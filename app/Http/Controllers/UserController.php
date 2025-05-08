@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
@@ -80,6 +81,59 @@ class UserController extends Controller
         }
         $user->save();
         return response()->json(['message' => 'Usuario actualizado', 'user' => $user], 200);
+    }
+
+    public function updatePassword(Request $request)
+    {
+        $user = Auth::user();
+        if(!$user)
+        {
+            return response()->json(['message' => 'Usuario no autenticado'], 401);
+        }
+        $validator = Validator::make($request->all(), [
+            'current_password' => 'required|string|min:8',
+            'password' => 'required|string|min:8|confirmed|different:current_password',
+        ]);
+        if($validator->fails())
+        {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+        if(!Hash::check($request->current_password, $user->password))
+        {
+            return response()->json(['errors' => ['current_password' => ['La contraseña actual es incorrecta.']]], 422);
+        }
+        $user->password = Hash::make($request->password);
+        $user->save();
+        return response()->json(['message' => 'Contraseña actualizada'], 200);
+    }
+
+    public function updatePhoto(Request $request)
+    {
+        $user = Auth::user();
+        if(!$user)
+        {
+            return response()->json(['message' => 'Usuario no autenticado'], 401);
+        }
+        $validator = Validator::make($request->all(), [
+            'photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+        if($validator->fails())
+        {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+        if($request->hasFile('photo'))
+        {
+            $file = $request->file('photo');
+            $filename = Str::random(40) . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('profile_photos', $filename, 'public'); 
+            {
+                Storage::disk('public')->delete($user->photo);
+            }
+            $user->photo = $path;
+            $user->save();
+            return response()->json(['message' => 'Foto de perfil actualizada', 'photo_url' => Storage::url($path)], 200); // El nombre de la URL también se actualiza
+        }
+        return response()->json(['message' => 'No se encontro el archivo'], 400);
     }
 
     public function delete($id)
