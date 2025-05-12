@@ -147,21 +147,19 @@ class UserController extends Controller
         return $this->success(null, 'Usuario eliminado');
     }
 
-    public function activateUser($id)
+    public function changeStatus(Request $request, $id)
     {
         $user = $this->findObject(User::class, $id);
-        $user->is_active = true;
+        $validator = Validator::make($request->all(), [
+            'status' => 'required|bool',
+        ]);
+        if ($validator->fails()) {
+            $this->logAudit(Auth::user(), 'Update Photo', $request->all(), $validator->errors());
+            return $this->validationError($validator->errors());
+        }
+        $user->is_active = $request->status;
         $user->save();
-        $this->logAudit(Auth::user(), 'Activate User', ['id' => $id], $user);
-        return $this->success($user, 'Usuario activado');
-    }
-
-    public function deactivateUser($id)
-    {
-        $user = $this->findObject(User::class, $id);
-        $user->is_active = false;
-        $user->save();
-        $this->logAudit(Auth::user(), 'Deactivate User', ['id' => $id], $user);
-        return $this->success($user, 'Usuario desactivado');
+        $this->logAudit(Auth::user(), 'Change Status User', ['id' => $id], $user);
+        return $this->success($user, 'Estado del usuario actualizado');
     }
 }

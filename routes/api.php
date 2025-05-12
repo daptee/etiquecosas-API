@@ -8,14 +8,13 @@ use App\Http\Controllers\UserController;
 // Auth
 Route::post('login', [LoginController::class, 'login']);
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('auth:sanctum')->prefix('users')->group(function () {
     // User
-    Route::get('usuarios', [UserController::class, 'index']);
-    Route::post('crear/usuario', [UserController::class, 'store']);
-    Route::put('actualizar/usuario/{id}', [UserController::class, 'update']);
-    Route::patch('actualizar/contraseña', [UserController::class, 'updatePassword']);
-    Route::post('actualizar/foto-de-perfil', [UserController::class, 'updatePhoto']);
-    Route::delete('eliminar/usuario/{id}', [UserController::class, 'delete']);
-    Route::patch('activar/usuario/{id}', [UserController::class, 'activateUser']);
-    Route::patch('desactivar/usuario/{id}', [UserController::class, 'deactivateUser']);
+    Route::get('/', [UserController::class, 'index']);
+    Route::post('/', [UserController::class, 'store']);
+    Route::put('/{id}', [UserController::class, 'update']);
+    Route::patch('/update-password', [UserController::class, 'updatePassword']);
+    Route::post('/update-photo', [UserController::class, 'updatePhoto']);
+    Route::delete('/{id}', [UserController::class, 'delete']);
+    Route::patch('/change-status/{id}', [UserController::class, 'changeStatus']);
 });
