@@ -8,7 +8,7 @@ use App\Http\Controllers\UserController;
 // Auth
 Route::post('login', [LoginController::class, 'login']);
 
-Route::middleware('auth:api')->group(function () {
+Route::middleware('auth:sanctum')->group(function () {
     // User
     Route::get('usuarios', [UserController::class, 'index']);
     Route::post('crear/usuario', [UserController::class, 'store']);
