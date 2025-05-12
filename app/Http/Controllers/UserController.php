@@ -11,11 +11,11 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use App\Traits\FindObject;
 use App\Traits\ApiResponse;
-
+use App\Traits\Auditable;
 
 class UserController extends Controller
 {
-    use FindObject, ApiResponse;
+    use FindObject, ApiResponse, Auditable;
 
     public function index(Request $request)
     {
@@ -23,16 +23,15 @@ class UserController extends Controller
         $page = $request->query('page', 1);
         $search = $request->query('search');
         $query = User::query();
-        if($search)
-        {
-            $query->where(function ($q) use ($search)
-            {
+        if ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                ->orWhere('lastName', 'like', "%{$search}%")
-                ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('lastName', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
         $users = $query->paginate($perPage, ['*'], 'page', $page);
+        $this->logAudit(Auth::user(), 'Get Users List', $request->all(), $users);
         return $this->success($users, 'Usuarios obtenidos');
     }
 
@@ -44,16 +43,18 @@ class UserController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
         ]);
-        if($validator->fails())
-        {
+        if ($validator->fails()) {
+            $this->logAudit(Auth::user(), 'Store User', $request->all(), $validator->errors());
             return $this->validationError($validator->errors());
         }
+
         $user = User::create([
             'name' => $request->name,
             'lastName' => $request->lastName,
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
+        $this->logAudit(Auth::user(), 'Store User', $request->all(), $user);
         return $this->success($user, 'Usuario creado', 201);
     }
 
@@ -66,70 +67,75 @@ class UserController extends Controller
             'email' => 'nullable|string|email|max:255|unique:users,email,' . $user->id,
             'password' => 'nullable|string|min:8|confirmed',
         ]);
-        if($validator->fails())
-        {
+        if ($validator->fails()) {
+            $this->logAudit(Auth::user(), 'Update User', $request->all(), $validator->errors());
             return $this->validationError($validator->errors());
         }
+
         $user->name = $request->input('name', $user->name);
         $user->lastName = $request->input('lastName', $user->lastName);
         $user->email = $request->input('email', $user->email);
-        if($request->filled('password')){
+        if ($request->filled('password')) {
             $user->password = Hash::make($request->password);
         }
         $user->save();
+        $this->logAudit(Auth::user(), 'Update User', $request->all(), $user);
         return $this->success($user, 'Usuario actualizado');
     }
 
     public function updatePassword(Request $request)
     {
         $user = Auth::user();
-        if(!$user)
-        {
+        if (!$user) {
             return $this->error('Usuario no autenticado', 401);
         }
+
         $validator = Validator::make($request->all(), [
             'current_password' => 'required|string|min:8',
             'password' => 'required|string|min:8|confirmed|different:current_password',
         ]);
-        if($validator->fails())
-        {
+        if ($validator->fails()) {
+            $this->logAudit(Auth::user(), 'Update Password', $request->all(), $validator->errors());
             return $this->validationError($validator->errors());
         }
-        if(!Hash::check($request->current_password, $user->password))
-        {
+
+        if (!Hash::check($request->current_password, $user->password)) {
+            $this->logAudit(Auth::user(), 'Update Password', $request->all(), ['error' => 'Contraseña actual incorrecta']);
             return $this->validationError(['current_password' => ['La contraseña actual es incorrecta.']]);
         }
+
         $user->password = Hash::make($request->password);
         $user->save();
+        $this->logAudit(Auth::user(), 'Update Password', $request->all(), $user);
         return $this->success(null, 'Contraseña actualizada');
     }
 
     public function updatePhoto(Request $request)
     {
         $user = Auth::user();
-        if(!$user)
-        {
+        if (!$user) {
             return $this->error('Usuario no autenticado', 401);
         }
+
         $validator = Validator::make($request->all(), [
             'photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
-        if($validator->fails())
-        {
+        if ($validator->fails()) {
+            $this->logAudit(Auth::user(), 'Update Photo', $request->all(), $validator->errors());
             return $this->validationError($validator->errors());
         }
-        if($request->hasFile('photo'))
-        {
+
+        if ($request->hasFile('photo')) {
             $file = $request->file('photo');
             $filename = Str::random(40) . '.' . $file->getClientOriginalExtension();
-            $path = $file->storeAs('profile_photos', $filename, 'public'); 
-            {
-                Storage::disk('public')->delete($user->photo);
-            }
+            $path = $file->storeAs('profile_photos', $filename, 'public');
+            Storage::disk('public')->delete($user->photo);
             $user->photo = $path;
             $user->save();
+            $this->logAudit(Auth::user(), 'Update Photo', $request->all(), ['photo_url' => Storage::url($path)]);
             return $this->success(['photo_url' => Storage::url($path)], 'Foto de perfil actualizada');
         }
+
         return $this->error('No se encontro el archivo', 400);
     }
 
@@ -137,6 +143,7 @@ class UserController extends Controller
     {
         $user = $this->findObject(User::class, $id);
         $user->delete();
+        $this->logAudit(Auth::user(), 'Delete User', ['id' => $id], null);
         return $this->success(null, 'Usuario eliminado');
     }
 
@@ -145,6 +152,7 @@ class UserController extends Controller
         $user = $this->findObject(User::class, $id);
         $user->is_active = true;
         $user->save();
+        $this->logAudit(Auth::user(), 'Activate User', ['id' => $id], $user);
         return $this->success($user, 'Usuario activado');
     }
 
@@ -153,6 +161,7 @@ class UserController extends Controller
         $user = $this->findObject(User::class, $id);
         $user->is_active = false;
         $user->save();
+        $this->logAudit(Auth::user(), 'Deactivate User', ['id' => $id], $user);
         return $this->success($user, 'Usuario desactivado');
     }
 }
