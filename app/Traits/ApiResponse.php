@@ -18,7 +18,7 @@ trait ApiResponse
     {
         return response()->json([
             'message' => $message,
-            'data'    => $data,
+            'errors'    => $data,
         ], $code);
     }
 
@@ -31,7 +31,7 @@ trait ApiResponse
     {
         return response()->json([
             'message' => $message,
-            'data'    => $errors,
+            'errors'    => $errors,
         ], 422);
     }
 }

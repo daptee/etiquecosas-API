@@ -31,8 +31,20 @@ class UserController extends Controller
             });
         }
         $users = $query->paginate($perPage, ['*'], 'page', $page);
-        $this->logAudit(Auth::user(), 'Get Users List', $request->all(), $users);
-        return $this->success($users, 'Usuarios obtenidos');
+        $this->logAudit(Auth::user(), 'Get Users List', $request->all(), $users);    
+        $metaData = [
+            'current_page' => $users->currentPage(),
+            'last_page' => $users->lastPage(),
+            'per_page' => $users->perPage(),
+            'total' => $users->total(),
+            'from' => $users->firstItem(),
+            'to' => $users->lastItem(),           
+        ];    
+        return response()->json([
+            'message' => 'Usuarios obtenidos',
+            'data' => $users->items(),
+            'meta_data' => $metaData,
+        ], 200);
     }
 
     public function store(Request $request)
