@@ -7,6 +7,7 @@ use App\Http\Controllers\UserController;
 
 // Auth
 Route::post('login', [LoginController::class, 'login']);
+Route::post('forgot-password', [LoginController::class, 'forgotPassword']);
 
 Route::middleware('auth:sanctum')->prefix('users')->group(function () {
     // User
