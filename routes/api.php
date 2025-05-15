@@ -13,6 +13,7 @@ Route::middleware('auth:sanctum')->prefix('users')->group(function () {
     Route::get('/', [UserController::class, 'index']);
     Route::post('/', [UserController::class, 'store']);
     Route::put('/{id}', [UserController::class, 'update']);
+    Route::patch('/update-profile', [UserController::class, 'updateProfile']);
     Route::patch('/update-password', [UserController::class, 'updatePassword']);
     Route::post('/update-photo', [UserController::class, 'updatePhoto']);
     Route::delete('/{id}', [UserController::class, 'delete']);

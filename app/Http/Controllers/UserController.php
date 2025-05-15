@@ -95,6 +95,32 @@ class UserController extends Controller
         return $this->success($user, 'Usuario actualizado');
     }
 
+    public function updateProfile(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return $this->error('Usuario no autenticado', 401);
+        }
+        
+        $validator = Validator::make($request->all(), [
+            'name' => 'nullable|string|max:255',
+            'lastName' => 'nullable|string|max:255',
+            'email' => 'nullable|string|email|max:255|unique:users,email,' . $user->id,
+        ]);
+
+        if ($validator->fails()) {
+            $this->logAudit($user, 'Update Profile Failed', $request->all(), $validator->errors());
+            return $this->validationError($validator->errors());
+        }
+
+        $user->name = $request->input('name', $user->name);
+        $user->lastName = $request->input('lastName', $user->lastName);
+        $user->email = $request->input('email', $user->email);
+        $user->save();
+        $this->logAudit($user, 'Update Profile', $request->all(), $user);
+        return $this->success($user, 'Perfil actualizado');
+    }
+
     public function updatePassword(Request $request)
     {
         $user = Auth::user();
@@ -119,7 +145,7 @@ class UserController extends Controller
         $user->password = Hash::make($request->password);
         $user->save();
         $this->logAudit(Auth::user(), 'Update Password', $request->all(), $user);
-        return $this->success(null, 'Contraseña actualizada');
+        return $this->success($user, 'Contraseña actualizada');
     }
 
     public function updatePhoto(Request $request)
