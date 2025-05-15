@@ -16,10 +16,16 @@ trait ApiResponse
 
     protected function error(string $message = 'Error en la solicitud', int $code = 500, $data = null): JsonResponse
     {
-        return response()->json([
-            'message' => $message,
-            'errors'    => $data,
-        ], $code);
+        if ($data != null) {
+            return response()->json([
+                'message' => $message,
+                'data'    => $data,
+            ], $code);
+        } else {
+            return response()->json([
+                'message' => $message,
+            ], $code);
+        }
     }
 
     protected function notFound(string $message = 'No encontrado'): JsonResponse
