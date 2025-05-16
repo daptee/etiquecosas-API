@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\CostController;
 
 // Auth
 Route::post('login', [LoginController::class, 'login']);
@@ -28,4 +29,11 @@ Route::middleware('auth:sanctum')->prefix('categories')->group(function () {
     Route::get('/', [CategoryController::class, 'index']);
     Route::post('/', [CategoryController::class, 'store']);
     Route::put('/{id}', [CategoryController::class, 'update']);
+});
+
+Route::middleware('auth:sanctum')->prefix('costs')->group(function () {
+    Route::get('/', [CostController::class, 'index']);
+    Route::post('/', [CostController::class, 'store']);
+    Route::get('/{id}', [CostController::class, 'show']);
+    Route::put('/{id}', [CostController::class, 'update']);
 });
