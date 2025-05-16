@@ -73,8 +73,9 @@ class AttributeController extends Controller
         return $this->success($attribute, 'Atributo creado', 201);
     }
 
-    public function update(Request $request, Attribute $attribute)
+   public function update(Request $request, $id)
     {
+        $attribute = $this->findObject(Attribute::class, $id);
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255|unique:attributes,name,' . $attribute->id,
             'values' => 'required|array|min:1',
