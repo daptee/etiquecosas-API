@@ -12,10 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('attribute_values', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('attributeId')->constrained('attributes')->onDelete('cascade');
+            $table->id();            
             $table->string('value');
             $table->foreignId('statusId')->default(1)->constrained('general_status');
+            $table->foreignId('attributeId')->constrained('attributes')->onDelete('cascade');
             $table->unique(['attributeId', 'value']);
             $table->timestamps();
         });

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\GeneralStatus;
 use App\Models\AttributeValue; 
+use App\Models\Attribute;
 
 class AttributeValue extends Model
 {
@@ -14,6 +15,7 @@ class AttributeValue extends Model
     protected $fillable = [
         'name',
         'statusId',
+        'attributeId',
     ];
 
     public function status() 
@@ -26,4 +28,8 @@ class AttributeValue extends Model
         return $this->hasMany(AttributeValue::class);
     }
 
+    public function attribute()
+    {
+        return $this->belongsTo(Attribute::class, 'attributeId');
+    }
 }

@@ -20,7 +20,7 @@ class CategoryController extends Controller
         $page = $request->query('page', 1);
         $search = $request->query('search');
         $statusId = $request->query('statusId');
-        $category = $request->query('category');
+        $categoryId = $request->query('categoryId');
         $query = Category::query();
         if ($search) {
             $query->where('name', 'like', "%{$search}%");
@@ -30,8 +30,8 @@ class CategoryController extends Controller
             $query->where('statusId', $statusId);
         }
 
-        if ($category) {
-            $query->where('id_category', $category);
+        if ($categoryId) {
+            $query->where('cagetoryId', $categoryId);
         }
 
         $categories = $query->paginate($perPage, ['*'], 'page', $page);

@@ -12,6 +12,8 @@ use App\Traits\Auditable;
 
 class AttributeController extends Controller
 {
+    use FindObject, ApiResponse, Auditable;
+
     public function index(Request $request)
     {
         $perPage = $request->query('quantity', 10);
@@ -60,11 +62,13 @@ class AttributeController extends Controller
         $attribute = Attribute::create([
             'name' => $request->name,
             'statusId' => $request->statusId ?? 1,
+            'attributeId' => $request->attributeId,
         ]);
         $valuesData = collect($request->input('values'))->map(function ($value) {
             return [
                 'value' => $value['value'],
                 'statusId' => $value['statusId'] ?? 1,
+                'attributeId' => $value['attributeId'],
             ];
         })->toArray();
         $attribute->values()->createMany($valuesData);

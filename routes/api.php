@@ -26,27 +26,29 @@ Route::middleware('auth:sanctum')->prefix('users')->group(function () {
 });
 
 // Category
-Route::middleware('auth:sanctum')->prefix('categories')->group(function () {
+Route::middleware('jwt.auth')->prefix('categories')->group(function () {
     Route::get('/', [CategoryController::class, 'index']);
     Route::post('/', [CategoryController::class, 'store']);
     Route::put('/{id}', [CategoryController::class, 'update']);
 });
 
 // Attribute
-Route::middleware('auth:sanctum')->prefix('attributes')->group(function () {
+Route::middleware('jwt.auth')->prefix('attributes')->group(function () {
     Route::get('/', [AttributeController::class, 'index']);
     Route::post('/', [AttributeController::class, 'store']);
     Route::put('/{id}', [AttributeController::class, 'update']);
 });
+
 // Cost
-Route::middleware('auth:sanctum')->prefix('costs')->group(function () {
+Route::middleware('jwt.auth')->prefix('costs')->group(function () {
     Route::get('/', [CostController::class, 'index']);
     Route::post('/', [CostController::class, 'store']);
     Route::get('/{id}', [CostController::class, 'show']);
     Route::put('/{id}', [CostController::class, 'update']);
 });
+
 // ConfigurationTag
-Route::middleware('auth:sanctum')->prefix('tags')->group(function () {
+Route::middleware('jwt.auth')->prefix('tags')->group(function () {
     Route::get('/', [ConfigurationTagController::class, 'index']);
     Route::post('/', [ConfigurationTagController::class, 'store']);
     Route::put('/{id}', [ConfigurationTagController::class, 'update']);

@@ -12,6 +12,8 @@ use App\Traits\Auditable;
 
 class CostController extends Controller
 {
+    use FindObject, ApiResponse, Auditable;
+    
     public function index(Request $request)
     {
         $perPage = $request->query('quantity', 10);
@@ -48,7 +50,7 @@ class CostController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255|unique:costs',
             'price' => 'required|numeric|min:0',
-            'statusId' => 'nullable|integer|exists:statuses,id',
+            'statusId' => 'nullable|in:1,2',
         ]);
         if ($validator->fails()) {
             $this->logAudit(Auth::user(), 'Store Cost', $request->all(), $validator->errors());
@@ -78,7 +80,7 @@ class CostController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255|unique:costs,name,' . $cost->id,
             'price' => 'required|numeric|min:0',
-            'statusId' => 'nullable|integer|exists:statuses,id',
+            'statusId' => 'nullable|in:1,2',
         ]);
         if ($validator->fails()) {
             $this->logAudit(Auth::user(), 'Update Cost', $request->all(), $validator->errors());
