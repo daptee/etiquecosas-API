@@ -14,7 +14,7 @@ Route::post('login', [LoginController::class, 'login']);
 Route::post('forgot-password', [LoginController::class, 'forgotPassword']);
 
 // User
-Route::middleware('auth:sanctum')->prefix('users')->group(function () {
+Route::middleware('jwt.auth')->prefix('users')->group(function () {
     Route::get('/', [UserController::class, 'index']);
     Route::post('/', [UserController::class, 'store']);
     Route::put('/{id}', [UserController::class, 'update']);
