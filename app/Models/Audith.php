@@ -9,5 +9,5 @@ class Audith extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['id_user', 'request', 'params', 'response', 'datetime'];
+    protected $fillable = ['userId', 'request', 'params', 'response', 'datetime'];
 }

@@ -10,12 +10,12 @@ class CreateAudithsTable extends Migration
     {
         Schema::create('audiths', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('id_user')->nullable();
+            $table->unsignedBigInteger('userId')->nullable();
             $table->text('request');
             $table->text('params');
             $table->text('response');
             $table->timestamp('datetime')->useCurrent();
-            $table->foreign('id_user')->references('id')->on('users')->onDelete('set null');
+            $table->foreign('userId')->references('id')->on('users')->onDelete('set null');
             $table->timestamps();
         });
     }

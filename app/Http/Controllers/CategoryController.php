@@ -19,15 +19,15 @@ class CategoryController extends Controller
         $perPage = $request->query('quantity', 10);
         $page = $request->query('page', 1);
         $search = $request->query('search');
-        $status = $request->query('status');
+        $statusId = $request->query('statusId');
         $category = $request->query('category');
         $query = Category::query();
         if ($search) {
             $query->where('name', 'like', "%{$search}%");
         }
 
-        if ($status) {
-            $query->where('status', $status);
+        if ($statusId) {
+            $query->where('statusId', $statusId);
         }
 
         if ($category) {
@@ -59,7 +59,7 @@ class CategoryController extends Controller
             'img' => 'nullable|string|max:255',
             'icon' => 'nullable|string|max:255',
             'color' => 'nullable|string|max:50',
-            'status' => 'nullable|in:1,2',
+            'statusId' => 'nullable|in:1,2',
         ]);
         if ($validator->fails()) {
             $this->logAudit(Auth::user(), 'Store Category', $request->all(), $validator->errors());
@@ -72,7 +72,7 @@ class CategoryController extends Controller
             'img' => $request->img,
             'icon' => $request->icon,
             'color' => $request->color,
-            'status' => $request->status ?? 1,
+            'statusId' => $request->statusId ?? 1,
         ]);
         $this->logAudit(Auth::user(), 'Store Category', $request->all(), $category);
         return $this->success($category, 'Categoría creada', 201);
@@ -87,7 +87,7 @@ class CategoryController extends Controller
             'img' => 'nullable|string|max:255',
             'icon' => 'nullable|string|max:255',
             'color' => 'nullable|string|max:50',
-            'status' => 'nullable|in:1,2',
+            'statusId' => 'nullable|in:1,2',
         ]);
         if ($validator->fails()) {
             $this->logAudit(Auth::user(), 'Update Category', $request->all(), $validator->errors());
@@ -105,10 +105,9 @@ class CategoryController extends Controller
         $category->img = $request->input('img', $category->img);
         $category->icon = $request->input('icon', $category->icon);
         $category->color = $request->input('color', $category->color);
-        $category->status = $request->input('status', $category->status);
+        $category->statusId = $request->input('statusId', $category->statusId);
         $category->save();
         $this->logAudit(Auth::user(), 'Update Category', $request->all(), $category);
         return $this->success($category, 'Categoría actualizada');
     }
-
 }
