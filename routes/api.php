@@ -7,6 +7,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\AttributeController;
 use App\Http\Controllers\CostController;
+use App\Http\Controllers\ConfigurationTagController;
 
 // Auth
 Route::post('login', [LoginController::class, 'login']);
@@ -14,7 +15,6 @@ Route::post('forgot-password', [LoginController::class, 'forgotPassword']);
 
 // User
 Route::middleware('auth:sanctum')->prefix('users')->group(function () {
-
     Route::get('/', [UserController::class, 'index']);
     Route::post('/', [UserController::class, 'store']);
     Route::put('/{id}', [UserController::class, 'update']);
@@ -44,4 +44,10 @@ Route::middleware('auth:sanctum')->prefix('costs')->group(function () {
     Route::post('/', [CostController::class, 'store']);
     Route::get('/{id}', [CostController::class, 'show']);
     Route::put('/{id}', [CostController::class, 'update']);
+});
+// ConfigurationTag
+Route::middleware('auth:sanctum')->prefix('tags')->group(function () {
+    Route::get('/', [ConfigurationTagController::class, 'index']);
+    Route::post('/', [ConfigurationTagController::class, 'store']);
+    Route::put('/{id}', [ConfigurationTagController::class, 'update']);
 });
