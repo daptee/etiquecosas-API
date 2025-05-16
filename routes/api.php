@@ -6,14 +6,15 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\AttributeController;
+use App\Http\Controllers\CostController;
 
 // Auth
 Route::post('login', [LoginController::class, 'login']);
 Route::post('forgot-password', [LoginController::class, 'forgotPassword']);
 
- // User
+// User
 Route::middleware('auth:sanctum')->prefix('users')->group(function () {
-   
+
     Route::get('/', [UserController::class, 'index']);
     Route::post('/', [UserController::class, 'store']);
     Route::put('/{id}', [UserController::class, 'update']);
@@ -36,4 +37,11 @@ Route::middleware('auth:sanctum')->prefix('attributes')->group(function () {
     Route::get('/', [AttributeController::class, 'index']);
     Route::post('/', [AttributeController::class, 'store']);
     Route::put('/{id}', [AttributeController::class, 'update']);
+});
+// Cost
+Route::middleware('auth:sanctum')->prefix('costs')->group(function () {
+    Route::get('/', [CostController::class, 'index']);
+    Route::post('/', [CostController::class, 'store']);
+    Route::get('/{id}', [CostController::class, 'show']);
+    Route::put('/{id}', [CostController::class, 'update']);
 });
