@@ -10,7 +10,7 @@ trait Auditable
     {
         $userId = $user ? $user->id : null;
         Audith::create([
-            'userId' => $userId,
+            'user_id' => $userId,
             'request' => $requestDetails,
             'params' => json_encode($params),
             'response' => json_encode($response),
