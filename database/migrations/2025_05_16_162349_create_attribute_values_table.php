@@ -11,14 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('categories', function (Blueprint $table) {
+        Schema::create('attribute_values', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('categoryId')->nullable()->constrained('categories')->onDelete('SET NULL');
-            $table->string('name', 100);
-            $table->string('img')->nullable();
-            $table->string('icon')->nullable();
-            $table->string('color', 50)->nullable();
+            $table->foreignId('attributeId')->constrained('attributes')->onDelete('cascade');
+            $table->string('value');
             $table->foreignId('statusId')->default(1)->constrained('general_status');
+            $table->unique(['attributeId', 'value']);
             $table->timestamps();
         });
     }
@@ -28,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('categories');
+        Schema::dropIfExists('attribute_values');
     }
 };

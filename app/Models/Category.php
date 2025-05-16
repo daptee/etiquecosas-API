@@ -16,7 +16,7 @@ class Category extends Model
         'img',
         'icon',
         'color',
-        'status',
+        'statusId',
     ];
 
     public function parent()
@@ -31,6 +31,6 @@ class Category extends Model
 
     public function generalStatus()
     {
-        return $this->belongsTo(GeneralStatus::class, 'status');
+        return $this->belongsTo(GeneralStatus::class, 'statusId');
     }
 }

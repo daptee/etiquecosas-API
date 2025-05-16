@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\AttributeController;
 
 // Auth
 Route::post('login', [LoginController::class, 'login']);
@@ -28,4 +29,11 @@ Route::middleware('auth:sanctum')->prefix('categories')->group(function () {
     Route::get('/', [CategoryController::class, 'index']);
     Route::post('/', [CategoryController::class, 'store']);
     Route::put('/{id}', [CategoryController::class, 'update']);
+});
+
+// Attribute
+Route::middleware('auth:sanctum')->prefix('attributes')->group(function () {
+    Route::get('/', [AttributeController::class, 'index']);
+    Route::post('/', [AttributeController::class, 'store']);
+    Route::put('/{id}', [AttributeController::class, 'update']);
 });
