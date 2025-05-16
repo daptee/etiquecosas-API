@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Str;
 use App\Mail\ForgotPasswordMail;
 use App\Models\User;
@@ -24,21 +25,18 @@ class LoginController extends Controller
             'email' => 'required|email',
             'password' => 'required',
         ]);
-        if($validator->fails())
-        {
+        if ($validator->fails()) {
             return response()->json(['message' => 'Los datos ingresados no respetan el formato'], 422);
         }
+
         $credentials = $request->only('email', 'password');
-        if(Auth::attempt($credentials))
-        {
-            $user = Auth::user();
-            $token = $user->createToken('Etiquecosas')->plainTextToken;    
-            return response()->json(['token' => $token], 200);
-        }
-        else
-        {
+        if (!$token = JWTAuth::attempt($credentials)) {
             return response()->json(['message' => 'El usuario y/o la contraseña son incorrectos'], 401);
         }
+
+        return response()->json([
+            'token' => $token
+        ], 200);
     }
 
     public function forgotPassword(Request $request)
@@ -53,7 +51,6 @@ class LoginController extends Controller
 
         $email = $request->input('email');
         $user = User::where('email', $email)->first();
-
         if (!$user) {
             return $this->error('No se encontró ningún usuario con ese correo electrónico.', 404);
         }
