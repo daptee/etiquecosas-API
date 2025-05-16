@@ -12,6 +12,7 @@ use App\Http\Controllers\ConfigurationTagController;
 // Auth
 Route::post('login', [LoginController::class, 'login']);
 Route::post('forgot-password', [LoginController::class, 'forgotPassword']);
+Route::post('create-admin-user', [UserController::class, 'store']);
 
 // User
 Route::middleware('jwt.auth')->prefix('users')->group(function () {
