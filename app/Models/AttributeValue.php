@@ -14,13 +14,13 @@ class AttributeValue extends Model
 
     protected $fillable = [
         'name',
-        'statusId',
-        'attributeId',
+        'status_id',
+        'attribute_id',
     ];
 
     public function status() 
     {
-        return $this->belongsTo(GeneralStatus::class);
+        return $this->belongsTo(GeneralStatus::class, 'status_id');
     }
 
     public function values()
@@ -30,6 +30,6 @@ class AttributeValue extends Model
 
     public function attribute()
     {
-        return $this->belongsTo(Attribute::class, 'attributeId');
+        return $this->belongsTo(Attribute::class, 'attibute_id');
     }
 }

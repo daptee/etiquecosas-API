@@ -68,11 +68,11 @@ class CategoryController extends Controller
 
         $category = Category::create([
             'name' => $request->name,
-            'categoryId' => $request->categoryId,
+            'category_id' => $request->categoryId,
             'img' => $request->img,
             'icon' => $request->icon,
             'color' => $request->color,
-            'statusId' => $request->statusId ?? 1,
+            'status_id' => $request->statusId ?? 1,
         ]);
         $this->logAudit(Auth::user(), 'Store Category', $request->all(), $category);
         return $this->success($category, 'Categoría creada', 201);
@@ -101,11 +101,11 @@ class CategoryController extends Controller
         }
 
         $category->name = $request->input('name', $category->name);
-        $category->categoryId = $request->input('categoryId', $category->categoryId);
+        $category->category_id = $request->input('categoryId', $category->category_id);
         $category->img = $request->input('img', $category->img);
         $category->icon = $request->input('icon', $category->icon);
         $category->color = $request->input('color', $category->color);
-        $category->statusId = $request->input('statusId', $category->statusId);
+        $category->status_id = $request->input('statusId', $category->status_id);
         $category->save();
         $this->logAudit(Auth::user(), 'Update Category', $request->all(), $category);
         return $this->success($category, 'Categoría actualizada');
