@@ -13,12 +13,12 @@ class Attribute extends Model
 
     protected $fillable = [
         'name',
-        'statusId',
+        'status_id',
     ];
 
     public function generalStatus() 
     {
-        return $this->belongsTo(GeneralStatus::class);
+        return $this->belongsTo(GeneralStatus::class, 'status_id');
     }
 
     public function values() 

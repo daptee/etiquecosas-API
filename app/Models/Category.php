@@ -11,12 +11,12 @@ class Category extends Model
     use HasFactory;
 
     protected $fillable = [
-        'categoryId',
+        'category_id',
         'name',
         'img',
         'icon',
         'color',
-        'statusId',
+        'status_id',
     ];
 
     public function parent()

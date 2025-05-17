@@ -14,9 +14,9 @@ return new class extends Migration
         Schema::create('attribute_values', function (Blueprint $table) {
             $table->id();            
             $table->string('value');
-            $table->foreignId('statusId')->default(1)->constrained('general_status');
-            $table->foreignId('attributeId')->constrained('attributes')->onDelete('cascade');
-            $table->unique(['attributeId', 'value']);
+            $table->foreignId('status_id')->default(1)->constrained('general_status');
+            $table->foreignId('attribute_id')->constrained('attributes')->onDelete('cascade');
+            $table->unique(['attribute_id', 'value']);
             $table->timestamps();
         });
     }

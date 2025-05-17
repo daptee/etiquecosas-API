@@ -13,11 +13,11 @@ class ConfigurationTag extends Model
      protected $fillable = [
         'name',
         'color',
-        'statusId',
+        'status_id',
     ];
 
     public function status() 
     {
-        return $this->belongsTo(GeneralStatus::class);
+        return $this->belongsTo(GeneralStatus::class, 'status_id');
     }
 }

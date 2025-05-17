@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name')->unique();
             $table->decimal('price', 10, 2);
-            $table->foreignId('statusId')->default(1)->constrained('general_status');
+            $table->foreignId('status_id')->default(1)->constrained('general_status');
             $table->timestamps();
         });
     }
