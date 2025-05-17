@@ -20,7 +20,7 @@ class CategoryController extends Controller
         $page = $request->query('page', 1);
         $search = $request->query('search');
         $statusId = $request->query('statusId');
-        $categoryId = $request->query('categoryId');        $
+        $categoryId = $request->query('categoryId');
         $query = Category::query();
         if ($search) {
             $query->where('name', 'like', "%{$search}%");
