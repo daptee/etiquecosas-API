@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\GeneralStatus;
+use App\Models\ConfigurationTag;
 
 class Category extends Model
 {
@@ -17,6 +18,7 @@ class Category extends Model
         'icon',
         'color',
         'statusId',
+        'tag_id',
     ];
 
     public function parent()
@@ -33,4 +35,9 @@ class Category extends Model
     {
         return $this->belongsTo(GeneralStatus::class, 'statusId');
     }
+
+    public function tag()
+    {
+        return $this->belongsTo(ConfigurationTag::class, 'tag_id');
+    } 
 }

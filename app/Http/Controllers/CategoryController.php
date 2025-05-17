@@ -20,7 +20,7 @@ class CategoryController extends Controller
         $page = $request->query('page', 1);
         $search = $request->query('search');
         $statusId = $request->query('statusId');
-        $categoryId = $request->query('categoryId');
+        $categoryId = $request->query('categoryId');        $
         $query = Category::query();
         if ($search) {
             $query->where('name', 'like', "%{$search}%");
@@ -60,6 +60,7 @@ class CategoryController extends Controller
             'icon' => 'nullable|string|max:255',
             'color' => 'nullable|string|max:50',
             'statusId' => 'nullable|in:1,2',
+            'tagId' => 'nullable|exists:configuration_tags,id',
         ]);
         if ($validator->fails()) {
             $this->logAudit(Auth::user(), 'Store Category', $request->all(), $validator->errors());
@@ -73,6 +74,7 @@ class CategoryController extends Controller
             'icon' => $request->icon,
             'color' => $request->color,
             'statusId' => $request->statusId ?? 1,
+            'tag_id' => $request->tagId,
         ]);
         $this->logAudit(Auth::user(), 'Store Category', $request->all(), $category);
         return $this->success($category, 'Categoría creada', 201);
@@ -88,6 +90,7 @@ class CategoryController extends Controller
             'icon' => 'nullable|string|max:255',
             'color' => 'nullable|string|max:50',
             'statusId' => 'nullable|in:1,2',
+            'tagId' => 'nullable|exists:configuration_tags,id',
         ]);
         if ($validator->fails()) {
             $this->logAudit(Auth::user(), 'Update Category', $request->all(), $validator->errors());
@@ -106,6 +109,7 @@ class CategoryController extends Controller
         $category->icon = $request->input('icon', $category->icon);
         $category->color = $request->input('color', $category->color);
         $category->statusId = $request->input('statusId', $category->statusId);
+        $category->tag_id = $request->input('tagId', $category->tagId);
         $category->save();
         $this->logAudit(Auth::user(), 'Update Category', $request->all(), $category);
         return $this->success($category, 'Categoría actualizada');
