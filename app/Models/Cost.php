@@ -14,16 +14,16 @@ class Cost extends Model
     protected $fillable = [
         'name',
         'price',
-        'statusId',
+        'status_id',
     ];
 
     public function status()
     {
-        return $this->belongsTo(GeneralStatus::class);
+        return $this->belongsTo(GeneralStatus::class, 'status_id');
     }
 
     public function prices()
     {
-        return $this->hasMany(CostPrice::class, 'costId');
+        return $this->hasMany(CostPrice::class, 'cost_id');
     }
 }

@@ -60,7 +60,7 @@ class CostController extends Controller
         $cost = Cost::create([
             'name' => $request->name,
             'price' => $request->price,
-            'statusId' => $request->statusId ?? 1,
+            'status_id' => $request->statusId ?? 1,
         ]);
         $this->logAudit(Auth::user(), 'Store Cost', $request->all(), $cost);
         return $this->success($cost, 'Costo creado', 201);
@@ -90,7 +90,7 @@ class CostController extends Controller
         $cost->update([
             'name' => $request->name,
             'price' => $request->price,
-            'statusId' => $request->statusId ?? 1,
+            'status_id' => $request->statusId ?? 1,
         ]);
         $this->logAudit(Auth::user(), 'Update Cost', $request->all(), $cost);
         return $this->success($cost, 'Costo actualizado');

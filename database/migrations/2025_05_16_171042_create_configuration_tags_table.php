@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name')->unique();
             $table->string('color')->nullable();
-            $table->foreignId('statusId')->default(1)->constrained('general_status');
+            $table->foreignId('status_id')->default(1)->constrained('general_status');
             $table->timestamps();
         });
     }

@@ -61,14 +61,14 @@ class AttributeController extends Controller
 
         $attribute = Attribute::create([
             'name' => $request->name,
-            'statusId' => $request->statusId ?? 1,
-            'attributeId' => $request->attributeId,
+            'status_id' => $request->statusId ?? 1,
+            'attribute_id' => $request->attributeId,
         ]);
         $valuesData = collect($request->input('values'))->map(function ($value) {
             return [
                 'value' => $value['value'],
-                'statusId' => $value['statusId'] ?? 1,
-                'attributeId' => $value['attributeId'],
+                'status_id' => $value['statusId'] ?? 1,
+                'attribute_id' => $value['attributeId'],
             ];
         })->toArray();
         $attribute->values()->createMany($valuesData);
@@ -103,12 +103,12 @@ class AttributeController extends Controller
             if ($existingId) {
                 $valuesToUpdate[$existingId] = [
                     'value' => $data['value'],
-                    'statusId' => $data['statusId'] ?? 1,
+                    'status_id' => $data['statusId'] ?? 1,
                 ];
             } else {
                 $valuesToCreate[] = [
                     'value' => $data['value'],
-                    'statusId' => $data['statusId'] ?? 1,
+                    'status_id' => $data['statusId'] ?? 1,
                 ];
             }
         }

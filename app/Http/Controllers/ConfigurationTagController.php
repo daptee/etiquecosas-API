@@ -51,7 +51,7 @@ class ConfigurationTagController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255|unique:configuration_tags',
             'color' => 'nullable|string|max:50',
-            'status' => 'nullable|in:1,2',
+            'statusId' => 'nullable|in:1,2',
         ]);
         if ($validator->fails()) {
             $this->logAudit(Auth::user(), 'Store Configuration Tag', $request->all(), $validator->errors());
@@ -61,7 +61,7 @@ class ConfigurationTagController extends Controller
         $tag = ConfigurationTag::create([
             'name' => $request->name,
             'color' => $request->color,
-            'statusId' => $request->statusId ?? 1,
+            'status_id' => $request->statusId ?? 1,
         ]);
         $this->logAudit(Auth::user(), 'Store Configuration Tag', $request->all(), $tag);
         return $this->success($tag, 'Etiqueta de configuración creada', 201);
@@ -82,7 +82,7 @@ class ConfigurationTagController extends Controller
 
         $tag->name = $request->input('name', $tag->name);
         $tag->color = $request->input('color', $tag->color);
-        $tag->statusId = $request->input('statusId', $tag->statusId);
+        $tag->status_id = $request->input('statusId', $tag->statusId);
         $tag->save();
         $this->logAudit(Auth::user(), 'Update Configuration Tag', $request->all(), $tag);
         return $this->success($tag, 'Etiqueta de configuración actualizada');

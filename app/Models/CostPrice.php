@@ -11,12 +11,12 @@ class CostPrice extends Model
     use HasFactory;
 
      protected $fillable = [
-        'costId',
+        'cost_id',
         'price',
     ];
 
     public function cost()
     {
-        return $this->belongsTo(Cost::class);
+        return $this->belongsTo(Cost::class, 'cost_id');
     }
 }
