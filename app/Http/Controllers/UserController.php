@@ -54,6 +54,7 @@ class UserController extends Controller
             'lastName' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
+            'profileId' => 'required',
         ]);
         if ($validator->fails()) {
             $this->logAudit(Auth::user(), 'Store User', $request->all(), $validator->errors());
@@ -65,6 +66,7 @@ class UserController extends Controller
             'lastName' => $request->lastName,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'profile_id' => $request->profileId,
         ]);
         $this->logAudit(Auth::user(), 'Store User', $request->all(), $user);
         return $this->success($user, 'Usuario creado', 201);
@@ -78,6 +80,7 @@ class UserController extends Controller
             'lastName' => 'nullable|string|max:255',
             'email' => 'nullable|string|email|max:255|unique:users,email,' . $user->id,
             'password' => 'nullable|string|min:8|confirmed',
+            'profileId' => 'nullable',
         ]);
         if ($validator->fails()) {
             $this->logAudit(Auth::user(), 'Update User', $request->all(), $validator->errors());
@@ -87,6 +90,7 @@ class UserController extends Controller
         $user->name = $request->input('name', $user->name);
         $user->lastName = $request->input('lastName', $user->lastName);
         $user->email = $request->input('email', $user->email);
+        $user->profile_id = $request->input('profileId', $user->profile_id);
         if ($request->filled('password')) {
             $user->password = Hash::make($request->password);
         }

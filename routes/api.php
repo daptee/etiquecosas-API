@@ -8,6 +8,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\AttributeController;
 use App\Http\Controllers\CostController;
 use App\Http\Controllers\ConfigurationTagController;
+use App\Http\Controllers\ProfileController;
 
 // Auth
 Route::post('login', [LoginController::class, 'login']);
@@ -53,4 +54,11 @@ Route::middleware('jwt.auth')->prefix('tags')->group(function () {
     Route::get('/', [ConfigurationTagController::class, 'index']);
     Route::post('/', [ConfigurationTagController::class, 'store']);
     Route::put('/{id}', [ConfigurationTagController::class, 'update']);
+});
+
+// Profile
+Route::middleware('jwt.auth')->prefix('profiles')->group(function () {
+    Route::get('/', [ProfileController::class, 'index']);
+    Route::post('/', [ProfileController::class, 'store']);
+    Route::put('/{id}', [ProfileController::class, 'update']);
 });
