@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('icon')->nullable();
             $table->string('color', 50)->nullable();
             $table->foreignId('status_id')->default(1)->constrained('general_status');
+            $table->foreignId('tag_id')->nullable()->constrained('configuration_tags')->onDelete('SET NULL');
             $table->timestamps();
         });
     }

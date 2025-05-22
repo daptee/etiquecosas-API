@@ -8,11 +8,11 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use App\Traits\FindObject;
 use App\Traits\ApiResponse;
-use App\Traits\Auditable; 
+use App\Traits\Auditable;
 
 class CategoryController extends Controller
 {
-    use FindObject, ApiResponse, Auditable; 
+    use FindObject, ApiResponse, Auditable;
 
     public function index(Request $request)
     {
@@ -42,12 +42,12 @@ class CategoryController extends Controller
             'per_page' => $categories->perPage(),
             'total' => $categories->total(),
             'from' => $categories->firstItem(),
-            'to' => $categories->lastItem(),           
+            'to' => $categories->lastItem(),
         ];
         return response()->json([
-                'message' => 'Categorias obtenidas',
-                'data' => $categories->items(),
-                'meta_data' => $metaData,
+            'message' => 'Categorias obtenidas',
+            'data' => $categories->items(),
+            'meta_data' => $metaData,
         ], 200);
     }
 
@@ -60,6 +60,7 @@ class CategoryController extends Controller
             'icon' => 'nullable|string|max:255',
             'color' => 'nullable|string|max:50',
             'statusId' => 'nullable|in:1,2',
+            'tagId' => 'nullable|exists:configuration_tags,id',
         ]);
         if ($validator->fails()) {
             $this->logAudit(Auth::user(), 'Store Category', $request->all(), $validator->errors());
@@ -72,7 +73,8 @@ class CategoryController extends Controller
             'img' => $request->img,
             'icon' => $request->icon,
             'color' => $request->color,
-            'status_id' => $request->statusId ?? 1,
+            'statusId' => $request->statusId ?? 1,
+            'tag_id' => $request->tagId,
         ]);
         $this->logAudit(Auth::user(), 'Store Category', $request->all(), $category);
         return $this->success($category, 'Categoría creada', 201);
@@ -88,6 +90,7 @@ class CategoryController extends Controller
             'icon' => 'nullable|string|max:255',
             'color' => 'nullable|string|max:50',
             'statusId' => 'nullable|in:1,2',
+            'tagId' => 'nullable|exists:configuration_tags,id',
         ]);
         if ($validator->fails()) {
             $this->logAudit(Auth::user(), 'Update Category', $request->all(), $validator->errors());
@@ -106,6 +109,7 @@ class CategoryController extends Controller
         $category->icon = $request->input('icon', $category->icon);
         $category->color = $request->input('color', $category->color);
         $category->status_id = $request->input('statusId', $category->status_id);
+        $category->tag_id = $request->input('tagId', $category->tagId);
         $category->save();
         $this->logAudit(Auth::user(), 'Update Category', $request->all(), $category);
         return $this->success($category, 'Categoría actualizada');
