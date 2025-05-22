@@ -8,10 +8,13 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\AttributeController;
 use App\Http\Controllers\CostController;
 use App\Http\Controllers\ConfigurationTagController;
+use App\Http\Controllers\ClientController; 
 
 // Auth
 Route::post('login', [LoginController::class, 'login']);
 Route::post('forgot-password', [LoginController::class, 'forgotPassword']);
+Route::post('client-login', [LoginController::class, 'clientLogin']);
+Route::post('client-forgot-password', [LoginController::class, 'clientForgotPassword']);
 Route::post('create-admin-user', [UserController::class, 'store']);
 
 // User
@@ -53,4 +56,12 @@ Route::middleware('jwt.auth')->prefix('tags')->group(function () {
     Route::get('/', [ConfigurationTagController::class, 'index']);
     Route::post('/', [ConfigurationTagController::class, 'store']);
     Route::put('/{id}', [ConfigurationTagController::class, 'update']);
+});
+
+// Client
+Route::middleware('jwt.auth')->prefix('costs')->group(function () {
+    Route::get('/', [ClientController::class, 'index']);
+    Route::post('/', [ClientController::class, 'store']);
+    Route::get('/{id}', [ClientController::class, 'show']);
+    Route::put('/{id}', [ClientController::class, 'update']);
 });
