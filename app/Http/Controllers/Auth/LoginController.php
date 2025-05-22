@@ -68,4 +68,56 @@ class LoginController extends Controller
         Mail::to($user->email)->send(new ForgotPasswordMail($mailData));
         return $this->success(null, 'Se ha enviado una nueva contraseña a tu correo electrónico.');
     }
+
+    public function clientLogin(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'password' => 'required',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['message' => 'Los datos ingresados no respetan el formato'], 422);
+        }
+
+        $credentials = [
+            'email' => $request->email,
+            'password' => $request->password,
+        ];
+        if (!$token = auth('client')->attempt($credentials)) {
+            return response()->json(['message' => 'El usuario y/o la contraseña son incorrectos'], 401);
+        }
+
+        return response()->json([
+            'token' => $token
+        ], 200);
+    }
+
+    public function clientForgotPassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email|max:255',
+        ]);
+        if ($validator->fails()) {
+            return $this->validationError($validator->errors());
+        }
+
+        $email = $request->input('email');
+        $client = Client::where('email', $email)->first();
+        if (!$client) {
+            return $this->error('No se encontró ningún cliente con ese correo electrónico.', 404);
+        }
+
+        $newPassword = Str::random(8);
+        $newPasswordAlphanumeric = preg_replace('/[^a-zA-Z0-9]/', '', $newPassword);
+        $newPasswordFinal = substr($newPasswordAlphanumeric, 0, 8);
+        $hashedPassword = Hash::make($newPasswordFinal);
+        $client->password = $hashedPassword;
+        $client->save();
+        $mailData = [
+            'name' => $client->name,
+            'password' => $newPasswordFinal,
+        ];
+        Mail::to($client->email)->send(new ForgotPasswordMail($mailData));
+        return $this->success(null, 'Se ha enviado una nueva contraseña a tu correo electrónico.');
+    }
 }
