@@ -5,9 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Client;
 use App\Models\ClientShipping;
 use Illuminate\Http\Request;
+use App\Traits\FindObject;
+use App\Traits\ApiResponse;
+use App\Traits\Auditable;
 
 class ClientController extends Controller
 {
+    use FindObject, ApiResponse, Auditable;
+    
     public function index(Request $request)
     {
         $perPage = $request->query('quantity', 10);
