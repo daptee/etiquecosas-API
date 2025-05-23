@@ -44,7 +44,7 @@ class CategoryController extends Controller
             'from' => $categories->firstItem(),
             'to' => $categories->lastItem(),
         ];
-        return response()->json([
+        return $this->success([
             'message' => 'Categorias obtenidas',
             'data' => $categories->items(),
             'meta_data' => $metaData,
