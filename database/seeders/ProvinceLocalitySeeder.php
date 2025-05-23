@@ -1,9 +1,12 @@
 <?php
 
-use App\Provincia; //name of model 
-use Illuminate\Database\Seeder;
+namespace Database\Seeders;
 
-class ProvinciaTableSeeder extends Seeder
+use App\Models\Province;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+
+class ProvinceLocalitySeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -12,6 +15,8 @@ class ProvinciaTableSeeder extends Seeder
      */
     public function run()
     {
+		DB::table('provinces')->truncate();
+		
         Province::create([ 'id' => 1, 'name' => 'Buenos Aires' ]);
 		Province::create([ 'id' => 2, 'name' => 'Capital Federal' ]);
 		Province::create([ 'id' => 3, 'name' => 'Catamarca' ]);
