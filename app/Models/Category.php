@@ -17,6 +17,9 @@ class Category extends Model
         'img',
         'icon',
         'color',
+        'meta_data',
+        'description',
+        'banner',
         'status_id',
         'tag_id',
     ];

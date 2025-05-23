@@ -24,8 +24,8 @@ class ClientShipping extends Model
         return $this->belongsTo(Client::class);
     }
 
-    //public function locality()
-    //{
-    //    return $this->belongsTo(Locality::class);
-    //}
+    public function locality()
+    {
+        return $this->belongsTo(Locality::class);
+    }
 }

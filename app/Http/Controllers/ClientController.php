@@ -61,7 +61,7 @@ class ClientController extends Controller
             'shippings' => 'nullable|array',
             'shippings.*.name' => 'required|string',
             'shippings.*.address' => 'required|string',
-            'shippings.*.idLocality' => 'required|exists:localities,id',
+            'shippings.*.locality_id' => 'required|exists:localities,id',
             'shippings.*.postalCode' => 'required|string',
             'shippings.*.observations' => 'nullable|string',
         ]);
@@ -87,7 +87,7 @@ class ClientController extends Controller
                     'client_id' => $client->id,
                     'name' => $shipping['name'],
                     'address' => $shipping['address'],
-                    'id_locality' => $shipping['idLocality'],
+                    'locality_id' => $shipping['localityId'],
                     'postal_code' => $shipping['postalCode'],
                     'observations' => $shipping['observations'] ?? null,
                 ]);
@@ -115,7 +115,7 @@ class ClientController extends Controller
             'shippings.*.id' => 'nullable|exists:clients_shipping,id',
             'shippings.*.name' => 'required|string',
             'shippings.*.address' => 'required|string',
-            'shippings.*.idLocality' => 'required|exists:localities,id',
+            'shippings.*.localityId' => 'required|exists:localities,id',
             'shippings.*.postalCode' => 'required|string',
             'shippings.*.observations' => 'nullable|string',
         ]);
@@ -149,7 +149,7 @@ class ClientController extends Controller
                     ClientShipping::where('id', $shipping['id'])->update([
                         'name' => $shipping['name'],
                         'address' => $shipping['address'],
-                        'id_locality' => $shipping['idLocality'],
+                        'locality_id' => $shipping['localityId'],
                         'postal_code' => $shipping['postalCode'],
                         'observations' => $shipping['observations'] ?? null,
                     ]);
@@ -158,7 +158,7 @@ class ClientController extends Controller
                         'client_id' => $client->id,
                         'name' => $shipping['name'],
                         'address' => $shipping['address'],
-                        'id_locality' => $shipping['idLocality'],
+                        'locality_id' => $shipping['localityId'],
                         'postal_code' => $shipping['postalCode'],
                         'observations' => $shipping['observations'] ?? null,
                     ]);
