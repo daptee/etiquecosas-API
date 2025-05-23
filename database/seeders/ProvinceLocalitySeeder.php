@@ -14,9 +14,7 @@ class ProvinceLocalitySeeder extends Seeder
      * @return void
      */
     public function run()
-    {
-		DB::table('provinces')->truncate();
-		
+    {		
         Province::create([ 'id' => 1, 'name' => 'Buenos Aires' ]);
 		Province::create([ 'id' => 2, 'name' => 'Capital Federal' ]);
 		Province::create([ 'id' => 3, 'name' => 'Catamarca' ]);
