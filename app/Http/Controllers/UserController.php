@@ -22,7 +22,7 @@ class UserController extends Controller
         $perPage = $request->query('quantity', 10);
         $page = $request->query('page', 1);
         $search = $request->query('search');
-        $query = User::query();
+        $query = User::with('profile');
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")

@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('client_id')->constrained('clients')->onDelete('cascade');
             $table->string('name');
             $table->string('address');
-            //$table->foreignId('locality_id')->constrained('localities');
+            $table->foreignId('locality_id')->constrained('localities');
             $table->string('postal_code');
             $table->text('observations')->nullable();
             $table->timestamps();

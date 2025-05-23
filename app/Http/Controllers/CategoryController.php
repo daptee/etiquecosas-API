@@ -59,6 +59,9 @@ class CategoryController extends Controller
             'img' => 'nullable|string|max:255',
             'icon' => 'nullable|string|max:255',
             'color' => 'nullable|string|max:50',
+            'metaData' => 'nullable|text',
+            'description' => 'nullable|text',
+            'banner' => 'nullable|string',
             'statusId' => 'nullable|in:1,2',
             'tagId' => 'nullable|exists:configuration_tags,id',
         ]);
@@ -73,6 +76,9 @@ class CategoryController extends Controller
             'img' => $request->img,
             'icon' => $request->icon,
             'color' => $request->color,
+            'meta_data' => $request->metaData,
+            'description' => $request->description,
+            'banner' => $request->banner,    
             'statusId' => $request->statusId ?? 1,
             'tag_id' => $request->tagId,
         ]);
@@ -89,6 +95,9 @@ class CategoryController extends Controller
             'img' => 'nullable|string|max:255',
             'icon' => 'nullable|string|max:255',
             'color' => 'nullable|string|max:50',
+            'metaData' => 'nullable|text',
+            'description' => 'nullable|text',
+            'banner' => 'nullable|string',
             'statusId' => 'nullable|in:1,2',
             'tagId' => 'nullable|exists:configuration_tags,id',
         ]);
@@ -108,6 +117,9 @@ class CategoryController extends Controller
         $category->img = $request->input('img', $category->img);
         $category->icon = $request->input('icon', $category->icon);
         $category->color = $request->input('color', $category->color);
+        $category->meta_data = $request->input('metaData', $category->meta_data);
+        $category->description = $request->input('description', $category->description);
+        $category->banner = $request->input('banner', $category->banner);
         $category->status_id = $request->input('statusId', $category->status_id);
         $category->tag_id = $request->input('tagId', $category->tagId);
         $category->save();
