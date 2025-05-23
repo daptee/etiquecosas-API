@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('phone')->nullable();
             $table->text('billing_data')->nullable();
             $table->text('wholesale_data')->nullable();
-            $table->foreignId('status_id')->constrained('status');
+            $table->foreignId('status_id')->constrained('general_status');
             $table->timestamps();
         });
     }
