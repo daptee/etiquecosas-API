@@ -12,6 +12,7 @@ class Locality extends Model
 
     protected $fillable = [
         'name',
+        'postalCode',
         'province_id',
     ];
 

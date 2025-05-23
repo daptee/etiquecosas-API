@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('localities', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('postalCode');
             $table->foreignId('province_id')->constrained('provinces');
             $table->timestamps();
         });
