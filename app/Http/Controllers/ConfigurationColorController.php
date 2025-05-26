@@ -53,7 +53,7 @@ class ConfigurationColorController extends Controller
             return $this->validationError($validator->errors());
         }
 
-        $Color = ConfigurationColor::create([
+        $color = ConfigurationColor::create([
             'name' => $request->name,
             'color_code' => $request->colorCode,
         ]);
@@ -78,5 +78,13 @@ class ConfigurationColorController extends Controller
         $color->save();
         $this->logAudit(Auth::user(), 'Update Configuration Color', $request->all(), $color);
         return $this->success($color, 'Color de configuración actualizado');
+    }
+
+    public function delete($id)
+    {
+        $color = $this->findObject(ConfigurationColor::class, $id);
+        $color->delete();
+        $this->logAudit(Auth::user(), 'Delete Configuration Color', $id, $color);
+        return $this->success($color, 'Color de configuración eliminado');
     }
 }

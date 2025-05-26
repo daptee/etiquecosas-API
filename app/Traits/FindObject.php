@@ -8,12 +8,11 @@ trait FindObject
 {
     public function findObject(string $modelClass, $id)
     {
-        $model = app($modelClass)->find($id);
-
-        if (!$model) {
+        $object = app($modelClass)->find($id);
+        if (!$object) {
             abort(404, 'El objeto no existe');
         }
 
-        return $model;
+        return $object;
     }
 }

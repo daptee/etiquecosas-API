@@ -75,8 +75,9 @@ Route::middleware('jwt.auth')->prefix('costs')->group(function () {
 });
 
 // ConfigurationColor
-Route::middleware('jwt.auth')->prefix('tags')->group(function () {
+Route::middleware('jwt.auth')->prefix('colors')->group(function () {
     Route::get('/', [ConfigurationColorController::class, 'index']);
     Route::post('/', [ConfigurationColorController::class, 'store']);
     Route::put('/{id}', [ConfigurationColorController::class, 'update']);
+    Route::delete('/{id}', [ConfigurationColorController::class, 'delete']);
 });
