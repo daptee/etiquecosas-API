@@ -82,6 +82,7 @@ Route::middleware('jwt.auth')->prefix('colors')->group(function () {
     Route::post('/', [PersonalizationColorController::class, 'store']);
     Route::put('/{id}', [PersonalizationColorController::class, 'update']);
     Route::delete('/{id}', [PersonalizationColorController::class, 'delete']);
+});   
 
 // Province
 Route::middleware('jwt.auth')->prefix('provinces')->group(function () {
