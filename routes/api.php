@@ -10,9 +10,9 @@ use App\Http\Controllers\CostController;
 use App\Http\Controllers\ConfigurationTagController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ClientController;
-use App\Http\Controllers\PersonalizationColorController; 
 use App\Http\Controllers\ProvinceController;
-use App\Http\Controllers\ConfigurationColorController; 
+use App\Http\Controllers\PersonalizationColorController; 
+use App\Http\Controllers\PersonalizationIconController; 
 
 // Auth
 Route::post('login', [LoginController::class, 'login']);
@@ -76,23 +76,23 @@ Route::middleware('jwt.auth')->prefix('costs')->group(function () {
     Route::put('/{id}', [ClientController::class, 'update']);
 });
   
+// Province
+Route::middleware('jwt.auth')->prefix('provinces')->group(function () {
+    Route::get('/', [ProvinceController::class, 'index']);
+});
+
 // PersonalizationColor
 Route::middleware('jwt.auth')->prefix('colors')->group(function () {
     Route::get('/', [PersonalizationColorController::class, 'index']);
     Route::post('/', [PersonalizationColorController::class, 'store']);
     Route::put('/{id}', [PersonalizationColorController::class, 'update']);
     Route::delete('/{id}', [PersonalizationColorController::class, 'delete']);
-});   
+});  
 
-// Province
-Route::middleware('jwt.auth')->prefix('provinces')->group(function () {
-    Route::get('/', [ProvinceController::class, 'index']);
-});
-
-// ConfigurationColor
-Route::middleware('jwt.auth')->prefix('colors')->group(function () {
-    Route::get('/', [ConfigurationColorController::class, 'index']);
-    Route::post('/', [ConfigurationColorController::class, 'store']);
-    Route::put('/{id}', [ConfigurationColorController::class, 'update']);
-    Route::delete('/{id}', [ConfigurationColorController::class, 'delete']);
+// PersonalizationIcon
+Route::middleware('jwt.auth')->prefix('icons')->group(function () {
+    Route::get('/', [PersonalizationIconController::class, 'index']);
+    Route::post('/', [PersonalizationIconController::class, 'store']);
+    Route::put('/{id}', [PersonalizationIconController::class, 'update']);
+    Route::delete('/{id}', [PersonalizationIconController::class, 'delete']);
 });
