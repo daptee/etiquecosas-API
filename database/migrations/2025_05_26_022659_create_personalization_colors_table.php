@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('configuration_colors', function (Blueprint $table) {
+        Schema::create('personalization_colors', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('color_code')->nullable();            
@@ -25,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('configuration_colors');
+        Schema::dropIfExists('personalization_colors');
     }
 };

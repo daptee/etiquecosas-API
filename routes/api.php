@@ -10,7 +10,7 @@ use App\Http\Controllers\CostController;
 use App\Http\Controllers\ConfigurationTagController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ClientController;
-use App\Http\Controllers\ConfigurationColorController; 
+use App\Http\Controllers\PersonalizationColorController; 
 
 // Auth
 Route::post('login', [LoginController::class, 'login']);
@@ -74,10 +74,10 @@ Route::middleware('jwt.auth')->prefix('costs')->group(function () {
     Route::put('/{id}', [ClientController::class, 'update']);
 });
 
-// ConfigurationColor
+// PersonalizationColor
 Route::middleware('jwt.auth')->prefix('colors')->group(function () {
-    Route::get('/', [ConfigurationColorController::class, 'index']);
-    Route::post('/', [ConfigurationColorController::class, 'store']);
-    Route::put('/{id}', [ConfigurationColorController::class, 'update']);
-    Route::delete('/{id}', [ConfigurationColorController::class, 'delete']);
+    Route::get('/', [PersonalizationColorController::class, 'index']);
+    Route::post('/', [PersonalizationColorController::class, 'store']);
+    Route::put('/{id}', [PersonalizationColorController::class, 'update']);
+    Route::delete('/{id}', [PersonalizationColorController::class, 'delete']);
 });

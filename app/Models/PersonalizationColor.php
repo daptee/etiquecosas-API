@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class ConfigurationColor extends Model
+class PersonalizationColor extends Model
 {
     use HasFactory, SoftDeletes;
 
