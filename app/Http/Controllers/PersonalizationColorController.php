@@ -26,7 +26,7 @@ class PersonalizationColorController extends Controller
         }
 
         $colors = $query->paginate($perPage, ['*'], 'page', $page);
-        $this->logAudit(Auth::user(), 'Get Configuration Colors List', $request->all(), $colors);
+        $this->logAudit(Auth::user(), 'Get Personalization Colors List', $request->all(), $colors);
         $metaData = [
             'current_page' => $colors->currentPage(),
             'last_page' => $colors->lastPage(),
@@ -36,7 +36,7 @@ class PersonalizationColorController extends Controller
             'to' => $colors->lastItem(),
         ];
         return response()->json([
-            'message' => 'Colores de configuración obtenidos',
+            'message' => 'Colores de personalización obtenidos',
             'data' => $colors->items(),
             'meta_data' => $metaData,
         ], 200);
@@ -46,10 +46,10 @@ class PersonalizationColorController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255|unique:personalization_colors',
-            'color_code' => 'nullable|string|max:50',
+            'colorCode' => 'required|string|max:50',
         ]);
         if ($validator->fails()) {
-            $this->logAudit(Auth::user(), 'Store Configuration Color', $request->all(), $validator->errors());
+            $this->logAudit(Auth::user(), 'Store Personalization Color', $request->all(), $validator->errors());
             return $this->validationError($validator->errors());
         }
 
@@ -57,8 +57,8 @@ class PersonalizationColorController extends Controller
             'name' => $request->name,
             'color_code' => $request->colorCode,
         ]);
-        $this->logAudit(Auth::user(), 'Store Configuration Color', $request->all(), $color);
-        return $this->success($color, 'Color de configuración creada', 201);
+        $this->logAudit(Auth::user(), 'Store Personalization Color', $request->all(), $color);
+        return $this->success($color, 'Color de personalización creado', 201);
     }
 
     public function update(Request $request, $id)
@@ -66,25 +66,25 @@ class PersonalizationColorController extends Controller
         $color = $this->findObject(PersonalizationColor::class, $id);
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255|unique:personalization_colors,name,' . $color->id,
-            'color_code' => 'nullable|string|max:50',
+            'colorCode' => 'required|string|max:50',
         ]);
         if ($validator->fails()) {
-            $this->logAudit(Auth::user(), 'Update Configuration Color', $request->all(), $validator->errors());
+            $this->logAudit(Auth::user(), 'Update Personalization Color', $request->all(), $validator->errors());
             return $this->validationError($validator->errors());
         }
 
         $color->name = $request->input('name', $color->name);
-        $color->color_code = $request->input('colorCode', $color->color_code);
+        $color->color_code = $request->input('colorCode', $color->colorCode);
         $color->save();
-        $this->logAudit(Auth::user(), 'Update Configuration Color', $request->all(), $color);
-        return $this->success($color, 'Color de configuración actualizado');
+        $this->logAudit(Auth::user(), 'Update Personalization Color', $request->all(), $color);
+        return $this->success($color, 'Color de personalización actualizado');
     }
 
     public function delete($id)
     {
         $color = $this->findObject(PersonalizationColor::class, $id);
         $color->delete();
-        $this->logAudit(Auth::user(), 'Delete Configuration Color', $id, $color);
-        return $this->success($color, 'Color de configuración eliminado');
+        $this->logAudit(Auth::user(), 'Delete Personalization Color', $id, $color);
+        return $this->success($color, 'Color de personalización eliminado');
     }
 }
