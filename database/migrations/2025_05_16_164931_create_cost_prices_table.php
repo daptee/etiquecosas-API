@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('cost_id')->constrained('costs')->onDelete('cascade');
             $table->decimal('price', 10, 2);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

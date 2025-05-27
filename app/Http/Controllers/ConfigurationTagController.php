@@ -87,4 +87,12 @@ class ConfigurationTagController extends Controller
         $this->logAudit(Auth::user(), 'Update Configuration Tag', $request->all(), $tag);
         return $this->success($tag, 'Etiqueta de configuración actualizada');
     }
+
+    public function delete($id)
+    {
+        $tag = $this->findObject(ConfigurationTag::class, $id);
+        $tag->delete();
+        $this->logAudit(Auth::user(), 'Delete Configuration Tag', $id, $tag);
+        return $this->success($tag, 'Etiqueta de configuración eliminada');
+    }
 }

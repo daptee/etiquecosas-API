@@ -95,4 +95,12 @@ class CostController extends Controller
         $this->logAudit(Auth::user(), 'Update Cost', $request->all(), $cost);
         return $this->success($cost, 'Costo actualizado');
     }
+
+    public function delete($id)
+    {
+        $cost = $this->findObject(Cost::class, $id);
+        $cost->delete();
+        $this->logAudit(Auth::user(), 'Delete Cost', $id, $cost);
+        return $this->success($cost, 'Costo eliminado');
+    }
 }

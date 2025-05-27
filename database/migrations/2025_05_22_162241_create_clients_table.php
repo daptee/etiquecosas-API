@@ -23,6 +23,7 @@ return new class extends Migration
             $table->text('wholesale_data')->nullable();
             $table->foreignId('status_id')->constrained('general_status');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

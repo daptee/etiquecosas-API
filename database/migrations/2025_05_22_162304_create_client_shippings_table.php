@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('postal_code');
             $table->text('observations')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
