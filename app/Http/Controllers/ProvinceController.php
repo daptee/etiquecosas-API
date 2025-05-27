@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Province;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 use App\Traits\FindObject;
 use App\Traits\ApiResponse;
 use App\Traits\Auditable;
-
 class ProvinceController extends Controller
 {
     use FindObject, ApiResponse, Auditable;
@@ -32,7 +34,7 @@ class ProvinceController extends Controller
         }
 
         $provinces = $query->paginate($perPage, ['*'], 'page', $page);
-        $this->logAudit(Auth::user(), 'Get Provinces List', $request->all(), $provinces);
+        $this->logAudit(Auth::user(), 'Get Provinces List', '/provinces', 'Provinces');
         $metaData = [
             'current_page' => $provinces->currentPage(),
             'last_page' => $provinces->lastPage(),
