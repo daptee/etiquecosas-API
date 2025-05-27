@@ -38,6 +38,7 @@ Route::middleware('jwt.auth')->prefix('categories')->group(function () {
     Route::get('/', [CategoryController::class, 'index']);
     Route::post('/', [CategoryController::class, 'store']);
     Route::put('/{id}', [CategoryController::class, 'update']);
+    Route::delete('/{id}', [CategoryController::class, 'delete']);
 });
 
 // Attribute
@@ -45,6 +46,7 @@ Route::middleware('jwt.auth')->prefix('attributes')->group(function () {
     Route::get('/', [AttributeController::class, 'index']);
     Route::post('/', [AttributeController::class, 'store']);
     Route::put('/{id}', [AttributeController::class, 'update']);
+    Route::delete('/{id}', [AttributeController::class, 'delete']);
 });
 
 // Cost
@@ -53,6 +55,8 @@ Route::middleware('jwt.auth')->prefix('costs')->group(function () {
     Route::post('/', [CostController::class, 'store']);
     Route::get('/{id}', [CostController::class, 'show']);
     Route::put('/{id}', [CostController::class, 'update']);
+    Route::delete('/{id}', [CostController::class, 'delete']);
+
 });
 
 // ConfigurationTag
@@ -60,6 +64,7 @@ Route::middleware('jwt.auth')->prefix('tags')->group(function () {
     Route::get('/', [ConfigurationTagController::class, 'index']);
     Route::post('/', [ConfigurationTagController::class, 'store']);
     Route::put('/{id}', [ConfigurationTagController::class, 'update']);
+    Route::delete('/{id}', [ConfigurationTagController::class, 'delete']);
 });
 
 // Profile
@@ -68,12 +73,14 @@ Route::middleware('jwt.auth')->prefix('profiles')->group(function () {
     Route::post('/', [ProfileController::class, 'store']);
     Route::put('/{id}', [ProfileController::class, 'update']);
 });
+
 // Client
 Route::middleware('jwt.auth')->prefix('costs')->group(function () {
     Route::get('/', [ClientController::class, 'index']);
     Route::post('/', [ClientController::class, 'store']);
     Route::get('/{id}', [ClientController::class, 'show']);
     Route::put('/{id}', [ClientController::class, 'update']);
+    Route::delete('/{id}', [ClientController::class, 'delete']);
 });
   
 // Province

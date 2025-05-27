@@ -129,4 +129,12 @@ class AttributeController extends Controller
         $this->logAudit(Auth::user(), 'Update Attribute', $request->all(), $attribute);
         return $this->success($attribute, 'Atributo actualizado');
     }
+
+    public function delete($id)
+    {
+        $attribute = $this->findObject(Attribute::class, $id);
+        $attribute->delete();
+        $this->logAudit(Auth::user(), 'Delete Attribute', $id, $attribute);
+        return $this->success($attribute, 'Atributo eliminado');
+    }
 }

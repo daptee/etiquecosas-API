@@ -24,6 +24,7 @@ return new class extends Migration
             $table->foreignId('status_id')->default(1)->constrained('general_status');
             $table->foreignId('tag_id')->nullable()->constrained('configuration_tags')->onDelete('SET NULL');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

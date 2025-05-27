@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('name')->unique();
             $table->foreignId('status_id')->default(1)->constrained('general_status');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

@@ -23,6 +23,7 @@ return new class extends Migration
             $table->foreignId('profile_id')->constrained('profiles'); 
             $table->rememberToken();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

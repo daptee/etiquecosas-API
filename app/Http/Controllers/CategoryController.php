@@ -126,4 +126,12 @@ class CategoryController extends Controller
         $this->logAudit(Auth::user(), 'Update Category', $request->all(), $category);
         return $this->success($category, 'Categoría actualizada');
     }
+
+    public function delete($id)
+    {
+        $category = $this->findObject(Category::class, $id);
+        $category->delete();
+        $this->logAudit(Auth::user(), 'Delete Category', $id, $category);
+        return $this->success($category, 'Categoría eliminada');
+    }
 }

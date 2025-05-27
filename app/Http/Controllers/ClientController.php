@@ -175,4 +175,11 @@ class ClientController extends Controller
         return $this->success($client, 'Cliente actualizado');
     }
 
+    public function delete($id)
+    {
+        $client = $this->findObject(Client::class, $id);
+        $client->delete();
+        $this->logAudit(Auth::user(), 'Delete Client', $id, $client);
+        return $this->success($client, 'Cliente eliminado');
+    }
 }

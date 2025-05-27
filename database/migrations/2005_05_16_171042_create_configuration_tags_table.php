@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('color')->nullable();
             $table->foreignId('status_id')->default(1)->constrained('general_status');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
