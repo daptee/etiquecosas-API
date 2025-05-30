@@ -19,8 +19,7 @@ class PersonalizationIconController extends Controller
         $perPage = $request->query('quantity', 10);
         $page = $request->query('page', 1);
         $search = $request->query('search');
-        $status = $request->query('statusId');
-        $query = PersonalizationIcon::query()->with('statusId');
+        $query = PersonalizationIcon::query();
         if ($search) {
             $query->where('name', 'like', "%{$search}%");
         }
