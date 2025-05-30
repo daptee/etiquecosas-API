@@ -19,8 +19,7 @@ class PersonalizationColorController extends Controller
         $perPage = $request->query('quantity', 10);
         $page = $request->query('page', 1);
         $search = $request->query('search');
-        $status = $request->query('statusId');
-        $query = PersonalizationColor::query()->with('statusId');
+        $query = PersonalizationColor::query();
         if ($search) {
             $query->where('name', 'like', "%{$search}%");
         }
