@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\UserController;
@@ -75,7 +74,7 @@ Route::middleware('jwt.auth')->prefix('profiles')->group(function () {
 });
 
 // Client
-Route::middleware('jwt.auth')->prefix('costs')->group(function () {
+Route::middleware('jwt.auth')->prefix('clients')->group(function () {
     Route::get('/', [ClientController::class, 'index']);
     Route::post('/', [ClientController::class, 'store']);
     Route::get('/{id}', [ClientController::class, 'show']);

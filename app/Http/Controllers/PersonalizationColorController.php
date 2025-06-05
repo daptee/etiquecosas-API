@@ -24,6 +24,7 @@ class PersonalizationColorController extends Controller
             $query->where('name', 'like', "%{$search}%");
         }
 
+        $query->orderBy('created_at', 'desc');
         $colors = $query->paginate($perPage, ['*'], 'page', $page);
         $this->logAudit(Auth::user(), 'Get Personalization Colors List', $request->all(), $colors);
         $metaData = [

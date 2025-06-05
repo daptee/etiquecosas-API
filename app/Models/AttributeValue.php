@@ -14,12 +14,12 @@ class AttributeValue extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'name',
+        'value',
         'status_id',
         'attribute_id',
     ];
 
-    public function status() 
+    public function generalStatus() 
     {
         return $this->belongsTo(GeneralStatus::class, 'status_id');
     }

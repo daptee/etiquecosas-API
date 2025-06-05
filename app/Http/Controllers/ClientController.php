@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Client;
 use App\Models\ClientShipping;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 use App\Traits\FindObject;
 use App\Traits\ApiResponse;
-use App\Traits\Auditable;
+use App\Traits\Auditable; 
 
 class ClientController extends Controller
 {
@@ -27,6 +29,7 @@ class ClientController extends Controller
             });
         }
 
+        $query->orderBy('created_at', 'desc');
         $clients = $query->paginate($perPage, ['*'], 'page', $page);
         $metaData = [
             'current_page' => $clients->currentPage(),

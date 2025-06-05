@@ -34,6 +34,7 @@ class CategoryController extends Controller
             $query->where('cagetoryId', $categoryId);
         }
 
+        $query->orderBy('created_at', 'desc');
         $categories = $query->paginate($perPage, ['*'], 'page', $page);
         $this->logAudit(Auth::user(), 'Get Categories List', $request->all(), $categories);
         $metaData = [

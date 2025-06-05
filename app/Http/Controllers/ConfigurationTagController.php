@@ -29,6 +29,7 @@ class ConfigurationTagController extends Controller
             $query->where('statusId', $status);
         }
 
+        $query->orderBy('created_at', 'desc');
         $tags = $query->paginate($perPage, ['*'], 'page', $page);
         $this->logAudit(Auth::user(), 'Get Configuration Tags List', $request->all(), $tags);
         $metaData = [

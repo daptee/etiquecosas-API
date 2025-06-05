@@ -28,7 +28,8 @@ class CostController extends Controller
         if ($statusId) {
             $query->where('statusId', $statusId);
         }
-
+        
+        $query->orderBy('created_at', 'desc');
         $costs = $query->paginate($perPage, ['*'], 'page', $page);
         $metaData = [
             'current_page' => $costs->currentPage(),

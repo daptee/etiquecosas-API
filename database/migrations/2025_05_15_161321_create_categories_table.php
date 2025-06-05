@@ -21,7 +21,7 @@ return new class extends Migration
             $table->text('meta_data')->nullable();
             $table->text('description')->nullable();
             $table->string('banner')->nullable()->default(null);
-            $table->foreignId('status_id')->default(1)->constrained('general_status');
+            $table->foreignId('status_id')->default(1)->constrained('general_statuses');
             $table->foreignId('tag_id')->nullable()->constrained('configuration_tags')->onDelete('SET NULL');
             $table->timestamps();
             $table->softDeletes();
