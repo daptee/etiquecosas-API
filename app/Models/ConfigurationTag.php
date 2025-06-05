@@ -18,7 +18,7 @@ class ConfigurationTag extends Model
         'status_id',
     ];
 
-    public function status() 
+    public function generalStatus() 
     {
         return $this->belongsTo(GeneralStatus::class, 'status_id');
     }

@@ -20,7 +20,7 @@ class CostController extends Controller
         $page = $request->query('page', 1);
         $search = $request->query('search');
         $statusId = $request->query('statusId');
-        $query = Cost::query()->with('status_id');
+        $query = Cost::query()->with('generalStatus');
         if ($search) {
             $query->where('name', 'like', "%{$search}%");
         }

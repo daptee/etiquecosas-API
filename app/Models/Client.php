@@ -30,7 +30,7 @@ class Client extends Model
         return $this->belongsTo(ClientType::class, 'client_type_id');
     }
 
-    public function status()
+    public function generalStatus()
     {
         return $this->belongsTo(Status::class);
     }

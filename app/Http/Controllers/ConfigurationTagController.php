@@ -20,7 +20,7 @@ class ConfigurationTagController extends Controller
         $page = $request->query('page', 1);
         $search = $request->query('search');
         $status = $request->query('statusId');
-        $query = ConfigurationTag::query()->with('statusId');
+        $query = ConfigurationTag::query()->with('generalStatus');
         if ($search) {
             $query->where('name', 'like', "%{$search}%");
         }
