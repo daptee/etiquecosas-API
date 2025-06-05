@@ -18,6 +18,7 @@ class ProfileController extends Controller
     {
         $perPage = $request->query('quantity', 10);
         $page = $request->query('page', 1);
+        $query->orderBy('created_at', 'desc');
         $profiles = Profile::paginate($perPage, ['*'], 'page', $page);
         $metaData = [
             'current_page' => $profiles->currentPage(),

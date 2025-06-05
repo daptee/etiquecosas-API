@@ -33,6 +33,7 @@ class ProvinceController extends Controller
             });
         }
 
+        $query->orderBy('created_at', 'desc');
         $provinces = $query->paginate($perPage, ['*'], 'page', $page);
         $this->logAudit(Auth::user(), 'Get Provinces List', '/provinces', 'Provinces');
         $metaData = [

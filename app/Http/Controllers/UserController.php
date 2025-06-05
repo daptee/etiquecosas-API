@@ -30,6 +30,8 @@ class UserController extends Controller
                     ->orWhere('email', 'like', "%{$search}%");
             });
         }
+
+        $query->orderBy('created_at', 'desc');
         $users = $query->paginate($perPage, ['*'], 'page', $page);
         $this->logAudit(Auth::user(), 'Get Users List', $request->all(), $users);    
         $metaData = [

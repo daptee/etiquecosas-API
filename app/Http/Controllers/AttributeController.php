@@ -20,7 +20,7 @@ class AttributeController extends Controller
         $page = $request->query('page', 1);
         $search = $request->query('search');
         $statusId = $request->query('statusId');
-        $query = Attribute::query()->with('values.statusId', 'statusId');
+        $query = Attribute::query();
 
         if ($search) {
             $query->where('name', 'like', "%{$search}%");
@@ -30,6 +30,7 @@ class AttributeController extends Controller
             $query->where('statusId', $statusId);
         }
 
+        $query->orderBy('created_at', 'desc');
         $attributes = $query->paginate($perPage, ['*'], 'page', $page);
         $metaData = [
             'current_page' => $attributes->currentPage(),
@@ -68,11 +69,10 @@ class AttributeController extends Controller
             return [
                 'value' => $value['value'],
                 'status_id' => $value['statusId'] ?? 1,
-                'attribute_id' => $value['attributeId'],
             ];
         })->toArray();
         $attribute->values()->createMany($valuesData);
-        $attribute->load('values.status', 'status');
+        $attribute->load('values.generalStatus', 'generalStatus');
         $this->logAudit(Auth::user(), 'Store Attribute', $request->all(), $attribute);
         return $this->success($attribute, 'Atributo creado', 201);
     }
