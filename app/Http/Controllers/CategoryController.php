@@ -80,7 +80,7 @@ class CategoryController extends Controller
             'meta_data' => $request->metaData,
             'description' => $request->description,
             'banner' => $request->banner,    
-            'statusId' => $request->statusId ?? 1,
+            'status_id' => $request->statusId ?? 1,
             'tag_id' => $request->tagId,
         ]);
         $this->logAudit(Auth::user(), 'Store Category', $request->all(), $category);
