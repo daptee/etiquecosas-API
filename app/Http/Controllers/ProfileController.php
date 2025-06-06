@@ -17,9 +17,10 @@ class ProfileController extends Controller
     public function index(Request $request)
     {
         $perPage = $request->query('quantity', 10);
-        $page = $request->query('page', 1);
+        $page = $request->query('page', 1);       
+        $query = Profile::query();
         $query->orderBy('created_at', 'desc');
-        $profiles = Profile::paginate($perPage, ['*'], 'page', $page);
+        $profiles = $query->paginate($perPage, ['*'], 'page', $page);
         $metaData = [
             'current_page' => $profiles->currentPage(),
             'last_page' => $profiles->lastPage(),
