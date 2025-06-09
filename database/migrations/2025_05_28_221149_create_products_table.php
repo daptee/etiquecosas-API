@@ -16,10 +16,10 @@ return new class extends Migration
             $table->string('sku')->unique();
             $table->string('name');
             $table->foreignId('product_type_id')->constrained('product_types');
-            $table->foreignId('product_status_id')->constrained('product_status');
+            $table->foreignId('product_status_id')->constrained('product_statuses');
             $table->decimal('price', 10, 2);
             $table->decimal('discounted_price', 10, 2)->nullable();
-            $table->foreignId('product_stock_status_id')->constrained('product_stock_status');
+            $table->foreignId('product_stock_status_id')->constrained('product_stock_statuses');
             $table->integer('stock_quantity')->nullable();
             $table->foreignId('tag_id')->nullable()->constrained('tags');
             $table->text('description')->nullable();
