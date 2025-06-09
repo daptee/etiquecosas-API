@@ -21,7 +21,7 @@ return new class extends Migration
             $table->decimal('discounted_price', 10, 2)->nullable();
             $table->foreignId('product_stock_status_id')->constrained('product_stock_statuses');
             $table->integer('stock_quantity')->nullable();
-            $table->foreignId('tag_id')->nullable()->constrained('tags');
+            $table->foreignId('tag_id')->nullable()->constrained('configuration_tags');
             $table->text('description')->nullable();
             $table->boolean('is_feature')->default(false);
             $table->string('tutorial_link')->nullable();
