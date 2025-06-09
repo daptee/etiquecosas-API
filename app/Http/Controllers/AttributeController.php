@@ -16,12 +16,11 @@ class AttributeController extends Controller
 
     public function index(Request $request)
     {
-        $perPage = $request->query('quantity', 10);
-        $page = $request->query('page', 1);
         $search = $request->query('search');
         $statusId = $request->query('statusId');
+        $perPage = $request->query('quantity');
+        $page = $request->query('page', 1);
         $query = Attribute::query();
-
         if ($search) {
             $query->where('name', 'like', "%{$search}%");
         }
@@ -31,6 +30,15 @@ class AttributeController extends Controller
         }
 
         $query->orderBy('created_at', 'desc');
+        if (!$perPage) {
+            $attributes = $query->get();
+            return response()->json([
+                'message' => 'Atributos obtenidos',
+                'data' => $attributes,
+                'meta_data' => null,
+            ], 200);
+        }
+
         $attributes = $query->paginate($perPage, ['*'], 'page', $page);
         $metaData = [
             'current_page' => $attributes->currentPage(),

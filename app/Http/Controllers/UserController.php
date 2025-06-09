@@ -26,22 +26,22 @@ class UserController extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('lastName', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
+                ->orWhere('lastName', 'like', "%{$search}%")
+                ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
         $query->orderBy('created_at', 'desc');
         $users = $query->paginate($perPage, ['*'], 'page', $page);
-        $this->logAudit(Auth::user(), 'Get Users List', $request->all(), $users);    
+        $this->logAudit(Auth::user(), 'Get Users List', $request->all(), $users);
         $metaData = [
             'current_page' => $users->currentPage(),
             'last_page' => $users->lastPage(),
             'per_page' => $users->perPage(),
             'total' => $users->total(),
             'from' => $users->firstItem(),
-            'to' => $users->lastItem(),           
-        ];    
+            'to' => $users->lastItem(),
+        ];
         return response()->json([
             'message' => 'Usuarios obtenidos',
             'data' => $users->items(),

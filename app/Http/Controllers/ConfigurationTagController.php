@@ -16,7 +16,7 @@ class ConfigurationTagController extends Controller
 
     public function index(Request $request)
     {
-        $perPage = $request->query('quantity', 10);
+        $perPage = $request->query('quantity');
         $page = $request->query('page', 1);
         $search = $request->query('search');
         $status = $request->query('statusId');
@@ -30,6 +30,16 @@ class ConfigurationTagController extends Controller
         }
 
         $query->orderBy('created_at', 'desc');
+        if (!$perPage) {
+            $tags = $query->get();
+            $this->logAudit(Auth::user(), 'Get Configuration Tags List', $request->all(), $tags);
+            return response()->json([
+                'message' => 'Etiquetas de configuración obtenidas',
+                'data' => $tags,
+                'meta_data' => null,
+            ], 200);
+        }
+
         $tags = $query->paginate($perPage, ['*'], 'page', $page);
         $this->logAudit(Auth::user(), 'Get Configuration Tags List', $request->all(), $tags);
         $metaData = [

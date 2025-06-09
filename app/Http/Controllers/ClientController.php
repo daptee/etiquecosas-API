@@ -17,7 +17,7 @@ class ClientController extends Controller
     
     public function index(Request $request)
     {
-        $perPage = $request->query('quantity', 10);
+        $perPage = $request->query('quantity');
         $page = $request->query('page', 1);
         $search = $request->query('search');
         $query = Client::query()->select('id', 'client_type_id', 'name', 'lastname', 'email', 'phone');
@@ -30,6 +30,15 @@ class ClientController extends Controller
         }
 
         $query->orderBy('created_at', 'desc');
+        if (!$perPage) {
+            $clients = $query->get();
+            $this->logAudit(Auth::user(), 'Get Clients List', $request->all(), $clients);
+            return $this->success([
+                'data' => $clients,
+                'meta_data' => null,
+            ], 'Clientes obtenidos');
+        }
+
         $clients = $query->paginate($perPage, ['*'], 'page', $page);
         $metaData = [
             'current_page' => $clients->currentPage(),
@@ -59,7 +68,7 @@ class ClientController extends Controller
         $validator = Validator::make($request->all(), [
             'clientTypeId' => 'required|exists:client_types,id',
             'name' => 'required|string|max:255',
-            'lastname' => 'required|string|max:255',
+            'lastName' => 'required|string|max:255',
             'email' => 'required|email|unique:clients,email',
             'password' => 'nullable|string|min:6',
             'phone' => 'nullable|string|max:20',
@@ -81,7 +90,7 @@ class ClientController extends Controller
         $client = Client::create([
             'client_type_id' => $request->clientTypeId,
             'name' => $request->name,
-            'lastname' => $request->lastname,
+            'lastName' => $request->lastName,
             'email' => $request->email,
             'password' => $request->password ? bcrypt($request->password) : null,
             'phone' => $request->phone,
@@ -112,7 +121,7 @@ class ClientController extends Controller
         $validator = Validator::make($request->all(), [
             'clientTypeId' => 'required|exists:client_types,id',
             'name' => 'required|string|max:255',
-            'lastname' => 'required|string|max:255',
+            'lastName' => 'required|string|max:255',
             'email' => 'required|email|unique:clients,email,' . $client->id,
             'password' => 'nullable|string|min:6',
             'phone' => 'nullable|string|max:20',
@@ -135,7 +144,7 @@ class ClientController extends Controller
         $client->update([
             'client_type_id' => $request->clientTypeId,
             'name' => $request->name,
-            'lastname' => $request->lastname,
+            'lastName' => $request->lastName,
             'email' => $request->email,
             'phone' => $request->phone,
             'billing_data' => $request->billingData,

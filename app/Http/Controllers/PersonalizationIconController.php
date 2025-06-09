@@ -16,7 +16,7 @@ class PersonalizationIconController extends Controller
 
     public function index(Request $request)
     {
-        $perPage = $request->query('quantity', 10);
+        $perPage = $request->query('quantity');
         $page = $request->query('page', 1);
         $search = $request->query('search');
         $query = PersonalizationIcon::query();
@@ -25,8 +25,17 @@ class PersonalizationIconController extends Controller
         }
 
         $query->orderBy('created_at', 'desc');
+        if (!$perPage) {
+            $icons = $query->get();
+            $this->logAudit(Auth::user(), 'Get Pesonalization Icons List', $request->all(), $icons);
+            return response()->json([
+                'message' => 'Iconos de personalización obtenidos',
+                'data' => $icons,
+                'meta_data' => null,
+            ], 200);
+        }
+
         $icons = $query->paginate($perPage, ['*'], 'page', $page);
-        $this->logAudit(Auth::user(), 'Get Pesonalization Icons List', $request->all(), $icons);
         $metaData = [
             'current_page' => $icons->currentPage(),
             'last_page' => $icons->lastPage(),
@@ -35,6 +44,7 @@ class PersonalizationIconController extends Controller
             'from' => $icons->firstItem(),
             'to' => $icons->lastItem(),
         ];
+        $this->logAudit(Auth::user(), 'Get Pesonalization Icons List', $request->all(), $icons);
         return response()->json([
             'message' => 'Iconos de personalización obtenidos',
             'data' => $icons->items(),
@@ -46,18 +56,31 @@ class PersonalizationIconController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255|unique:personalization_icons',
-            'icon' => 'required|string|max:50',
+            'icon' => 'required|file|mimes:svg|max:2048',
         ]);
         if ($validator->fails()) {
             $this->logAudit(Auth::user(), 'Store Configuration Icon', $request->all(), $validator->errors());
             return $this->validationError($validator->errors());
         }
 
+        $iconPath = null;
+        if ($request->hasFile('icon')) {
+            $iconFile = $request->file('icon');
+            $iconName = 'icons/personalization/' . uniqid('icon_') . '.' . $iconFile->getClientOriginalExtension();
+            Storage::disk('public_uploads')->put($iconName, file_get_contents($iconFile));
+            $iconPath = $iconName;
+        }
+
         $icon = PersonalizationIcon::create([
             'name' => $request->name,
-            'icon' => $request->icon,
+            'icon' => $iconPath,
         ]);
         $this->logAudit(Auth::user(), 'Store Personalization Icon', $request->all(), $icon);
+        
+        if ($icon->icon) {
+            $icon->icon = asset($icon->icon);
+        }
+
         return $this->success($icon, 'Icono de personalización creado', 201);
     }
 
@@ -65,17 +88,43 @@ class PersonalizationIconController extends Controller
     {
         $icon = $this->findObject(PersonalizationIcon::class, $id);
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255|unique:personalization_icons,name,' . $icon->id,
-            'icon' => 'required|string|max:50',
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('personalization_icons')->ignore($icon->id),
+            ],
+            'icon' => 'nullable|file|mimes:svg|max:2048',
         ]);
         if ($validator->fails()) {
             $this->logAudit(Auth::user(), 'Update Configuration icon', $request->all(), $validator->errors());
             return $this->validationError($validator->errors());
         }
 
+        $iconPath = $icon->icon;
+        if ($request->hasFile('icon')) {
+            $iconFile = $request->file('icon');
+            $iconName = 'icons/personalization/' . uniqid('icon_') . '.' . $iconFile->getClientOriginalExtension();
+            if (Storage::disk('public_uploads')->put($iconName, file_get_contents($iconFile))) {
+                if ($icon->icon && Storage::disk('public_uploads')->exists($icon->icon)) {
+                    Storage::disk('public_uploads')->delete($icon->icon);
+                }
+                $iconPath = $iconName;
+            }
+        } elseif ($request->input('icon') === 'null' || $request->input('icon') === '') {
+            if ($icon->icon && Storage::disk('public_uploads')->exists($icon->icon)) {
+                Storage::disk('public_uploads')->delete($icon->icon);
+            }
+            $iconPath = null;
+        }
+
         $icon->name = $request->input('name', $icon->name);
-        $icon->icon = $request->input('iconCode', $icon->icon);
+        $icon->icon = $iconPath;
         $icon->save();
+        if ($icon->icon) {
+            $icon->icon = asset($icon->icon);
+        }
+
         $this->logAudit(Auth::user(), 'Update Personalization Icon', $request->all(), $icon);
         return $this->success($icon, 'Icono de personalización actualizado');
     }

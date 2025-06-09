@@ -15,7 +15,7 @@ class ProvinceController extends Controller
 
    public function index(Request $request)
     {
-        $perPage = $request->query('quantity', 10);
+        $perPage = $request->query('quantity');
         $page = $request->query('page', 1);
         $search = $request->query('search');
         $provinceId = $request->query('province_id');
@@ -34,8 +34,18 @@ class ProvinceController extends Controller
         }
 
         $query->orderBy('created_at', 'desc');
+        if (!$perPage) {
+            $provinces = $query->get();
+            $this->logAudit(Auth::user(), 'Get Provinces List', '/provinces', $provinces);
+            return $this->success([
+                'message' => 'Provincias obtenidas',
+                'data' => $provinces,
+                'meta_data' => null,
+            ], 200);
+        }
+
         $provinces = $query->paginate($perPage, ['*'], 'page', $page);
-        $this->logAudit(Auth::user(), 'Get Provinces List', '/provinces', 'Provinces');
+        $this->logAudit(Auth::user(), 'Get Provinces List', '/provinces', $provinces);
         $metaData = [
             'current_page' => $provinces->currentPage(),
             'last_page' => $provinces->lastPage(),

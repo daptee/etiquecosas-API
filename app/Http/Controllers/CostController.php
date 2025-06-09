@@ -16,7 +16,7 @@ class CostController extends Controller
     
     public function index(Request $request)
     {
-        $perPage = $request->query('quantity', 10);
+        $perPage = $request->query('quantity');
         $page = $request->query('page', 1);
         $search = $request->query('search');
         $statusId = $request->query('statusId');
@@ -28,8 +28,17 @@ class CostController extends Controller
         if ($statusId) {
             $query->where('statusId', $statusId);
         }
-        
+
         $query->orderBy('created_at', 'desc');
+        if (!$perPage) {
+            $costs = $query->get();
+            $this->logAudit(Auth::user(), 'Get Costs List', $request->all(), $costs);
+            return $this->success([
+                'data' => $costs,
+                'meta_data' => null,
+            ], 'Costos obtenidos');
+        }
+
         $costs = $query->paginate($perPage, ['*'], 'page', $page);
         $metaData = [
             'current_page' => $costs->currentPage(),
@@ -44,7 +53,7 @@ class CostController extends Controller
             'data' => $costs->items(),
             'meta_data' => $metaData,
         ], 'Costos obtenidos');
-    }        
+    }       
 
     public function store(Request $request)
     {

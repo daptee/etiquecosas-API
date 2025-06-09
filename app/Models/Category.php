@@ -25,6 +25,10 @@ class Category extends Model
         'tag_id',
     ];
 
+    protected $casts = [
+        'meta_data' => 'array',
+    ];
+
     public function parent()
     {
         return $this->belongsTo(Category::class, 'categoryId');

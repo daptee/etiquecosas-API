@@ -14,9 +14,9 @@ class PersonalizationColorController extends Controller
 {
     use FindObject, ApiResponse, Auditable;
 
-    public function index(Request $request)
+   public function index(Request $request)
     {
-        $perPage = $request->query('quantity', 10);
+        $perPage = $request->query('quantity');
         $page = $request->query('page', 1);
         $search = $request->query('search');
         $query = PersonalizationColor::query();
@@ -25,8 +25,17 @@ class PersonalizationColorController extends Controller
         }
 
         $query->orderBy('created_at', 'desc');
+        if (!$perPage) {
+            $colors = $query->get();
+            $this->logAudit(Auth::user(), 'Get Personalization Colors List', $request->all(), $colors);
+            return response()->json([
+                'message' => 'Colores de personalización obtenidos',
+                'data' => $colors,
+                'meta_data' => null,
+            ], 200);
+        }
+
         $colors = $query->paginate($perPage, ['*'], 'page', $page);
-        $this->logAudit(Auth::user(), 'Get Personalization Colors List', $request->all(), $colors);
         $metaData = [
             'current_page' => $colors->currentPage(),
             'last_page' => $colors->lastPage(),
@@ -35,6 +44,7 @@ class PersonalizationColorController extends Controller
             'from' => $colors->firstItem(),
             'to' => $colors->lastItem(),
         ];
+        $this->logAudit(Auth::user(), 'Get Personalization Colors List', $request->all(), $colors);
         return response()->json([
             'message' => 'Colores de personalización obtenidos',
             'data' => $colors->items(),

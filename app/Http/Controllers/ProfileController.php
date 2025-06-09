@@ -16,10 +16,18 @@ class ProfileController extends Controller
 
     public function index(Request $request)
     {
-        $perPage = $request->query('quantity', 10);
-        $page = $request->query('page', 1);       
-        $query = Profile::query();
-        $query->orderBy('created_at', 'desc');
+        $perPage = $request->query('quantity');
+        $page = $request->query('page', 1);
+        $query = Profile::query()->orderBy('created_at', 'desc');
+        if (!$perPage) {
+            $profiles = $query->get();
+            $this->logAudit(Auth::user(), 'Get Profiles List', $request->all(), $profiles);
+            return $this->success([
+                'data' => $profiles,
+                'meta_data' => null,
+            ], 'Perfiles obtenidos');
+        }
+
         $profiles = $query->paginate($perPage, ['*'], 'page', $page);
         $metaData = [
             'current_page' => $profiles->currentPage(),
