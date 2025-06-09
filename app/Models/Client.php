@@ -25,14 +25,14 @@ class Client extends Model
         'status_id'
     ];
 
-    public function type()
+    public function clientType()
     {
         return $this->belongsTo(ClientType::class, 'client_type_id');
     }
 
     public function generalStatus()
     {
-        return $this->belongsTo(Status::class);
+        return $this->belongsTo(GeneralStatus::class);
     }
 
     public function shippings()

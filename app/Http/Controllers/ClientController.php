@@ -20,7 +20,7 @@ class ClientController extends Controller
         $perPage = $request->query('quantity');
         $page = $request->query('page', 1);
         $search = $request->query('search');
-        $query = Client::query()->select('id', 'client_type_id', 'name', 'lastName', 'email', 'phone');
+        $query = Client::query()->select('id', 'client_type_id', 'name', 'lastName', 'email', 'phone', 'status_id');
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
@@ -58,7 +58,7 @@ class ClientController extends Controller
     public function show($id)
     {
         $client = $this->findObject(Client::class, $id);
-        $client->load('type', 'status', 'shippings.locality');
+        $client->load('clientType', 'generalStatus', 'shippings.locality');
         $this->logAudit(Auth::user(), 'Get Client Details', $id, $client);
         return $this->success($client, 'Detalles del cliente obtenidos');
     }
@@ -110,7 +110,7 @@ class ClientController extends Controller
                 ]);
             }
         }
-
+        
         $this->logAudit(Auth::user(), 'Store Client', $request->all(), $client);
         return $this->success($client, 'Cliente creado', 201);
     }

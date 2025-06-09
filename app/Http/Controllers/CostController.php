@@ -79,7 +79,7 @@ class CostController extends Controller
     public function show($id)
     {
         $cost = $this->findObject(Cost::class, $id);
-        $cost->load('status', 'prices');
+        $cost->load('generalStatus', 'prices');
         $this->logAudit(Auth::user(), 'Get Cost Details', $id, $cost);
         return $this->success($cost, 'Detalles del costo obtenidos');
     }
