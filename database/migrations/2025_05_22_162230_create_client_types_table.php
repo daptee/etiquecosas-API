@@ -17,6 +17,11 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
         });
+
+        DB::table('client_types')->insert([
+            ['id' => 1, 'name' => 'Común'],
+            ['id' => 2, 'name' => 'Mayorista'],
+        ]);
     }
 
     /**

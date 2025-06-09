@@ -6,6 +6,8 @@ use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use App\Traits\FindObject;
 use App\Traits\ApiResponse;
 use App\Traits\Auditable;
@@ -229,7 +231,7 @@ class CategoryController extends Controller
         if ($category->img) {
             $category->img = asset($category->img);
         }
-        
+
         if ($category->icon) {
             $category->icon = asset($category->icon);
         }
