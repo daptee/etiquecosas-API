@@ -6,6 +6,8 @@ use App\Models\PersonalizationIcon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use App\Traits\FindObject;
 use App\Traits\ApiResponse;
 use App\Traits\Auditable; 
