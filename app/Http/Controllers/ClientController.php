@@ -20,11 +20,11 @@ class ClientController extends Controller
         $perPage = $request->query('quantity');
         $page = $request->query('page', 1);
         $search = $request->query('search');
-        $query = Client::query()->select('id', 'client_type_id', 'name', 'lastname', 'email', 'phone');
+        $query = Client::query()->select('id', 'client_type_id', 'name', 'lastName', 'email', 'phone');
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                ->orWhere('lastname', 'like', "%{$search}%")
+                ->orWhere('lastName', 'like', "%{$search}%")
                 ->orWhere('email', 'like', "%{$search}%");
             });
         }
@@ -74,7 +74,7 @@ class ClientController extends Controller
             'phone' => 'nullable|string|max:20',
             'billingData' => 'nullable|json',
             'wholesaleData' => 'nullable|json',
-            'statusId' => 'nullable|exists:statuses,id',
+            'statusId' => 'nullable|exists:general_statuses,id',
             'shippings' => 'nullable|array',
             'shippings.*.name' => 'required|string',
             'shippings.*.address' => 'required|string',
@@ -127,7 +127,7 @@ class ClientController extends Controller
             'phone' => 'nullable|string|max:20',
             'billingData' => 'nullable|json',
             'wholesaleData' => 'nullable|json',
-            'statusId' => 'nullable|exists:statuses,id',
+            'statusId' => 'nullable|exists:general_statuses,id',
             'shippings' => 'nullable|array',
             'shippings.*.id' => 'nullable|exists:clients_shipping,id',
             'shippings.*.name' => 'required|string',
