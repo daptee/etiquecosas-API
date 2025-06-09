@@ -9,6 +9,7 @@ use App\Http\Controllers\CostController;
 use App\Http\Controllers\ConfigurationTagController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\ClientTypeController;
 use App\Http\Controllers\ProvinceController;
 use App\Http\Controllers\PersonalizationColorController; 
 use App\Http\Controllers\PersonalizationIconController; 
@@ -80,6 +81,11 @@ Route::middleware('jwt.auth')->prefix('clients')->group(function () {
     Route::get('/{id}', [ClientController::class, 'show']);
     Route::put('/{id}', [ClientController::class, 'update']);
     Route::delete('/{id}', [ClientController::class, 'delete']);
+});
+
+// Client
+Route::middleware('jwt.auth')->prefix('client-types')->group(function () {
+    Route::get('/', [ClientTypeController::class, 'index']);
 });
   
 // Province

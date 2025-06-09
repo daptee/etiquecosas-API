@@ -12,6 +12,8 @@ use App\Traits\Auditable;
 
 class ClientTypeController extends Controller
 {
+    use FindObject, ApiResponse, Auditable;
+    
     public function index(Request $request)
     {
         $perPage = $request->query('quantity');
