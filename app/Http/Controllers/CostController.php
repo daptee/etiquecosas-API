@@ -46,7 +46,7 @@ class CostController extends Controller
             'to' => $costs->lastItem(),
         ];
         $this->logAudit(Auth::user(), 'Get Costs List', $request->all(), $costs);
-        return $this->success($categories, 'Categorias obtenidas', $metaData);
+        return $this->success($costs, 'Costos obtenidos', $metaData);
     }       
 
     public function store(Request $request)
