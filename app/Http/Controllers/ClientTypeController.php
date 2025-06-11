@@ -22,7 +22,7 @@ class ClientTypeController extends Controller
         if (!$perPage) {
             $clientTypes = $query->get();
             $this->logAudit(Auth::user(), 'Get Client Type List', $request->all(), $clientTypes);
-            return $this->success($categories, 'Categorias obtenidas');
+            return $this->success($clientTypes, 'Tipos de cliente obtenidos');
         }
 
         $clientTypes = $query->paginate($perPage, ['*'], 'page', $page);

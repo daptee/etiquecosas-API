@@ -33,7 +33,7 @@ class ClientController extends Controller
         if (!$perPage) {
             $clients = $query->get();
             $this->logAudit(Auth::user(), 'Get Clients List', $request->all(), $clients);
-            return $this->success($categories, 'Categorias obtenidas');
+            return $this->success($client, 'Clientes obtenidos');
         }
 
         $clients = $query->paginate($perPage, ['*'], 'page', $page);
