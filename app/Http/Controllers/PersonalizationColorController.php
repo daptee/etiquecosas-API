@@ -45,7 +45,7 @@ class PersonalizationColorController extends Controller
             'to' => $colors->lastItem(),
         ];
         $this->logAudit(Auth::user(), 'Get Personalization Colors List', $request->all(), $colors);
-        return response()->json([
+        return $this->success([
             'message' => 'Colores de personalización obtenidos',
             'data' => $colors->items(),
             'meta_data' => $metaData,

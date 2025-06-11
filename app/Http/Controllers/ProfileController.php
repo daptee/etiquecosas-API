@@ -39,9 +39,10 @@ class ProfileController extends Controller
         ];
         $this->logAudit(Auth::user(), 'Get Profiles List', $request->all(), $profiles);
         return $this->success([
+            'message' => 'Perfiles obtenidos',
             'data' => $profiles->items(),
             'meta_data' => $metaData,
-        ], 'Perfiles obtenidos');
+        ], 200);
     }
 
     public function store(Request $request)

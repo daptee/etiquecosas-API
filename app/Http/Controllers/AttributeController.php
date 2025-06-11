@@ -48,7 +48,7 @@ class AttributeController extends Controller
             'from' => $attributes->firstItem(),
             'to' => $attributes->lastItem(),
         ];
-        return response()->json([
+        return $this->success([
             'message' => 'Atributos obtenidos',
             'data' => $attributes->items(),
             'meta_data' => $metaData,

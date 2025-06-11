@@ -33,10 +33,7 @@ class CostController extends Controller
         if (!$perPage) {
             $costs = $query->get();
             $this->logAudit(Auth::user(), 'Get Costs List', $request->all(), $costs);
-            return $this->success([
-                'data' => $costs,
-                'meta_data' => null,
-            ], 'Costos obtenidos');
+            return $this->success($categories, 'Categorias obtenidas');
         }
 
         $costs = $query->paginate($perPage, ['*'], 'page', $page);
@@ -49,10 +46,7 @@ class CostController extends Controller
             'to' => $costs->lastItem(),
         ];
         $this->logAudit(Auth::user(), 'Get Costs List', $request->all(), $costs);
-        return $this->success([
-            'data' => $costs->items(),
-            'meta_data' => $metaData,
-        ], 'Costos obtenidos');
+        return $this->success($categories, 'Categorias obtenidas', $metaData);
     }       
 
     public function store(Request $request)

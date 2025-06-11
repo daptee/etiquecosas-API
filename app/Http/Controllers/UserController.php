@@ -19,21 +19,28 @@ class UserController extends Controller
 
     public function index(Request $request)
     {
-        $perPage = $request->query('quantity', 10);
-        $page = $request->query('page', 1);
+        $perPage = $request->query('quantity');
         $search = $request->query('search');
         $query = User::with('profile');
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                ->orWhere('lastName', 'like', "%{$search}%")
-                ->orWhere('email', 'like', "%{$search}%");
+                  ->orWhere('lastName', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
         $query->orderBy('created_at', 'desc');
-        $users = $query->paginate($perPage, ['*'], 'page', $page);
-        $this->logAudit(Auth::user(), 'Get Users List', $request->all(), $users);
+        if (!$perPage) {
+            $users = $query->get();
+            $this->logAudit(Auth::user(), 'Get Users List', $request->all(), $users);
+            return $this->success([
+                'data' => $users,
+                'meta_data' => null,
+            ], 'Usuarios obtenidos');
+        }
+
+        $users = $query->paginate($perPage, ['*'], 'page', $page);        
         $metaData = [
             'current_page' => $users->currentPage(),
             'last_page' => $users->lastPage(),
@@ -42,7 +49,8 @@ class UserController extends Controller
             'from' => $users->firstItem(),
             'to' => $users->lastItem(),
         ];
-        return response()->json([
+        $this->logAudit(Auth::user(), 'Get Users List', $request->all(), $users);
+        return $this->success([
             'message' => 'Usuarios obtenidos',
             'data' => $users->items(),
             'meta_data' => $metaData,

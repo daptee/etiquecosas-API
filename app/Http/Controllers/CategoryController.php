@@ -40,11 +40,7 @@ class CategoryController extends Controller
         if (!$perPage) {
             $categories = $query->get();
             $this->logAudit(Auth::user(), 'Get Categories List', $request->all(), $categories);
-            return $this->success([
-                'message' => 'Categorias obtenidas',
-                'data' => $categories,
-                'meta_data' => null,
-            ], 200);
+            return $this->success($categories, 'Categorias obtenidas');
         }
 
         $categories = $query->paginate($perPage, ['*'], 'page', $page);
@@ -58,10 +54,9 @@ class CategoryController extends Controller
             'to' => $categories->lastItem(),
         ];
         return $this->success([
-            'message' => 'Categorias obtenidas',
             'data' => $categories->items(),
             'meta_data' => $metaData,
-        ], 200);
+        ], 'Categorias obtenidas');
     }
 
     public function store(Request $request)

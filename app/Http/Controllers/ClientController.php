@@ -33,10 +33,7 @@ class ClientController extends Controller
         if (!$perPage) {
             $clients = $query->get();
             $this->logAudit(Auth::user(), 'Get Clients List', $request->all(), $clients);
-            return $this->success([
-                'data' => $clients,
-                'meta_data' => null,
-            ], 'Clientes obtenidos');
+            return $this->success($categories, 'Categorias obtenidas');
         }
 
         $clients = $query->paginate($perPage, ['*'], 'page', $page);
@@ -50,9 +47,10 @@ class ClientController extends Controller
         ];
         $this->logAudit(Auth::user(), 'Get Clients List', $request->all(), $clients);
         return $this->success([
+            'message' => 'Clientes obtenidos',
             'data' => $clients->items(),
             'meta_data' => $metaData,
-        ], 'Clientes obtenidos');
+        ], 200);
     }
 
     public function show($id)
@@ -60,7 +58,7 @@ class ClientController extends Controller
         $client = $this->findObject(Client::class, $id);
         $client->load('clientType', 'generalStatus', 'shippings.locality');
         $this->logAudit(Auth::user(), 'Get Client Details', $id, $client);
-        return $this->success($client, 'Detalles del cliente obtenidos');
+        return $this->success($client, 'Cliente obtenidos');
     }
     
     public function store(Request $request)

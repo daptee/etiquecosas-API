@@ -47,7 +47,7 @@ class PersonalizationIconController extends Controller
             'to' => $icons->lastItem(),
         ];
         $this->logAudit(Auth::user(), 'Get Pesonalization Icons List', $request->all(), $icons);
-        return response()->json([
+        return $this->success([
             'message' => 'Iconos de personalización obtenidos',
             'data' => $icons->items(),
             'meta_data' => $metaData,

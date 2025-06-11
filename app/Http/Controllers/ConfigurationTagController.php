@@ -33,11 +33,7 @@ class ConfigurationTagController extends Controller
         if (!$perPage) {
             $tags = $query->get();
             $this->logAudit(Auth::user(), 'Get Configuration Tags List', $request->all(), $tags);
-            return response()->json([
-                'message' => 'Etiquetas de configuración obtenidas',
-                'data' => $tags,
-                'meta_data' => null,
-            ], 200);
+            return $this->success($categories, 'Categorias obtenidas');
         }
 
         $tags = $query->paginate($perPage, ['*'], 'page', $page);
@@ -50,7 +46,7 @@ class ConfigurationTagController extends Controller
             'from' => $tags->firstItem(),
             'to' => $tags->lastItem(),
         ];
-        return response()->json([
+        return $this->success([
             'message' => 'Etiquetas de configuración obtenidas',
             'data' => $tags->items(),
             'meta_data' => $metaData,

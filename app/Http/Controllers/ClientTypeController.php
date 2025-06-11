@@ -22,10 +22,7 @@ class ClientTypeController extends Controller
         if (!$perPage) {
             $clientTypes = $query->get();
             $this->logAudit(Auth::user(), 'Get Client Type List', $request->all(), $clientTypes);
-            return $this->success([
-                'data' => $clientTypes,
-                'meta_data' => null,
-            ], 'Tipos de cliente obtenidos');
+            return $this->success($categories, 'Categorias obtenidas');
         }
 
         $clientTypes = $query->paginate($perPage, ['*'], 'page', $page);
@@ -39,8 +36,9 @@ class ClientTypeController extends Controller
         ];
         $this->logAudit(Auth::user(), 'Get Client Type List', $request->all(), $clientTypes);
         return $this->success([
+            'message' => 'Tipos de cliente obtenidos', 
             'data' => $clientTypes->items(),
             'meta_data' => $metaData,
-        ], 'Tipos de cliente obtenidos');
+        ], 200);
     }
 }
