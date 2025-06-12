@@ -20,7 +20,7 @@ class AttributeController extends Controller
         $statusId = $request->query('statusId');
         $perPage = $request->query('quantity');
         $page = $request->query('page', 1);
-        $query = Attribute::query();
+        $query = Attribute::with(['values.generalStatus', 'generalStatus']);
         if ($search) {
             $query->where('name', 'like', "%{$search}%");
         }
