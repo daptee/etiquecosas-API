@@ -22,13 +22,11 @@ class ProfileController extends Controller
         if (!$perPage) {
             $profiles = $query->get();
             $this->logAudit(Auth::user(), 'Get Profiles List', $request->all(), $profiles);
-            return $this->success([
-                'data' => $profiles,
-                'meta_data' => null,
-            ], 'Perfiles obtenidos');
+            return $this->success($profiles, 'Perfiles obtenidos');
         }
 
         $profiles = $query->paginate($perPage, ['*'], 'page', $page);
+        $this->logAudit(Auth::user(), 'Get Profiles List', $request->all(), $profiles);
         $metaData = [
             'current_page' => $profiles->currentPage(),
             'last_page' => $profiles->lastPage(),
@@ -36,13 +34,8 @@ class ProfileController extends Controller
             'total' => $profiles->total(),
             'from' => $profiles->firstItem(),
             'to' => $profiles->lastItem(),
-        ];
-        $this->logAudit(Auth::user(), 'Get Profiles List', $request->all(), $profiles);
-        return $this->success([
-            'message' => 'Perfiles obtenidos',
-            'data' => $profiles->items(),
-            'meta_data' => $metaData,
-        ], 200);
+        ];        
+        return $this->success($profiles->items(), 'Perfiles obtenidos', $metaData);
     }
 
     public function store(Request $request)

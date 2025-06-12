@@ -46,11 +46,7 @@ class ConfigurationTagController extends Controller
             'from' => $tags->firstItem(),
             'to' => $tags->lastItem(),
         ];
-        return $this->success([
-            'message' => 'Etiquetas de configuración obtenidas',
-            'data' => $tags->items(),
-            'meta_data' => $metaData,
-        ], 200);
+        return $this->success($tags->items(), 'Etiquetas obtenidas', $metaData);
     }
 
     public function store(Request $request)

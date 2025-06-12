@@ -30,14 +30,11 @@ class PersonalizationIconController extends Controller
         if (!$perPage) {
             $icons = $query->get();
             $this->logAudit(Auth::user(), 'Get Pesonalization Icons List', $request->all(), $icons);
-            return response()->json([
-                'message' => 'Iconos de personalización obtenidos',
-                'data' => $icons,
-                'meta_data' => null,
-            ], 200);
+            return $this->success($icons, 'Iconos obtenidos');
         }
 
         $icons = $query->paginate($perPage, ['*'], 'page', $page);
+        $this->logAudit(Auth::user(), 'Get Pesonalization Icons List', $request->all(), $icons);
         $metaData = [
             'current_page' => $icons->currentPage(),
             'last_page' => $icons->lastPage(),
@@ -45,13 +42,8 @@ class PersonalizationIconController extends Controller
             'total' => $icons->total(),
             'from' => $icons->firstItem(),
             'to' => $icons->lastItem(),
-        ];
-        $this->logAudit(Auth::user(), 'Get Pesonalization Icons List', $request->all(), $icons);
-        return $this->success([
-            'message' => 'Iconos de personalización obtenidos',
-            'data' => $icons->items(),
-            'meta_data' => $metaData,
-        ], 200);
+        ];        
+        return $this->success($icons->items(), 'Colores obtenidos', $metaData);
     }
 
     public function store(Request $request)

@@ -32,14 +32,12 @@ class AttributeController extends Controller
         $query->orderBy('created_at', 'desc');
         if (!$perPage) {
             $attributes = $query->get();
-            return response()->json([
-                'message' => 'Atributos obtenidos',
-                'data' => $attributes,
-                'meta_data' => null,
-            ], 200);
+            $this->logAudit(Auth::user(), 'Get Attributes List', $request->all(), $attributes);
+            return $this->success($attributes, 'Atributos obtenidos');
         }
 
         $attributes = $query->paginate($perPage, ['*'], 'page', $page);
+        $this->logAudit(Auth::user(), 'Get Attributes List', $request->all(), $attributes);
         $metaData = [
             'current_page' => $attributes->currentPage(),
             'last_page' => $attributes->lastPage(),
@@ -48,11 +46,7 @@ class AttributeController extends Controller
             'from' => $attributes->firstItem(),
             'to' => $attributes->lastItem(),
         ];
-        return $this->success([
-            'message' => 'Atributos obtenidos',
-            'data' => $attributes->items(),
-            'meta_data' => $metaData,
-        ], 200);
+        return $this->success($attributes->items(), 'Atributos obtenidos', $metaData);
     }
 
     public function store(Request $request)
@@ -133,7 +127,7 @@ class AttributeController extends Controller
             $attribute->values()->whereIn('id', $valuesToDelete)->delete();
         }
 
-        $attribute->load('values.status', 'status');
+        $attribute->load('values.generalStatus', 'generalStatus');
         $this->logAudit(Auth::user(), 'Update Attribute', $request->all(), $attribute);
         return $this->success($attribute, 'Atributo actualizado');
     }

@@ -53,10 +53,7 @@ class CategoryController extends Controller
             'from' => $categories->firstItem(),
             'to' => $categories->lastItem(),
         ];
-        return $this->success([
-            'data' => $categories->items(),
-            'meta_data' => $metaData,
-        ], 'Categorias obtenidas');
+        return $this->success($categories->items(), 'Categorias obtenidas', $metaData);
     }
 
     public function store(Request $request)

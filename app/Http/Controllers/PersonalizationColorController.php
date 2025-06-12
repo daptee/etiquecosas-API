@@ -28,14 +28,11 @@ class PersonalizationColorController extends Controller
         if (!$perPage) {
             $colors = $query->get();
             $this->logAudit(Auth::user(), 'Get Personalization Colors List', $request->all(), $colors);
-            return response()->json([
-                'message' => 'Colores de personalización obtenidos',
-                'data' => $colors,
-                'meta_data' => null,
-            ], 200);
+            return $this->success($colors, 'Colores obtenidos');
         }
 
         $colors = $query->paginate($perPage, ['*'], 'page', $page);
+        $this->logAudit(Auth::user(), 'Get Personalization Colors List', $request->all(), $colors);
         $metaData = [
             'current_page' => $colors->currentPage(),
             'last_page' => $colors->lastPage(),
@@ -43,13 +40,8 @@ class PersonalizationColorController extends Controller
             'total' => $colors->total(),
             'from' => $colors->firstItem(),
             'to' => $colors->lastItem(),
-        ];
-        $this->logAudit(Auth::user(), 'Get Personalization Colors List', $request->all(), $colors);
-        return $this->success([
-            'message' => 'Colores de personalización obtenidos',
-            'data' => $colors->items(),
-            'meta_data' => $metaData,
-        ], 200);
+        ];        
+        return $this->success($colors->items(), 'Colores obtenidos', $metaData);
     }
 
     public function store(Request $request)

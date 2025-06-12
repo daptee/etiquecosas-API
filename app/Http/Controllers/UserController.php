@@ -20,6 +20,7 @@ class UserController extends Controller
     public function index(Request $request)
     {
         $perPage = $request->query('quantity');
+        $page = $request->query('page', 1);
         $search = $request->query('search');
         $query = User::with('profile');
         if ($search) {
@@ -34,10 +35,7 @@ class UserController extends Controller
         if (!$perPage) {
             $users = $query->get();
             $this->logAudit(Auth::user(), 'Get Users List', $request->all(), $users);
-            return $this->success([
-                'data' => $users,
-                'meta_data' => null,
-            ], 'Usuarios obtenidos');
+            return $this->success($users, 'Usuarios obtenidos');
         }
 
         $users = $query->paginate($perPage, ['*'], 'page', $page);        
@@ -50,11 +48,7 @@ class UserController extends Controller
             'to' => $users->lastItem(),
         ];
         $this->logAudit(Auth::user(), 'Get Users List', $request->all(), $users);
-        return $this->success([
-            'message' => 'Usuarios obtenidos',
-            'data' => $users->items(),
-            'meta_data' => $metaData,
-        ], 200);
+        return $this->success($users->items(), 'Usuarios obtenidos', $metaData);
     }
 
     public function store(Request $request)

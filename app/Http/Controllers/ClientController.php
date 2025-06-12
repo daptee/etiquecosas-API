@@ -33,10 +33,11 @@ class ClientController extends Controller
         if (!$perPage) {
             $clients = $query->get();
             $this->logAudit(Auth::user(), 'Get Clients List', $request->all(), $clients);
-            return $this->success($client, 'Clientes obtenidos');
+            return $this->success($clients, 'Clientes obtenidos');
         }
 
         $clients = $query->paginate($perPage, ['*'], 'page', $page);
+        $this->logAudit(Auth::user(), 'Get Clients List', $request->all(), $clients);
         $metaData = [
             'current_page' => $clients->currentPage(),
             'last_page' => $clients->lastPage(),
@@ -44,13 +45,8 @@ class ClientController extends Controller
             'total' => $clients->total(),
             'from' => $clients->firstItem(),
             'to' => $clients->lastItem(),
-        ];
-        $this->logAudit(Auth::user(), 'Get Clients List', $request->all(), $clients);
-        return $this->success([
-            'message' => 'Clientes obtenidos',
-            'data' => $clients->items(),
-            'meta_data' => $metaData,
-        ], 200);
+        ];        
+        return $this->success($clients->items(), 'Clientes obtenidos', $metaData);
     }
 
     public function show($id)

@@ -37,11 +37,7 @@ class ProvinceController extends Controller
         if (!$perPage) {
             $provinces = $query->get();
             $this->logAudit(Auth::user(), 'Get Provinces List', '/provinces', $provinces);
-            return $this->success([
-                'message' => 'Provincias obtenidas',
-                'data' => $provinces,
-                'meta_data' => null,
-            ], 200);
+            return $this->success($provinces, 'Provincias obtenidas');
         }
 
         $provinces = $query->paginate($perPage, ['*'], 'page', $page);
@@ -54,10 +50,6 @@ class ProvinceController extends Controller
             'from' => $provinces->firstItem(),
             'to' => $provinces->lastItem(),
         ];
-        return $this->success([
-            'message' => 'Provincias obtenidas',
-            'data' => $provinces->items(),
-            'meta_data' => $metaData,
-        ], 200);
+        return $this->success($provinces->items(), 'Provincias obtenidas', $metaData);
     }
 }
