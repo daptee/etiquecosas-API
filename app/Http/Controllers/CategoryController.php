@@ -60,7 +60,7 @@ class CategoryController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255|unique:categories',
-            'categoryId' => 'nullable|exists:categories,id',
+            'categoryId' => 'nullable',
             'img' => 'nullable|image|max:2048',
             'icon' => 'nullable|file|mimes:svg|max:2048',
             'color' => 'nullable|string|max:50',
@@ -70,6 +70,13 @@ class CategoryController extends Controller
             'statusId' => 'nullable|in:1,2',
             'tagId' => 'nullable|exists:configuration_tags,id',
         ]);
+        $fieldsToNormalize = ['tagId', 'categoryId', 'img', 'icon', 'banner'];
+        foreach ($fieldsToNormalize as $field) {
+            if ($request->has($field) && in_array($request->input($field), ['null', ''])) {
+                $request->merge([$field => null]);
+            }
+        }
+
         if ($validator->fails()) {
             $this->logAudit(Auth::user(), 'Store Category', $request->all(), $validator->errors());
             return $this->validationError($validator->errors());
