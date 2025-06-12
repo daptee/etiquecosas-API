@@ -130,7 +130,7 @@ class CategoryController extends Controller
     public function update(Request $request, $id)
     {
         $category = $this->findObject(Category::class, $id);
-        $fieldsToNormalize = ['tagId', 'categoryId'];
+        $fieldsToNormalize = ['tagId', 'categoryId', 'img', 'icon', 'banner'];
         foreach ($fieldsToNormalize as $field) {
             if ($request->has($field) && in_array($request->input($field), ['null', ''])) {
                 $request->merge([$field => null]);
@@ -240,16 +240,17 @@ class CategoryController extends Controller
         }
        
         $category->save();
+
         if ($category->img) {
-            $category->img = asset($category->img);
+            $category->img = $category->img;
         }
 
         if ($category->icon) {
-            $category->icon = asset($category->icon);
+            $category->icon = $category->icon;
         }
 
         if ($category->banner) {
-            $category->banner = asset($category->banner);
+            $category->banner = $category->banner;
         }
 
         $this->logAudit(Auth::user(), 'Update Category', $request->all(), $category);
