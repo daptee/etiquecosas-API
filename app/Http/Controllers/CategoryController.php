@@ -130,7 +130,7 @@ class CategoryController extends Controller
     public function update(Request $request, $id)
     {
         $category = $this->findObject(Category::class, $id);
-        $fieldsToNormalize = ['tagId', 'categoryId', 'img', 'icon', 'banner'];
+        $fieldsToNormalize = ['tagId', 'categoryId'];
         foreach ($fieldsToNormalize as $field) {
             if ($request->has($field) && in_array($request->input($field), ['null', ''])) {
                 $request->merge([$field => null]);
