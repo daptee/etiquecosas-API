@@ -222,14 +222,23 @@ class CategoryController extends Controller
 
         $category->name = $request->input('name', $category->name);
         $category->category_id = $request->input('categoryId', $category->category_id);
-        $category->img = $imgPath;
-        $category->icon = $iconPath;
         $category->color = $request->input('color', $category->color);
         $category->meta_data = $request->input('metaData', $category->meta_data);
-        $category->description = $request->input('description', $category->description);
-        $category->banner = $bannerPath;
+        $category->description = $request->input('description', $category->description);        
         $category->status_id = $request->input('statusId', $category->status_id);
-        $category->tag_id = $request->input('tagId', $category->tag_id);        
+        $category->tag_id = $request->input('tagId', $category->tag_id); 
+        if ($request->hasFile('img') || $request->has('img')) {
+            $category->img = $imgPath;
+        }
+
+        if ($request->hasFile('icon') || $request->has('icon')) {
+            $category->icon = $iconPath;
+        }
+
+        if ($request->hasFile('banner') || $request->has('banner')) {
+            $category->banner = $bannerPath;
+        }
+       
         $category->save();
         if ($category->img) {
             $category->img = asset($category->img);
