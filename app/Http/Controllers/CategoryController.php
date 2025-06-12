@@ -137,6 +137,10 @@ class CategoryController extends Controller
             }
         }
 
+        if ($request->has('description') && $request->input('description') === 'null') {
+            $request->merge(['description' => null]);
+        }
+
         $validator = Validator::make($request->all(), [
             'name' => [
                 'required',
