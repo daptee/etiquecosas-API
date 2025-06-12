@@ -53,7 +53,7 @@ class AttributeController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255|unique:attributes',
-            'values' => 'required|array|min:1',
+            'values' => 'nullable|array',
             'values.*.value' => 'required|string|max:255',
             'values.*.statusId' => 'nullable|in:1,2',
         ]);
@@ -84,7 +84,7 @@ class AttributeController extends Controller
         $attribute = $this->findObject(Attribute::class, $id);
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255|unique:attributes,name,' . $attribute->id,
-            'values' => 'required|array|min:1',
+            'values' => 'nullable|array|',
             'values.*.id' => 'nullable|integer|exists:attribute_values,id',
             'values.*.value' => 'required|string|max:255',
             'values.*.statusId' => 'nullable|in:1,2',
@@ -95,19 +95,29 @@ class AttributeController extends Controller
         }
 
         $attribute->update($request->only(['name', 'statusId']));
-        $existingValues = $attribute->values()->pluck('id', 'value')->toArray();
-        $submittedValues = collect($request->input('values'))->keyBy('value');
+
+        // Obtener todos los IDs actuales de AttributeValue vinculados
+        $existingIds = $attribute->values()->pluck('id')->toArray();
+
+        $submittedValues = collect($request->input('values'));
+
+        $submittedIds = $submittedValues->pluck('id')->filter()->toArray();
+
+        // IDs que deben eliminarse (existen pero no vienen en la petición)
+        $valuesToDelete = array_diff($existingIds, $submittedIds);
+
         $valuesToUpdate = [];
         $valuesToCreate = [];
-        $valuesToDelete = array_diff($existingValues, $submittedValues->pluck('id')->filter()->toArray());
-        foreach ($submittedValues as $value => $data) {
-            $existingId = $existingValues[$value] ?? null;
-            if ($existingId) {
-                $valuesToUpdate[$existingId] = [
+
+        foreach ($submittedValues as $data) {
+            if (!empty($data['id']) && in_array($data['id'], $existingIds)) {
+                // Actualizar registro existente
+                $valuesToUpdate[$data['id']] = [
                     'value' => $data['value'],
                     'status_id' => $data['statusId'] ?? 1,
                 ];
             } else {
+                // Crear nuevo registro (no viene id o no existe)
                 $valuesToCreate[] = [
                     'value' => $data['value'],
                     'status_id' => $data['statusId'] ?? 1,
@@ -115,22 +125,28 @@ class AttributeController extends Controller
             }
         }
 
-        foreach ($valuesToUpdate as $id => $data) {
-            $attribute->values()->where('id', $id)->update($data);
+        // Actualizar los registros existentes
+        foreach ($valuesToUpdate as $valueId => $updateData) {
+            $attribute->values()->where('id', $valueId)->update($updateData);
         }
 
+        // Crear nuevos registros
         if (!empty($valuesToCreate)) {
             $attribute->values()->createMany($valuesToCreate);
         }
 
+        // Eliminar los registros no enviados
         if (!empty($valuesToDelete)) {
             $attribute->values()->whereIn('id', $valuesToDelete)->delete();
         }
 
         $attribute->load('values.generalStatus', 'generalStatus');
+
         $this->logAudit(Auth::user(), 'Update Attribute', $request->all(), $attribute);
+
         return $this->success($attribute, 'Atributo actualizado');
     }
+
 
     public function delete($id)
     {
