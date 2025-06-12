@@ -130,6 +130,12 @@ class CategoryController extends Controller
     public function update(Request $request, $id)
     {
         $category = $this->findObject(Category::class, $id);
+        foreach (['tagId', 'categoryId'] as $key) {
+            if ($request->has($key) && in_array($request->input($key), ['null', ''])) {
+                $request->merge([$key => null]);
+            }
+        }
+
         $validator = Validator::make($request->all(), [
             'name' => [
                 'required',

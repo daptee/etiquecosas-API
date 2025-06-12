@@ -43,7 +43,7 @@ class PersonalizationIconController extends Controller
             'from' => $icons->firstItem(),
             'to' => $icons->lastItem(),
         ];        
-        return $this->success($icons->items(), 'Colores obtenidos', $metaData);
+        return $this->success($icons->items(), 'Iconos obtenidos', $metaData);
     }
 
     public function store(Request $request)
