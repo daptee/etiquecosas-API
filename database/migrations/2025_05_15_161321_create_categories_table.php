@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('img')->nullable();
             $table->string('icon')->nullable();
             $table->string('color', 50)->nullable();
-            $table->text('meta_data')->nullable();
+            $table->json('meta_data')->nullable();
             $table->text('description')->nullable();
             $table->string('banner')->nullable()->default(null);
             $table->foreignId('status_id')->default(1)->constrained('general_statuses');
