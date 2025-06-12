@@ -130,9 +130,10 @@ class CategoryController extends Controller
     public function update(Request $request, $id)
     {
         $category = $this->findObject(Category::class, $id);
-        foreach (['tagId', 'categoryId'] as $key) {
-            if ($request->has($key) && in_array($request->input($key), ['null', ''])) {
-                $request->merge([$key => null]);
+        $fieldsToNormalize = ['tagId', 'categoryId', 'img', 'icon', 'banner'];
+        foreach ($fieldsToNormalize as $field) {
+            if ($request->has($field) && in_array($request->input($field), ['null', ''])) {
+                $request->merge([$field => null]);
             }
         }
 
@@ -174,7 +175,7 @@ class CategoryController extends Controller
                 }
                 $imgPath = $imageName;
             }
-        } elseif ($request->input('img') === 'null' || $request->input('img') === '') {
+        } elseif (is_null($request->input('img'))) {
             if ($category->img && Storage::disk('public_uploads')->exists($category->img)) {
                 Storage::disk('public_uploads')->delete($category->img);
             }
@@ -191,7 +192,7 @@ class CategoryController extends Controller
                 }
                 $iconPath = $iconName;
             }
-        } elseif ($request->input('icon') === 'null' || $request->input('icon') === '') {
+        } elseif (is_null($request->input('icon'))) {
             if ($category->icon && Storage::disk('public_uploads')->exists($category->icon)) {
                 Storage::disk('public_uploads')->delete($category->icon);
             }
@@ -208,7 +209,7 @@ class CategoryController extends Controller
                 }
                 $bannerPath = $bannerName;
             }
-        } elseif ($request->input('banner') === 'null' || $request->input('banner') === '') {
+        } elseif (is_null($request->input('banner'))) {
             if ($category->banner && Storage::disk('public_uploads')->exists($category->banner)) {
                 Storage::disk('public_uploads')->delete($category->banner);
             }
