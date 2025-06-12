@@ -68,7 +68,7 @@ class CategoryController extends Controller
             'description' => 'nullable|string',
             'banner' => 'nullable|image|max:2048',
             'statusId' => 'nullable|in:1,2',
-            'tagId' => 'nullable|exists:configuration_tags,id',
+            'tagId' => 'nullable',
         ]);
         $fieldsToNormalize = ['tagId', 'categoryId', 'img', 'icon', 'banner'];
         foreach ($fieldsToNormalize as $field) {
