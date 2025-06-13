@@ -106,7 +106,7 @@ class ClientController extends Controller
         }
         
         $this->logAudit(Auth::user(), 'Store Client', $request->all(), $client);
-        return $this->success($client, 'Cliente creado', 201);
+        return $this->success($client, 'Cliente creado');
     }
 
     public function update(Request $request, $id)

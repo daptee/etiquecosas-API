@@ -131,7 +131,7 @@ class CategoryController extends Controller
             $category->banner = asset($category->banner);
         }
 
-        return $this->success($category, 'Categoría creada', 201);
+        return $this->success($category, 'Categoría creada');
     }
 
     public function update(Request $request, $id)

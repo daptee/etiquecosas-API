@@ -76,7 +76,7 @@ class AttributeController extends Controller
         $attribute->values()->createMany($valuesData);
         $attribute->load('values.generalStatus', 'generalStatus');
         $this->logAudit(Auth::user(), 'Store Attribute', $request->all(), $attribute);
-        return $this->success($attribute, 'Atributo creado', 201);
+        return $this->success($attribute, 'Atributo creado');
     }
 
     public function update(Request $request, $id)
@@ -95,55 +95,39 @@ class AttributeController extends Controller
         }
 
         $attribute->update($request->only(['name', 'statusId']));
-
-        // Obtener todos los IDs actuales de AttributeValue vinculados
         $existingIds = $attribute->values()->pluck('id')->toArray();
-
         $submittedValues = collect($request->input('values'));
-
         $submittedIds = $submittedValues->pluck('id')->filter()->toArray();
-
-        // IDs que deben eliminarse (existen pero no vienen en la petición)
         $valuesToDelete = array_diff($existingIds, $submittedIds);
-
         $valuesToUpdate = [];
         $valuesToCreate = [];
-
         foreach ($submittedValues as $data) {
             if (!empty($data['id']) && in_array($data['id'], $existingIds)) {
-                // Actualizar registro existente
                 $valuesToUpdate[$data['id']] = [
                     'value' => $data['value'],
                     'status_id' => $data['statusId'] ?? 1,
                 ];
             } else {
-                // Crear nuevo registro (no viene id o no existe)
                 $valuesToCreate[] = [
                     'value' => $data['value'],
                     'status_id' => $data['statusId'] ?? 1,
                 ];
             }
         }
-
-        // Actualizar los registros existentes
         foreach ($valuesToUpdate as $valueId => $updateData) {
             $attribute->values()->where('id', $valueId)->update($updateData);
         }
 
-        // Crear nuevos registros
         if (!empty($valuesToCreate)) {
             $attribute->values()->createMany($valuesToCreate);
         }
 
-        // Eliminar los registros no enviados
         if (!empty($valuesToDelete)) {
             $attribute->values()->whereIn('id', $valuesToDelete)->delete();
         }
 
         $attribute->load('values.generalStatus', 'generalStatus');
-
         $this->logAudit(Auth::user(), 'Update Attribute', $request->all(), $attribute);
-
         return $this->success($attribute, 'Atributo actualizado');
     }
 

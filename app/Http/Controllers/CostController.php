@@ -67,7 +67,7 @@ class CostController extends Controller
             'status_id' => $request->statusId ?? 1,
         ]);
         $this->logAudit(Auth::user(), 'Store Cost', $request->all(), $cost);
-        return $this->success($cost, 'Costo creado', 201);
+        return $this->success($cost, 'Costo creado');
     }
 
     public function show($id)

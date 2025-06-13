@@ -51,6 +51,7 @@ class PersonalizationIconController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255|unique:personalization_icons',
             'icon' => 'required|file|mimes:svg|max:2048',
+            'statusId' => 'nullable|exists:general_statuses,id',
         ]);
         if ($validator->fails()) {
             $this->logAudit(Auth::user(), 'Store Configuration Icon', $request->all(), $validator->errors());
@@ -68,6 +69,7 @@ class PersonalizationIconController extends Controller
         $icon = PersonalizationIcon::create([
             'name' => $request->name,
             'icon' => $iconPath,
+            'status_id' => $request->statusId ?? 1, 
         ]);
         $this->logAudit(Auth::user(), 'Store Personalization Icon', $request->all(), $icon);
         
@@ -75,7 +77,7 @@ class PersonalizationIconController extends Controller
             $icon->icon = $icon->icon;
         }
 
-        return $this->success($icon, 'Icono de personalización creado', 201);
+        return $this->success($icon, 'Icono de personalización creado');
     }
 
     public function update(Request $request, $id)
@@ -97,6 +99,7 @@ class PersonalizationIconController extends Controller
                 Rule::unique('personalization_icons')->ignore($icon->id),
             ],
             'icon' => 'nullable|file|mimes:svg|max:2048',
+            'statusId' => 'nullable|exists:general_statuses,id',
         ]);
 
         if ($validator->fails()) {
@@ -105,18 +108,16 @@ class PersonalizationIconController extends Controller
         }
 
         $iconPath = $icon->icon;
-
         if ($request->hasFile('icon')) {
             $iconFile = $request->file('icon');
-            $iconName = 'icons/personalization/' . uniqid('icon_') . '.' . $iconFile->getClientOriginalExtension();
-
+            $iconName = 'icons/icons/' . uniqid('icon_') . '.' . $iconFile->getClientOriginalExtension();
             if (Storage::disk('public_uploads')->put($iconName, file_get_contents($iconFile))) {
                 if ($icon->icon && Storage::disk('public_uploads')->exists($icon->icon)) {
-                    Storage::disk('public_uploads')->delete($icon->icon);
+                    Storage::disk('public_uploads')->delete($category->icon);
                 }
                 $iconPath = $iconName;
             }
-        } elseif ($request->has('icon') && is_null($request->input('icon'))) {
+        } elseif (is_null($request->input('icon'))) {
             if ($icon->icon && Storage::disk('public_uploads')->exists($icon->icon)) {
                 Storage::disk('public_uploads')->delete($icon->icon);
             }
@@ -125,8 +126,8 @@ class PersonalizationIconController extends Controller
 
         $icon->name = $request->input('name', $icon->name);
         $icon->icon = $iconPath;
+        $icon->status_id = $request->input('statusId', $icon->status_id);
         $icon->save();
-
         if ($icon->icon) {
             $icon->icon = $icon->icon;
         }

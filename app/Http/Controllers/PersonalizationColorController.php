@@ -60,7 +60,7 @@ class PersonalizationColorController extends Controller
             'color_code' => $request->colorCode,
         ]);
         $this->logAudit(Auth::user(), 'Store Personalization Color', $request->all(), $color);
-        return $this->success($color, 'Color de personalización creado', 201);
+        return $this->success($color, 'Color de personalización creado');
     }
 
     public function update(Request $request, $id)

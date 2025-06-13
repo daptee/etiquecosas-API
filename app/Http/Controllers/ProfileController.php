@@ -52,7 +52,7 @@ class ProfileController extends Controller
             'name' => $request->name,
         ]);
         $this->logAudit(Auth::user(), 'Store Profile', $request->all(), $profile);
-        return $this->success($profile, 'Perfil creado', 201);
+        return $this->success($profile, 'Perfil creado');
     }
   
     public function update(Request $request, $id)

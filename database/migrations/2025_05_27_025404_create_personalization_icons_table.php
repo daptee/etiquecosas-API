@@ -14,7 +14,8 @@ return new class extends Migration
         Schema::create('personalization_icons', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('icon');            
+            $table->string('icon')->nullable();     
+            $table->foreignId('status_id')->default(1)->constrained('general_statuses');       
             $table->timestamps();
             $table->softDeletes();
         });

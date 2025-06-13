@@ -67,7 +67,7 @@ class ConfigurationTagController extends Controller
             'status_id' => $request->statusId ?? 1,
         ]);
         $this->logAudit(Auth::user(), 'Store Configuration Tag', $request->all(), $tag);
-        return $this->success($tag, 'Etiqueta de configuración creada', 201);
+        return $this->success($tag, 'Etiqueta de configuración creada');
     }
 
     public function update(Request $request, $id)

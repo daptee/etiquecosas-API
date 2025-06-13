@@ -59,6 +59,7 @@ class UserController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
             'profileId' => 'required',
+            'isActive' => 'nullable',
         ]);
         if ($validator->fails()) {
             $this->logAudit(Auth::user(), 'Store User', $request->all(), $validator->errors());
@@ -71,9 +72,10 @@ class UserController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'profile_id' => $request->profileId,
+            'is_active' => $request->isActive ?? true,
         ]);
         $this->logAudit(Auth::user(), 'Store User', $request->all(), $user);
-        return $this->success($user, 'Usuario creado', 201);
+        return $this->success($user, 'Usuario creado');
     }
 
     public function update(Request $request, $id)
