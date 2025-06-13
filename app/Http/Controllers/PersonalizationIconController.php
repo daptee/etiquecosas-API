@@ -48,6 +48,12 @@ class PersonalizationIconController extends Controller
 
     public function store(Request $request)
     {
+        if ($request->has('statusId')) {
+            $request->merge([
+                'statusId' => (int) $request->input('statusId')
+            ]);
+        }
+
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255|unique:personalization_icons',
             'icon' => 'required|file|mimes:svg|max:2048',
@@ -83,6 +89,12 @@ class PersonalizationIconController extends Controller
     public function update(Request $request, $id)
     {
         $icon = $this->findObject(PersonalizationIcon::class, $id);
+        if ($request->has('statusId')) {
+            $request->merge([
+                'statusId' => (int) $request->input('statusId')
+            ]);
+        }
+        
         $validator = Validator::make($request->all(), [
             'name' => [
                 'required',
