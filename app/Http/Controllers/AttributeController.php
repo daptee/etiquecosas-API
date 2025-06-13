@@ -53,6 +53,7 @@ class AttributeController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255|unique:attributes',
+            'statusId' => 'nullable|in:1,2',
             'values' => 'nullable|array',
             'values.*.value' => 'required|string|max:255',
             'values.*.statusId' => 'nullable|in:1,2',
@@ -84,6 +85,7 @@ class AttributeController extends Controller
         $attribute = $this->findObject(Attribute::class, $id);
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255|unique:attributes,name,' . $attribute->id,
+            'statusId' => 'nullable|in:1,2',
             'values' => 'nullable|array|',
             'values.*.id' => 'nullable|integer|exists:attribute_values,id',
             'values.*.value' => 'required|string|max:255',
@@ -94,7 +96,8 @@ class AttributeController extends Controller
             return $this->validationError($validator->errors());
         }
 
-        $attribute->update($request->only(['name', 'statusId']));
+        $attribute->name = $request->input('name', $attribute->name);
+        $attribute->status_id = $request->input('statusId', $attribute->status_id);
         $existingIds = $attribute->values()->pluck('id')->toArray();
         $submittedValues = collect($request->input('values'));
         $submittedIds = $submittedValues->pluck('id')->filter()->toArray();

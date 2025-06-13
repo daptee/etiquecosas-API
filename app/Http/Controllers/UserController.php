@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use Tymon\JWTAuth\Facades\JWTAuth;
 use App\Traits\FindObject;
 use App\Traits\ApiResponse;
 use App\Traits\Auditable;
@@ -103,7 +104,7 @@ class UserController extends Controller
         $user->save();
         $this->logAudit(Auth::user(), 'Update User', $request->all(), $user);
         return $this->success($user, 'Usuario actualizado');
-    }
+    }    
 
     public function updateProfile(Request $request)
     {
@@ -111,7 +112,7 @@ class UserController extends Controller
         if (!$user) {
             return $this->error('Usuario no autenticado', 401);
         }
-        
+
         $validator = Validator::make($request->all(), [
             'name' => 'nullable|string|max:255',
             'lastName' => 'nullable|string|max:255',
@@ -128,7 +129,11 @@ class UserController extends Controller
         $user->email = $request->input('email', $user->email);
         $user->save();
         $this->logAudit($user, 'Update Profile', $request->all(), $user);
-        return $this->success($user, 'Perfil actualizado');
+        $token = JWTAuth::fromUser($user);
+        return $this->success([
+            'user' => $user,
+            'token' => $token
+        ], 'Perfil actualizado y nuevo token generado');
     }
 
     public function updatePassword(Request $request)

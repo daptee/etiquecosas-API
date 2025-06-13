@@ -20,29 +20,29 @@ class LoginController extends Controller
     use ApiResponse, Auditable;
 
    public function login(Request $request)
-{
-    $validator = Validator::make($request->all(), [
-        'email' => 'required|email',
-        'password' => 'required',
-    ]);
-    if ($validator->fails()) {
-        return response()->json(['message' => 'Los datos ingresados no respetan el formato'], 422);
-    }
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'password' => 'required',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['message' => 'Los datos ingresados no respetan el formato'], 422);
+        }
 
-    $credentials = $request->only('email', 'password');
-    $user = User::where('email', $credentials['email'])->first();
-    if (!$user || !$user->is_active) {
-        return response()->json(['message' => 'El usuario y/o la contraseña son incorrectos'], 401);
-    }
+        $credentials = $request->only('email', 'password');
+        $user = User::where('email', $credentials['email'])->first();
+        if (!$user || !$user->is_active) {
+            return response()->json(['message' => 'El usuario y/o la contraseña son incorrectos'], 401);
+        }
 
-    if (!$token = JWTAuth::attempt($credentials)) {
-        return response()->json(['message' => 'El usuario y/o la contraseña son incorrectos'], 401);
-    }
+        if (!$token = JWTAuth::attempt($credentials)) {
+            return response()->json(['message' => 'El usuario y/o la contraseña son incorrectos'], 401);
+        }
 
-    return response()->json([
-        'token' => $token
-    ], 200);
-}
+        return response()->json([
+            'token' => $token
+        ], 200);
+    }
 
     public function forgotPassword(Request $request)
     {
