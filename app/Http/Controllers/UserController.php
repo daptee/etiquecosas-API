@@ -72,7 +72,7 @@ class UserController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'profile_id' => $request->profileId,
-            'is_active' => $request->isActive ?? true,
+            'is_active' => $request->isActive ?? 1,
         ]);
         $this->logAudit(Auth::user(), 'Store User', $request->all(), $user);
         return $this->success($user, 'Usuario creado');
