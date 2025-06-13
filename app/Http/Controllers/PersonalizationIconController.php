@@ -83,13 +83,6 @@ class PersonalizationIconController extends Controller
     public function update(Request $request, $id)
     {
         $icon = $this->findObject(PersonalizationIcon::class, $id);
-        $fieldsToNormalize = ['icon'];
-        foreach ($fieldsToNormalize as $field) {
-            if ($request->has($field) && in_array($request->input($field), ['null', ''])) {
-                $request->merge([$field => null]);
-            }
-        }
-
         $validator = Validator::make($request->all(), [
             'name' => [
                 'required',
@@ -116,12 +109,12 @@ class PersonalizationIconController extends Controller
                 }
                 $iconPath = $iconName;
             }
-        } elseif (is_null($request->input('icon'))) {
+        } elseif ($request->has('icon') && is_null($request->input('icon'))) {
             if ($icon->icon && Storage::disk('public_uploads')->exists($icon->icon)) {
                 Storage::disk('public_uploads')->delete($icon->icon);
             }
             $iconPath = null;
-        }
+}
 
         $icon->name = $request->input('name', $icon->name);
         $icon->icon = $iconPath;
