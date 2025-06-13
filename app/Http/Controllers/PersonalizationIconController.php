@@ -83,7 +83,6 @@ class PersonalizationIconController extends Controller
     public function update(Request $request, $id)
     {
         $icon = $this->findObject(PersonalizationIcon::class, $id);
-
         $fieldsToNormalize = ['icon'];
         foreach ($fieldsToNormalize as $field) {
             if ($request->has($field) && in_array($request->input($field), ['null', ''])) {
@@ -113,7 +112,7 @@ class PersonalizationIconController extends Controller
             $iconName = 'icons/icons/' . uniqid('icon_') . '.' . $iconFile->getClientOriginalExtension();
             if (Storage::disk('public_uploads')->put($iconName, file_get_contents($iconFile))) {
                 if ($icon->icon && Storage::disk('public_uploads')->exists($icon->icon)) {
-                    Storage::disk('public_uploads')->delete($category->icon);
+                    Storage::disk('public_uploads')->delete($icon->icon);
                 }
                 $iconPath = $iconName;
             }
