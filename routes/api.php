@@ -13,6 +13,7 @@ use App\Http\Controllers\ClientTypeController;
 use App\Http\Controllers\ProvinceController;
 use App\Http\Controllers\PersonalizationColorController; 
 use App\Http\Controllers\PersonalizationIconController; 
+use App\Http\Controllers\ShippingTemplateController;
 
 // Auth
 Route::post('login', [LoginController::class, 'login']);
@@ -107,4 +108,12 @@ Route::middleware('jwt.auth')->prefix('icons')->group(function () {
     Route::post('/', [PersonalizationIconController::class, 'store']);
     Route::put('/{id}', [PersonalizationIconController::class, 'update']);
     Route::delete('/{id}', [PersonalizationIconController::class, 'delete']);
+});
+
+// ShippingTemplate
+Route::middleware('jwt.auth')->prefix('shipping-templates')->group(function () {
+    Route::get('/', [ShippingTemplateController::class, 'index']);
+    Route::post('/', [ShippingTemplateController::class, 'store']);
+    Route::put('/{id}', [ShippingTemplateController::class, 'update']);
+    Route::delete('/{id}', [ShippingTemplateController::class, 'delete']);
 });

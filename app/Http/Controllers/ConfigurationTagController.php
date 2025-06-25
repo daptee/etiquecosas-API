@@ -85,7 +85,7 @@ class ConfigurationTagController extends Controller
 
         $tag->name = $request->input('name', $tag->name);
         $tag->color = $request->input('color', $tag->color);
-        $tag->status_id = $request->input('statusId', $tag->statusId);
+        $tag->status_id = $request->input('statusId', $tag->status_id);
         $tag->save();
         $this->logAudit(Auth::user(), 'Update Configuration Tag', $request->all(), $tag);
         return $this->success($tag, 'Etiqueta de configuración actualizada');

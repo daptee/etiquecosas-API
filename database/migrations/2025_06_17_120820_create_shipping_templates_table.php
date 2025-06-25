@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('shipping_templates', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('id_shipping_template_category')->constrained('templates_categories');
+            $table->foreignId('id_shipping_template_category')->nullable()->constrained('templates_categories');
             $table->text('description')->nullable();
             $table->foreignId('status_id')->default(1)->constrained('general_statuses');
             $table->timestamps();
