@@ -14,6 +14,7 @@ use App\Http\Controllers\ProvinceController;
 use App\Http\Controllers\PersonalizationColorController; 
 use App\Http\Controllers\PersonalizationIconController; 
 use App\Http\Controllers\ShippingTemplateController;
+use App\Http\Controllers\TemplateCategoryController;
 
 // Auth
 Route::post('login', [LoginController::class, 'login']);
@@ -116,4 +117,9 @@ Route::middleware('jwt.auth')->prefix('shipping-templates')->group(function () {
     Route::post('/', [ShippingTemplateController::class, 'store']);
     Route::put('/{id}', [ShippingTemplateController::class, 'update']);
     Route::delete('/{id}', [ShippingTemplateController::class, 'delete']);
+});
+
+// TemplateCategory
+Route::middleware('jwt.auth')->prefix('template-categories')->group(function () {
+    Route::get('/', [TemplateCategoryController::class, 'index']);
 });
