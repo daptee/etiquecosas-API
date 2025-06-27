@@ -14,7 +14,7 @@ class PersonalizationColorController extends Controller
 {
     use FindObject, ApiResponse, Auditable;
 
-   public function index(Request $request)
+    public function index(Request $request)
     {
         $perPage = $request->query('quantity');
         $page = $request->query('page', 1);
