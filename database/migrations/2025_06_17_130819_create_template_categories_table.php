@@ -11,14 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('templates_categories', function (Blueprint $table) {
+        Schema::dropIfExists('templates_categories');
+        
+        Schema::create('template_categories', function (Blueprint $table) {
             $table->id();
             $table->string('name', 100)->unique();
             $table->foreignId('status_id')->default(1)->constrained('general_statuses');
             $table->timestamps();
         });
 
-        DB::table('templates_categories')->insert([
+        DB::table('template_categories')->insert([
             ['name' => 'Entrega'],
             ['name' => 'Tiempos de envío'],
             ['name' => 'Notificaciones'],
