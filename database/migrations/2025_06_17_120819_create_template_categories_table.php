@@ -10,9 +10,7 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-    {
-        Schema::dropIfExists('templates_categories');
-        
+    {        
         Schema::create('template_categories', function (Blueprint $table) {
             $table->id();
             $table->string('name', 100)->unique();

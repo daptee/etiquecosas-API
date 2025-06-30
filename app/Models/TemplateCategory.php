@@ -11,6 +11,8 @@ class TemplateCategory extends Model
 {
     use HasFactory;
 
+    protected $table = 'templates_categories';
+
     protected $fillable = [
         'name',
         'status_id',
