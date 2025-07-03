@@ -15,6 +15,10 @@ use App\Http\Controllers\PersonalizationColorController;
 use App\Http\Controllers\PersonalizationIconController; 
 use App\Http\Controllers\ShippingTemplateController;
 use App\Http\Controllers\TemplateCategoryController;
+use App\Http\Controllers\ProductTypeController;
+use App\Http\Controllers\ProductStatusController;
+use App\Http\Controllers\ProductStockStatusController; 
+use App\Http\Controllers\ProductController;
 
 // Auth
 Route::post('login', [LoginController::class, 'login']);
@@ -54,8 +58,8 @@ Route::middleware('jwt.auth')->prefix('attributes')->group(function () {
 // Cost
 Route::middleware('jwt.auth')->prefix('costs')->group(function () {
     Route::get('/', [CostController::class, 'index']);
-    Route::post('/', [CostController::class, 'store']);
     Route::get('/{id}', [CostController::class, 'show']);
+    Route::post('/', [CostController::class, 'store']);   
     Route::put('/{id}', [CostController::class, 'update']);
     Route::delete('/{id}', [CostController::class, 'delete']);
 
@@ -78,14 +82,14 @@ Route::middleware('jwt.auth')->prefix('profiles')->group(function () {
 
 // Client
 Route::middleware('jwt.auth')->prefix('clients')->group(function () {
-    Route::get('/', [ClientController::class, 'index']);
-    Route::post('/', [ClientController::class, 'store']);
+    Route::get('/', [ClientController::class, 'index']);    
     Route::get('/{id}', [ClientController::class, 'show']);
+    Route::post('/', [ClientController::class, 'store']);
     Route::put('/{id}', [ClientController::class, 'update']);
     Route::delete('/{id}', [ClientController::class, 'delete']);
 });
 
-// Client
+// ClientType
 Route::middleware('jwt.auth')->prefix('client-types')->group(function () {
     Route::get('/', [ClientTypeController::class, 'index']);
 });
@@ -122,4 +126,28 @@ Route::middleware('jwt.auth')->prefix('shipping-templates')->group(function () {
 // TemplateCategory
 Route::middleware('jwt.auth')->prefix('template-categories')->group(function () {
     Route::get('/', [TemplateCategoryController::class, 'index']);
+});
+
+// ProductType
+Route::middleware('jwt.auth')->prefix('product-types')->group(function () {
+    Route::get('/', [ProductTypeController::class, 'index']);
+});
+
+// ProductStatus
+Route::middleware('jwt.auth')->prefix('product-statuses')->group(function () {
+    Route::get('/', [ProductStatusController::class, 'index']);
+});
+
+// ProductStockStatus
+Route::middleware('jwt.auth')->prefix('product-stock-statuses')->group(function () {
+    Route::get('/', [ProductStockStatusController::class, 'index']);
+});
+
+// Product
+Route::middleware('jwt.auth')->prefix('products')->group(function () {
+    Route::get('/', [ProductController::class, 'index']);
+    Route::get('/{id}', [ProductController::class, 'show']);
+    Route::post('/', [ProductController::class, 'store']);
+    Route::put('/{id}', [ProductController::class, 'update']);
+    Route::delete('/{id}', [ProductController::class, 'delete']);
 });
