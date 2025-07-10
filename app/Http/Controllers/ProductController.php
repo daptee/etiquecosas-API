@@ -123,7 +123,7 @@ class ProductController extends Controller
         'sku' => ['nullable', 'string', 'max:255', Rule::unique('products', 'sku')],
         'discounted_price' => 'nullable|numeric|min:0|lt:price',
         'stock_quantity' => 'nullable|integer|min:0',
-        'tag_id' => 'nullable|exists:tags,id',
+        'tag_id' => 'nullable|exists:configuration_tags,id',
         'description' => 'nullable|string',
         'is_feature' => 'nullable|boolean',
         'tutorial_link' => 'nullable|url|max:2048',
