@@ -48,7 +48,7 @@ class ShippingTemplateController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'id_shipping_template_category' => 'nullable|integer',
-            'description' => 'required|string|max:50',
+            'description' => 'required|string',
             'statusId' => 'nullable|in:1,2',
         ]);
         if ($validator->fails()) {
@@ -71,7 +71,7 @@ class ShippingTemplateController extends Controller
         $shippingTemplate = $this->findObject(ShippingTemplate::class, $id);
         $validator = Validator::make($request->all(), [
             'id_shipping_template_category' => 'nullable|integer',
-            'description' => 'required|string|max:50',
+            'description' => 'required|string',
             'statusId' => 'nullable|in:1,2',
         ]);
         if ($validator->fails()) {

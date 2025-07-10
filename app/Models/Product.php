@@ -29,18 +29,30 @@ class Product extends Model
         'discounted_price',
         'product_stock_status_id',
         'stock_quantity',
+        'wholesale_price',
+        'wholesale_min_amount',
         'tag_id',
+        'costs',
+        'wholesales',
         'description',
-        'is_feature',
+        'shortDescription',
+        'shipping_text',
+        'shipping_time_text',
+        'notifications_text',
         'tutorial_link',
+        'is_feature',
         'is_customizable',
         'meta_data',
+        'related_products',
     ];
 
     protected $casts = [
+        'costs' => 'array',
+        'wholesales' => 'array',
+        'meta_data' => 'array',
+        'related_products' => 'array',
         'is_feature' => 'boolean',
         'is_customizable' => 'boolean',
-        'meta_data' => 'array',
     ];
 
     public function type()
@@ -88,9 +100,9 @@ class Product extends Model
         return $this->hasMany(ProductVariant::class);
     }
 
-    public function customizations()
+    public function customization()
     {
-        return $this->hasMany(ProductCustomization::class);
+        return $this->hasOne(ProductCustomization::class);
     }
 
     public function images()

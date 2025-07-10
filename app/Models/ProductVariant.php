@@ -13,6 +13,7 @@ class ProductVariant extends Model
     protected $fillable = [
         'product_id',
         'variant',
+        'img',
     ];
 
       protected $casts = [
