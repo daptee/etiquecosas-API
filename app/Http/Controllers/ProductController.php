@@ -130,7 +130,7 @@ class ProductController extends Controller
         'is_customizable' => 'nullable|boolean',
         'meta_data' => 'nullable|json',
         'images' => 'nullable|array',
-        'images.*.img' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        'images.*' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         'main_image_index' => 'nullable|integer|min:0',
         'variants' => 'nullable|json',
         'variants_image' => 'nullable|array',
@@ -175,12 +175,12 @@ class ProductController extends Controller
 
     $product = Product::create($productData);
 
-    if ($request->has('categories')) {
-        $product->categories()->attach($request->categories);
+   if ($request->has('categories')) {
+        $product->categories()->attach($request->categories); 
     }
 
+    $product->categories()->attach($request->categories);
     $variantDbIds = [];
-
     if ($request->has('variants')) {
         $variantsArray = json_decode($request->input('variants'), true);
         if (json_last_error() === JSON_ERROR_NONE && is_array($variantsArray)) {
@@ -244,7 +244,6 @@ class ProductController extends Controller
     }
 
     if ($request->hasFile('images')) {
-        $mainImageIndex = $request->input('main_image_index');
         foreach ($request->file('images') as $index => $imageArray) {
             $imageFile = $imageArray['img'];
             if ($imageFile->isValid()) {
@@ -253,7 +252,7 @@ class ProductController extends Controller
                 ProductImage::create([
                     'product_id' => $product->id,
                     'img' => $imageName,
-                    'is_main' => ($index == $mainImageIndex),
+                    'is_main' => 1,
                 ]);
             }
         }
