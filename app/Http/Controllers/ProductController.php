@@ -108,7 +108,7 @@ class ProductController extends Controller
             'attributes',
             'attributeValues',
             'variants',
-            'customizations',
+            'customization',
         ]);
         $this->logAudit(Auth::user(), 'Get Product Details', ['product_id' => $id], $product);
         return $this->success($product, 'Producto obtenido exitosamente');
