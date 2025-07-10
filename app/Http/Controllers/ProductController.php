@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use App\Traits\FindObject;
 use App\Traits\ApiResponse;
@@ -31,6 +32,7 @@ class ProductController extends Controller
                 'price',
                 'discounted_price',
                 'tag_id',
+                'meta_data',
                 'is_feature',
                 'is_customizable',
                 'product_type_id',
@@ -41,6 +43,7 @@ class ProductController extends Controller
                 'type:id,name',
                 'status:id,name',
                 'stockStatus:id,name',
+                'categories:id,name',
             ]);
         if ($request->has('search')) {
             $search = $request->query('search');
@@ -93,7 +96,7 @@ class ProductController extends Controller
         return $this->success($products->items(), 'Productos obtenidos', $metaData);
     }
 
-     public function show(Request $request, string $id)
+    public function show(Request $request, string $id)
     {
         $product = $this->findObject(Product::class, $id);
         $product->load([
@@ -111,101 +114,166 @@ class ProductController extends Controller
         return $this->success($product, 'Producto obtenido exitosamente');
     }
 
-     public function store(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'product_type_id' => 'required|exists:product_types,id',
-            'product_status_id' => 'required|exists:product_statuses,id',
-            'price' => 'required|numeric|min:0',
-            'product_stock_status_id' => 'required|exists:product_stock_statuses,id',
-            'categories' => 'required|array|min:1',
-            'categories.*' => 'exists:categories,id',
-            'sku' => [
-                'nullable',
-                'string',
-                'max:255',
-                Rule::unique('products', 'sku'),
-            ],
-            'discounted_price' => 'nullable|numeric|min:0|lt:price',
-            'stock_quantity' => 'nullable|integer|min:0',
-            'tag_id' => 'nullable|exists:tags,id',
-            'description' => 'nullable|string',
-            'is_feature' => 'nullable|boolean',
-            'tutorial_link' => 'nullable|url|max:2048',
-            'is_customizable' => 'nullable|boolean',
-            'meta_data' => 'nullable|json',
-            'images' => 'nullable|array',
-            'images.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'main_image_index' => 'nullable|integer|min:0',
-            'variants' => 'nullable|array',
-            'variants.*.variant' => 'required|json',
-            'customizations' => 'nullable|array',
-            'customizations.*.customization' => 'required|json',
-        ]);
+    public function store(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'name' => 'required|string|max:255',
+        'categories' => 'required|array|min:1',
+        'categories.*' => 'exists:categories,id',
+        'sku' => ['nullable', 'string', 'max:255', Rule::unique('products', 'sku')],
+        'discounted_price' => 'nullable|numeric|min:0|lt:price',
+        'stock_quantity' => 'nullable|integer|min:0',
+        'tag_id' => 'nullable|exists:tags,id',
+        'description' => 'nullable|string',
+        'is_feature' => 'nullable|boolean',
+        'tutorial_link' => 'nullable|url|max:2048',
+        'is_customizable' => 'nullable|boolean',
+        'meta_data' => 'nullable|json',
+        'images' => 'nullable|array',
+        'images.*.img' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        'main_image_index' => 'nullable|integer|min:0',
+        'variants' => 'nullable|json',
+        'variants_image' => 'nullable|array',
+        'variants_image.*.img' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        'variants_image.*.variant_id' => 'required|integer',
+        'customizations' => 'nullable|json',
+        'product_type_id' => 'required|integer|exists:product_types,id',
+        'price' => 'required|numeric|min:0',
+        'product_stock_status_id' => 'required|integer|exists:product_stock_statuses,id',
+        'wholesale_price' => 'nullable|numeric|min:0',
+        'wholesale_min_amount' => 'nullable|integer|min:0',
+        'costs' => 'nullable|json',
+        'wholesales' => 'nullable|json',
+        'shortDescription' => 'nullable|string|max:500',
+        'shipping_text' => 'nullable|string',
+        'shipping_time_text' => 'nullable|string',
+        'notifications_text' => 'nullable|string',
+        'product_status_id' => 'required|integer|exists:product_statuses,id',
+        'related_products' => 'nullable|json',
+    ]);
 
-        if ($validator->fails()) {
-            $this->logAudit(Auth::user(), 'Store Product Validation Fail', $request->all(), $validator->errors());
-            return $this->validationError($validator->errors());
-        }
+    if ($validator->fails()) {
+        $this->logAudit(Auth::user(), 'Store Product Validation Fail', $request->all(), $validator->errors());
+        return $this->validationError($validator->errors());
+    }
 
-        $productData = $request->except(['categories', 'variants', 'customizations', 'images', 'main_image_index']);
-        $productData['is_feature'] = $productData['is_feature'] ?? false;
-        $productData['is_customizable'] = $productData['is_customizable'] ?? false;
-        if (!isset($productData['meta_data'])) {
-            $productData['meta_data'] = null;
-        }
+    $productData = $request->except(['categories', 'variants', 'customizations', 'images', 'main_image_index', 'variants_image']);
+    $productData['is_feature'] = $productData['is_feature'] ?? false;
+    $productData['is_customizable'] = $productData['is_customizable'] ?? false;
 
-        $product = Product::create($productData);
-        if ($request->has('categories')) {
-            $product->categories()->attach($request->categories);
-        }
-
-        if ($request->has('variants')) {
-            foreach ($request->variants as $variantData) {
-                ProductVariant::create([
-                    'product_id' => $product->id,
-                    'variant' => $variantData['variant'],
-                ]);
+    $jsonFields = ['meta_data', 'costs', 'wholesales', 'related_products'];
+    foreach ($jsonFields as $field) {
+        if ($request->has($field) && is_string($request->input($field))) {
+            $productData[$field] = json_decode($request->input($field), true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                $productData[$field] = null;
             }
+        } elseif (!$request->has($field)) {
+            $productData[$field] = null;
         }
+    }
 
-        if ($request->has('customizations')) {
-            foreach ($request->customizations as $customizationData) {
-                ProductCustomization::create([
-                    'product_id' => $product->id,
-                    'customization' => $customizationData['customization'],
+    $product = Product::create($productData);
+
+    if ($request->has('categories')) {
+        $product->categories()->attach($request->categories);
+    }
+
+    $variantDbIds = [];
+
+    if ($request->has('variants')) {
+        $variantsArray = json_decode($request->input('variants'), true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($variantsArray)) {
+            foreach ($variantsArray as $index => $variantData) {
+                $singleVariantValidator = Validator::make($variantData, [
+                    'attributesvalues' => 'required|array',
+                    'attributesvalues.*.attribute_id' => 'required|integer|exists:attributes,id',
+                    'sku' => ['nullable', 'string', 'max:255'],
+                    'price' => 'required|numeric|min:0',
+                    'discounted_price' => 'nullable|numeric|min:0|lt:price',
+                    'stock_status' => 'required|integer|exists:product_stock_statuses,id',
+                    'stock_quantity' => 'nullable|integer|min:0',
+                    'wholesale_price' => 'nullable|numeric|min:0',
+                    'wholesale_min_amount' => 'nullable|integer|min:0',
                 ]);
-            }
-        }
 
-        if ($request->hasFile('images')) {
-            $mainImageIndex = $request->input('main_image_index');
-            foreach ($request->file('images') as $index => $imageFile) {
-                if ($imageFile->isValid()) {
-                    $imageName = 'images/products/' . uniqid('img_') . '.' . $imageFile->getClientOriginalExtension();
-                    Storage::disk('public_uploads')->put($imageName, file_get_contents($imageFile->getRealPath()));
-                    ProductImage::create([
-                        'product_id' => $product->id,
-                        'img' => $imageName,
-                        'is_main' => ($index == $mainImageIndex),
+                if ($singleVariantValidator->fails()) {
+                    return $this->validationError([
+                        "variants.$index" => $singleVariantValidator->errors()
                     ]);
                 }
+
+                $newVariant = ProductVariant::create([
+                    'product_id' => $product->id,
+                    'variant' => $variantData,
+                ]);
+
+                $variantDbIds[$index] = $newVariant->id;
             }
         }
-        $product->load([
-            'type',
-            'status',
-            'stockStatus',
-            'categories',
-            'variants',
-            'customizations',
-            'tag',
-            'images',
-        ]);
-        $this->logAudit(Auth::user(), 'Product Created', $request->all(), $product);
-        return $this->success($product, 'Producto creado exitosamente', 201);
     }
+
+  if ($request->hasFile('variants_image')) {
+    foreach ($request->file('variants_image') as $imgData) {
+        if (
+            isset($imgData['img']) && $imgData['img']->isValid() &&
+            isset($imgData['variant_id'])
+        ) {
+            $imageFile = $imgData['img'];
+            $variantId = $imgData['variant_id'];
+
+            $variantToUpdate = ProductVariant::find($variantId);
+            if ($variantToUpdate) {
+                $imageName = 'images/product_variants/' . uniqid('img_') . '.' . $imageFile->getClientOriginalExtension();
+                Storage::disk('public_uploads')->put($imageName, file_get_contents($imageFile));
+
+                $variantToUpdate->img = $imageName;
+                $variantToUpdate->save();
+            }
+        }
+    }
+}
+    if ($request->has('customizations')) {
+        $customizationsArray = json_decode($request->input('customizations'), true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($customizationsArray)) {
+            ProductCustomization::create([
+                'product_id' => $product->id,
+                'customization' => $customizationsArray,
+            ]);
+        }
+    }
+
+    if ($request->hasFile('images')) {
+        $mainImageIndex = $request->input('main_image_index');
+        foreach ($request->file('images') as $index => $imageArray) {
+            $imageFile = $imageArray['img'];
+            if ($imageFile->isValid()) {
+                $imageName = 'images/products/' . uniqid('img_') . '.' . $imageFile->getClientOriginalExtension();
+                Storage::disk('public_uploads')->put($imageName, file_get_contents($imageFile));
+                ProductImage::create([
+                    'product_id' => $product->id,
+                    'img' => $imageName,
+                    'is_main' => ($index == $mainImageIndex),
+                ]);
+            }
+        }
+    }
+
+    $product->load([
+        'type',
+        'status',
+        'stockStatus',
+        'categories',
+        'variants',
+        'customization',
+        'tag',
+        'images',
+    ]);
+
+    $this->logAudit(Auth::user(), 'Product Created', $request->all(), $product);
+    return $this->success($product, 'Producto creado exitosamente', 201);
+}
+
 
     public function update(Request $request, string $id)
     {
