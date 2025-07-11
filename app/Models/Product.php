@@ -51,6 +51,7 @@ class Product extends Model
         'wholesales' => 'array',
         'meta_data' => 'array',
         'related_products' => 'array',
+        'customization' => 'array',
         'is_feature' => 'boolean',
         'is_customizable' => 'boolean',
     ];
