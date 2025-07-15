@@ -50,7 +50,6 @@ class Product extends Model
         'costs' => 'array',
         'meta_data' => 'array',
         'related_products' => 'array',
-        'customization' => 'array',
         'is_feature' => 'integer',
         'is_customizable' => 'integer',
     ];

@@ -142,8 +142,8 @@ class ProductController extends Controller
             'tutorial_link' => 'nullable|url|max:2048',
             //'variants_image' => 'nullable|array',
             //'variants_image.*.img' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            //'is_customizable' => 'nullable|boolean',
-            //'customizations' => 'nullable|json',
+            'is_customizable' => 'nullable|boolean',
+            'customization' => 'nullable|json',
             'meta_data' => 'nullable|json',
             'is_feature' => 'nullable|boolean',
             'product_status_id' => 'required|integer|exists:product_statuses,id',
@@ -159,7 +159,7 @@ class ProductController extends Controller
         }
 
         $decodedData = $request->all();
-        $jsonFieldsToDecode = ['variants', 'customizations', 'related_products'];
+        $jsonFieldsToDecode = ['variants', 'customization', 'related_products'];
         foreach ($jsonFieldsToDecode as $field) {
             if ($request->has($field) && is_string($request->input($field))) {
                 $decodedValue = json_decode($request->input($field), true);
@@ -185,14 +185,7 @@ class ProductController extends Controller
             'variants.*.stock_quantity' => 'nullable|integer|min:0',
             'variants.*.wholesale_price' => 'nullable|numeric|min:0',
             'variants.*.wholesale_min_amount' => 'nullable|integer|min:0',
-            'customizations' => 'nullable|array',
-            'customizations.is_details_active' => 'nullable|integer|in:0,1',
-            'customizations.is_colors_active' => 'nullable|integer|in:0,1',
-            'customizations.is_icons_active' => 'nullable|integer|in:0,1',
-            'customizations.colors' => 'nullable|array',
-            'customizations.colors.*' => 'integer|exists:personalization_colors,id',
-            'customizations.icons' => 'nullable|array',
-            'customizations.icons.*' => 'integer|exists:personalization_icons,id',
+            'customization' => 'nullable|array',            
             'meta_data' => 'nullable|json',           
             'related_products' => 'nullable|array',
             'related_products.*' => 'integer|exists:products,id',
@@ -215,7 +208,7 @@ class ProductController extends Controller
             'variants_image',
             'costs',
             'attributes', 
-            'customizations',
+            'customization',
             'meta_data',
             'related_products',
         ]);
@@ -236,8 +229,8 @@ class ProductController extends Controller
             }
         }
 
-        if ($request->has('customizations')) {
-            $value = $request->input('customizations');
+        if ($request->has('customization')) {
+            $value = $request->input('customization');
             if (is_string($value)) {
                 $decodedValue = json_decode($value, true);
                 $productData['customization'] = (json_last_error() === JSON_ERROR_NONE) ? $decodedValue : null;
@@ -278,6 +271,20 @@ class ProductController extends Controller
                 ]);
             }
             $product->wholesales()->saveMany($productWholesales);
+        }
+    }
+
+    protected function createOrUpdateProductCustomization(Product $product, Request $request)
+    {
+        if ($request->has('customization')) {
+            $customizationData = $request->input('customization');
+            $decodedCustomization = json_decode($customizationData, true);
+            $product->customization()->updateOrCreate(
+                [],
+                ['customization' => $decodedCustomization] 
+            );
+        } else {
+            $product->customization()->delete();
         }
     }
 
@@ -377,6 +384,7 @@ class ProductController extends Controller
         $this->syncProductRelations($product, $request);
         $variantDbIds = $this->createProductVariants($product, $request);
         $this->createProductWholesales($product, $request);
+        $this->createOrUpdateProductCustomization($product, $request);
         $this->createProductImages($product, $request);
         $this->createVariantImages($product, $request, $variantDbIds);
         DB::commit();
