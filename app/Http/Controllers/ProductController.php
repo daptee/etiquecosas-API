@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\ProductCustomization;
 use App\Models\ProductImage;
+use App\Models\ProductWholesale;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -107,6 +108,7 @@ class ProductController extends Controller
             'attributeValues',
             'variants',
             'customization',
+            'wholesales',
         ]);
         $this->logAudit(Auth::user(), 'Get Product Details', ['product_id' => $id], $product);
         return $this->success($product, 'Producto obtenido exitosamente');
@@ -132,12 +134,12 @@ class ProductController extends Controller
             //'attributes' => 'nullable|array',
             //'attributes.*' => 'integer|exists:attributes,id',
             'wholesales' => 'nullable|array',
-            //'description' => 'nullable|string',
-            //'shortDescription' => 'nullable|string|max:500',
-            //'shipping_text' => 'nullable|string',
-            //'shipping_time_text' => 'nullable|string',
-            //'notifications_text' => 'nullable|string',
-            //'tutorial_link' => 'nullable|url|max:2048',
+            'description' => 'nullable|string',
+            'shortDescription' => 'nullable|string|max:500',
+            'shipping_text' => 'nullable|string',
+            'shipping_time_text' => 'nullable|string',
+            'notifications_text' => 'nullable|string',
+            'tutorial_link' => 'nullable|url|max:2048',
             //'variants_image' => 'nullable|array',
             //'variants_image.*.img' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             //'is_customizable' => 'nullable|boolean',
@@ -172,7 +174,6 @@ class ProductController extends Controller
         }
 
         $internalJsonRules = [
-            'wholesales' => 'nullable|array',
             'variants' => 'nullable|array',
             'variants.*.attributesvalues' => 'required|array',
             'variants.*.attributesvalues.*.id' => 'required|numeric', 
@@ -213,15 +214,14 @@ class ProductController extends Controller
             'main_image_index',
             'variants_image',
             'costs',
-            'attributes',
-            'wholesales', 
+            'attributes', 
             'customizations',
             'meta_data',
             'related_products',
         ]);
         $productData['is_feature'] = (bool)($request->input('is_feature', false));
         $productData['is_customizable'] = (bool)($request->input('is_customizable', false));
-        $jsonFields = ['meta_data', 'wholesales', 'related_products'];
+        $jsonFields = ['meta_data', 'related_products'];
         foreach ($jsonFields as $field) {
             if ($request->has($field)) {
                 $value = $request->input($field);
@@ -263,6 +263,21 @@ class ProductController extends Controller
 
         if ($request->has('attributes')) {
             $product->attributes()->sync($request->attributes);
+        }
+    }
+
+    protected function createProductWholesales(Product $product, Request $request)
+    {
+        if ($request->has('wholesales') && is_array($request->input('wholesales'))) {
+            $wholesalesData = $request->input('wholesales');
+            $productWholesales = [];
+            foreach ($wholesalesData as $wholesale) {
+                $productWholesales[] = new ProductWholesale([
+                    'amount' => $wholesale['amount'],
+                    'discount' => $wholesale['discount'],
+                ]);
+            }
+            $product->wholesales()->saveMany($productWholesales);
         }
     }
 
@@ -361,6 +376,7 @@ class ProductController extends Controller
         $product = Product::create($productData);
         $this->syncProductRelations($product, $request);
         $variantDbIds = $this->createProductVariants($product, $request);
+        $this->createProductWholesales($product, $request);
         $this->createProductImages($product, $request);
         $this->createVariantImages($product, $request, $variantDbIds);
         DB::commit();

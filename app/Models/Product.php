@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\ProductType;
 use App\Models\ProductStatus;
 use App\Models\ProductStockStatus;
+use App\Models\ProductWholesale;
 use App\Models\ConfigurationTag;
 use App\Models\Category;
 use App\Models\Cost;
@@ -33,7 +34,6 @@ class Product extends Model
         'wholesale_min_amount',
         'tag_id',
         'costs',
-        'wholesales',
         'description',
         'shortDescription',
         'shipping_text',
@@ -48,7 +48,6 @@ class Product extends Model
 
     protected $casts = [
         'costs' => 'array',
-        'wholesales' => 'array',
         'meta_data' => 'array',
         'related_products' => 'array',
         'customization' => 'array',
@@ -74,6 +73,11 @@ class Product extends Model
     public function tag()
     {
         return $this->belongsTo(ConfigurationTag::class, 'tag_id');
+    }
+
+    public function wholesales()
+    {
+        return $this->hasMany(ProductWholesale::class);
     }
 
     public function categories()
