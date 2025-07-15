@@ -110,6 +110,7 @@ class ProductController extends Controller
             'customization',
             'wholesales',
             'relatedProducts:id',
+            'images',
         ]);
         $this->logAudit(Auth::user(), 'Get Product Details', ['product_id' => $id], $product);
         return $this->success($product, 'Producto obtenido exitosamente');
@@ -139,6 +140,7 @@ class ProductController extends Controller
             'shipping_time_text' => 'nullable|string',
             'notifications_text' => 'nullable|string',
             'tutorial_link' => 'nullable|url|max:2048',
+            'variants' => 'nullable|array',
             //'variants_image' => 'nullable|array',
             //'variants_image.*.img' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'is_customizable' => 'nullable|boolean',
@@ -174,16 +176,6 @@ class ProductController extends Controller
 
         $internalJsonRules = [
             'variants' => 'nullable|array',
-            'variants.*.attributesvalues' => 'required|array',
-            'variants.*.attributesvalues.*.id' => 'required|numeric', 
-            'variants.*.attributesvalues.*.attribute_id' => 'required|integer|exists:attributes,id',
-            'variants.*.sku' => ['nullable', 'string', 'max:255'],
-            'variants.*.price' => 'required|numeric|min:0',
-            'variants.*.discounted_price' => 'nullable|numeric|min:0|lt:variants.*.price',
-            'variants.*.stock_status' => 'required|integer|exists:product_stock_statuses,id',
-            'variants.*.stock_quantity' => 'nullable|integer|min:0',
-            'variants.*.wholesale_price' => 'nullable|numeric|min:0',
-            'variants.*.wholesale_min_amount' => 'nullable|integer|min:0',
             'customization' => 'nullable|array',            
             'meta_data' => 'nullable|json',           
             'related_products' => 'nullable|array',
@@ -344,17 +336,14 @@ class ProductController extends Controller
 
     protected function createVariantImages(Product $product, Request $request, array $variantDbIds)
     {
-        if ($request->hasFile('variants_image')) {
-            foreach ($request->file('variants_image') as $index => $variantImageArray) {
+        foreach ($request->file('variants_image') as $index => $variantImageArray) {
                 $imageFile = $variantImageArray['img'] ?? null;
                 $associatedVariantId = $variantDbIds[$index] ?? null;
-
                 if ($imageFile && $imageFile->isValid() && $associatedVariantId) {
                     $imageName = 'images/product_variants/' . uniqid('img_') . '.' . $imageFile->getClientOriginalExtension();
                     Storage::disk('public_uploads')->put($imageName, file_get_contents($imageFile));                    
                 }
-            }
-        }
+            }          
     }
 
     public function store(Request $request)
