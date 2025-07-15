@@ -109,6 +109,7 @@ class ProductController extends Controller
             'variants',
             'customization',
             'wholesales',
+            'relatedProducts:id',
         ]);
         $this->logAudit(Auth::user(), 'Get Product Details', ['product_id' => $id], $product);
         return $this->success($product, 'Producto obtenido exitosamente');
@@ -129,8 +130,8 @@ class ProductController extends Controller
             'tag_id' => 'nullable|exists:configuration_tags,id',
             'costs' => 'nullable|array',
             'costs.*' => 'integer|exists:costs,id',
-            //'categories' => 'required|array|min:1',
-            //'categories.*' => 'exists:categories,id',
+            'categories' => 'required|array|min:1',
+            'categories.*' => 'exists:categories,id',
             //'attributes' => 'nullable|array',
             //'attributes.*' => 'integer|exists:attributes,id',
             'wholesales' => 'nullable|array',
@@ -150,7 +151,7 @@ class ProductController extends Controller
             //'images' => 'nullable|array',
             //'images.*.img' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             //'main_image_index' => 'nullable|integer|min:0',
-            //'related_products' => 'nullable|json',
+            'related_products' => 'nullable|array',
         ];
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
@@ -159,7 +160,7 @@ class ProductController extends Controller
         }
 
         $decodedData = $request->all();
-        $jsonFieldsToDecode = ['variants', 'customization', 'related_products'];
+        $jsonFieldsToDecode = ['variants', 'customization'];
         foreach ($jsonFieldsToDecode as $field) {
             if ($request->has($field) && is_string($request->input($field))) {
                 $decodedValue = json_decode($request->input($field), true);
@@ -227,19 +228,7 @@ class ProductController extends Controller
             } else {
                 $productData[$field] = null;
             }
-        }
-
-        if ($request->has('customization')) {
-            $value = $request->input('customization');
-            if (is_string($value)) {
-                $decodedValue = json_decode($value, true);
-                $productData['customization'] = (json_last_error() === JSON_ERROR_NONE) ? $decodedValue : null;
-            } else {
-                $productData['customization'] = $value;
-            }
-        } else {
-            $productData['customization'] = null;
-        }
+        }       
 
         return $productData;
     }
@@ -256,6 +245,10 @@ class ProductController extends Controller
 
         if ($request->has('attributes')) {
             $product->attributes()->sync($request->attributes);
+        }
+
+        if ($request->has('related_products')) {
+            $product->relatedProducts()->sync($request->related_products);
         }
     }
 
@@ -398,6 +391,9 @@ class ProductController extends Controller
             'images',
             'costs',
             'attributes',
+            'customization',
+            'wholesales',
+            'relatedProducts',
         ]);
         $this->logAudit(Auth::user(), 'Product Created', $request->all(), $product);
         return $this->success($product, 'Producto creado exitosamente', 201);

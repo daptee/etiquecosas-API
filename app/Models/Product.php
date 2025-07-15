@@ -43,13 +43,11 @@ class Product extends Model
         'is_feature',
         'is_customizable',
         'meta_data',
-        'related_products',
     ];
 
     protected $casts = [
         'costs' => 'array',
         'meta_data' => 'array',
-        'related_products' => 'array',
         'is_feature' => 'integer',
         'is_customizable' => 'integer',
     ];
@@ -112,5 +110,10 @@ class Product extends Model
     public function images()
     {
         return $this->hasMany(ProductImage::class);
+    }
+
+    public function relatedProducts()
+    {
+        return $this->belongsToMany(Product::class, 'product_related_product', 'product_id', 'related_product_id');
     }
 }
