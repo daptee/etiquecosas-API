@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
 use App\Traits\FindObject;
 use App\Traits\ApiResponse;
 use App\Traits\Auditable; 
@@ -114,69 +115,120 @@ class ProductController extends Controller
         return $this->success($product, 'Producto obtenido exitosamente');
     }
 
-    public function store(Request $request)
+    protected function validateProductRequest(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $rules = [
             'name' => 'required|string|max:255',
-            'categories' => 'required|array|min:1',
-            'categories.*' => 'exists:categories,id',
             'sku' => ['nullable', 'string', 'max:255', Rule::unique('products', 'sku')],
-            'discounted_price' => 'nullable|numeric|min:0|lt:price',
-            'stock_quantity' => 'nullable|integer|min:0',
-            'tag_id' => 'nullable|exists:configuration_tags,id',
-            'description' => 'nullable|string',
-            'is_feature' => 'nullable|boolean',
-            'tutorial_link' => 'nullable|url|max:2048',
-            'is_customizable' => 'nullable|boolean',
-            'meta_data' => 'nullable|json',
-            'meta_data.title' => 'nullable|string|max:255', 
-            'meta_data.description' => 'nullable|string',
-            'images' => 'nullable|array',
-            'images.*' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'main_image_index' => 'nullable|integer|min:0',
-            'variants' => 'nullable|json',
-            'variants_image' => 'nullable|array',
-            'variants_image.*.img' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'variants_image.*.variant_id' => 'required|integer',
-            'customization' => 'nullable|json',
-            'customization.is_details_active' => 'nullable|integer|in:0,1',
-            'customization.is_colors_active' => 'nullable|integer|in:0,1',
-            'customization.is_icons_active' => 'nullable|integer|in:0,1',
-            'customization.colors' => 'nullable|array',
-            'customization.colors.*' => 'integer|exists:colors,id',
-            'customization.icons' => 'nullable|array',
-            'customization.icons.*' => 'integer|exists:icons,id',
             'product_type_id' => 'required|integer|exists:product_types,id',
             'price' => 'required|numeric|min:0',
+            'discounted_price' => 'nullable|numeric|min:0|lt:price',
             'product_stock_status_id' => 'required|integer|exists:product_stock_statuses,id',
+            'stock_quantity' => 'nullable|integer|min:0',
             'wholesale_price' => 'nullable|numeric|min:0',
             'wholesale_min_amount' => 'nullable|integer|min:0',
-            'costs' => 'nullable|array',
-            'costs.*' => 'integer|exists:costs,id',
-            'wholesales' => 'nullable|json',
-            'shortDescription' => 'nullable|string|max:500',
-            'shipping_text' => 'nullable|string',
-            'shipping_time_text' => 'nullable|string',
-            'notifications_text' => 'nullable|string',
-            'product_status_id' => 'required|integer|exists:product_statuses,id',
-            'related_products' => 'nullable|json',
-        ]);
+            'tag_id' => 'nullable|exists:configuration_tags,id',
+            //'costs' => 'nullable|array',
+            //'costs.*' => 'integer|exists:costs,id',
+            //'categories' => 'required|array|min:1',
+            //'categories.*' => 'exists:categories,id',
+            //'attributes' => 'nullable|array',
+            //'attributes.*' => 'integer|exists:attributes,id',
+            //'wholesales' => 'nullable|json',
+            //'description' => 'nullable|string',
+            //'shortDescription' => 'nullable|string|max:500',
+            //'shipping_text' => 'nullable|string',
+            //'shipping_time_text' => 'nullable|string',
+            //'notifications_text' => 'nullable|string',
+            //'tutorial_link' => 'nullable|url|max:2048',
+            //'variants_image' => 'nullable|array',
+            //'variants_image.*.img' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            //'is_customizable' => 'nullable|boolean',
+            //'customizations' => 'nullable|json',
+            //'meta_data' => 'nullable|json',
+            //'is_feature' => 'nullable|boolean',
+            //'product_status_id' => 'required|integer|exists:product_statuses,id',
+            //'images' => 'nullable|array',
+            //'images.*.img' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            //'main_image_index' => 'nullable|integer|min:0',
+            //'related_products' => 'nullable|json',
+        ];
+        $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
-            $this->logAudit(Auth::user(), 'Store Product Validation Fail', $request->all(), $validator->errors());
+            $this->logAudit(Auth::user(), 'Store Product Validation Fail (Initial)', $request->all(), $validator->errors());
             return $this->validationError($validator->errors());
         }
 
+        $decodedData = $request->all();
+        $jsonFieldsToDecode = ['wholesales', 'variants', 'customizations', 'meta_data', 'related_products'];
+        foreach ($jsonFieldsToDecode as $field) {
+            if ($request->has($field) && is_string($request->input($field))) {
+                $decodedValue = json_decode($request->input($field), true);
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    $decodedData[$field] = $decodedValue;
+                } else {
+                    $validator->errors()->add($field, 'El campo ' . $field . ' no es un JSON válido.');
+                    $this->logAudit(Auth::user(), 'Store Product Validation Fail (JSON Decode)', $request->all(), $validator->errors());
+                    return $this->validationError($validator->errors());
+                }
+            }
+        }
+
+        $internalJsonRules = [
+            'wholesales' => 'nullable|array',
+            'wholesales.*.amount' => 'required_with:wholesales|numeric|min:0',
+            'wholesales.*.discount' => 'required_with:wholesales|numeric|min:0',
+            'variants' => 'nullable|array',
+            'variants.*.attributesvalues' => 'required|array',
+            'variants.*.attributesvalues.*.id' => 'required|numeric', 
+            'variants.*.attributesvalues.*.attribute_id' => 'required|integer|exists:attributes,id',
+            'variants.*.sku' => ['nullable', 'string', 'max:255'],
+            'variants.*.price' => 'required|numeric|min:0',
+            'variants.*.discounted_price' => 'nullable|numeric|min:0|lt:variants.*.price',
+            'variants.*.stock_status' => 'required|integer|exists:product_stock_statuses,id',
+            'variants.*.stock_quantity' => 'nullable|integer|min:0',
+            'variants.*.wholesale_price' => 'nullable|numeric|min:0',
+            'variants.*.wholesale_min_amount' => 'nullable|integer|min:0',
+            'customizations' => 'nullable|array',
+            'customizations.is_details_active' => 'nullable|integer|in:0,1',
+            'customizations.is_colors_active' => 'nullable|integer|in:0,1',
+            'customizations.is_icons_active' => 'nullable|integer|in:0,1',
+            'customizations.colors' => 'nullable|array',
+            'customizations.colors.*' => 'integer|exists:personalization_colors,id',
+            'customizations.icons' => 'nullable|array',
+            'customizations.icons.*' => 'integer|exists:personalization_icons,id',
+            'meta_data' => 'nullable|array',
+            'meta_data.title' => 'nullable|string|max:255',
+            'meta_data.description' => 'nullable|string',
+            'related_products' => 'nullable|array',
+            'related_products.*' => 'integer|exists:products,id',
+        ];
+        $internalValidator = Validator::make($decodedData, $internalJsonRules);
+        if ($internalValidator->fails()) {
+            $this->logAudit(Auth::user(), 'Store Product Validation Fail (Internal JSON)', $decodedData, $internalValidator->errors());
+            return $this->validationError($internalValidator->errors());
+        }
+        return null;
+    }
+
+    protected function prepareProductData(Request $request): array
+    {
         $productData = $request->except([
             'categories',
             'variants',
             'images',
             'main_image_index',
             'variants_image',
-            'costs'
+            'costs',
+            'attributes',
+            'wholesales', 
+            'customizations',
+            'meta_data',
+            'related_products',
         ]);
-        $productData['is_feature'] = $productData['is_feature'] ?? false;
-        $productData['is_customizable'] = $productData['is_customizable'] ?? false;
-        $jsonFields = ['meta_data', 'wholesales', 'related_products', 'customization'];
+        $productData['is_feature'] = (bool)($request->input('is_feature', false));
+        $productData['is_customizable'] = (bool)($request->input('is_customizable', false));
+        $jsonFields = ['meta_data', 'wholesales', 'related_products'];
         foreach ($jsonFields as $field) {
             if ($request->has($field)) {
                 $value = $request->input($field);
@@ -191,85 +243,134 @@ class ProductController extends Controller
             }
         }
 
-        $product = Product::create($productData);
+        if ($request->has('customizations')) {
+            $value = $request->input('customizations');
+            if (is_string($value)) {
+                $decodedValue = json_decode($value, true);
+                $productData['customization'] = (json_last_error() === JSON_ERROR_NONE) ? $decodedValue : null;
+            } else {
+                $productData['customization'] = $value;
+            }
+        } else {
+            $productData['customization'] = null;
+        }
 
+        return $productData;
+    }
+
+    protected function syncProductRelations(Product $product, Request $request)
+    {
         if ($request->has('categories')) {
-            $product->categories()->attach($request->categories); 
+            $product->categories()->attach($request->categories);
         }
 
         if ($request->has('costs')) {
             $product->costs()->sync($request->costs);
         }
 
-        $variantDbIds = [];
-        if ($request->has('variants')) {
-            $variantsArray = json_decode($request->input('variants'), true);
-            if (json_last_error() === JSON_ERROR_NONE && is_array($variantsArray)) {
-                foreach ($variantsArray as $index => $variantData) {
-                    $singleVariantValidator = Validator::make($variantData, [
-                        'attributesvalues' => 'required|array',
-                        'attributesvalues.*.attribute_id' => 'required|integer|exists:attributes,id',
-                        'sku' => ['nullable', 'string', 'max:255'],
-                        'price' => 'required|numeric|min:0',
-                        'discounted_price' => 'nullable|numeric|min:0|lt:price',
-                        'stock_status' => 'required|integer|exists:product_stock_statuses,id',
-                        'stock_quantity' => 'nullable|integer|min:0',
-                        'wholesale_price' => 'nullable|numeric|min:0',
-                        'wholesale_min_amount' => 'nullable|integer|min:0',
-                    ]);
-
-                    if ($singleVariantValidator->fails()) {
-                        return $this->validationError([
-                            "variants.$index" => $singleVariantValidator->errors()
-                        ]);
-                    }
-
-                    $newVariant = ProductVariant::create([
-                        'product_id' => $product->id,
-                        'variant' => $variantData,
-                    ]);
-
-                    $variantDbIds[$index] = $newVariant->id;
-                }
-            }
+        if ($request->has('attributes')) {
+            $product->attributes()->sync($request->attributes);
         }
+    }
 
-        if ($request->hasFile('variants_image')) {
-            foreach ($request->file('variants_image') as $imgData) {
-                if (
-                    isset($imgData['img']) && $imgData['img']->isValid() &&
-                    isset($imgData['variant_id'])
-                ) {
-                    $imageFile = $imgData['img'];
-                    $variantId = $imgData['variant_id'];
-
-                    $variantToUpdate = ProductVariant::find($variantId);
-                    if ($variantToUpdate) {
-                        $imageName = 'images/product_variants/' . uniqid('img_') . '.' . $imageFile->getClientOriginalExtension();
-                        Storage::disk('public_uploads')->put($imageName, file_get_contents($imageFile));
-
-                        $variantToUpdate->img = $imageName;
-                        $variantToUpdate->save();
-                    }
-                }
-            }
-        }
-        
+    protected function createProductImages(Product $product, Request $request)
+    {
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $index => $imageArray) {
-                $imageFile = $imageArray['img'];
-                if ($imageFile->isValid()) {
+                $imageFile = $imageArray['img'] ?? null;
+                if ($imageFile && $imageFile->isValid()) {
                     $imageName = 'images/products/' . uniqid('img_') . '.' . $imageFile->getClientOriginalExtension();
                     Storage::disk('public_uploads')->put($imageName, file_get_contents($imageFile));
                     ProductImage::create([
                         'product_id' => $product->id,
                         'img' => $imageName,
-                        'is_main' => 1,
+                        'is_main' => ($request->input('main_image_index') == $index) ? 1 : 0,
                     ]);
                 }
             }
         }
+    }
 
+    protected function createProductVariants(Product $product, Request $request): array
+    {
+        $variantDbIds = [];
+        if ($request->has('variants')) {
+            $variantsData = $request->input('variants');
+            $variantsArray = [];
+
+            if (is_string($variantsData)) {
+                $decodedVariants = json_decode($variantsData, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($decodedVariants)) {
+                    $variantsArray = $decodedVariants;
+                } else {
+                    return [];
+                }
+            } elseif (is_array($variantsData)) {
+                $variantsArray = $variantsData;
+            } else {
+                return []; 
+            }
+
+            foreach ($variantsArray as $index => $variantData) {
+                $singleVariantValidator = Validator::make($variantData, [
+                    'attributesvalues' => 'required|array',
+                    'attributesvalues.*.id' => 'required|numeric',
+                    'attributesvalues.*.attribute_id' => 'required|integer|exists:attributes,id',
+                    'sku' => ['nullable', 'string', 'max:255'],
+                    'price' => 'required|numeric|min:0',
+                    'discounted_price' => 'nullable|numeric|min:0|lt:price',
+                    'stock_status' => 'required|integer|exists:product_stock_statuses,id',
+                    'stock_quantity' => 'nullable|integer|min:0',
+                    'wholesale_price' => 'nullable|numeric|min:0',
+                    'wholesale_min_amount' => 'nullable|integer|min:0',
+                ]);
+                if ($singleVariantValidator->fails()) {
+                    return $this->validationError([
+                        "variants.$index" => $singleVariantValidator->errors()
+                    ]);
+                }
+
+                $newVariant = ProductVariant::create([
+                    'product_id' => $product->id,
+                    'variant' => $variantData,
+                    'sku' => $variantData['sku'] ?? null,
+                    'price' => $variantData['price'],
+                ]);
+                $variantDbIds[$index] = $newVariant->id;
+            }
+        }
+        return $variantDbIds;
+    }
+
+    protected function createVariantImages(Product $product, Request $request, array $variantDbIds)
+    {
+        if ($request->hasFile('variants_image')) {
+            foreach ($request->file('variants_image') as $index => $variantImageArray) {
+                $imageFile = $variantImageArray['img'] ?? null;
+                $associatedVariantId = $variantDbIds[$index] ?? null;
+
+                if ($imageFile && $imageFile->isValid() && $associatedVariantId) {
+                    $imageName = 'images/product_variants/' . uniqid('img_') . '.' . $imageFile->getClientOriginalExtension();
+                    Storage::disk('public_uploads')->put($imageName, file_get_contents($imageFile));                    
+                }
+            }
+        }
+    }
+
+    public function store(Request $request)
+    {
+        $validationResponse = $this->validateProductRequest($request);
+        if ($validationResponse) {
+            return $validationResponse;
+        }
+        DB::beginTransaction();
+        $productData = $this->prepareProductData($request);
+        $product = Product::create($productData);
+        //$this->syncProductRelations($product, $request);
+        //$variantDbIds = $this->createProductVariants($product, $request);
+        //$this->createProductImages($product, $request);
+        //$this->createVariantImages($product, $request, $variantDbIds);
+        DB::commit();
         $product->load([
             'type',
             'status',
@@ -279,11 +380,11 @@ class ProductController extends Controller
             'tag',
             'images',
             'costs',
+            'attributes',
         ]);
         $this->logAudit(Auth::user(), 'Product Created', $request->all(), $product);
         return $this->success($product, 'Producto creado exitosamente', 201);
     }
-
 
     public function update(Request $request, string $id)
     {
@@ -327,9 +428,9 @@ class ProductController extends Controller
             'customization.is_colors_active' => 'nullable|integer|in:0,1',
             'customization.is_icons_active' => 'nullable|integer|in:0,1',
             'customization.colors' => 'nullable|array',
-            'customization.colors.*' => 'integer|exists:colors,id',
+            'customization.colors.*' => 'integer|exists:personalization_colors,id',
             'customization.icons' => 'nullable|array',
-            'customization.icons.*' => 'integer|exists:icons,id',
+            'customization.icons.*' => 'integer|exists:personalization_icons,id',
             'images_to_delete' => 'nullable|array',
             'images_to_delete.*' => 'exists:product_images,id',
             'new_images' => 'nullable|array',
