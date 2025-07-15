@@ -110,7 +110,7 @@ class ProductController extends Controller
             'customization',
             'wholesales',
             'relatedProducts:id',
-            'images:img',
+            'images',
         ]);
         $this->logAudit(Auth::user(), 'Get Product Details', ['product_id' => $id], $product);
         return $this->success($product, 'Producto obtenido exitosamente');
