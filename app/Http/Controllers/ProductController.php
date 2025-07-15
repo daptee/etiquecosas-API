@@ -128,8 +128,8 @@ class ProductController extends Controller
             'wholesale_price' => 'nullable|numeric|min:0',
             'wholesale_min_amount' => 'nullable|integer|min:0',
             'tag_id' => 'nullable|exists:configuration_tags,id',
-            //'costs' => 'nullable|array',
-            //'costs.*' => 'integer|exists:costs,id',
+            'costs' => 'nullable|array',
+            'costs.*' => 'integer|exists:costs,id',
             //'categories' => 'required|array|min:1',
             //'categories.*' => 'exists:categories,id',
             //'attributes' => 'nullable|array',
@@ -146,8 +146,8 @@ class ProductController extends Controller
             //'is_customizable' => 'nullable|boolean',
             //'customizations' => 'nullable|json',
             //'meta_data' => 'nullable|json',
-            //'is_feature' => 'nullable|boolean',
-            //'product_status_id' => 'required|integer|exists:product_statuses,id',
+            'is_feature' => 'nullable|boolean',
+            'product_status_id' => 'required|integer|exists:product_statuses,id',
             //'images' => 'nullable|array',
             //'images.*.img' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             //'main_image_index' => 'nullable|integer|min:0',
@@ -366,10 +366,10 @@ class ProductController extends Controller
         DB::beginTransaction();
         $productData = $this->prepareProductData($request);
         $product = Product::create($productData);
-        //$this->syncProductRelations($product, $request);
-        //$variantDbIds = $this->createProductVariants($product, $request);
-        //$this->createProductImages($product, $request);
-        //$this->createVariantImages($product, $request, $variantDbIds);
+        $this->syncProductRelations($product, $request);
+        $variantDbIds = $this->createProductVariants($product, $request);
+        $this->createProductImages($product, $request);
+        $this->createVariantImages($product, $request, $variantDbIds);
         DB::commit();
         $product->load([
             'type',
