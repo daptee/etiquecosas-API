@@ -131,7 +131,7 @@ class ProductController extends Controller
             //'categories.*' => 'exists:categories,id',
             //'attributes' => 'nullable|array',
             //'attributes.*' => 'integer|exists:attributes,id',
-            'wholesales' => 'nullable|json',
+            'wholesales' => 'nullable|array',
             //'description' => 'nullable|string',
             //'shortDescription' => 'nullable|string|max:500',
             //'shipping_text' => 'nullable|string',
@@ -172,7 +172,7 @@ class ProductController extends Controller
         }
 
         $internalJsonRules = [
-            'wholesales' => 'nullable|json',
+            'wholesales' => 'nullable|array',
             'variants' => 'nullable|array',
             'variants.*.attributesvalues' => 'required|array',
             'variants.*.attributesvalues.*.id' => 'required|numeric', 
