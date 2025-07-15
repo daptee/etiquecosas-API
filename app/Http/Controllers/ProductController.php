@@ -131,9 +131,7 @@ class ProductController extends Controller
             'costs' => 'nullable|array',
             'costs.*' => 'integer|exists:costs,id',
             'categories' => 'required|array|min:1',
-            'categories.*' => 'exists:categories,id',
-            //'attributes' => 'nullable|array',
-            //'attributes.*' => 'integer|exists:attributes,id',
+            'categories.*' => 'exists:categories,id',            
             'wholesales' => 'nullable|array',
             'description' => 'nullable|string',
             'shortDescription' => 'nullable|string|max:500',
@@ -148,9 +146,9 @@ class ProductController extends Controller
             'meta_data' => 'nullable|json',
             'is_feature' => 'nullable|boolean',
             'product_status_id' => 'required|integer|exists:product_statuses,id',
-            //'images' => 'nullable|array',
-            //'images.*.img' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            //'main_image_index' => 'nullable|integer|min:0',
+            'images' => 'nullable|array',
+            'images.*.img' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'main_image_index' => 'nullable|integer|min:0',
             'related_products' => 'nullable|array',
         ];
         $validator = Validator::make($request->all(), $rules);
@@ -243,10 +241,6 @@ class ProductController extends Controller
             $product->costs()->sync($request->costs);
         }
 
-        if ($request->has('attributes')) {
-            $product->attributes()->sync($request->attributes);
-        }
-
         if ($request->has('related_products')) {
             $product->relatedProducts()->sync($request->related_products);
         }
@@ -282,9 +276,8 @@ class ProductController extends Controller
     }
 
     protected function createProductImages(Product $product, Request $request)
-    {
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $index => $imageArray) {
+    {        
+       foreach ($request->file('images') as $index => $imageArray) {
                 $imageFile = $imageArray['img'] ?? null;
                 if ($imageFile && $imageFile->isValid()) {
                     $imageName = 'images/products/' . uniqid('img_') . '.' . $imageFile->getClientOriginalExtension();
@@ -295,8 +288,7 @@ class ProductController extends Controller
                         'is_main' => ($request->input('main_image_index') == $index) ? 1 : 0,
                     ]);
                 }
-            }
-        }
+            }    
     }
 
     protected function createProductVariants(Product $product, Request $request): array
