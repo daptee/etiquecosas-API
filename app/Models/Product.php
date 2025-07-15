@@ -52,8 +52,8 @@ class Product extends Model
         'meta_data' => 'array',
         'related_products' => 'array',
         'customization' => 'array',
-        'is_feature' => 'boolean',
-        'is_customizable' => 'boolean',
+        'is_feature' => 'integer',
+        'is_customizable' => 'integer',
     ];
 
     public function type()

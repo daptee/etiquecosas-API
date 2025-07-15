@@ -101,9 +101,6 @@ class ProductController extends Controller
     {
         $product = $this->findObject(Product::class, $id);
         $product->load([
-            'type',
-            'status',
-            'stockStatus',
             'categories:id',
             'costs:id',
             'attributes',
@@ -134,7 +131,7 @@ class ProductController extends Controller
             //'categories.*' => 'exists:categories,id',
             //'attributes' => 'nullable|array',
             //'attributes.*' => 'integer|exists:attributes,id',
-            //'wholesales' => 'nullable|json',
+            'wholesales' => 'nullable|json',
             //'description' => 'nullable|string',
             //'shortDescription' => 'nullable|string|max:500',
             //'shipping_text' => 'nullable|string',
@@ -145,7 +142,7 @@ class ProductController extends Controller
             //'variants_image.*.img' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             //'is_customizable' => 'nullable|boolean',
             //'customizations' => 'nullable|json',
-            //'meta_data' => 'nullable|json',
+            'meta_data' => 'nullable|json',
             'is_feature' => 'nullable|boolean',
             'product_status_id' => 'required|integer|exists:product_statuses,id',
             //'images' => 'nullable|array',
@@ -160,7 +157,7 @@ class ProductController extends Controller
         }
 
         $decodedData = $request->all();
-        $jsonFieldsToDecode = ['wholesales', 'variants', 'customizations', 'meta_data', 'related_products'];
+        $jsonFieldsToDecode = ['variants', 'customizations', 'related_products'];
         foreach ($jsonFieldsToDecode as $field) {
             if ($request->has($field) && is_string($request->input($field))) {
                 $decodedValue = json_decode($request->input($field), true);
@@ -175,9 +172,7 @@ class ProductController extends Controller
         }
 
         $internalJsonRules = [
-            'wholesales' => 'nullable|array',
-            'wholesales.*.amount' => 'required_with:wholesales|numeric|min:0',
-            'wholesales.*.discount' => 'required_with:wholesales|numeric|min:0',
+            'wholesales' => 'nullable|json',
             'variants' => 'nullable|array',
             'variants.*.attributesvalues' => 'required|array',
             'variants.*.attributesvalues.*.id' => 'required|numeric', 
@@ -197,9 +192,7 @@ class ProductController extends Controller
             'customizations.colors.*' => 'integer|exists:personalization_colors,id',
             'customizations.icons' => 'nullable|array',
             'customizations.icons.*' => 'integer|exists:personalization_icons,id',
-            'meta_data' => 'nullable|array',
-            'meta_data.title' => 'nullable|string|max:255',
-            'meta_data.description' => 'nullable|string',
+            'meta_data' => 'nullable|json',           
             'related_products' => 'nullable|array',
             'related_products.*' => 'integer|exists:products,id',
         ];
