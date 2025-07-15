@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\ProductType;
 use App\Models\ProductStatus;
 use App\Models\ProductStockStatus;
@@ -19,7 +20,7 @@ use App\Models\ProductImage;
 
 class Product extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'sku',
