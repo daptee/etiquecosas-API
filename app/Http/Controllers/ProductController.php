@@ -141,8 +141,8 @@ class ProductController extends Controller
             'notifications_text' => 'nullable|string',
             'tutorial_link' => 'nullable|url|max:2048',
             'variants' => 'nullable|array',
-            //'variants_image' => 'nullable|array',
-            //'variants_image.*.img' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'variants_image' => 'nullable|array',
+            'variants_image.*.img' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'is_customizable' => 'nullable|boolean',
             'customization' => 'nullable|json',
             'meta_data' => 'nullable|json',
@@ -269,7 +269,8 @@ class ProductController extends Controller
 
     protected function createProductImages(Product $product, Request $request)
     {        
-       foreach ($request->file('images') as $index => $imageArray) {
+        if ($request->hasFile('images')) { 
+        foreach ($request->file('images') as $index => $imageArray) {
                 $imageFile = $imageArray['img'] ?? null;
                 if ($imageFile && $imageFile->isValid()) {
                     $imageName = 'images/products/' . uniqid('img_') . '.' . $imageFile->getClientOriginalExtension();
@@ -280,7 +281,8 @@ class ProductController extends Controller
                         'is_main' => ($request->input('main_image_index') == $index) ? 1 : 0,
                     ]);
                 }
-            }    
+            }  
+        }      
     }
 
     protected function createProductVariants(Product $product, Request $request): array
@@ -356,11 +358,11 @@ class ProductController extends Controller
         $productData = $this->prepareProductData($request);
         $product = Product::create($productData);
         $this->syncProductRelations($product, $request);
-        $variantDbIds = $this->createProductVariants($product, $request);
+        //$variantDbIds = $this->createProductVariants($product, $request);
         $this->createProductWholesales($product, $request);
         $this->createOrUpdateProductCustomization($product, $request);
         $this->createProductImages($product, $request);
-        $this->createVariantImages($product, $request, $variantDbIds);
+        //$this->createVariantImages($product, $request, $variantDbIds);
         DB::commit();
         $product->load([
             'type',
