@@ -152,7 +152,6 @@ class ProductController extends Controller
             'attributes.*' => 'integer|exists:attributes,id',
             'variants' => 'nullable|array',
             'variants.*.attributesvalues' => 'required|array',
-            'variants.*.attributesvalues.*.attribute_id' => 'nullable|integer|exists:attributes,id',
             'variants.*.attributesvalues.*.id' => 'nullable|numeric', 
             'variants.*.sku' => ['nullable', 'string', 'max:255'],
             'variants.*.price' => 'required|numeric|min:0',
@@ -353,7 +352,6 @@ class ProductController extends Controller
                 $singleVariantValidator = Validator::make($variantData, [
                     'attributesvalues' => 'required|array',
                     'attributesvalues.*.id' => 'nullable|numeric',
-                    'attributesvalues.*.attribute_id' => 'required|integer|exists:attributes,id',
                     'sku' => ['nullable', 'string', 'max:255'],
                     'price' => 'required|numeric|min:0',
                     'discounted_price' => 'nullable|numeric|min:0|lt:price',
@@ -494,7 +492,6 @@ class ProductController extends Controller
             'variants' => 'nullable|array',
             'variants.*.id' => 'nullable|exists:product_variants,id',
             'variants.*.attributesvalues' => 'required|array',
-            'variants.*.attributesvalues.*.attribute_id' => 'required|integer|exists:attributes,id',
             'variants.*.sku' => ['nullable', 'string', 'max:255'],
             'variants.*.price' => 'required|numeric|min:0',
             'variants.*.discounted_price' => 'nullable|numeric|min:0|lt:variants.*.price',
