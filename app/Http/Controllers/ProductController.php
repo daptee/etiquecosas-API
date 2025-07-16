@@ -151,7 +151,7 @@ class ProductController extends Controller
             'attributes.*' => 'integer|exists:attributes,id',
             'variants' => 'nullable|array',
             'variants.*.attributesvalues' => 'required|array',
-            'variants.*.attributesvalues.*.attribute_id' => 'required|integer|exists:attributes,id',
+            'variants.*.attributesvalues.*.attribute_id' => 'nullable|integer|exists:attributes,id',
             'variants.*.attributesvalues.*.id' => 'nullable|numeric', 
             'variants.*.sku' => ['nullable', 'string', 'max:255'],
             'variants.*.price' => 'required|numeric|min:0',
