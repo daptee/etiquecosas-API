@@ -116,7 +116,7 @@ class ProductController extends Controller
         return $this->success($product, 'Producto obtenido exitosamente');
     }
 
-    protected function validateProductRequest(Request $request)
+    protected function validateProductRequest(Request $request, ?int $productId = null)
     {
         $rules = [
             'name' => 'required|string|max:255',
