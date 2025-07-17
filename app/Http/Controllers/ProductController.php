@@ -105,6 +105,7 @@ class ProductController extends Controller
         $product->load([
             'categories:id',
             'costs:id',
+            'attributes',
             'attributeValues',
             'variants',
             'customization',
@@ -159,14 +160,14 @@ class ProductController extends Controller
             'variants.*.stock_quantity' => 'nullable|integer|min:0',
             'variants.*.wholesale_price' => 'nullable|numeric|min:0',
             'variants.*.wholesale_min_amount' => 'nullable|integer|min:0',
+            'variants.*.img' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'meta_data' => 'nullable|json',
             'customization' => 'nullable|json',
             'images' => 'nullable|array',
             'images.*.img' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'main_image_index' => 'nullable|integer|min:0',
             'variants_image' => 'nullable|array',
-            'variants_image.*.variant_id' => 'required|integer', 
-            'variants_image.*.img' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'variants_image.*.variant_id' => 'required|integer',             
         ];
 
         $validator = Validator::make($request->all(), $rules);
@@ -219,7 +220,6 @@ class ProductController extends Controller
             'variants',
             'images',
             'main_image_index',
-            'variants_image',
             'costs',
             'attributes',
             'customization',
@@ -331,16 +331,15 @@ class ProductController extends Controller
         }
     }
 
-    protected function createProductVariants(Product $product, Request $request): array
+     protected function createProductVariants(Product $product, Request $request): array
     {
         $variantDbIds = [];
         if ($request->has('variants') && is_array($request->input('variants'))) {
-            $variantsArray = $request->input('variants'); 
-
+            $variantsArray = $request->input('variants');
             foreach ($variantsArray as $index => $variantData) {
                 if (!is_array($variantData)) {
-                    Log::error("createProductVariants: Variant data at index $index is not an array. Type: " . gettype($variantData) . " Value: " . json_encode($variantData));
-                    throw ValidationException::withMessages([
+                    Log::error("createProductVariants: Variant data at index $index is not an array: " . json_encode($variantData));
+                    throw \Illuminate\Validation\ValidationException::withMessages([
                         "variants.$index" => ['Los datos de la variante no son válidos (cada variante debe ser un objeto). Este elemento es de tipo ' . gettype($variantData) . '.'],
                     ]);
                 }
@@ -348,6 +347,7 @@ class ProductController extends Controller
                 $singleVariantValidator = Validator::make($variantData, [
                     'attributesvalues' => 'required|array',
                     'attributesvalues.*.id' => 'nullable|numeric',
+                    'attributesvalues.*.attribute_id' => 'required|integer|exists:attributes,id',
                     'sku' => ['nullable', 'string', 'max:255'],
                     'price' => 'required|numeric|min:0',
                     'discounted_price' => 'nullable|numeric|min:0|lt:price',
@@ -355,16 +355,26 @@ class ProductController extends Controller
                     'stock_quantity' => 'nullable|integer|min:0',
                     'wholesale_price' => 'nullable|numeric|min:0',
                     'wholesale_min_amount' => 'nullable|integer|min:0',
+                    'img' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048', 
                 ]);
                 if ($singleVariantValidator->fails()) {
-                    throw ValidationException::withMessages([
+                    throw \Illuminate\Validation\ValidationException::withMessages([
                         "variants.$index" => $singleVariantValidator->errors()->all(),
                     ]);
                 }
 
+                $imagePath = null;
+                $variantImageFile = $request->file("variants.$index.img");
+
+                if ($variantImageFile instanceof \Illuminate\Http\UploadedFile && $variantImageFile->isValid()) {
+                    $imageName = 'images/product_variants/' . uniqid('img_') . '.' . $variantImageFile->getClientOriginalExtension();
+                    Storage::disk('public_uploads')->put($imageName, file_get_contents($variantImageFile->getRealPath()));
+                    $imagePath = $imageName;
+                }
+
                 $newVariant = ProductVariant::create([
                     'product_id' => $product->id,
-                    'variant' => $variantData,
+                    'variant' => $variantData, 
                     'sku' => $variantData['sku'] ?? null,
                     'price' => $variantData['price'],
                     'discounted_price' => $variantData['discounted_price'] ?? null,
@@ -372,33 +382,12 @@ class ProductController extends Controller
                     'stock_quantity' => $variantData['stock_quantity'] ?? null,
                     'wholesale_price' => $variantData['wholesale_price'] ?? null,
                     'wholesale_min_amount' => $variantData['wholesale_min_amount'] ?? null,
+                    'img' => $imagePath, 
                 ]);
                 $variantDbIds[$index] = $newVariant->id;
             }
         }
         return $variantDbIds;
-    }
-
-    protected function createVariantImages(Product $product, Request $request, array $variantDbIds)
-    {
-        $variantsImagesCollection = collect($request->file('variants_image'));
-
-        if ($variantsImagesCollection->isNotEmpty()) {
-            foreach ($variantsImagesCollection as $index => $variantImageArray) {
-                $imageFile = (is_array($variantImageArray) && isset($variantImageArray['img'])) ? $variantImageArray['img'] : null;
-                $variantIdFromRequest = (is_array($variantImageArray) && isset($variantImageArray['variant_id'])) ? $variantImageArray['variant_id'] : null;
-                $associatedVariantId = $variantDbIds[$variantIdFromRequest] ?? null;
-                if ($imageFile instanceof \Illuminate\Http\UploadedFile && $imageFile->isValid() && $associatedVariantId) {
-                    $imageName = 'images/product_variants/' . uniqid('img_') . '.' . $imageFile->getClientOriginalExtension();
-                    Storage::disk('public_uploads')->put($imageName, file_get_contents($imageFile->getRealPath()));
-                    $variant = ProductVariant::find($associatedVariantId);
-                    if ($variant) {
-                        $variant->img = $imageName;
-                        $variant->save();
-                    }
-                }
-            }
-        }
     }
 
     public function store(Request $request)
@@ -415,7 +404,6 @@ class ProductController extends Controller
         $this->createProductWholesales($product, $request);
         $this->createOrUpdateProductCustomization($product, $request);
         $this->createProductImages($product, $request);
-        $this->createVariantImages($product, $request, $variantDbIds);
         DB::commit();
         $product->load([
             'type',
@@ -674,71 +662,51 @@ class ProductController extends Controller
 
     protected function updateProductImages(Product $product, Request $request)
     {
-        if ($request->has('images'))
-        {
-            $currentImageIds = $product->images->pluck('id')->toArray();
-            $incomingImageIds = [];
-            $mainImageIndex = (int) $request->input('main_image_index', 0);
-            $mainImageCandidateId = null;
-            $imagesCollection = collect($request->file('images'));
-            if ($imagesCollection->isNotEmpty()) {
-                foreach ($imagesCollection as $index => $imageArray) {
-                    $imageFile = (is_array($imageArray) && isset($imageArray['img'])) ? $imageArray['img'] : null;
-                    $imageId = (is_array($imageArray) && isset($imageArray['id'])) ? $imageArray['id'] : null;
-                    if ($imageFile instanceof \Illuminate\Http\UploadedFile && $imageFile->isValid()) {
-                        $imageName = 'images/products/' . uniqid('img_') . '.' . $imageFile->getClientOriginalExtension();
-                        Storage::disk('public_uploads')->put($imageName, file_get_contents($imageFile->getRealPath()));
-                        if ($imageId && in_array($imageId, $currentImageIds)) {
-                            $image = ProductImage::find($imageId);
-                            if ($image) {
-                                if ($image->img && Storage::disk('public_uploads')->exists($image->img)) {
-                                    Storage::disk('public_uploads')->delete($image->img);
-                                }
-                                $image->update(['img' => $imageName]);
-                                $incomingImageIds[] = $imageId;
+        $currentImageIds = $product->images->pluck('id')->toArray();
+        $incomingImageIds = [];
+        $mainImageIndex = (int) $request->input('main_image_index', 0);
+        $mainImageCandidateId = null;
+        $imagesCollection = collect($request->file('images'));
+        $allIncomingImagesData = $request->input('images'); 
+        Log::info('--- Debugging updateProductImages ---');
+        Log::info('Current Image IDs (from DB):', ['ids' => $currentImageIds]);
+        Log::info('Raw Request images input:', ['input' => $request->input('images')]);
+        Log::info('Uploaded Files for images:', ['files' => $request->file('images') ? array_keys($request->file('images')) : 'No files']);
+        if ($request->has('images') && is_array($request->input('images'))) {
+            foreach ($allIncomingImagesData as $index => $imageArray) {
+                $imageFile = (is_array($imageArray) && isset($imageArray['img'])) ? $imagesCollection->get($index) : null;
+                $imageId = (is_array($imageArray) && isset($imageArray['id'])) ? $imageArray['id'] : null;
+                if ($imageFile instanceof \Illuminate\Http\UploadedFile && $imageFile->isValid()) {
+                    if ($imageId && in_array($imageId, $currentImageIds)) {
+                        $image = ProductImage::find($imageId);
+                        if ($image) {
+                            if ($image->img && Storage::disk('public_uploads')->exists($image->img)) {
+                                Storage::disk('public_uploads')->delete($image->img);
                             }
-                        } else {
-                            $newImage = ProductImage::create([
-                                'product_id' => $product->id,
-                                'img' => $imageName,
-                                'is_main' => 0,
-                            ]);
-                            $incomingImageIds[] = $newImage->id;
+                            $image->update(['img' => $imageName]);
+                            $incomingImageIds[] = $imageId;
                         }
-                    } elseif ($imageId && in_array($imageId, $currentImageIds)) {
-                        $incomingImageIds[] = $imageId;
+                    } else {
+                        $newImage = ProductImage::create([
+                            'product_id' => $product->id,
+                            'img' => $imageName,
+                            'is_main' => 0,
+                        ]);
+                        $incomingImageIds[] = $newImage->id;
                     }
+                } elseif ($imageId && in_array($imageId, $currentImageIds)) {
+                    $incomingImageIds[] = $imageId;
+                }
 
-                    $processedImageId = $imageId ?? (isset($incomingImageIds[count($incomingImageIds)-1]) ? $incomingImageIds[count($incomingImageIds)-1] : null);
-                    if ($mainImageIndex === $index && $processedImageId) {
-                        $mainImageCandidateId = $processedImageId;
-                    }
+                $processedImageId = $imageId ?? (isset($incomingImageIds[count($incomingImageIds)-1]) ? $incomingImageIds[count($incomingImageIds)-1] : null);
+                if ($mainImageIndex === $index && $processedImageId) {
+                    $mainImageCandidateId = $processedImageId;
                 }
             }
+        }
 
-            $imagesToDelete = array_diff($currentImageIds, $incomingImageIds);
-            if (!empty($imagesToDelete)) {
-                $deletedImageFiles = ProductImage::whereIn('id', $imagesToDelete)->pluck('img')->toArray();
-                ProductImage::destroy($imagesToDelete);
-                foreach ($deletedImageFiles as $filePath) {
-                    if ($filePath && Storage::disk('public_uploads')->exists($filePath)) {
-                        Storage::disk('public_uploads')->delete($filePath);
-                    }
-                }
-            }
-
-            ProductImage::where('product_id', $product->id)->update(['is_main' => 0]);
-            if ($mainImageCandidateId) {
-                ProductImage::where('id', $mainImageCandidateId)->update(['is_main' => 1]);
-            } elseif (!empty($incomingImageIds)) {
-                ProductImage::where('id', $incomingImageIds[0])->update(['is_main' => 1]);
-            } elseif (empty($incomingImageIds) && $product->images()->count() > 0) {
-                $firstRemainingImage = $product->images()->first();
-                if ($firstRemainingImage) {
-                    $firstRemainingImage->update(['is_main' => 1]);
-                }
-            }
-        }    
+        Log::info('Incoming Image IDs (after processing):', ['ids' => $incomingImageIds]);
+        $imagesToDelete = array_diff($currentImageIds, $incomingImageIds);
     }
 
     protected function updateVariantImages(Product $product, Request $request, array $variantDbIds)
