@@ -51,6 +51,11 @@ class Product extends Model
         'meta_data' => 'array',
         'is_feature' => 'integer',
         'is_customizable' => 'integer',
+        'price' => 'float',
+        'discounted_price' => 'float',
+        'wholesale_price' => 'float', 
+        'wholesale_min_amount' => 'integer',
+        'stock_quantity' => 'integer',
     ];
 
     public function type()
