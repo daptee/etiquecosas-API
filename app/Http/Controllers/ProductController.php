@@ -674,68 +674,71 @@ class ProductController extends Controller
 
     protected function updateProductImages(Product $product, Request $request)
     {
-        $currentImageIds = $product->images->pluck('id')->toArray();
-        $incomingImageIds = [];
-        $mainImageIndex = (int) $request->input('main_image_index', 0);
-        $mainImageCandidateId = null;
-        $imagesCollection = collect($request->file('images'));
-        if ($imagesCollection->isNotEmpty()) {
-            foreach ($imagesCollection as $index => $imageArray) {
-                $imageFile = (is_array($imageArray) && isset($imageArray['img'])) ? $imageArray['img'] : null;
-                $imageId = (is_array($imageArray) && isset($imageArray['id'])) ? $imageArray['id'] : null;
-                if ($imageFile instanceof \Illuminate\Http\UploadedFile && $imageFile->isValid()) {
-                    $imageName = 'images/products/' . uniqid('img_') . '.' . $imageFile->getClientOriginalExtension();
-                    Storage::disk('public_uploads')->put($imageName, file_get_contents($imageFile->getRealPath()));
-                    if ($imageId && in_array($imageId, $currentImageIds)) {
-                        $image = ProductImage::find($imageId);
-                        if ($image) {
-                            if ($image->img && Storage::disk('public_uploads')->exists($image->img)) {
-                                Storage::disk('public_uploads')->delete($image->img);
+        if ($request->has('images'))
+        {
+            $currentImageIds = $product->images->pluck('id')->toArray();
+            $incomingImageIds = [];
+            $mainImageIndex = (int) $request->input('main_image_index', 0);
+            $mainImageCandidateId = null;
+            $imagesCollection = collect($request->file('images'));
+            if ($imagesCollection->isNotEmpty()) {
+                foreach ($imagesCollection as $index => $imageArray) {
+                    $imageFile = (is_array($imageArray) && isset($imageArray['img'])) ? $imageArray['img'] : null;
+                    $imageId = (is_array($imageArray) && isset($imageArray['id'])) ? $imageArray['id'] : null;
+                    if ($imageFile instanceof \Illuminate\Http\UploadedFile && $imageFile->isValid()) {
+                        $imageName = 'images/products/' . uniqid('img_') . '.' . $imageFile->getClientOriginalExtension();
+                        Storage::disk('public_uploads')->put($imageName, file_get_contents($imageFile->getRealPath()));
+                        if ($imageId && in_array($imageId, $currentImageIds)) {
+                            $image = ProductImage::find($imageId);
+                            if ($image) {
+                                if ($image->img && Storage::disk('public_uploads')->exists($image->img)) {
+                                    Storage::disk('public_uploads')->delete($image->img);
+                                }
+                                $image->update(['img' => $imageName]);
+                                $incomingImageIds[] = $imageId;
                             }
-                            $image->update(['img' => $imageName]);
-                            $incomingImageIds[] = $imageId;
+                        } else {
+                            $newImage = ProductImage::create([
+                                'product_id' => $product->id,
+                                'img' => $imageName,
+                                'is_main' => 0,
+                            ]);
+                            $incomingImageIds[] = $newImage->id;
                         }
-                    } else {
-                        $newImage = ProductImage::create([
-                            'product_id' => $product->id,
-                            'img' => $imageName,
-                            'is_main' => 0,
-                        ]);
-                        $incomingImageIds[] = $newImage->id;
+                    } elseif ($imageId && in_array($imageId, $currentImageIds)) {
+                        $incomingImageIds[] = $imageId;
                     }
-                } elseif ($imageId && in_array($imageId, $currentImageIds)) {
-                    $incomingImageIds[] = $imageId;
-                }
 
-                $processedImageId = $imageId ?? (isset($incomingImageIds[count($incomingImageIds)-1]) ? $incomingImageIds[count($incomingImageIds)-1] : null);
-                if ($mainImageIndex === $index && $processedImageId) {
-                    $mainImageCandidateId = $processedImageId;
+                    $processedImageId = $imageId ?? (isset($incomingImageIds[count($incomingImageIds)-1]) ? $incomingImageIds[count($incomingImageIds)-1] : null);
+                    if ($mainImageIndex === $index && $processedImageId) {
+                        $mainImageCandidateId = $processedImageId;
+                    }
                 }
             }
-        }
 
-        $imagesToDelete = array_diff($currentImageIds, $incomingImageIds);
-        if (!empty($imagesToDelete)) {
-            $deletedImageFiles = ProductImage::whereIn('id', $imagesToDelete)->pluck('img')->toArray();
-            ProductImage::destroy($imagesToDelete);
-            foreach ($deletedImageFiles as $filePath) {
-                if ($filePath && Storage::disk('public_uploads')->exists($filePath)) {
-                    Storage::disk('public_uploads')->delete($filePath);
+            $imagesToDelete = array_diff($currentImageIds, $incomingImageIds);
+            if (!empty($imagesToDelete)) {
+                $deletedImageFiles = ProductImage::whereIn('id', $imagesToDelete)->pluck('img')->toArray();
+                ProductImage::destroy($imagesToDelete);
+                foreach ($deletedImageFiles as $filePath) {
+                    if ($filePath && Storage::disk('public_uploads')->exists($filePath)) {
+                        Storage::disk('public_uploads')->delete($filePath);
+                    }
                 }
             }
-        }
 
-        ProductImage::where('product_id', $product->id)->update(['is_main' => 0]);
-        if ($mainImageCandidateId) {
-            ProductImage::where('id', $mainImageCandidateId)->update(['is_main' => 1]);
-        } elseif (!empty($incomingImageIds)) {
-            ProductImage::where('id', $incomingImageIds[0])->update(['is_main' => 1]);
-        } elseif (empty($incomingImageIds) && $product->images()->count() > 0) {
-            $firstRemainingImage = $product->images()->first();
-            if ($firstRemainingImage) {
-                $firstRemainingImage->update(['is_main' => 1]);
+            ProductImage::where('product_id', $product->id)->update(['is_main' => 0]);
+            if ($mainImageCandidateId) {
+                ProductImage::where('id', $mainImageCandidateId)->update(['is_main' => 1]);
+            } elseif (!empty($incomingImageIds)) {
+                ProductImage::where('id', $incomingImageIds[0])->update(['is_main' => 1]);
+            } elseif (empty($incomingImageIds) && $product->images()->count() > 0) {
+                $firstRemainingImage = $product->images()->first();
+                if ($firstRemainingImage) {
+                    $firstRemainingImage->update(['is_main' => 1]);
+                }
             }
-        }
+        }    
     }
 
     protected function updateVariantImages(Product $product, Request $request, array $variantDbIds)
