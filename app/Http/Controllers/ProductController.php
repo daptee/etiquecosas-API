@@ -166,9 +166,7 @@ class ProductController extends Controller
             'images' => 'nullable|array',
             'images.*.img' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'main_image_index' => 'nullable|integer|min:0',
-            'variants_image' => 'nullable|array',
-            'variants_image.*.variant_id' => 'required|integer',             
-        ];
+                              ];
 
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
@@ -468,15 +466,13 @@ class ProductController extends Controller
             'variants.*.stock_quantity' => 'nullable|integer|min:0',
             'variants.*.wholesale_price' => 'nullable|numeric|min:0',
             'variants.*.wholesale_min_amount' => 'nullable|integer|min:0',
+            'variants.*.img' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'meta_data' => 'nullable|json',
             'customization' => 'nullable|json',
             'images' => 'nullable|array',
             'images.*.id' => 'nullable|integer|exists:product_images,id',
             'images.*.img' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'main_image_index' => 'nullable|integer|min:0',
-            'variants_image' => 'nullable|array',
-            'variants_image.*.variant_id' => 'required|integer', 
-            'variants_image.*.img' => 'required_with:variants_image.*.variant_id|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'main_image_index' => 'nullable|integer|min:0',            
         ];
 
         $validator = Validator::make($request->all(), $rules);
@@ -594,10 +590,9 @@ class ProductController extends Controller
                 if (!is_array($variantData)) {
                     Log::error("Variant data at index $index is not an array in updateProductVariants: " . json_encode($variantData));
                     throw ValidationException::withMessages([
-                        "variants.$index" => ['Los datos de la variante no son validos. Este elemento es de tipo ' . gettype($variantData) . '.'],
+                        "variants.$index" => ['Los datos de la variante no son válidos (cada variante debe ser un objeto). Este elemento es de tipo ' . gettype($variantData) . '.'],
                     ]);
                 }
-
                 $variantId = $variantData['id'] ?? null;
                 $singleVariantValidator = Validator::make($variantData, [
                     'id' => 'nullable|integer|exists:product_variants,id',
@@ -611,41 +606,52 @@ class ProductController extends Controller
                     'stock_quantity' => 'nullable|integer|min:0',
                     'wholesale_price' => 'nullable|numeric|min:0',
                     'wholesale_min_amount' => 'nullable|integer|min:0',
+                    'img' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
                 ]);
+
                 if ($singleVariantValidator->fails()) {
                     throw ValidationException::withMessages([
                         "variants.$index" => $singleVariantValidator->errors()->all(),
                     ]);
                 }
 
+                $imagePathToSave = null;
+                $variantImageFile = $request->file("variants.$index.img");
+
+                if ($variantImageFile instanceof \Illuminate\Http\UploadedFile && $variantImageFile->isValid()) {
+                    $imageName = 'images/product_variants/' . uniqid('img_') . '.' . $variantImageFile->getClientOriginalExtension();
+                    Storage::disk('public_uploads')->put($imageName, file_get_contents($variantImageFile->getRealPath()));
+                    $imagePathToSave = $imageName;
+                } else if (isset($variantData['img']) && is_string($variantData['img'])) {
+                    $imagePathToSave = $variantData['img'];
+                }
+
+                $variantCommonData = [
+                    'variant' => $variantData,
+                    'sku' => $variantData['sku'] ?? null,
+                    'price' => $variantData['price'],
+                    'discounted_price' => $variantData['discounted_price'] ?? null,
+                    'stock_status' => $variantData['stock_status'],
+                    'stock_quantity' => $variantData['stock_quantity'] ?? null,
+                    'wholesale_price' => $variantData['wholesale_price'] ?? null,
+                    'wholesale_min_amount' => $variantData['wholesale_min_amount'] ?? null,
+                    'img' => $imagePathToSave,
+                ];
+
                 if ($variantId && in_array($variantId, $currentVariantIds)) {
                     $variant = ProductVariant::find($variantId);
-                    if ($variant) {
-                        $variant->update([
-                            'variant' => $variantData,
-                            'sku' => $variantData['sku'] ?? null,
-                            'price' => $variantData['price'],
-                            'discounted_price' => $variantData['discounted_price'] ?? null,
-                            'stock_status' => $variantData['stock_status'],
-                            'stock_quantity' => $variantData['stock_quantity'] ?? null,
-                            'wholesale_price' => $variantData['wholesale_price'] ?? null,
-                            'wholesale_min_amount' => $variantData['wholesale_min_amount'] ?? null,
-                        ]);
+                    if ($variant) {                      
+                        if ($variant->image_path && $imagePathToSave !== $variant->image_path && Storage::disk('public_uploads')->exists($variant->image_path)) {
+                            Storage::disk('public_uploads')->delete($variant->image_path);
+                        }
+                        $variant->update($variantCommonData);
                         $incomingVariantIds[] = $variantId;
                         $variantDbIdsMap[$index] = $variantId;
                     }
                 } else {
-                    $newVariant = ProductVariant::create([
+                    $newVariant = ProductVariant::create(array_merge($variantCommonData, [
                         'product_id' => $product->id,
-                        'variant' => $variantData,
-                        'sku' => $variantData['sku'] ?? null,
-                        'price' => $variantData['price'],
-                        'discounted_price' => $variantData['discounted_price'] ?? null,
-                        'stock_status' => $variantData['stock_status'],
-                        'stock_quantity' => $variantData['stock_quantity'] ?? null,
-                        'wholesale_price' => $variantData['wholesale_price'] ?? null,
-                        'wholesale_min_amount' => $variantData['wholesale_min_amount'] ?? null,
-                    ]);
+                    ]));
                     $incomingVariantIds[] = $newVariant->id;
                     $variantDbIdsMap[$index] = $newVariant->id;
                 }
@@ -654,6 +660,12 @@ class ProductController extends Controller
 
         $variantsToDelete = array_diff($currentVariantIds, $incomingVariantIds);
         if (!empty($variantsToDelete)) {
+            foreach ($variantsToDelete as $variantToDeleteId) {
+                $variant = ProductVariant::find($variantToDeleteId);
+                if ($variant && $variant->image_path && Storage::disk('public_uploads')->exists($variant->image_path)) {
+                    Storage::disk('public_uploads')->delete($variant->image_path);
+                }
+            }
             ProductVariant::destroy($variantsToDelete);
         }
 
@@ -708,48 +720,7 @@ class ProductController extends Controller
         Log::info('Incoming Image IDs (after processing):', ['ids' => $incomingImageIds]);
         $imagesToDelete = array_diff($currentImageIds, $incomingImageIds);
     }
-
-    protected function updateVariantImages(Product $product, Request $request, array $variantDbIds)
-    {
-        $currentVariantImagePaths = ProductVariant::where('product_id', $product->id)
-                                    ->whereNotNull('img')
-                                    ->pluck('img', 'id')
-                                    ->toArray();
-        $incomingVariantImageMap = [];
-        $variantsImagesCollection = collect($request->file('variants_image'));
-        if ($variantsImagesCollection->isNotEmpty()) {
-            foreach ($variantsImagesCollection as $index => $variantImageArray) {
-                $imageFile = (is_array($variantImageArray) && isset($variantImageArray['img'])) ? $variantImageArray['img'] : null;
-                $variantIdFromRequest = (is_array($variantImageArray) && isset($variantImageArray['variant_id'])) ? $variantImageArray['variant_id'] : null;
-                $associatedVariantId = $variantIdFromRequest;
-                if ($imageFile instanceof \Illuminate\Http\UploadedFile && $imageFile->isValid() && $associatedVariantId) {
-                    $variant = ProductVariant::find($associatedVariantId);
-                    if ($variant) {
-                        $imageName = 'images/product_variants/' . uniqid('img_') . '.' . $imageFile->getClientOriginalExtension();
-                        Storage::disk('public_uploads')->put($imageName, file_get_contents($imageFile->getRealPath()));
-                        if ($variant->img && Storage::disk('public_uploads')->exists($variant->img)) {
-                            Storage::disk('public_uploads')->delete($variant->img);
-                        }
-
-                        $variant->img = $imageName;
-                        $variant->save();
-                        $incomingVariantImageMap[$associatedVariantId] = $imageName; 
-                    }
-                }
-            }
-        }
-
-        $product->variants->each(function($variant) use ($incomingVariantImageMap, $currentVariantImagePaths) {
-            if ($variant->img && !array_key_exists($variant->id, $incomingVariantImageMap)) {                
-                if (Storage::disk('public_uploads')->exists($variant->img)) {
-                    Storage::disk('public_uploads')->delete($variant->img);
-                }
-                $variant->img = null;
-                $variant->save();
-            }
-        });
-    }
-
+    
     protected function updateProductWholesales(Product $product, Request $request)
     {
         $currentWholesaleIds = $product->wholesales->pluck('id')->toArray();
