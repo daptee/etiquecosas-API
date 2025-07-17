@@ -484,18 +484,7 @@ class ProductController extends Controller
             'customization' => 'nullable|json',
             'images' => 'nullable|array',
             'images.*.id' => 'nullable|integer|exists:product_images,id',
-            'images.*.img' => [
-                'nullable', 
-                'image',
-                'mimes:jpeg,png,jpg,gif,svg',
-                'max:2048',
-                Rule::requiredIf(function ($value, $attribute, $data) use ($request) {
-                    $originalIndex = explode('.', $attribute)[1];
-                    $imageId = $request->input("images.$originalIndex.id");
-                    $uploadedFile = $request->file("images.$originalIndex.img");
-                    return is_null($imageId) || !is_null($uploadedFile);
-                }),
-            ],
+            'images.*.img' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'main_image_index' => 'nullable|integer|min:0',
             'variants_image' => 'nullable|array',
             'variants_image.*.variant_id' => 'required|integer', 
