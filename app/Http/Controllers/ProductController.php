@@ -773,7 +773,6 @@ class ProductController extends Controller
         $this->syncProductUpdateRelations($product, $request);
         $variantDbIds = $this->updateProductVariants($product, $request);
         $this->updateProductImages($product, $request);
-        $this->updateVariantImages($product, $request, $variantDbIds);
         $this->updateProductWholesales($product, $request);
         $this->createOrUpdateProductCustomization($product, $request);
         DB::commit();
