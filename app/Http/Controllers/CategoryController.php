@@ -274,6 +274,14 @@ class CategoryController extends Controller
 
     protected function formatCategoryForPublicApi(Category $category) 
     {
+        $metaData = $category->meta_data;
+        if (is_string($metaData)) {
+            $decodedMetaData = json_decode($metaData); 
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $metaData = $decodedMetaData;
+            }
+        }
+
         $formatted = [
             'id' => $category->id,
             'name' => $category->name,
@@ -284,7 +292,7 @@ class CategoryController extends Controller
             'description' => $category->description,
             'banner' => $category->banner ? asset($category->banner) : null,
             'status_id' => $category->status_id, 
-            'tag_id' => $category->tag_id, 
+             'tag' => $category->tag ? ['id' => $category->tag->id, 'name' => $category->tag->name, 'color' => $category->tag->color] : null,
         ];
 
         if ($category->children->isNotEmpty()) {
@@ -302,8 +310,9 @@ class CategoryController extends Controller
     {
         $categories = Category::whereNull('category_id') 
             ->where('status_id', 1)
+            ->with('tag')
             ->with(['children' => function ($query) {
-                $query->where('status_id', 1)->with('children'); 
+                $query->where('status_id', 1)->with('children.tag'); 
             }])
             ->get();
         $formattedCategories = $categories->map(function ($category) {
