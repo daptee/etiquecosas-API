@@ -27,6 +27,11 @@ Route::post('client-login', [LoginController::class, 'clientLogin']);
 Route::post('client-forgot-password', [LoginController::class, 'clientForgotPassword']);
 Route::post('create-admin-user', [UserController::class, 'store']);
 
+// Publica
+Route::prefix('v1')->group(function () {
+    Route::get('categories', [CategoryController::class, 'getPublicCategories']);
+});
+
 // User
 Route::middleware('jwt.auth')->prefix('users')->group(function () {
     Route::get('/', [UserController::class, 'index']);

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\ClientType;
 use App\Models\GeneralStatus;
 use App\Models\ClientShipping;
+use App\Models\ClientWholesale;
 
 class Client extends Model
 {
@@ -21,7 +22,6 @@ class Client extends Model
         'password',
         'phone',
         'billing_data',
-        'wholesale_data',
         'status_id'
     ];
 
@@ -38,5 +38,10 @@ class Client extends Model
     public function shippings()
     {
         return $this->hasMany(ClientShipping::class);
+    }
+
+    public function wholesale()
+    {
+        return $this->hasOne(ClientWholesale::class);
     }
 }

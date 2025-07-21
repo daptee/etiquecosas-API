@@ -271,4 +271,46 @@ class CategoryController extends Controller
         $this->logAudit(Auth::user(), 'Delete Category', $id, $category);
         return $this->success($category, 'Categoría eliminada');
     }
+
+    protected function formatCategoryForPublicApi(Category $category) 
+    {
+        $formatted = [
+            'id' => $category->id,
+            'name' => $category->name,
+            'img' => $category->img ? asset($category->img) : null,
+            'icon' => $category->icon ? asset($category->icon) : null,
+            'color' => $category->color,
+            'meta_data' => $category->meta_data, 
+            'description' => $category->description,
+            'banner' => $category->banner ? asset($category->banner) : null,
+            'status_id' => $category->status_id, 
+            'tag_id' => $category->tag_id, 
+        ];
+
+        if ($category->children->isNotEmpty()) {
+            $formatted['subcategories'] = $category->children->map(function ($subCategory) {
+                return $this->formatCategoryForPublicApi($subCategory);
+            })->toArray();
+        } else {
+            $formatted['subcategories'] = []; 
+        }
+
+        return $formatted;
+    }
+
+    public function getPublicCategories() 
+    {
+        $categories = Category::whereNull('category_id') 
+            ->where('status_id', 1)
+            ->with(['children' => function ($query) {
+                $query->where('status_id', 1)->with('children'); 
+            }])
+            ->get();
+        $formattedCategories = $categories->map(function ($category) {
+            return $this->formatCategoryForPublicApi($category);
+        });
+        $this->logAudit(null, 'Get Public Categories List V1', [], $formattedCategories);
+
+        return response()->json($formattedCategories, 200);
+    }    
 }
