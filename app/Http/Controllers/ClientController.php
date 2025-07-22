@@ -47,7 +47,7 @@ class ClientController extends Controller
             'from' => $clients->firstItem(),
             'to' => $clients->lastItem(),
         ];        
-        return $this->success($clients->items(), $metaData, 'Clientes obtenidos');
+        return $this->success($clients->items(), 'Clientes obtenidos', $metaData);
     }
 
     public function show($id)
@@ -55,7 +55,7 @@ class ClientController extends Controller
         $client = $this->findObject(Client::class, $id);
         $client->load('clientType', 'generalStatus', 'shippings.locality', 'wholesale.locality'); 
         $this->logAudit(Auth::user(), 'Get Client Details', $id, $client);
-        return $this->success($client, 'Cliente obtenidos');
+        return $this->success($client, 'Cliente obtenido');
     }
     
    public function store(Request $request)
