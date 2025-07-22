@@ -13,7 +13,6 @@ class ClientWholesale extends Model
 
     protected $fillable = [
         'client_id',
-        'cuit',
         'name',
         'locality_id',
         'address',

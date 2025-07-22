@@ -4,15 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Client;
 use App\Models\ClientShipping;
-use App\Models\ClientWholesale; // Importa el nuevo modelo
+use App\Models\ClientWholesale;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use App\Traits\FindObject;
 use App\Traits\ApiResponse;
 use App\Traits\Auditable;
-use Illuminate\Validation\Rule; // Importar para validación unique
-
+use Illuminate\Validation\Rule;
 class ClientController extends Controller
 {
     use FindObject, ApiResponse, Auditable;
@@ -22,7 +21,7 @@ class ClientController extends Controller
         $perPage = $request->query('quantity');
         $page = $request->query('page', 1);
         $search = $request->query('search');
-        $query = Client::query()->select('id', 'client_type_id', 'name', 'lastName', 'email', 'phone', 'status_id')->with('wholesale');         
+        $query = Client::query()->select('id', 'client_type_id', 'name', 'lastName', 'email', 'phone', 'status_id', 'cuit')->with('wholesales');         
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
@@ -35,10 +34,7 @@ class ClientController extends Controller
         if (!$perPage) {
             $clients = $query->get();
             $this->logAudit(Auth::user(), 'Get Clients List', $request->all(), $clients);
-            return $this->success([
-                'data' => $clients,
-                'meta_data' => null,
-            ], 'Clientes obtenidos');
+            return $this->success($clients, 'Clientes obtenidos');
         }
 
         $clients = $query->paginate($perPage, ['*'], 'page', $page);
@@ -51,10 +47,7 @@ class ClientController extends Controller
             'from' => $clients->firstItem(),
             'to' => $clients->lastItem(),
         ];        
-        return $this->success([
-            'data' => $clients->items(),
-            'meta_data' => $metaData,
-        ], 'Clientes obtenidos');
+        return $this->success($clients->items(), $metaData, 'Clientes obtenidos');
     }
 
     public function show($id)
@@ -65,7 +58,7 @@ class ClientController extends Controller
         return $this->success($client, 'Cliente obtenidos');
     }
     
-    public function store(Request $request)
+   public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'clientTypeId' => 'required|exists:client_types,id',
@@ -74,12 +67,13 @@ class ClientController extends Controller
             'email' => 'required|email|unique:clients,email',
             'password' => 'nullable|string|min:6',
             'phone' => 'nullable|string|max:20',
+            'cuit' => 'nullable|string|max:20|unique:clients,cuit',
             'billingData' => 'nullable|json',
             'statusId' => 'nullable|exists:general_statuses,id',
-            'wholesale.cuit' => 'nullable|string|max:20|unique:client_wholesales,cuit',
-            'wholesale.name' => 'nullable|string|max:255',
-            'wholesale.localityId' => 'nullable|exists:localities,id',
-            'wholesale.address' => 'nullable|string|max:255',
+            'wholesale_data' => 'nullable|array',
+            'wholesale_data.*.name' => 'required|string|max:255',
+            'wholesale_data.*.localityId' => 'required|exists:localities,id',
+            'wholesale_data.*.address' => 'required|string|max:255',
             'shippings' => 'nullable|array',
             'shippings.*.name' => 'required|string',
             'shippings.*.address' => 'required|string',
@@ -99,17 +93,19 @@ class ClientController extends Controller
             'email' => $request->email,
             'password' => $request->password ? bcrypt($request->password) : null,
             'phone' => $request->phone,
+            'cuit' => $request->cuit, 
             'billing_data' => $request->billingData,
             'status_id' => $request->statusId,
         ]);
 
-        if ($request->has('wholesale') && !empty($request->wholesale['cuit'])) {
-            $client->wholesale()->create([
-                'cuit' => $request->wholesale['cuit'],
-                'name' => $request->wholesale['name'] ?? null,
-                'locality_id' => $request->wholesale['localityId'] ?? null,
-                'address' => $request->wholesale['address'] ?? null,
-            ]);
+        if ($request->has('wholesale_data') && is_array($request->wholesale_data)) {
+            foreach ($request->wholesale_data as $wholesaleItem) {
+                $client->wholesales()->create([
+                    'name' => $wholesaleItem['name'],
+                    'locality_id' => $wholesaleItem['localityId'],
+                    'address' => $wholesaleItem['address'],
+                ]);
+            }
         }
 
         if ($request->has('shippings')) {
@@ -139,17 +135,14 @@ class ClientController extends Controller
             'email' => Rule::unique('clients', 'email')->ignore($client->id), 
             'password' => 'nullable|string|min:6',
             'phone' => 'nullable|string|max:20',
+            'cuit' => Rule::unique('clients', 'cuit')->ignore($client->id), 
             'billingData' => 'nullable|json',
             'statusId' => 'nullable|exists:general_statuses,id',
-            'wholesale.cuit' => [
-                'nullable',
-                'string',
-                'max:20',
-                Rule::unique('client_wholesales', 'cuit')->ignore($client->wholesale->id ?? null, 'id'), 
-            ],
-            'wholesale.name' => 'nullable|string|max:255',
-            'wholesale.localityId' => 'nullable|exists:localities,id',
-            'wholesale.address' => 'nullable|string|max:255',
+            'wholesale_data' => 'nullable|array',
+            'wholesale_data.*.id' => 'nullable|exists:client_wholesales,id', 
+            'wholesale_data.*.name' => 'required|string|max:255',
+            'wholesale_data.*.localityId' => 'required|exists:localities,id',
+            'wholesale_data.*.address' => 'required|string|max:255',
             'shippings' => 'nullable|array',
             'shippings.*.id' => 'nullable|exists:clients_shipping,id',
             'shippings.*.name' => 'required|string',
@@ -169,33 +162,35 @@ class ClientController extends Controller
             'lastName' => $request->lastName,
             'email' => $request->email,
             'phone' => $request->phone,
+            'cuit' => $request->cuit, 
             'billing_data' => $request->billingData,
             'status_id' => $request->statusId,
         ]);
-
         if ($request->password) {
             $client->password = bcrypt($request->password);
-            $client->save();
+            $client->save(); 
         }
 
-        if ($request->has('wholesale') && !empty($request->wholesale['cuit'])) {
-            if ($client->wholesale) {
-                $client->wholesale->update([
-                    'cuit' => $request->wholesale['cuit'],
-                    'name' => $request->wholesale['name'] ?? $client->wholesale->name,
-                    'locality_id' => $request->wholesale['localityId'] ?? $client->wholesale->locality_id,
-                    'address' => $request->wholesale['address'] ?? $client->wholesale->address,
-                ]);
-            } else {
-                $client->wholesale()->create([
-                    'cuit' => $request->wholesale['cuit'],
-                    'name' => $request->wholesale['name'] ?? null,
-                    'locality_id' => $request->wholesale['localityId'] ?? null,
-                    'address' => $request->wholesale['address'] ?? null,
-                ]);
+        $existingWholesaleIds = $client->wholesales()->pluck('id')->toArray();
+        $incomingWholesaleIds = collect($request->wholesale_data ?? [])->pluck('id')->filter()->toArray();
+        $wholesalesToDelete = array_diff($existingWholesaleIds, $incomingWholesaleIds);
+        ClientWholesale::whereIn('id', $wholesalesToDelete)->delete();
+        if ($request->has('wholesale_data') && is_array($request->wholesale_data)) {
+            foreach ($request->wholesale_data as $wholesaleItem) {
+                if (isset($wholesaleItem['id']) && in_array($wholesaleItem['id'], $existingWholesaleIds)) {
+                    ClientWholesale::where('id', $wholesaleItem['id'])->update([
+                        'name' => $wholesaleItem['name'],
+                        'locality_id' => $wholesaleItem['localityId'],
+                        'address' => $wholesaleItem['address'],
+                    ]);
+                } else {
+                    $client->wholesales()->create([
+                        'name' => $wholesaleItem['name'],
+                        'locality_id' => $wholesaleItem['localityId'],
+                        'address' => $wholesaleItem['address'],
+                    ]);
+                }
             }
-        } elseif ($client->wholesale && $request->input('wholesale') === null) {
-            $client->wholesale->delete();
         }
 
         $existingShippingIds = $client->shippings()->pluck('id')->toArray();

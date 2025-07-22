@@ -22,7 +22,8 @@ class Client extends Model
         'password',
         'phone',
         'billing_data',
-        'status_id'
+        'status_id',
+        'cuit',
     ];
 
     public function clientType()
@@ -40,8 +41,8 @@ class Client extends Model
         return $this->hasMany(ClientShipping::class);
     }
 
-    public function wholesale()
+    public function wholesales()
     {
-        return $this->hasOne(ClientWholesale::class);
+        return $this->hasMany(ClientWholesale::class);
     }
 }

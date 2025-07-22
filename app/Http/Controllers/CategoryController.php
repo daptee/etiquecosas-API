@@ -288,7 +288,7 @@ class CategoryController extends Controller
             'img' => $category->img ? asset($category->img) : null,
             'icon' => $category->icon ? asset($category->icon) : null,
             'color' => $category->color,
-            'meta_data' => $category->meta_data, 
+            'meta_data' => $metaData, 
             'description' => $category->description,
             'banner' => $category->banner ? asset($category->banner) : null,
             'status_id' => $category->status_id, 

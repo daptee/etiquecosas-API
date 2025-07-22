@@ -27,7 +27,7 @@ class Category extends Model
 
     protected $casts = [
         'meta_data' => 'array',
-    ];
+    ];     
 
     public function parent()
     {
