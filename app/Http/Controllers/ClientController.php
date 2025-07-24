@@ -128,6 +128,7 @@ class ClientController extends Controller
     public function update(Request $request, $id)
     {
         $client = $this->findObject(Client::class, $id);
+        $client->load('wholesales');
         $validator = Validator::make($request->all(), [
             'clientTypeId' => 'required|exists:client_types,id',
             'name' => 'required|string|max:255',
@@ -138,8 +139,9 @@ class ClientController extends Controller
             'cuit' => Rule::unique('clients', 'cuit')->ignore($client->id), 
             'billingData' => 'nullable|json',
             'statusId' => 'nullable|exists:general_statuses,id',
+
             'wholesale_data' => 'nullable|array',
-            'wholesale_data.*.id' => 'nullable|exists:client_wholesales,id', 
+            'wholesale_data.*.id' => 'nullable|integer|exists:client_wholesales,id', 
             'wholesale_data.*.name' => 'required|string|max:255',
             'wholesale_data.*.localityId' => 'required|exists:localities,id',
             'wholesale_data.*.address' => 'required|string|max:255',
@@ -166,15 +168,19 @@ class ClientController extends Controller
             'billing_data' => $request->billingData,
             'status_id' => $request->statusId,
         ]);
+
         if ($request->password) {
             $client->password = bcrypt($request->password);
             $client->save(); 
         }
 
-        $existingWholesaleIds = $client->wholesales()->pluck('id')->toArray();
-        $incomingWholesaleIds = collect($request->wholesale_data ?? [])->pluck('id')->filter()->toArray();
+        $existingWholesaleIds = $client->wholesales->pluck('id')->toArray();
+        $incomingWholesaleIds = collect($request->wholesale_data ?? [])->pluck('id')->toArray();     
         $wholesalesToDelete = array_diff($existingWholesaleIds, $incomingWholesaleIds);
-        ClientWholesale::whereIn('id', $wholesalesToDelete)->delete();
+        if (!empty($wholesalesToDelete)) {
+            ClientWholesale::whereIn('id', $wholesalesToDelete)->delete();
+        }
+
         if ($request->has('wholesale_data') && is_array($request->wholesale_data)) {
             foreach ($request->wholesale_data as $wholesaleItem) {
                 if (isset($wholesaleItem['id']) && in_array($wholesaleItem['id'], $existingWholesaleIds)) {
