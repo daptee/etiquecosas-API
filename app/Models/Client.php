@@ -9,6 +9,7 @@ use App\Models\ClientType;
 use App\Models\GeneralStatus;
 use App\Models\ClientShipping;
 use App\Models\ClientWholesale;
+use App\Models\ClientAddress;
 
 class Client extends Model
 {
@@ -44,5 +45,10 @@ class Client extends Model
     public function wholesales()
     {
         return $this->hasMany(ClientWholesale::class);
+    }
+
+    public function addresses()
+    {
+        return $this->hasMany(ClientAddress::class);
     }
 }
