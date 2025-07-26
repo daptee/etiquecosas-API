@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Client;
 use App\Models\ClientShipping;
 use App\Models\ClientWholesale;
+use APp\Models\ClientAddress;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -21,7 +22,7 @@ class ClientController extends Controller
         $perPage = $request->query('quantity');
         $page = $request->query('page', 1);
         $search = $request->query('search');
-        $query = Client::query()->select('id', 'client_type_id', 'name', 'lastName', 'email', 'phone', 'status_id', 'cuit')->with('wholesales');         
+        $query = Client::query()->select('id', 'client_type_id', 'name', 'lastName', 'email', 'phone', 'status_id', 'cuit')->with('wholesales', 'addresses');         
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
@@ -53,7 +54,7 @@ class ClientController extends Controller
     public function show($id)
     {
         $client = $this->findObject(Client::class, $id);
-        $client->load('clientType', 'generalStatus', 'shippings.locality', 'wholesale.locality'); 
+        $client->load('clientType', 'generalStatus', 'shippings.locality', 'wholesales.locality', 'addresses.locality'); 
         $this->logAudit(Auth::user(), 'Get Client Details', $id, $client);
         return $this->success($client, 'Cliente obtenido');
     }
@@ -68,7 +69,9 @@ class ClientController extends Controller
             'password' => 'nullable|string|min:6',
             'phone' => 'nullable|string|max:20',
             'cuit' => 'nullable|string|max:20|unique:clients,cuit',
-            'billingData' => 'nullable|json',
+            'billing_data' => 'nullable|array',
+            'billing_data.*.localityId' => 'required|exists:localities,id',
+            'billing_data.*.address' => 'required|string|max:255',
             'statusId' => 'nullable|exists:general_statuses,id',
             'wholesale_data' => 'nullable|array',
             'wholesale_data.*.name' => 'required|string|max:255',
@@ -94,9 +97,17 @@ class ClientController extends Controller
             'password' => $request->password ? bcrypt($request->password) : null,
             'phone' => $request->phone,
             'cuit' => $request->cuit, 
-            'billing_data' => $request->billingData,
             'status_id' => $request->statusId,
         ]);
+
+        if ($request->has('billing_data') && is_array($request->billing_data)) {
+            foreach ($request->billing_data as $billingItem) {
+                $client->addresses()->create([
+                    'locality_id' => $billingItem['localityId'],
+                    'address' => $billingItem['address'],
+                ]);
+            }
+        }
 
         if ($request->has('wholesale_data') && is_array($request->wholesale_data)) {
             foreach ($request->wholesale_data as $wholesaleItem) {
@@ -121,6 +132,12 @@ class ClientController extends Controller
             }
         }
         
+        $client->load([
+            'clientType',
+            'shippings',
+            'wholesales',
+            'addresses'
+        ]);
         $this->logAudit(Auth::user(), 'Store Client', $request->all(), $client);
         return $this->success($client, 'Cliente creado');
     }
@@ -137,9 +154,10 @@ class ClientController extends Controller
             'password' => 'nullable|string|min:6',
             'phone' => 'nullable|string|max:20',
             'cuit' => Rule::unique('clients', 'cuit')->ignore($client->id), 
-            'billingData' => 'nullable|json',
+            'billing_data' => 'nullable|array',
+            'billing_data.*.localityId' => 'required|exists:localities,id',
+            'billing_data.*.address' => 'required|string|max:255',
             'statusId' => 'nullable|exists:general_statuses,id',
-
             'wholesale_data' => 'nullable|array',
             'wholesale_data.*.id' => 'nullable|integer|exists:client_wholesales,id', 
             'wholesale_data.*.name' => 'required|string|max:255',
@@ -165,13 +183,35 @@ class ClientController extends Controller
             'email' => $request->email,
             'phone' => $request->phone,
             'cuit' => $request->cuit, 
-            'billing_data' => $request->billingData,
             'status_id' => $request->statusId,
         ]);
 
         if ($request->password) {
             $client->password = bcrypt($request->password);
             $client->save(); 
+        }
+
+        $existingAddressIds = $client->addresses->pluck('id')->toArray();
+        $incomingAddressIds = collect($request->billing_data ?? [])->pluck('id')->toArray();     
+        $addressesToDelete = array_diff($existingAddressIds, $incomingAddressIds);
+        if (!empty($addressesToDelete)) {
+            ClientAddress::whereIn('id', $addressesToDelete)->delete();
+        }
+
+        if ($request->has('billing_data') && is_array($request->billing_data)) {
+            foreach ($request->billing_data as $billingItem) {
+                if (isset($billingItem['id']) && in_array($billingItem['id'], $existingAddressIds)) {
+                    ClientAddress::where('id', $billingItem['id'])->update([
+                        'locality_id' => $wholesalbillingItemeItem['localityId'],
+                        'address' => $billingItem['address'],
+                    ]);
+                } else {
+                    $client->addresses()->create([
+                        'locality_id' => $billingItem['localityId'],
+                        'address' => $billingItem['address'],
+                    ]);
+                }
+            }
         }
 
         $existingWholesaleIds = $client->wholesales->pluck('id')->toArray();
@@ -225,7 +265,13 @@ class ClientController extends Controller
                 }
             }
         }
-
+        
+        $client->load([
+            'clientType',
+            'shippings',
+            'wholesales',
+            'addresses'
+        ]);
         $this->logAudit(Auth::user(), 'Update Client', $request->all(), $client);
         return $this->success($client, 'Cliente actualizado');
     }
