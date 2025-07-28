@@ -202,7 +202,7 @@ class ClientController extends Controller
             foreach ($request->billing_data as $billingItem) {
                 if (isset($billingItem['id']) && in_array($billingItem['id'], $existingAddressIds)) {
                     ClientAddress::where('id', $billingItem['id'])->update([
-                        'locality_id' => $wholesalbillingItemeItem['localityId'],
+                        'locality_id' => $billingItem['localityId'],
                         'address' => $billingItem['address'],
                     ]);
                 } else {
