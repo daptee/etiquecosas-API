@@ -19,6 +19,7 @@ use App\Http\Controllers\ProductTypeController;
 use App\Http\Controllers\ProductStatusController;
 use App\Http\Controllers\ProductStockStatusController; 
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\CouponController;
 
 // Auth
 Route::post('login', [LoginController::class, 'login']);
@@ -155,4 +156,13 @@ Route::middleware('jwt.auth')->prefix('products')->group(function () {
     Route::post('/', [ProductController::class, 'store']);
     Route::put('/{id}', [ProductController::class, 'update']);
     Route::delete('/{id}', [ProductController::class, 'delete']);
+});
+
+// Coupon 
+Route::middleware('jwt.auth')->prefix('coupons')->group(function () {
+    Route::get('/', [CouponController::class, 'index']);
+    Route::get('/{id}', [CouponController::class, 'show']);
+    Route::post('/', [CouponController::class, 'store']);
+    Route::put('/{id}', [CouponController::class, 'update']);
+    Route::delete('/{id}', [CouponController::class, 'delete']);
 });

@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\CouponStatus;
+use App\Models\Category;
+use App\Models\Product;
 
 class Coupon extends Model
 {
@@ -18,6 +20,7 @@ class Coupon extends Model
         'date_to',
         'min_amount',
         'type',
+        'applies_to_all_products',
         'applies_to_shipping',
         'max_use_per_user',
         'max_use_per_code',
@@ -28,10 +31,21 @@ class Coupon extends Model
         'date_from' => 'date',
         'date_to' => 'date',
         'applies_to_shipping' => 'boolean',
+        'applies_to_all_products' => 'boolean',
     ];
 
-    public function status(): BelongsTo
+    public function status()
     {
         return $this->belongsTo(CouponStatus::class, 'coupon_status_id');
+    }
+
+    public function categories()
+    {
+        return $this->belongsToMany(Category::class);
+    }
+
+    public function products()
+    {
+        return $this->belongsToMany(Product::class);
     }
 }
