@@ -408,13 +408,13 @@ class ProductController extends Controller
                     'product_id' => $product->id,
                     'variant' => $variantData,
                     'sku' => $variantData['sku'] ?? null,
-                    'price' => $variantData['price'],
+                    'price' => $variantData['price'] ?? null,
                     'discounted_price' => $variantData['discounted_price'] ?? null,
-                    'stock_status' => $variantData['stock_status'],
+                    'stock_status' => $variantData['stock_status'] ?? null,
                     'stock_quantity' => $variantData['stock_quantity'] ?? null,
                     'wholesale_price' => $variantData['wholesale_price'] ?? null,
                     'wholesale_min_amount' => $variantData['wholesale_min_amount'] ?? null,
-                    'img' => $imagePath,
+                    'img' => $imagePath ?? null,
                 ]);
                 $variantDbIds[$index] = $newVariant->id;
             }
