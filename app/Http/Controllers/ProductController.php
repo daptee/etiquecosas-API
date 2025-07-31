@@ -793,7 +793,8 @@ class ProductController extends Controller
             $file = $imagesCollection->get($index)['img'] ?? null;
 
             if ($file instanceof \Illuminate\Http\UploadedFile && $file->isValid()) {
-                $filename = $file->store('images/products', 'public_uploads');
+                $filename = 'images/products/' . uniqid('img_') . '.' . $file->getClientOriginalExtension();
+                Storage::disk('public_uploads')->put($filename, file_get_contents($file->getRealPath()));
 
                 if ($imageId && in_array($imageId, $currentImageIds)) {
                     // Reemplazar imagen existente
