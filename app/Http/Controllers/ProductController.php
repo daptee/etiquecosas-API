@@ -17,7 +17,7 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\DB;
 use App\Traits\FindObject;
 use App\Traits\ApiResponse;
-use App\Traits\Auditable; 
+use App\Traits\Auditable;
 
 class ProductController extends Controller
 {
@@ -52,7 +52,7 @@ class ProductController extends Controller
             $search = $request->query('search');
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('sku', 'like', "%{$search}%");
+                    ->orWhere('sku', 'like', "%{$search}%");
             });
         }
 
@@ -121,7 +121,7 @@ class ProductController extends Controller
     {
         $rules = [
             'name' => 'required|string|max:255',
-            'sku' => ['nullable', 'string', 'max:255', Rule::unique('products', 'sku')], 
+            'sku' => ['nullable', 'string', 'max:255', Rule::unique('products', 'sku')],
             'product_type_id' => 'required|integer|exists:product_types,id',
             'price' => 'required|numeric|min:0',
             'discounted_price' => 'nullable|numeric|min:0|lt:price',
@@ -131,7 +131,7 @@ class ProductController extends Controller
             'wholesale_min_amount' => 'nullable|integer|min:0',
             'tag_id' => 'nullable|exists:configuration_tags,id',
             'costs' => 'nullable|array',
-            'costs.*' => 'integer|exists:costs,id',
+            'costs.*' => 'exists:costs,id',
             'categories' => 'required|array|min:1',
             'categories.*' => 'exists:categories,id',
             'wholesales' => 'nullable|array',
@@ -147,26 +147,28 @@ class ProductController extends Controller
             'is_feature' => 'nullable|boolean',
             'product_status_id' => 'required|integer|exists:product_statuses,id',
             'related_products' => 'nullable|array',
-            'related_products.*' => 'integer|exists:products,id',
+            'related_products.*' => 'exists:products,id',
             'attributes' => 'nullable|array',
-            'attributes.*' => 'integer|exists:attributes,id',
+            'attributes.*' => 'exists:attributes,id',
+            'attributes_values' => 'nullable|array',
+            'attributes_values.*' => 'exists:attribute_values,id',
             'variants' => 'nullable|array',
             'variants.*.attributesvalues' => 'required|array',
-            'variants.*.attributesvalues.*.id' => 'nullable|numeric', 
+            'variants.*.attributesvalues.*.id' => 'nullable|numeric',
             'variants.*.sku' => ['nullable', 'string', 'max:255'],
-            'variants.*.price' => 'required|numeric|min:0',
+            'variants.*.price' => 'nullable|numeric|min:0',
             'variants.*.discounted_price' => 'nullable|numeric|min:0|lt:price',
-            'variants.*.stock_status' => 'required|integer|exists:product_stock_statuses,id',
+            'variants.*.stock_status' => 'nullable|integer|exists:product_stock_statuses,id',
             'variants.*.stock_quantity' => 'nullable|integer|min:0',
             'variants.*.wholesale_price' => 'nullable|numeric|min:0',
             'variants.*.wholesale_min_amount' => 'nullable|integer|min:0',
-            'variants.*.img' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'variants.*.img' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'meta_data' => 'nullable|json',
             'customization' => 'nullable|json',
             'images' => 'nullable|array',
-            'images.*.img' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'images.*.img' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'main_image_index' => 'nullable|integer|min:0',
-                              ];
+        ];
 
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
@@ -224,8 +226,8 @@ class ProductController extends Controller
             'wholesales',
             'related_products',
         ]);
-        $productData['is_feature'] = (bool)($request->input('is_feature', false));
-        $productData['is_customizable'] = (bool)($request->input('is_customizable', false));
+        $productData['is_feature'] = (bool) ($request->input('is_feature', false));
+        $productData['is_customizable'] = (bool) ($request->input('is_customizable', false));
 
         $jsonFields = ['meta_data'];
         foreach ($jsonFields as $field) {
@@ -246,28 +248,60 @@ class ProductController extends Controller
 
     protected function syncProductRelations(Product $product, Request $request)
     {
+        Log::info('Request attributes:', $request->input('attributes'));
         if ($request->has('categories')) {
-            $product->categories()->attach($request->categories);
+            $categories = collect($request->categories)
+                ->filter(fn($id) => is_numeric($id))
+                ->map(fn($id) => (int) $id)
+                ->toArray();
+            $product->categories()->sync($categories);
         } else {
             $product->categories()->detach();
         }
 
         if ($request->has('costs')) {
-            $product->costs()->sync($request->costs);
+            $costs = collect($request->costs)
+                ->filter(fn($id) => is_numeric($id))
+                ->map(fn($id) => (int) $id)
+                ->toArray();
+            $product->costs()->sync($costs);
         } else {
             $product->costs()->detach();
         }
 
         if ($request->has('related_products')) {
-            $product->relatedProducts()->sync($request->related_products);
+            $relatedProducts = collect($request->related_products)
+                ->filter(fn($id) => is_numeric($id))
+                ->map(fn($id) => (int) $id)
+                ->toArray();
+            $product->relatedProducts()->sync($relatedProducts);
         } else {
             $product->relatedProducts()->detach();
         }
-        
+
         if ($request->has('attributes')) {
-            $product->attributes()->sync($request->attributes);
+            $attributes = $request->input('attributes');
+
+            // Si es un string JSON (ej: '["6"]'), decodificarlo
+            if (is_string($attributes)) {
+                $attributes = json_decode($attributes, true);
+            }
+
+            Log::info("Syncing attributes for product ID {$product->id}: ", $attributes);
+
+            $product->attributes()->sync($attributes);
         } else {
             $product->attributes()->detach();
+        }
+
+        if ($request->has('attributes_values')) {
+            $attributesValues = collect($request->input('attributes_values'))
+                ->filter(fn($id) => is_numeric($id))
+                ->map(fn($id) => (int) $id)
+                ->toArray();
+            $product->attributeValues()->sync($attributesValues);
+        } else {
+            $product->attributeValues()->detach();
         }
     }
 
@@ -277,7 +311,7 @@ class ProductController extends Controller
             $wholesalesData = $request->input('wholesales');
             $productWholesales = [];
             foreach ($wholesalesData as $wholesale) {
-                if (!is_array($wholesale)) { 
+                if (!is_array($wholesale)) {
                     Log::error("Wholesale data element is not an array: " . json_encode($wholesale));
                     throw ValidationException::withMessages(['wholesales' => 'Cada elemento de la venta al por mayor debe ser un objeto.']);
                 }
@@ -295,9 +329,9 @@ class ProductController extends Controller
         if ($request->has('customization')) {
             $customizationData = $request->input('customization');
             $decodedCustomization = json_decode($customizationData, true);
-            if (!is_array($decodedCustomization)) { 
-                 Log::error("Customization data is not a valid JSON object: " . json_encode($customizationData));
-                 throw ValidationException::withMessages(['customization' => 'El formato de personalización no es un JSON válido.']);
+            if (!is_array($decodedCustomization)) {
+                Log::error("Customization data is not a valid JSON object: " . json_encode($customizationData));
+                throw ValidationException::withMessages(['customization' => 'El formato de personalización no es un JSON válido.']);
             }
             $product->customization()->updateOrCreate(
                 [],
@@ -322,14 +356,14 @@ class ProductController extends Controller
                     ProductImage::create([
                         'product_id' => $product->id,
                         'img' => $imageName,
-                        'is_main' => ((int)$request->input('main_image_index') === $index) ? 1 : 0,
+                        'is_main' => ((int) $request->input('main_image_index') === $index) ? 1 : 0,
                     ]);
                 }
             }
         }
     }
 
-     protected function createProductVariants(Product $product, Request $request): array
+    protected function createProductVariants(Product $product, Request $request): array
     {
         $variantDbIds = [];
         if ($request->has('variants') && is_array($request->input('variants'))) {
@@ -347,13 +381,13 @@ class ProductController extends Controller
                     'attributesvalues.*.id' => 'nullable|numeric',
                     'attributesvalues.*.attribute_id' => 'nullable|integer|exists:attributes,id',
                     'sku' => ['nullable', 'string', 'max:255'],
-                    'price' => 'required|numeric|min:0',
+                    'price' => 'nullable|numeric|min:0',
                     'discounted_price' => 'nullable|numeric|min:0|lt:price',
-                    'stock_status' => 'required|integer|exists:product_stock_statuses,id',
+                    'stock_status' => 'nullable|integer|exists:product_stock_statuses,id',
                     'stock_quantity' => 'nullable|integer|min:0',
                     'wholesale_price' => 'nullable|numeric|min:0',
                     'wholesale_min_amount' => 'nullable|integer|min:0',
-                    'img' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048', 
+                    'img' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
                 ]);
                 if ($singleVariantValidator->fails()) {
                     throw \Illuminate\Validation\ValidationException::withMessages([
@@ -372,7 +406,7 @@ class ProductController extends Controller
 
                 $newVariant = ProductVariant::create([
                     'product_id' => $product->id,
-                    'variant' => $variantData, 
+                    'variant' => $variantData,
                     'sku' => $variantData['sku'] ?? null,
                     'price' => $variantData['price'],
                     'discounted_price' => $variantData['discounted_price'] ?? null,
@@ -380,7 +414,7 @@ class ProductController extends Controller
                     'stock_quantity' => $variantData['stock_quantity'] ?? null,
                     'wholesale_price' => $variantData['wholesale_price'] ?? null,
                     'wholesale_min_amount' => $variantData['wholesale_min_amount'] ?? null,
-                    'img' => $imagePath, 
+                    'img' => $imagePath,
                 ]);
                 $variantDbIds[$index] = $newVariant->id;
             }
@@ -408,6 +442,8 @@ class ProductController extends Controller
             'status',
             'stockStatus',
             'categories',
+            'attributes',
+            'attributeValues',
             'variants',
             'tag',
             'images',
@@ -440,7 +476,7 @@ class ProductController extends Controller
             'wholesales' => 'nullable|array',
             'wholesales.*.amount' => 'required_with:wholesales|numeric|min:0',
             'wholesales.*.discount' => 'required_with:wholesales|numeric|min:0',
-            'wholesales.*.id' => 'nullable|integer|exists:product_wholesales,id', 
+            'wholesales.*.id' => 'nullable|integer|exists:product_wholesales,id',
             'description' => 'nullable|string',
             'shortDescription' => 'nullable|string|max:500',
             'shipping_text' => 'nullable|string',
@@ -454,25 +490,28 @@ class ProductController extends Controller
             'related_products.*' => 'integer|exists:products,id',
             'attributes' => 'nullable|array',
             'attributes.*' => 'integer|exists:attributes,id',
+            'attributes_values' => 'nullable|array',
+            'attributes_values.*' => 'exists:attribute_values,id',
             'variants' => 'nullable|array',
             'variants.*.id' => 'nullable|integer|exists:product_variants,id',
             'variants.*.attributesvalues' => 'required|array',
             'variants.*.attributesvalues.*.attribute_id' => 'nullable|integer|exists:attributes,id',
             'variants.*.attributesvalues.*.id' => 'nullable|numeric',
             'variants.*.sku' => ['nullable', 'string', 'max:255'],
-            'variants.*.price' => 'required|numeric|min:0',
+            'variants.*.price' => 'nullable|numeric|min:0',
             'variants.*.discounted_price' => 'nullable|numeric|min:0|lt:variants.*.price',
-            'variants.*.stock_status' => 'required|integer|exists:product_stock_statuses,id',
+            'variants.*.stock_status' => 'nullable|integer|exists:product_stock_statuses,id',
             'variants.*.stock_quantity' => 'nullable|integer|min:0',
             'variants.*.wholesale_price' => 'nullable|numeric|min:0',
             'variants.*.wholesale_min_amount' => 'nullable|integer|min:0',
-            'variants.*.img' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'variants.*.img' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'variants.*.delete_img' => 'nullable|boolean',
             'meta_data' => 'nullable|json',
             'customization' => 'nullable|json',
             'images' => 'nullable|array',
             'images.*.id' => 'nullable|integer|exists:product_images,id',
             'images.*.img' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'main_image_index' => 'nullable|integer|min:0',            
+            'main_image_index' => 'nullable|integer|min:0',
         ];
 
         $validator = Validator::make($request->all(), $rules);
@@ -518,22 +557,22 @@ class ProductController extends Controller
         return null;
     }
 
-     protected function prepareProductUpdateData(Request $request): array
+    protected function prepareProductUpdateData(Request $request): array
     {
         $productData = $request->except([
             'categories',
-            'variants',             
-            'images',    
-            'main_image_index',     
-            'variants_image',   
+            'variants',
+            'images',
+            'main_image_index',
+            'variants_image',
             'costs',
             'attributes',
-            'wholesales',          
-            'customization', 
+            'wholesales',
+            'customization',
             'related_products',
         ]);
-        $productData['is_feature'] = (bool)($request->input('is_feature', false));
-        $productData['is_customizable'] = (bool)($request->input('is_customizable', false));
+        $productData['is_feature'] = (bool) ($request->input('is_feature', false));
+        $productData['is_customizable'] = (bool) ($request->input('is_customizable', false));
         $jsonFields = ['meta_data'];
         foreach ($jsonFields as $field) {
             if ($request->has($field)) {
@@ -555,54 +594,86 @@ class ProductController extends Controller
     protected function syncProductUpdateRelations(Product $product, Request $request)
     {
         if ($request->has('categories')) {
-            $product->categories()->sync($request->categories);
+            $categories = collect($request->categories)
+                ->filter(fn($id) => is_numeric($id))
+                ->map(fn($id) => (int) $id)
+                ->toArray();
+            $product->categories()->sync($categories);
         } else {
             $product->categories()->detach();
         }
 
         if ($request->has('costs')) {
-            $product->costs()->sync($request->costs);
+            $costs = collect($request->costs)
+                ->filter(fn($id) => is_numeric($id))
+                ->map(fn($id) => (int) $id)
+                ->toArray();
+            $product->costs()->sync($costs);
         } else {
             $product->costs()->detach();
         }
 
         if ($request->has('attributes')) {
-            $product->attributes()->sync($request->attributes);
+            $attributes = $request->input('attributes');
+
+            // Si es un string JSON (ej: '["6"]'), decodificarlo
+            if (is_string($attributes)) {
+                $attributes = json_decode($attributes, true);
+            }
+
+            Log::info("Syncing attributes for product ID {$product->id}: ", $attributes);
+
+            $product->attributes()->sync($attributes);
+
         } else {
             $product->attributes()->detach();
         }
 
         if ($request->has('related_products')) {
-            $product->relatedProducts()->sync($request->related_products);
+            $relatedProducts = collect($request->related_products)
+                ->filter(fn($id) => is_numeric($id))
+                ->map(fn($id) => (int) $id)
+                ->toArray();
+            $product->relatedProducts()->sync($relatedProducts);
         } else {
             $product->relatedProducts()->detach();
+        }
+
+        if ($request->has('attributes_values')) {
+            $attributesValues = collect($request->input('attributes_values'))
+                ->filter(fn($id) => is_numeric($id))
+                ->map(fn($id) => (int) $id)
+                ->toArray();
+            $product->attributeValues()->sync($attributesValues);
+        } else {
+            $product->attributeValues()->detach();
         }
     }
 
     protected function updateProductVariants(Product $product, Request $request): array
     {
-        $currentVariantIds = $product->variants->pluck('id')->toArray();
-        $incomingVariantIds = [];
-        $variantDbIdsMap = [];
+        $variantDbIds = [];
+
         if ($request->has('variants') && is_array($request->input('variants'))) {
             $variantsArray = $request->input('variants');
+
             foreach ($variantsArray as $index => $variantData) {
                 if (!is_array($variantData)) {
-                    Log::error("Variant data at index $index is not an array in updateProductVariants: " . json_encode($variantData));
-                    throw ValidationException::withMessages([
-                        "variants.$index" => ['Los datos de la variante no son válidos (cada variante debe ser un objeto). Este elemento es de tipo ' . gettype($variantData) . '.'],
+                    Log::error("updateProductVariants: Variant data at index $index is not an array: " . json_encode($variantData));
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        "variants.$index" => ['Los datos de la variante no son válidos (cada variante debe ser un objeto).'],
                     ]);
                 }
-                $variantId = $variantData['id'] ?? null;
+
                 $singleVariantValidator = Validator::make($variantData, [
-                    'id' => 'nullable|integer|exists:product_variants,id',
+                    'id' => 'nullable|exists:product_variants,id',
                     'attributesvalues' => 'required|array',
-                    'attributesvalues.*.attribute_id' => 'nullable|integer|exists:attributes,id',
                     'attributesvalues.*.id' => 'nullable|numeric',
+                    'attributesvalues.*.attribute_id' => 'nullable|integer|exists:attributes,id',
                     'sku' => ['nullable', 'string', 'max:255'],
-                    'price' => 'required|numeric|min:0',
+                    'price' => 'nullable|numeric|min:0',
                     'discounted_price' => 'nullable|numeric|min:0|lt:price',
-                    'stock_status' => 'required|integer|exists:product_stock_statuses,id',
+                    'stock_status' => 'nullable|integer|exists:product_stock_statuses,id',
                     'stock_quantity' => 'nullable|integer|min:0',
                     'wholesale_price' => 'nullable|numeric|min:0',
                     'wholesale_min_amount' => 'nullable|integer|min:0',
@@ -610,66 +681,88 @@ class ProductController extends Controller
                 ]);
 
                 if ($singleVariantValidator->fails()) {
-                    throw ValidationException::withMessages([
+                    throw \Illuminate\Validation\ValidationException::withMessages([
                         "variants.$index" => $singleVariantValidator->errors()->all(),
                     ]);
                 }
 
-                $imagePathToSave = null;
+                $variant = null;
                 $variantImageFile = $request->file("variants.$index.img");
+                $imagePath = null;
 
-                if ($variantImageFile instanceof \Illuminate\Http\UploadedFile && $variantImageFile->isValid()) {
-                    $imageName = 'images/product_variants/' . uniqid('img_') . '.' . $variantImageFile->getClientOriginalExtension();
-                    Storage::disk('public_uploads')->put($imageName, file_get_contents($variantImageFile->getRealPath()));
-                    $imagePathToSave = $imageName;
-                } else if (isset($variantData['img']) && is_string($variantData['img'])) {
-                    $imagePathToSave = $variantData['img'];
-                }
+                if (!empty($variantData['id'])) {
+                    // Actualizar variante existente
+                    $variant = ProductVariant::find($variantData['id']);
 
-                $variantCommonData = [
-                    'variant' => $variantData,
-                    'sku' => $variantData['sku'] ?? null,
-                    'price' => $variantData['price'],
-                    'discounted_price' => $variantData['discounted_price'] ?? null,
-                    'stock_status' => $variantData['stock_status'],
-                    'stock_quantity' => $variantData['stock_quantity'] ?? null,
-                    'wholesale_price' => $variantData['wholesale_price'] ?? null,
-                    'wholesale_min_amount' => $variantData['wholesale_min_amount'] ?? null,
-                    'img' => $imagePathToSave,
-                ];
-
-                if ($variantId && in_array($variantId, $currentVariantIds)) {
-                    $variant = ProductVariant::find($variantId);
-                    if ($variant) {                      
-                        if ($variant->image_path && $imagePathToSave !== $variant->image_path && Storage::disk('public_uploads')->exists($variant->image_path)) {
-                            Storage::disk('public_uploads')->delete($variant->image_path);
+                    if ($variantImageFile instanceof \Illuminate\Http\UploadedFile && $variantImageFile->isValid()) {
+                        if ($variant->img && Storage::disk('public_uploads')->exists($variant->img)) {
+                            Storage::disk('public_uploads')->delete($variant->img);
                         }
-                        $variant->update($variantCommonData);
-                        $incomingVariantIds[] = $variantId;
-                        $variantDbIdsMap[$index] = $variantId;
+
+                        $imageName = 'images/product_variants/' . uniqid('img_') . '.' . $variantImageFile->getClientOriginalExtension();
+                        Storage::disk('public_uploads')->put($imageName, file_get_contents($variantImageFile->getRealPath()));
+                        $imagePath = $imageName;
+                    } else {
+                        $imagePath = $variant->img;
+
+                        // Eliminar imagen si se solicitó con delete_img = true
+                        if (!empty($variantData['delete_img']) && $variantData['delete_img']) {
+                            if ($variant->img && Storage::disk('public_uploads')->exists($variant->img)) {
+                                Storage::disk('public_uploads')->delete($variant->img);
+                            }
+                            $imagePath = null;
+                        }
                     }
+
+                    $variant->update([
+                        'variant' => $variantData,
+                        'sku' => $variantData['sku'] ?? null,
+                        'price' => $variantData['price'] ?? null,
+                        'discounted_price' => $variantData['discounted_price'] ?? null,
+                        'stock_status' => $variantData['stock_status'] ?? null,
+                        'stock_quantity' => $variantData['stock_quantity'] ?? null,
+                        'wholesale_price' => $variantData['wholesale_price'] ?? null,
+                        'wholesale_min_amount' => $variantData['wholesale_min_amount'] ?? null,
+                        'img' => $imagePath,
+                    ]);
                 } else {
-                    $newVariant = ProductVariant::create(array_merge($variantCommonData, [
+                    // Crear nueva variante
+                    if ($variantImageFile instanceof \Illuminate\Http\UploadedFile && $variantImageFile->isValid()) {
+                        $imageName = 'images/product_variants/' . uniqid('img_') . '.' . $variantImageFile->getClientOriginalExtension();
+                        Storage::disk('public_uploads')->put($imageName, file_get_contents($variantImageFile->getRealPath()));
+                        $imagePath = $imageName;
+                    }
+
+                    $variant = ProductVariant::create([
                         'product_id' => $product->id,
-                    ]));
-                    $incomingVariantIds[] = $newVariant->id;
-                    $variantDbIdsMap[$index] = $newVariant->id;
+                        'variant' => $variantData,
+                        'sku' => $variantData['sku'] ?? null,
+                        'price' => $variantData['price'] ?? null,
+                        'discounted_price' => $variantData['discounted_price'] ?? null,
+                        'stock_status' => $variantData['stock_status'] ?? null,
+                        'stock_quantity' => $variantData['stock_quantity'] ?? null,
+                        'wholesale_price' => $variantData['wholesale_price'] ?? null,
+                        'wholesale_min_amount' => $variantData['wholesale_min_amount'] ?? null,
+                        'img' => $imagePath,
+                    ]);
                 }
+
+                $variantDbIds[$index] = $variant->id;
             }
+
+            // Eliminar variantes que no están en el request
+            $product->variants()
+                ->whereNotIn('id', $variantDbIds)
+                ->get()
+                ->each(function ($variant) {
+                    if ($variant->img && Storage::disk('public_uploads')->exists($variant->img)) {
+                        Storage::disk('public_uploads')->delete($variant->img);
+                    }
+                    $variant->delete();
+                });
         }
 
-        $variantsToDelete = array_diff($currentVariantIds, $incomingVariantIds);
-        if (!empty($variantsToDelete)) {
-            foreach ($variantsToDelete as $variantToDeleteId) {
-                $variant = ProductVariant::find($variantToDeleteId);
-                if ($variant && $variant->image_path && Storage::disk('public_uploads')->exists($variant->image_path)) {
-                    Storage::disk('public_uploads')->delete($variant->image_path);
-                }
-            }
-            ProductVariant::destroy($variantsToDelete);
-        }
-
-        return $variantDbIdsMap;
+        return $variantDbIds;
     }
 
     protected function updateProductImages(Product $product, Request $request)
@@ -678,49 +771,84 @@ class ProductController extends Controller
         $incomingImageIds = [];
         $mainImageIndex = (int) $request->input('main_image_index', 0);
         $mainImageCandidateId = null;
-        $imagesCollection = collect($request->file('images'));
-        $allIncomingImagesData = $request->input('images'); 
-        Log::info('--- Debugging updateProductImages ---');
-        Log::info('Current Image IDs (from DB):', ['ids' => $currentImageIds]);
-        Log::info('Raw Request images input:', ['input' => $request->input('images')]);
-        Log::info('Uploaded Files for images:', ['files' => $request->file('images') ? array_keys($request->file('images')) : 'No files']);
-        if ($request->has('images') && is_array($request->input('images'))) {
-            foreach ($allIncomingImagesData as $index => $imageArray) {
-                $imageFile = (is_array($imageArray) && isset($imageArray['img'])) ? $imagesCollection->get($index) : null;
-                $imageId = (is_array($imageArray) && isset($imageArray['id'])) ? $imageArray['id'] : null;
-                if ($imageFile instanceof \Illuminate\Http\UploadedFile && $imageFile->isValid()) {
-                    if ($imageId && in_array($imageId, $currentImageIds)) {
-                        $image = ProductImage::find($imageId);
-                        if ($image) {
-                            if ($image->img && Storage::disk('public_uploads')->exists($image->img)) {
-                                Storage::disk('public_uploads')->delete($image->img);
-                            }
-                            $image->update(['img' => $imageName]);
-                            $incomingImageIds[] = $imageId;
-                        }
-                    } else {
-                        $newImage = ProductImage::create([
-                            'product_id' => $product->id,
-                            'img' => $imageName,
-                            'is_main' => 0,
-                        ]);
-                        $incomingImageIds[] = $newImage->id;
-                    }
-                } elseif ($imageId && in_array($imageId, $currentImageIds)) {
-                    $incomingImageIds[] = $imageId;
-                }
 
-                $processedImageId = $imageId ?? (isset($incomingImageIds[count($incomingImageIds)-1]) ? $incomingImageIds[count($incomingImageIds)-1] : null);
-                if ($mainImageIndex === $index && $processedImageId) {
-                    $mainImageCandidateId = $processedImageId;
+        // Usamos $request->all() para traer TODO (inputs + archivos)
+        $allIncomingImagesData = $request->all()['images'] ?? null;
+        $imageFiles = $request->file('images', []);
+        $imagesCollection = collect($imageFiles);
+
+        Log::info('--- Debug updateProductImages ---');
+        Log::info('Current DB Image IDs:', $currentImageIds);
+        Log::info('Request all images data:', $allIncomingImagesData);
+        Log::info('Request images files:', $imagesCollection->keys()->all());
+
+        if (!is_array($allIncomingImagesData)) {
+            Log::info("No se enviaron datos válidos en 'images' del request");
+            // Opcional: podés decidir qué hacer si no hay imágenes válidas
+            return;
+        }
+
+        foreach ($allIncomingImagesData as $index => $imageData) {
+            $imageId = $imageData['id'] ?? null;
+            $file = $imagesCollection->get($index)['img'] ?? null;
+
+            if ($file instanceof \Illuminate\Http\UploadedFile && $file->isValid()) {
+                $filename = $file->store('images/products', 'public_uploads');
+
+                if ($imageId && in_array($imageId, $currentImageIds)) {
+                    // Reemplazar imagen existente
+                    $image = ProductImage::find($imageId);
+                    if ($image) {
+                        if ($image->img && Storage::disk('public_uploads')->exists($image->img)) {
+                            Storage::disk('public_uploads')->delete($image->img);
+                        }
+                        $image->update(['img' => $filename]);
+                        $incomingImageIds[] = $imageId;
+                    }
+                } else {
+                    // Crear nueva imagen
+                    $newImage = ProductImage::create([
+                        'product_id' => $product->id,
+                        'img' => $filename,
+                        'is_main' => 0,
+                    ]);
+                    $incomingImageIds[] = $newImage->id;
+                    $imageId = $newImage->id; // para marcar como principal
                 }
+            } elseif ($imageId && in_array($imageId, $currentImageIds)) {
+                // No hay archivo nuevo, conservar la imagen existente
+                $incomingImageIds[] = $imageId;
+            }
+
+            // Marcar la imagen principal según el índice
+            if ($mainImageIndex === $index && $imageId) {
+                $mainImageCandidateId = $imageId;
             }
         }
 
-        Log::info('Incoming Image IDs (after processing):', ['ids' => $incomingImageIds]);
+        // Eliminar imágenes que no fueron enviadas en la request
         $imagesToDelete = array_diff($currentImageIds, $incomingImageIds);
+        foreach ($imagesToDelete as $id) {
+            $image = ProductImage::find($id);
+            if ($image) {
+                if ($image->img && Storage::disk('public_uploads')->exists($image->img)) {
+                    Storage::disk('public_uploads')->delete($image->img);
+                }
+                $image->delete();
+            }
+        }
+
+        // Actualizar la imagen principal
+        if ($mainImageCandidateId) {
+            ProductImage::where('product_id', $product->id)->update(['is_main' => 0]);
+            ProductImage::where('id', $mainImageCandidateId)->update(['is_main' => 1]);
+        }
+
+        Log::info('Final image IDs kept:', $incomingImageIds);
+        Log::info('Deleted image IDs:', $imagesToDelete);
     }
-    
+
+
     protected function updateProductWholesales(Product $product, Request $request)
     {
         $currentWholesaleIds = $product->wholesales->pluck('id')->toArray();
@@ -781,6 +909,8 @@ class ProductController extends Controller
             'status',
             'stockStatus',
             'categories',
+            'attributes',
+            'attributeValues',
             'variants',
             'tag',
             'images',
