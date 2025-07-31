@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\GeneralStatus;
-use App\Models\AttributeValue; 
 use App\Models\Attribute;
 
 class AttributeValue extends Model
