@@ -106,7 +106,7 @@ class ProductController extends Controller
             'categories:id',
             'costs:id',
             'attributes',
-            'attributeValues',
+            'attributeValues.attribute',
             'variants',
             'customization',
             'wholesales',
