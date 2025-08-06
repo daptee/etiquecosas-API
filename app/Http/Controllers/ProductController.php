@@ -157,7 +157,7 @@ class ProductController extends Controller
             'variants.*.attributesvalues.*.id' => 'nullable|numeric',
             'variants.*.sku' => ['nullable', 'string', 'max:255'],
             'variants.*.price' => 'nullable|numeric|min:0',
-            'variants.*.discounted_price' => 'nullable|numeric|min:0|lt:price',
+            'variants.*.discounted_price' => 'nullable|numeric|min:0',
             'variants.*.stock_status' => 'nullable|integer|exists:product_stock_statuses,id',
             'variants.*.stock_quantity' => 'nullable|integer|min:0',
             'variants.*.wholesale_price' => 'nullable|numeric|min:0',
@@ -248,7 +248,6 @@ class ProductController extends Controller
 
     protected function syncProductRelations(Product $product, Request $request)
     {
-        Log::info('Request attributes:', $request->input('attributes'));
         if ($request->has('categories')) {
             $categories = collect($request->categories)
                 ->filter(fn($id) => is_numeric($id))
@@ -499,7 +498,7 @@ class ProductController extends Controller
             'variants.*.attributesvalues.*.id' => 'nullable|numeric',
             'variants.*.sku' => ['nullable', 'string', 'max:255'],
             'variants.*.price' => 'nullable|numeric|min:0',
-            'variants.*.discounted_price' => 'nullable|numeric|min:0|lt:variants.*.price',
+            'variants.*.discounted_price' => 'nullable|numeric|min:0',
             'variants.*.stock_status' => 'nullable|integer|exists:product_stock_statuses,id',
             'variants.*.stock_quantity' => 'nullable|integer|min:0',
             'variants.*.wholesale_price' => 'nullable|numeric|min:0',
