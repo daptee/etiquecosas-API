@@ -120,6 +120,7 @@ class CouponController extends Controller
             $coupon->products()->attach($productIds);
         }
 
+        $coupon->load('categories:id', 'products:id'); 
         $this->logAudit(Auth::user(), 'Store Coupon', $request->all(), $coupon);
         return $this->success($coupon, 'Cupon creado', 201);
     }
@@ -186,6 +187,7 @@ class CouponController extends Controller
             $coupon->products()->sync($productIdsToSync);
         }
 
+        $coupon->load('categories:id', 'products:id'); 
         $this->logAudit(Auth::user(), 'Update Coupon', $request->all(), $coupon);
         return $this->success($coupon, 'Cupon actualizado');
     }
