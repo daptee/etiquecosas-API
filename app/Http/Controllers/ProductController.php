@@ -744,6 +744,12 @@ class ProductController extends Controller
     {
         $variantDbIds = [];
 
+        // si no existen variantes eliminamos las existentes
+        if (!$request->has('variants') || !is_array($request->input('variants'))) {
+            $product->variants()->delete();
+            return $variantDbIds;
+        }
+
         if ($request->has('variants') && is_array($request->input('variants'))) {
             $variantsArray = $request->input('variants');
 
