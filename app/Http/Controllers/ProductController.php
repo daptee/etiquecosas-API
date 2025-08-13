@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AttributeValue;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\ProductCustomization;
@@ -376,6 +377,8 @@ class ProductController extends Controller
                 }
 
                 $singleVariantValidator = Validator::make($variantData, [
+                    'attributes' => 'nullable|array',
+                    'attributes.*.attribute_id' => 'required|integer|exists:attributes,id',
                     'attributesvalues' => 'required|array',
                     'attributesvalues.*.id' => 'nullable|numeric',
                     'attributesvalues.*.attribute_id' => 'nullable|integer|exists:attributes,id',
@@ -394,6 +397,33 @@ class ProductController extends Controller
                     ]);
                 }
 
+                if (!empty($variantData['attributes'])) {
+                    foreach ($variantData['attributes'] as $attr) {
+                        if (!empty($attr['attribute_id'])) {
+                            $allValues = AttributeValue::where('attribute_id', $attr['attribute_id'])
+                                ->pluck('id')
+                                ->toArray();
+
+                            // Sobrescribimos el array de attributes con TODOS los valores de ese attribute_id
+                            $attrValuesArray = [];
+                            foreach ($allValues as $valId) {
+                                $attrValuesArray[] = [
+                                    'attribute_id' => $attr['attribute_id'],
+                                    'id' => $valId
+                                ];
+                            }
+
+                            // Si quieres que se agreguen a la variante (campo variant)
+                            if (!isset($variantData['attributesvalues'])) {
+                                $variantData['attributesvalues'] = [];
+                            }
+                            $variantData['attributesvalues'] = array_merge($variantData['attributesvalues'], $attrValuesArray);
+                        }
+                    }
+                }
+
+                // eliminamos el campo 'attributes' si existe, ya que no es necesario en la creación de variantes
+                unset($variantData['attributes']);
                 $imagePath = null;
                 $variantImageFile = $request->file("variants.$index.img");
 
@@ -666,6 +696,8 @@ class ProductController extends Controller
 
                 $singleVariantValidator = Validator::make($variantData, [
                     'id' => 'nullable|exists:product_variants,id',
+                    'attributes' => 'nullable|array',
+                    'attributes.*.attribute_id' => 'required|integer|exists:attributes,id',
                     'attributesvalues' => 'required|array',
                     'attributesvalues.*.id' => 'nullable|numeric',
                     'attributesvalues.*.attribute_id' => 'nullable|integer|exists:attributes,id',
@@ -684,6 +716,35 @@ class ProductController extends Controller
                         "variants.$index" => $singleVariantValidator->errors()->all(),
                     ]);
                 }
+
+                if (!empty($variantData['attributes']) && is_array($variantData['attributes'])) {
+                    foreach ($variantData['attributes'] as $attr) {
+                        if (isset($attr['attribute_id']) && !empty($attr['attribute_id'])) {
+                            $allValues = AttributeValue::where('attribute_id', $attr['attribute_id'])
+                                ->pluck('id')
+                                ->toArray();
+
+                            $attrValuesArray = [];
+                            foreach ($allValues as $valId) {
+                                $attrValuesArray[] = [
+                                    'attribute_id' => $attr['attribute_id'],
+                                    'id' => $valId
+                                ];
+                            }
+
+                            if (!isset($variantData['attributesvalues'])) {
+                                $variantData['attributesvalues'] = [];
+                            }
+                            $variantData['attributesvalues'] = array_merge($variantData['attributesvalues'], $attrValuesArray);
+                        }
+                    }
+
+                    unset($variantData['attributes']);
+                }
+
+
+                // Quitar 'attributes' antes de guardar
+                unset($variantData['attributes']);
 
                 $variant = null;
                 $variantImageFile = $request->file("variants.$index.img");
@@ -775,11 +836,6 @@ class ProductController extends Controller
         $allIncomingImagesData = $request->all()['images'] ?? null;
         $imageFiles = $request->file('images', []);
         $imagesCollection = collect($imageFiles);
-
-        Log::info('--- Debug updateProductImages ---');
-        Log::info('Current DB Image IDs:', $currentImageIds);
-        Log::info('Request all images data:', $allIncomingImagesData);
-        Log::info('Request images files:', $imagesCollection->keys()->all());
 
         if (!is_array($allIncomingImagesData)) {
             Log::info("No se enviaron datos válidos en 'images' del request");
