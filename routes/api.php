@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CacheController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\UserController;
@@ -21,6 +22,9 @@ use App\Http\Controllers\ProductStockStatusController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CouponController;
 
+// cache
+Route::get('/clear-cache', [CacheController::class, 'clearCache'])->name('clearCache');
+
 // Auth
 Route::post('login', [LoginController::class, 'login']);
 Route::post('forgot-password', [LoginController::class, 'forgotPassword']);
@@ -30,6 +34,8 @@ Route::post('create-admin-user', [UserController::class, 'store']);
 
 // Publica
 Route::prefix('v1')->group(function () {
+    Route::get('product', [ProductController::class, 'index']);
+    Route::get('product/{id}', [ProductController::class, 'show']);
     Route::get('categories', [CategoryController::class, 'getPublicCategories']);
 });
 
@@ -150,9 +156,7 @@ Route::middleware('jwt.auth')->prefix('product-stock-statuses')->group(function 
 });
 
 // Product
-Route::prefix('products')->group(function () {
-    Route::get('/', [ProductController::class, 'index']);
-    Route::get('/{id}', [ProductController::class, 'show']);
+Route::middleware('jwt.auth')->prefix('products')->group(function () {
     Route::post('/', [ProductController::class, 'store']);
     Route::post('/{id}', [ProductController::class, 'update']);
     Route::delete('/{id}', [ProductController::class, 'delete']);
