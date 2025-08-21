@@ -9,10 +9,14 @@ trait FindObject
     public function findObject(string $modelClass, $id)
     {
         $object = app($modelClass)->find($id);
+
         if (!$object) {
-            abort(404, 'El objeto no existe');
+            abort(response()->json([
+                'message' => 'El objeto no existe'
+            ], 404));
         }
 
         return $object;
     }
+
 }
