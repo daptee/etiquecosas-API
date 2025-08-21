@@ -24,7 +24,7 @@ class TemplateCategoryController extends Controller
             $query->where('name', 'like', "%{$search}%");
         }
 
-        $query->orderBy('created_at', 'desc');
+        $query->orderBy('name', 'asc');
         if (!$perPage) {
             $templateCategories = $query->get();
             $this->logAudit(Auth::user(), 'Get Template Category List', $request->all(), $templateCategories);

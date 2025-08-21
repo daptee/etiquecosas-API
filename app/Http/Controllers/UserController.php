@@ -32,7 +32,7 @@ class UserController extends Controller
             });
         }
 
-        $query->orderBy('created_at', 'desc');
+        $query->orderBy('name', 'asc');
         if (!$perPage) {
             $users = $query->get();
             $this->logAudit(Auth::user(), 'Get Users List', $request->all(), $users);
