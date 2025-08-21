@@ -35,7 +35,7 @@ class CouponController extends Controller
             $query->where('coupon_status_id', $statusId);
         }
         
-        $query->orderBy('created_at', 'desc');
+        $query->orderBy('name', 'asc');
         if (!$perPage) {
             $coupons = $query->get();
             $this->logAudit(Auth::user(), 'Get Coupons List', $request->all(), $coupons);

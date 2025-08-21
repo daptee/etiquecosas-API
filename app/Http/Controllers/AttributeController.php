@@ -29,7 +29,7 @@ class AttributeController extends Controller
             $query->where('statusId', $statusId);
         }
 
-        $query->orderBy('created_at', 'desc');
+        $query->orderBy('name', 'asc');
         if (!$perPage) {
             $attributes = $query->get();
             $this->logAudit(Auth::user(), 'Get Attributes List', $request->all(), $attributes);

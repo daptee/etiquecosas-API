@@ -31,7 +31,7 @@ class ClientController extends Controller
             });
         }
 
-        $query->orderBy('created_at', 'desc');
+        $query->orderBy('name', 'asc');
         if (!$perPage) {
             $clients = $query->get();
             $this->logAudit(Auth::user(), 'Get Clients List', $request->all(), $clients);

@@ -48,6 +48,10 @@ class ProductController extends Controller
                 'status:id,name',
                 'stockStatus:id,name',
                 'categories:id,name',
+                'attributes:id,name',
+                'attributeValues:id,value,attribute_id',
+                'tag:id,name',
+                'images:id,product_id,img,is_main',
             ]);
         if ($request->has('search')) {
             $search = $request->query('search');
@@ -80,7 +84,88 @@ class ProductController extends Controller
             $query->where('product_type_id', $request->query('product_type_id'));
         }
 
-        $query->orderBy('created_at', 'desc');
+        $query->orderBy('name', 'asc');
+        if (!$perPage) {
+            $products = $query->get();
+            $this->logAudit(Auth::user(), 'Get Product List', $request->all(), $products);
+            return $this->success($products, 'Productos obtenidos');
+        }
+
+        $products = $query->paginate($perPage, ['*'], 'page', $page);
+        $this->logAudit(Auth::user(), 'Get Product List', $request->all(), $products->items());
+        $metaData = [
+            'current_page' => $products->currentPage(),
+            'last_page' => $products->lastPage(),
+            'per_page' => $products->perPage(),
+            'total' => $products->total(),
+            'from' => $products->firstItem(),
+            'to' => $products->lastItem(),
+        ];
+        return $this->success($products->items(), 'Productos obtenidos', $metaData);
+    }
+
+    public function bestSellers(Request $request)
+    {
+        $perPage = $request->query('quantity', 20);
+        $page = $request->query('page', 1);
+        $query = Product::query()
+            ->select([
+                'id',
+                'name',
+                'sku',
+                'price',
+                'discounted_price',
+                'tag_id',
+                'meta_data',
+                'is_feature',
+                'is_customizable',
+                'product_type_id',
+                'product_status_id',
+                'product_stock_status_id',
+            ])
+            ->with([
+                'type:id,name',
+                'status:id,name',
+                'stockStatus:id,name',
+                'categories:id,name',
+                'attributes:id,name',
+                'attributeValues:id,value,attribute_id',
+                'tag:id,name',
+                'images:id,product_id,img,is_main',
+            ]);
+        if ($request->has('search')) {
+            $search = $request->query('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('sku', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->has('status_id')) {
+            $query->where('product_status_id', $request->query('status_id'));
+        }
+
+        if ($request->has('category_id')) {
+            $categoryId = $request->query('category_id');
+            $query->whereHas('categories', function ($q) use ($categoryId) {
+                $q->where('categories.id', $categoryId);
+            });
+        }
+
+        if ($request->has('stock_status_id')) {
+            $query->where('product_stock_status_id', $request->query('stock_status_id'));
+        }
+
+        if ($request->has('tag_id')) {
+            $query->where('tag_id', $request->query('tag_id'));
+        }
+
+        if ($request->has('product_type_id')) {
+            $query->where('product_type_id', $request->query('product_type_id'));
+        }
+
+        // cambiado el orden para los productos más vendidos
+        $query->orderBy('name', 'asc');
         if (!$perPage) {
             $products = $query->get();
             $this->logAudit(Auth::user(), 'Get Product List', $request->all(), $products);
@@ -103,18 +188,53 @@ class ProductController extends Controller
     public function show(Request $request, string $id)
     {
         $product = $this->findObject(Product::class, $id);
+        // Si no se encuentra el producto, retornar error 404
+        if (!$product) {
+            return $this->error('Producto no encontrado', 404);
+        }
         $product->load([
-            'categories:id',
-            'costs:id',
-            'attributes',
-            'attributeValues.attribute',
-            'variants',
+            'type:id,name',
+            'status:id,name',
+            'stockStatus:id,name',
+            'categories:id,name',
+            'attributes:id,name',
+            'attributeValues:id,value,attribute_id',
+            'tag:id,name',
+            'images:id,product_id,img,is_main',
+            'costs:id,name',
             'customization',
-            'wholesales',
-            'relatedProducts:id',
-            'images',
+            'wholesales:id,product_id,amount,discount',
+            'relatedProducts:id,name,sku,price,discounted_price,product_type_id,product_status_id,product_stock_status_id',
+        ])->makeHidden(['created_at', 'updated_at'
         ]);
         $this->logAudit(Auth::user(), 'Get Product Details', ['product_id' => $id], $product);
+        return $this->success($product, 'Producto obtenido exitosamente');
+    }
+
+    public function sku(Request $request, string $sku)
+    {
+        $product = Product::where('sku', $sku)->first();
+
+        // Si no se encuentra el producto, retornar error 404
+        if (!$product) {
+            return $this->error('Producto no encontrado', 404);
+        }
+        $product->load([
+            'type:id,name',
+            'status:id,name',
+            'stockStatus:id,name',
+            'categories:id,name',
+            'attributes:id,name',
+            'attributeValues:id,value,attribute_id',
+            'tag:id,name',
+            'images:id,product_id,img,is_main',
+            'costs:id,name',
+            'customization',
+            'wholesales:id,product_id,amount,discount',
+            'relatedProducts:id,name,sku,price,discounted_price,product_type_id,product_status_id,product_stock_status_id',
+        ])->makeHidden(['created_at', 'updated_at'
+        ]);
+        $this->logAudit(Auth::user(), 'Get Product Details', ['product_id' => $product->id], $product);
         return $this->success($product, 'Producto obtenido exitosamente');
     }
 

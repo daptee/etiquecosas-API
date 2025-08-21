@@ -24,7 +24,7 @@ class ProductTypeController extends Controller
             $query->where('name', 'like', "%{$search}%");
         }
 
-        $query->orderBy('created_at', 'desc');
+        $query->orderBy('name', 'asc');
         if (!$perPage) {
             $productTypes = $query->get();
             $this->logAudit(Auth::user(), 'Get Product Type List', $request->all(), $productTypes);
