@@ -16,12 +16,38 @@ class ProductVariant extends Model
         'img',
     ];
 
-      protected $casts = [
+    protected $casts = [
         'variant' => 'array',
     ];
 
     public function product()
     {
         return $this->belongsTo(Product::class, 'product_id');
+    }
+
+    public function getAttributesValuesAttribute()
+    {
+        $ids = collect($this->variant['attributesvalues'] ?? [])
+            ->pluck('id')
+            ->filter()
+            ->toArray();
+
+        return AttributeValue::whereIn('id', $ids)->with('attribute')->get();
+    }
+
+    public function toArray()
+    {
+        $array = parent::toArray();
+
+        $array['variant'] = [
+            'sku' => $this->variant['sku'] ?? null,
+            'stock_status' => $this->variant['stock_status'] ?? null,
+            'stock_quantity' => $this->variant['stock_quantity'] ?? null,
+            'wholesale_price' => $this->variant['wholesale_price'] ?? null,
+            'wholesale_min_amount' => $this->variant['wholesale_min_amount'] ?? null,
+            'attributesvalues' => $this->attributes_values, // 👈 devuelve modelos completos
+        ];
+
+        return $array;
     }
 }

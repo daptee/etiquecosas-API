@@ -205,6 +205,7 @@ class ProductController extends Controller
             'customization',
             'wholesales:id,product_id,amount,discount',
             'relatedProducts:id,name,sku,price,discounted_price,product_type_id,product_status_id,product_stock_status_id',
+            'variants'
         ])->makeHidden(['created_at', 'updated_at'
         ]);
         $this->logAudit(Auth::user(), 'Get Product Details', ['product_id' => $id], $product);

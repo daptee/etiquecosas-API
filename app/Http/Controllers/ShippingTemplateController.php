@@ -24,7 +24,7 @@ class ShippingTemplateController extends Controller
             $query->where('description', 'like', "%{$search}%");
         }
 
-        $query->orderBy('name', 'asc');
+        $query->orderBy('created_at', 'desc');
         if (!$perPage) {
             $shippingTemplates = $query->get();
             $this->logAudit(Auth::user(), 'Get Shipping Template List', $request->all(), $shippingTemplates);
