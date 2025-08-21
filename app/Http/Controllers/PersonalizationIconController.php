@@ -26,7 +26,7 @@ class PersonalizationIconController extends Controller
             $query->where('name', 'like', "%{$search}%");
         }
 
-        $query->orderBy('created_at', 'desc');
+        $query->orderBy('name', 'asc');
         if (!$perPage) {
             $icons = $query->get();
             $this->logAudit(Auth::user(), 'Get Pesonalization Icons List', $request->all(), $icons);

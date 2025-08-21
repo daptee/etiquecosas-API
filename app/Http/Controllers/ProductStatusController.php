@@ -24,7 +24,7 @@ class ProductStatusController extends Controller
             $query->where('name', 'like', "%{$search}%");
         }
 
-        $query->orderBy('created_at', 'desc');
+        $query->orderBy('name', 'asc');
         if (!$perPage) {
             $productStatuses = $query->get();
             $this->logAudit(Auth::user(), 'Get Product Status List', $request->all(), $productStatuses);

@@ -24,7 +24,7 @@ class ProductStockStatusController extends Controller
             $query->where('name', 'like', "%{$search}%");
         }
 
-        $query->orderBy('created_at', 'desc');
+        $query->orderBy('name', 'asc');
         if (!$perPage) {
             $productStockStatuses = $query->get();
             $this->logAudit(Auth::user(), 'Get Product Stock Status List', $request->all(), $productStockStatuses);

@@ -29,7 +29,7 @@ class CostController extends Controller
             $query->where('statusId', $statusId);
         }
 
-        $query->orderBy('created_at', 'desc');
+        $query->orderBy('name', 'asc');
         if (!$perPage) {
             $costs = $query->get();
             $this->logAudit(Auth::user(), 'Get Costs List', $request->all(), $costs);

@@ -18,7 +18,7 @@ class ClientTypeController extends Controller
     {
         $perPage = $request->query('quantity');
         $page = $request->query('page', 1);
-        $query = ClientType::query()->orderBy('created_at', 'desc');
+        $query = ClientType::query()->orderBy('name', 'asc');
         if (!$perPage) {
             $clientTypes = $query->get();
             $this->logAudit(Auth::user(), 'Get Client Type List', $request->all(), $clientTypes);

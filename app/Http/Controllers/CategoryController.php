@@ -36,7 +36,7 @@ class CategoryController extends Controller
             $query->where('cagetoryId', $categoryId);
         }
 
-        $query->orderBy('created_at', 'desc');
+        $query->orderBy('name', 'asc');
         if (!$perPage) {
             $categories = $query->get();
             $this->logAudit(Auth::user(), 'Get Categories List', $request->all(), $categories);
@@ -118,7 +118,7 @@ class CategoryController extends Controller
             'status_id' => $request->statusId ?? 1,
             'tag_id' => $request->tagId,
         ]);
-        $this->logAudit(Auth::user(), 'Store Category', $request->all(), $category);        
+        $this->logAudit(Auth::user(), 'Store Category', $request->all(), $category);
         if ($category->img) {
             $category->img = asset($category->img);
         }
@@ -231,9 +231,9 @@ class CategoryController extends Controller
         $category->category_id = $request->input('categoryId', $category->category_id);
         $category->color = $request->input('color', $category->color);
         $category->meta_data = $request->input('metaData', $category->meta_data);
-        $category->description = $request->input('description', $category->description);        
+        $category->description = $request->input('description', $category->description);
         $category->status_id = $request->input('statusId', $category->status_id);
-        $category->tag_id = $request->input('tagId', $category->tag_id); 
+        $category->tag_id = $request->input('tagId', $category->tag_id);
         if ($request->hasFile('img') || $request->has('img')) {
             $category->img = $imgPath;
         }
@@ -245,7 +245,7 @@ class CategoryController extends Controller
         if ($request->hasFile('banner') || $request->has('banner')) {
             $category->banner = $bannerPath;
         }
-       
+
         $category->save();
 
         if ($category->img) {
@@ -272,11 +272,11 @@ class CategoryController extends Controller
         return $this->success($category, 'Categoría eliminada');
     }
 
-    protected function formatCategoryForPublicApi(Category $category) 
+    protected function formatCategoryForPublicApi(Category $category)
     {
         $metaData = $category->meta_data;
         if (is_string($metaData)) {
-            $decodedMetaData = json_decode($metaData); 
+            $decodedMetaData = json_decode($metaData);
             if (json_last_error() === JSON_ERROR_NONE) {
                 $metaData = $decodedMetaData;
             }
@@ -288,11 +288,11 @@ class CategoryController extends Controller
             'img' => $category->img ? asset($category->img) : null,
             'icon' => $category->icon ? asset($category->icon) : null,
             'color' => $category->color,
-            'meta_data' => $metaData, 
+            'meta_data' => $metaData,
             'description' => $category->description,
             'banner' => $category->banner ? asset($category->banner) : null,
-            'status_id' => $category->status_id, 
-             'tag' => $category->tag ? ['id' => $category->tag->id, 'name' => $category->tag->name, 'color' => $category->tag->color] : null,
+            'status_id' => $category->status_id,
+            'tag' => $category->tag ? ['id' => $category->tag->id, 'name' => $category->tag->name, 'color' => $category->tag->color] : null,
         ];
 
         if ($category->children->isNotEmpty()) {
@@ -300,26 +300,33 @@ class CategoryController extends Controller
                 return $this->formatCategoryForPublicApi($subCategory);
             })->toArray();
         } else {
-            $formatted['subcategories'] = []; 
+            $formatted['subcategories'] = [];
         }
 
         return $formatted;
     }
 
-    public function getPublicCategories() 
+    public function getPublicCategories()
     {
-        $categories = Category::whereNull('category_id') 
+        $categories = Category::whereNull('category_id')
             ->where('status_id', 1)
             ->with('tag')
-            ->with(['children' => function ($query) {
-                $query->where('status_id', 1)->with('children.tag'); 
-            }])
+            ->with([
+                'children' => function ($query) {
+                    $query->where('status_id', 1)
+                        ->orderBy('name', 'asc') // 👈 ordena hijos alfabéticamente
+                        ->with('children.tag');
+                }
+            ])
+            ->orderBy('name', 'asc') // 👈 ordena categorías principales alfabéticamente
             ->get();
+
         $formattedCategories = $categories->map(function ($category) {
             return $this->formatCategoryForPublicApi($category);
         });
+
         $this->logAudit(null, 'Get Public Categories List V1', [], $formattedCategories);
 
         return response()->json($formattedCategories, 200);
-    }    
+    }
 }
