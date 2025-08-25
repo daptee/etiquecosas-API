@@ -37,7 +37,7 @@ Route::prefix('v1')->group(function () {
     Route::get('product', [ProductController::class, 'index']);
     Route::get('product/best-sellers', [ProductController::class, 'bestSellers']);
     Route::get('product/{id}', [ProductController::class, 'show']);
-    Route::get('product/sku/{sku}', [ProductController::class, 'sku']);
+    Route::get('product/slug/{slug}', [ProductController::class, 'slug']);
     Route::get('categories', [CategoryController::class, 'getPublicCategories']);
 });
 

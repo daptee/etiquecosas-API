@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\DB;
 use App\Traits\FindObject;
 use App\Traits\ApiResponse;
 use App\Traits\Auditable;
+use Str;
 
 class ProductController extends Controller
 {
@@ -206,15 +207,17 @@ class ProductController extends Controller
             'wholesales:id,product_id,amount,discount',
             'relatedProducts:id,name,sku,price,discounted_price,product_type_id,product_status_id,product_stock_status_id',
             'variants'
-        ])->makeHidden(['created_at', 'updated_at'
-        ]);
+        ])->makeHidden([
+                    'created_at',
+                    'updated_at'
+                ]);
         $this->logAudit(Auth::user(), 'Get Product Details', ['product_id' => $id], $product);
         return $this->success($product, 'Producto obtenido exitosamente');
     }
 
-    public function sku(Request $request, string $sku)
+    public function slug(Request $request, string $slug)
     {
-        $product = Product::where('sku', $sku)->first();
+        $product = Product::where('slug', $slug)->first();
 
         // Si no se encuentra el producto, retornar error 404
         if (!$product) {
@@ -233,8 +236,10 @@ class ProductController extends Controller
             'customization',
             'wholesales:id,product_id,amount,discount',
             'relatedProducts:id,name,sku,price,discounted_price,product_type_id,product_status_id,product_stock_status_id',
-        ])->makeHidden(['created_at', 'updated_at'
-        ]);
+        ])->makeHidden([
+                    'created_at',
+                    'updated_at'
+                ]);
         $this->logAudit(Auth::user(), 'Get Product Details', ['product_id' => $product->id], $product);
         return $this->success($product, 'Producto obtenido exitosamente');
     }
@@ -350,6 +355,9 @@ class ProductController extends Controller
         ]);
         $productData['is_feature'] = (bool) ($request->input('is_feature', false));
         $productData['is_customizable'] = (bool) ($request->input('is_customizable', false));
+
+        // Generamos el slug único a partir del name
+        $productData['slug'] = $this->generateUniqueSlug($request->input('name'), $request->id ?? null);
 
         $jsonFields = ['meta_data'];
         foreach ($jsonFields as $field) {
@@ -768,7 +776,7 @@ class ProductController extends Controller
         return null;
     }
 
-    protected function prepareProductUpdateData(Request $request): array
+    protected function prepareProductUpdateData(Request $request, Product $product): array
     {
         $productData = $request->except([
             'categories',
@@ -784,6 +792,12 @@ class ProductController extends Controller
         ]);
         $productData['is_feature'] = (bool) ($request->input('is_feature', false));
         $productData['is_customizable'] = (bool) ($request->input('is_customizable', false));
+
+        // ⚡️ Si se edita el nombre, actualizamos slug y SKU
+        if ($request->filled('name') && $request->input('name') !== $product->name) {
+            $productData['slug'] = $this->generateUniqueSlug($request->input('name'), $product->id);
+        }
+
         $jsonFields = ['meta_data'];
         foreach ($jsonFields as $field) {
             if ($request->has($field)) {
@@ -1173,7 +1187,7 @@ class ProductController extends Controller
         }
 
         DB::beginTransaction();
-        $productData = $this->prepareProductUpdateData($request);
+        $productData = $this->prepareProductUpdateData($request, $product);
         $product->update($productData);
         $this->syncProductUpdateRelations($product, $request);
         $variantDbIds = $this->updateProductVariants($product, $request);
@@ -1206,5 +1220,26 @@ class ProductController extends Controller
         $product->delete();
         $this->logAudit(Auth::user(), 'Delete Product', $id, $product);
         return $this->success($product, 'Product eliminado');
+    }
+
+    public function generateUniqueSlug(string $name, $productId = null): string
+    {
+        // Convertimos el nombre a slug básico
+        $slug = Str::slug($name);
+
+        // Guardamos el slug original para usarlo en caso de duplicados
+        $originalSlug = $slug;
+        $counter = 1;
+
+        // Validamos si ya existe un slug igual
+        while (
+            Product::where('slug', $slug)
+                ->when($productId, fn($query) => $query->where('id', '!=', $productId))
+                ->exists()
+        ) {
+            $slug = $originalSlug . '-' . $counter++;
+        }
+
+        return $slug;
     }
 }
