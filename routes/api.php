@@ -179,10 +179,11 @@ Route::middleware('jwt.auth')->prefix('coupons')->group(function () {
 Route::middleware('jwt.auth')->prefix('sales')->group(function () {
     Route::get('/', [SaleController::class, 'index']);
     Route::get('/{id}', [SaleController::class, 'show']);
-    Route::post('/', [SaleController::class, 'store']);
     Route::put('/{id}', [SaleController::class, 'update']);
     Route::put('/change-status/{id}', [SaleController::class, 'changeStatus']);
 });
+
+Route::post('/sales', [SaleController::class, 'store']);
 
 // payment with MercadoPago
 Route::middleware('jwt.auth')->prefix('mercadopago')->group(function () {
