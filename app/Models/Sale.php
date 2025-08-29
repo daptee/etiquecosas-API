@@ -1,0 +1,65 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class Sale extends Model
+{
+
+    protected $table = 'sales';
+
+    protected $fillable = [
+        'client_id',
+        'channel_id',
+        'external_id',
+        'address',
+        'locality_id',
+        'postal_code',
+        'client_shipping_id',
+        'subtotal',
+        'shipping_cost',
+        'shipping_method_id',
+        'customer_notes',
+        'internal_comments',
+        'sale_status_id',
+        'sale_id',
+    ];
+
+    // 🔹 Relaciones
+    public function client()
+    {
+        return $this->belongsTo(Client::class, 'client_id');
+    }
+
+    public function channel()
+    {
+        return $this->belongsTo(Channel::class, 'channel_id');
+    }
+
+    public function shippingMethod()
+    {
+        return $this->belongsTo(ShippingMethod::class, 'shipping_method_id');
+    }
+
+    public function status()
+    {
+        return $this->belongsTo(SaleStatus::class, 'sale_status_id');
+    }
+
+    public function parentSale()
+    {
+        return $this->belongsTo(Sale::class, 'sale_id');
+    }
+
+    public function products()
+    {
+        return $this->hasMany(SaleProduct::class, 'sale_id');
+    }
+
+    public function statusHistory()
+    {
+        return $this->hasMany(SaleStatusHistory::class, 'sale_id');
+    }
+}

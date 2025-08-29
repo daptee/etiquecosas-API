@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\CacheController;
+use App\Http\Controllers\MercadoPagoController;
+use App\Http\Controllers\SaleController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\UserController;
@@ -172,3 +174,21 @@ Route::middleware('jwt.auth')->prefix('coupons')->group(function () {
     Route::put('/{id}', [CouponController::class, 'update']);
     Route::delete('/{id}', [CouponController::class, 'delete']);
 });
+
+// Sales
+Route::middleware('jwt.auth')->prefix('sales')->group(function () {
+    Route::get('/', [SaleController::class, 'index']);
+    Route::get('/{id}', [SaleController::class, 'show']);
+    Route::post('/', [SaleController::class, 'store']);
+    Route::put('/{id}', [SaleController::class, 'update']);
+    Route::put('/change-status/{id}', [SaleController::class, 'changeStatus']);
+});
+
+// payment with MercadoPago
+Route::middleware('jwt.auth')->prefix('mercadopago')->group(function () {
+    Route::post('/create-preference', [MercadoPagoController::class, 'createPreference']);
+});
+
+Route::get('/mercadopago/success', [MercadoPagoController::class, 'success'])->name('mercadopago.success');
+Route::get('/mercadopago/failure', [MercadoPagoController::class, 'failure'])->name('mercadopago.failure');
+Route::get('/mercadopago/pending', [MercadoPagoController::class, 'pending'])->name('mercadopago.pending');
