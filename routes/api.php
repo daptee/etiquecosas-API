@@ -36,11 +36,21 @@ Route::post('create-admin-user', [UserController::class, 'store']);
 
 // Publica
 Route::prefix('v1')->group(function () {
+    // Product
     Route::get('product', [ProductController::class, 'index']);
     Route::get('product/best-sellers', [ProductController::class, 'bestSellers']);
     Route::get('product/{id}', [ProductController::class, 'show']);
     Route::get('product/slug/{slug}', [ProductController::class, 'slug']);
+
+    // Category
     Route::get('categories', [CategoryController::class, 'getPublicCategories']);
+
+    // Province
+    Route::get('provinces', [ProvinceController::class, 'index']);
+
+    // Sale
+    Route::post('sales', [SaleController::class, 'store']);
+    Route::post('mercadopago/create-preference', [MercadoPagoController::class, 'createPreference']);
 });
 
 // User
@@ -109,11 +119,6 @@ Route::middleware('jwt.auth')->prefix('clients')->group(function () {
 Route::middleware('jwt.auth')->prefix('client-types')->group(function () {
     Route::get('/', [ClientTypeController::class, 'index']);
 });
-  
-// Province
-Route::middleware('jwt.auth')->prefix('provinces')->group(function () {
-    Route::get('/', [ProvinceController::class, 'index']);
-});
 
 // PersonalizationColor
 Route::middleware('jwt.auth')->prefix('colors')->group(function () {
@@ -181,13 +186,6 @@ Route::middleware('jwt.auth')->prefix('sales')->group(function () {
     Route::get('/{id}', [SaleController::class, 'show']);
     Route::put('/{id}', [SaleController::class, 'update']);
     Route::put('/change-status/{id}', [SaleController::class, 'changeStatus']);
-});
-
-Route::post('/sales', [SaleController::class, 'store']);
-
-// payment with MercadoPago
-Route::middleware('jwt.auth')->prefix('mercadopago')->group(function () {
-    Route::post('/create-preference', [MercadoPagoController::class, 'createPreference']);
 });
 
 Route::get('/mercadopago/success', [MercadoPagoController::class, 'success'])->name('mercadopago.success');
