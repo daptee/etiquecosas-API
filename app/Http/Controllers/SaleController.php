@@ -135,7 +135,7 @@ class SaleController extends Controller
 
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
-            $this->logAudit(Auth(), 'Sale Validation Fail (Create)', $request->all(), $validator->errors());
+            $this->logAudit(null, 'Sale Validation Fail (Create)', $request->all(), $validator->errors());
             return $this->validationclientr($validator->errors());
         }
 
@@ -155,7 +155,7 @@ class SaleController extends Controller
 
             $clientValidator = Validator::make($request->all(), $clientRules);
             if ($clientValidator->fails()) {
-                $this->logAudit(Auth::user(), 'Client Validation Fail (Create)', $request->all(), $clientValidator->errors());
+                $this->logAudit(null, 'Client Validation Fail (Create)', $request->all(), $clientValidator->errors());
                 return $this->validationError($clientValidator->errors());
             }
 
@@ -190,7 +190,7 @@ class SaleController extends Controller
                 ]);
             }
 
-            $this->logAudit(Auth::user(), 'Store Client Sale', $request->all(), $client);
+            $this->logAudit($client->id, 'Store Client Sale', $request->all(), $client);
         }
 
         // agregamos el client_id al request para crear la venta
