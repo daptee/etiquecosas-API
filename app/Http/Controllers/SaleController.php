@@ -136,7 +136,7 @@ class SaleController extends Controller
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
             $this->logAudit(null, 'Sale Validation Fail (Create)', $request->all(), $validator->errors());
-            return $this->validationclientr($validator->errors());
+            return $this->validationError($validator->errors());
         }
 
         // buscar si existe el cliente por email nada mas no creamos nada aun
