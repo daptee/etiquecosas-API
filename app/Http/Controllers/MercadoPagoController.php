@@ -69,6 +69,7 @@ class MercadoPagoController extends Controller
                 "items" => $items,
                 "back_urls" => $backUrls,
                 "auto_return" => "approved",
+                "external_reference" => (string)$sale->id,
             ]);
 
         $data = $response->json();

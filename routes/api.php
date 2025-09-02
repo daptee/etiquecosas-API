@@ -50,6 +50,7 @@ Route::prefix('v1')->group(function () {
 
     // Sale
     Route::post('sales', [SaleController::class, 'store']);
+    Route::put('sales/change-status/{id}', [SaleController::class, 'changeStatus']);
     Route::post('mercadopago/create-preference', [MercadoPagoController::class, 'createPreference']);
 });
 
@@ -185,7 +186,6 @@ Route::middleware('jwt.auth')->prefix('sales')->group(function () {
     Route::get('/', [SaleController::class, 'index']);
     Route::get('/{id}', [SaleController::class, 'show']);
     Route::put('/{id}', [SaleController::class, 'update']);
-    Route::put('/change-status/{id}', [SaleController::class, 'changeStatus']);
 });
 
 Route::get('/mercadopago/success', [MercadoPagoController::class, 'success'])->name('mercadopago.success');
