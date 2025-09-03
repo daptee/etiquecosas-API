@@ -90,3 +90,6 @@ CREATE TABLE sales_status_history (
     CONSTRAINT fk_status_history_status FOREIGN KEY (sale_status_id) REFERENCES sale_status(id)
 );
 
+ALTER TABLE sales 
+ADD COLUMN coupon_id BIGINT UNSIGNED NULL AFTER sale_id,
+ADD CONSTRAINT fk_sales_coupon FOREIGN KEY (coupon_id) REFERENCES coupons(id);

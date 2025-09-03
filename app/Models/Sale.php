@@ -62,4 +62,10 @@ class Sale extends Model
     {
         return $this->hasMany(SaleStatusHistory::class, 'sale_id');
     }
+
+    public function coupon()
+    {
+        return $this->belongsTo(Coupon::class, 'coupon_id');
+    }
+
 }

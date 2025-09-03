@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Mail\NewClientForSale;
 use App\Models\Client;
 use App\Models\ClientAddress;
+use App\Models\Coupon;
 use App\Models\Sale;
 use App\Models\SaleProduct;
 use App\Models\SaleStatusHistory;
@@ -68,7 +69,7 @@ class SaleController extends Controller
 
         // Paginación
         $sales = $query->paginate($perPage, ['*'], 'page', $page);
-        $this->logAudit(Auth::user(), 'Get Sales List', $request->all(), $sales->items());
+        $this->logAudit(Auth::user(), 'Get Sales List', $request->all(), collect($sales->items())->take(10));
 
         $metaData = [
             'current_page' => $sales->currentPage(),
@@ -124,6 +125,7 @@ class SaleController extends Controller
             'internal_comments' => 'nullable|string',
             'sale_status_id' => 'required|integer|exists:sale_status,id',
             'sale_id' => 'nullable|integer|exists:sales,id',
+            'coupon_code' => 'nullable|string|exists:coupons,code',
             'products' => 'required|array|min:1',
             'products.*.product_id' => 'required|integer|exists:products,id',
             'products.*.variant_id' => 'nullable|integer|exists:product_variants,id',
@@ -212,6 +214,14 @@ class SaleController extends Controller
             'sale_status_id' => $request->sale_status_id,
             'sale_id' => $request->sale_id,
         ]);
+
+        if ($request->coupon_code) {
+            $coupon = Coupon::where('code', $request->coupon_code)->first();
+            if ($coupon) {
+                $sale->coupon_id = $coupon->id;
+                $sale->save();
+            }
+        }
 
 
         // Guardar historial de estado
