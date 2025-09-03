@@ -63,7 +63,7 @@ class SaleController extends Controller
         // Si no hay perPage, traer todo
         if (!$perPage) {
             $sales = $query->get();
-            $this->logAudit(Auth::user(), 'Get Sales List', $request->all(), $sales);
+            $this->logAudit(Auth::user(), 'Get Sales List', $request->all(), collect($sales->items())->take(10));
             return $this->success($sales, 'Ventas obtenidas');
         }
 
