@@ -182,15 +182,15 @@ class SaleController extends Controller
             Mail::to(users: $request->client_mail)->send(new NewClientForSale($mailData));
 
 
-            if ($request->user_address && $request->user_locality_id) {
+            if ($request->client_address && $request->client_locality_id) {
                 ClientAddress::create([
                     'client_id' => $client->id,
-                    'address' => $request->user_address,
-                    'locality_id' => $request->user_locality_id,
+                    'address' => $request->client_address,
+                    'locality_id' => $request->client_locality_id,
                 ]);
             }
 
-            $this->logAudit($client->id, 'Store Client Sale', $request->all(), $client);
+            $this->logAudit(null, 'Store Client Sale', $request->all(), $client);
         }
 
         // agregamos el client_id al request para crear la venta
