@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use App\Traits\FindObject;
 use App\Traits\ApiResponse;
-use App\Traits\Auditable; 
+use App\Traits\Auditable;
 
 class CouponController extends Controller
 {
@@ -22,19 +22,19 @@ class CouponController extends Controller
         $perPage = $request->query('quantity');
         $page = $request->query('page', 1);
         $search = $request->query('search');
-        $statusId = $request->query('status');        
+        $statusId = $request->query('status');
         $query = Coupon::query()->with('status', 'categories:id', 'products:id');
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('code', 'like', "%{$search}%");
+                    ->orWhere('code', 'like', "%{$search}%");
             });
         }
 
         if ($statusId) {
             $query->where('coupon_status_id', $statusId);
         }
-        
+
         $query->orderBy('name', 'asc');
         if (!$perPage) {
             $coupons = $query->get();
@@ -43,7 +43,7 @@ class CouponController extends Controller
         }
 
         $coupons = $query->paginate($perPage, ['*'], 'page', $page);
-        $this->logAudit(Auth::user(), 'Get Coupons List', $request->all(), $coupons);        
+        $this->logAudit(Auth::user(), 'Get Coupons List', $request->all(), $coupons);
         $metaData = [
             'current_page' => $coupons->currentPage(),
             'last_page' => $coupons->lastPage(),
@@ -51,14 +51,14 @@ class CouponController extends Controller
             'total' => $coupons->total(),
             'from' => $coupons->firstItem(),
             'to' => $coupons->lastItem(),
-        ];      
+        ];
         return $this->success($coupons->items(), 'Cupones obtenidos', $metaData);
     }
 
     public function show($id)
     {
         $coupon = $this->findObject(Coupon::class, $id);
-        $coupon->load('categories:id', 'products:id'); 
+        $coupon->load('categories:id', 'products:id');
         $this->logAudit(Auth::user(), 'Get Coupon Details', $id, $coupon);
         return $this->success($coupon, 'Cupon obtenido');
     }
@@ -71,20 +71,20 @@ class CouponController extends Controller
             'date_from' => 'required|date',
             'date_to' => 'required|date|after_or_equal:date_from',
             'min_amount' => 'required|numeric|min:0',
-            'type' => 'required|in:Fijo,Porcentaje', 
-            'applies_to_shipping' => 'boolean', 
-            'max_use_per_user' => 'required|integer|min:0', 
-            'max_use_per_code' => 'required|integer|min:0', 
-            'coupon_status_id' => 'required|exists:coupon_statuses,id',            
-            'categories' => 'nullable|array', 
+            'type' => 'required|in:Fijo,Porcentaje',
+            'applies_to_shipping' => 'boolean',
+            'max_use_per_user' => 'required|integer|min:0',
+            'max_use_per_code' => 'required|integer|min:0',
+            'coupon_status_id' => 'required|exists:coupon_statuses,id',
+            'categories' => 'nullable|array',
             'categories.*' => 'integer|exists:categories,id',
-            'products' => 'nullable|array', 
+            'products' => 'nullable|array',
             'products.*' => [
                 'integer',
                 'distinct',
                 Rule::in(Product::pluck('id')->toArray()),
             ],
-            'products_all' => 'nullable|boolean', 
+            'products_all' => 'nullable|boolean',
         ]);
         if ($validator->fails()) {
             $this->logAudit(Auth::user(), 'Store Coupon', $request->all(), $validator->errors());
@@ -94,7 +94,7 @@ class CouponController extends Controller
         $appliesToAllProducts = $request->input('products_all', false);
         if ($appliesToAllProducts || (is_array($request->products) && in_array('all', $request->products))) {
             $appliesToAllProducts = true;
-            $productIds = []; 
+            $productIds = [];
         } else {
             $productIds = $request->products ?? [];
         }
@@ -106,11 +106,11 @@ class CouponController extends Controller
             'date_to' => $request->date_to,
             'min_amount' => $request->min_amount,
             'type' => $request->type,
-            'applies_to_shipping' => $request->applies_to_shipping ?? false, 
+            'applies_to_shipping' => $request->applies_to_shipping ?? false,
             'max_use_per_user' => $request->max_use_per_user,
             'max_use_per_code' => $request->max_use_per_code,
             'coupon_status_id' => $request->coupon_status_id,
-            'applies_to_all_products' => $appliesToAllProducts, 
+            'applies_to_all_products' => $appliesToAllProducts,
         ]);
         if (!empty($request->categories)) {
             $coupon->categories()->attach($request->categories);
@@ -120,7 +120,7 @@ class CouponController extends Controller
             $coupon->products()->attach($productIds);
         }
 
-        $coupon->load('categories:id', 'products:id'); 
+        $coupon->load('categories:id', 'products:id');
         $this->logAudit(Auth::user(), 'Store Coupon', $request->all(), $coupon);
         return $this->success($coupon, 'Cupon creado', 201);
     }
@@ -134,7 +134,7 @@ class CouponController extends Controller
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('coupons', 'code')->ignore($coupon->id), 
+                Rule::unique('coupons', 'code')->ignore($coupon->id),
             ],
             'date_from' => 'required|date',
             'date_to' => 'required|date|after_or_equal:date_from',
@@ -143,7 +143,7 @@ class CouponController extends Controller
             'applies_to_shipping' => 'boolean',
             'max_use_per_user' => 'required|integer|min:0',
             'max_use_per_code' => 'required|integer|min:0',
-            'coupon_status_id' => 'required|exists:coupon_statuses,id',            
+            'coupon_status_id' => 'required|exists:coupon_statuses,id',
             'categories' => 'nullable|array',
             'categories.*' => 'integer|exists:categories,id',
             'products' => 'nullable|array',
@@ -152,19 +152,19 @@ class CouponController extends Controller
                 'distinct',
                 'exists:products,id',
             ],
-            'products_all' => 'nullable|boolean', 
+            'products_all' => 'nullable|boolean',
         ]);
         if ($validator->fails()) {
             $this->logAudit(Auth::user(), 'Update Coupon', $request->all(), $validator->errors());
             return $this->validationError($validator->errors());
         }
 
-        $appliesToAllProducts = $request->input('products_all', false); 
+        $appliesToAllProducts = $request->input('products_all', false);
         if ($appliesToAllProducts || (is_array($request->products) && in_array('all', $request->products))) {
             $appliesToAllProducts = true;
-            $productIdsToSync = []; 
+            $productIdsToSync = [];
         } else {
-            $productIdsToSync = $request->products ?? []; 
+            $productIdsToSync = $request->products ?? [];
         }
 
         $coupon->update([
@@ -178,16 +178,16 @@ class CouponController extends Controller
             'max_use_per_user' => $request->max_use_per_user,
             'max_use_per_code' => $request->max_use_per_code,
             'coupon_status_id' => $request->coupon_status_id,
-            'applies_to_all_products' => $appliesToAllProducts, 
+            'applies_to_all_products' => $appliesToAllProducts,
         ]);
         $coupon->categories()->sync($request->categories ?? []);
         if ($appliesToAllProducts) {
-            $coupon->products()->detach(); 
+            $coupon->products()->detach();
         } else {
             $coupon->products()->sync($productIdsToSync);
         }
 
-        $coupon->load('categories:id', 'products:id'); 
+        $coupon->load('categories:id', 'products:id');
         $this->logAudit(Auth::user(), 'Update Coupon', $request->all(), $coupon);
         return $this->success($coupon, 'Cupon actualizado');
     }
@@ -198,5 +198,71 @@ class CouponController extends Controller
         $coupon->delete();
         $this->logAudit(Auth::user(), 'Delete Coupon', $id, $coupon);
         return $this->success($coupon, 'Cupon eliminado');
+    }
+
+    public function validateCoupon(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'code' => 'required|string',
+            'client_id' => 'nullable|integer|exists:clients,id',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->validationError($validator->errors());
+        }
+
+        $code = $request->code;
+        $clientId = $request->client_id;
+
+        $coupon = Coupon::with('categories:id,name', 'products:id,name')
+            ->where('code', $code)
+            ->first();
+
+        if (!$coupon) {
+            return $this->error('Código de cupón inválido', 404);
+        }
+
+        // Validaciones de vigencia
+        $today = now();
+        if ($today->lt($coupon->date_from) || $today->gt($coupon->date_to)) {
+            return $this->error('Cupón vencido o aún no vigente', 400);
+        }
+
+        // Validación de usos por código
+        if (
+            $coupon->max_use_per_code > 0 &&
+            $coupon->sales()->whereNotIn('sale_status_id', [5, 8, 9])->count() >= $coupon->max_use_per_code
+        ) {
+            return $this->error('Este cupón alcanzó el máximo de usos permitidos', 400);
+        }
+
+        // Validación de usos por usuario
+        if ($clientId && $coupon->max_use_per_user > 0) {
+            $usesByClient = $coupon->sales()
+                ->where('client_id', $clientId)
+                ->whereNotIn('sale_status_id', [5, 8, 9])
+                ->count();
+
+            if ($usesByClient >= $coupon->max_use_per_user) {
+                return $this->error('Ya has usado este cupón el máximo de veces permitidas', 400);
+            }
+        }
+
+        // Si pasa todas las validaciones
+        $response = [
+            'id' => $coupon->id,
+            'name' => $coupon->name,
+            'code' => $coupon->code,
+            'type' => $coupon->type, // Fijo o Porcentaje
+            'value' => $coupon->min_amount, // o el campo que uses para el monto/descuento
+            'applies_to_shipping' => $coupon->applies_to_shipping,
+            'applies_to_all_products' => $coupon->applies_to_all_products,
+            'categories' => $coupon->categories,
+            'products' => $coupon->products,
+        ];
+
+        $this->logAudit(Auth::user(), 'Validate Coupon', $request->all(), $response);
+
+        return $this->success($response, 'Cupón válido');
     }
 }

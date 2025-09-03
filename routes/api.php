@@ -52,6 +52,9 @@ Route::prefix('v1')->group(function () {
     Route::post('sales', [SaleController::class, 'store']);
     Route::put('sales/change-status/{id}', [SaleController::class, 'changeStatus']);
     Route::post('mercadopago/create-preference', [MercadoPagoController::class, 'createPreference']);
+
+    // Coupons
+    Route::patch('coupons/validate', [CouponController::class, 'validateCoupon']);
 });
 
 // User
