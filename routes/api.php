@@ -170,6 +170,8 @@ Route::middleware('jwt.auth')->prefix('product-stock-statuses')->group(function 
 
 // Product
 Route::middleware('jwt.auth')->prefix('products')->group(function () {
+    Route::get('/', [ProductController::class, 'index']);
+    Route::get('/{id}', [ProductController::class, 'show']);
     Route::post('/', [ProductController::class, 'store']);
     Route::post('/{id}', [ProductController::class, 'update']);
     Route::delete('/{id}', [ProductController::class, 'delete']);
