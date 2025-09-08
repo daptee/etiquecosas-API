@@ -214,7 +214,7 @@ class ProductController extends Controller
                     'created_at',
                     'updated_at'
                 ]);
-        $this->logAudit(Auth::user(), 'Get Product Details', ['product_id' => $id], $product);
+        $this->logAudit(Auth::user(), 'Get Product Details', ['product_id' => $id], $product->id);
         return $this->success($product, 'Producto obtenido exitosamente');
     }
 
