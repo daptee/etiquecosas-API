@@ -89,12 +89,12 @@ class ProductController extends Controller
         $query->orderBy('name', 'asc');
         if (!$perPage) {
             $products = $query->get();
-            $this->logAudit(Auth::user(), 'Get Product List', $request->all(), $products);
+            $this->logAudit(Auth::user(), 'Get Product List', $request->all(), $products->first());
             return $this->success($products, 'Productos obtenidos');
         }
 
         $products = $query->paginate($perPage, ['*'], 'page', $page);
-        $this->logAudit(Auth::user(), 'Get Product List', $request->all(), $products->items());
+        $this->logAudit(Auth::user(), 'Get Product List', $request->all(), $products->first());
         $metaData = [
             'current_page' => $products->currentPage(),
             'last_page' => $products->lastPage(),
