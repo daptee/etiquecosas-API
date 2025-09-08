@@ -77,6 +77,12 @@ Route::middleware('jwt.auth')->prefix('categories')->group(function () {
     Route::delete('/{id}', [CategoryController::class, 'delete']);
 });
 
+// Province
+Route::middleware('jwt.auth')->prefix('provinces')->group(function () {
+    Route::get('/', [ProvinceController::class, 'index']);
+});
+    
+
 // Attribute
 Route::middleware('jwt.auth')->prefix('attributes')->group(function () {
     Route::get('/', [AttributeController::class, 'index']);
