@@ -88,6 +88,7 @@ class ShippingOptionController extends Controller
             'name' => $request->name,
             'price' => $request->price,
             'status_id' => $request->status_id,
+            'is_shipping_free' => 0
         ]);
 
         $option->load(['zone', 'status']);

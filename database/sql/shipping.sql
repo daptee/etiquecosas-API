@@ -15,6 +15,7 @@ CREATE TABLE shipping_options (
     name VARCHAR(255) NOT NULL,
     price DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     status_id BIGINT UNSIGNED NOT NULL,
+    is_shipping_free BOOLEAN DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_shipping_options_zone FOREIGN KEY (zone_id) REFERENCES shipping_zones(id) ON DELETE CASCADE,
@@ -24,9 +25,13 @@ CREATE TABLE shipping_options (
 
 CREATE TABLE shipping_config (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    free_shipping_min DECIMAL(10,2) NOT NULL DEFAULT 0.00, -- monto mínimo para envío gratuito
+    data JSON NULL, -- monto mínimo para envío gratuito
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
-INSERT INTO shipping_config (free_shipping_min) VALUES (100000.00);
+INSERT INTO shipping_config (data)
+VALUES ('{
+    "free_shipping_min": 100000.00,
+    "active": true
+}');

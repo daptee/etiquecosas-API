@@ -80,6 +80,7 @@ class ShippingZoneController extends Controller
             'name' => 'Envío Gratuito',
             'price' => 0,
             'status_id' => $zone->status_id,
+            'is_shipping_free' => 1
         ]);
 
         $zone->load('options', 'status');
