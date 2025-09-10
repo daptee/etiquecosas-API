@@ -3,6 +3,8 @@
 use App\Http\Controllers\CacheController;
 use App\Http\Controllers\MercadoPagoController;
 use App\Http\Controllers\SaleController;
+use App\Http\Controllers\ShippingOptionController;
+use App\Http\Controllers\ShippingZoneController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\UserController;
@@ -197,6 +199,26 @@ Route::middleware('jwt.auth')->prefix('sales')->group(function () {
     Route::get('/', [SaleController::class, 'index']);
     Route::get('/{id}', [SaleController::class, 'show']);
     Route::put('/{id}', [SaleController::class, 'update']);
+});
+
+// Shipping options
+Route::middleware('jwt.auth')->prefix('shipping-options')->group(function () {
+    Route::get('/', [ShippingOptionController::class, 'index']);       // Listar todas
+    Route::get('/{id}', [ShippingOptionController::class, 'show']);   // Ver una
+    Route::post('/', [ShippingOptionController::class, 'store']);     // Crear
+    Route::put('/{id}', [ShippingOptionController::class, 'update']); // Actualizar
+    Route::delete('/{id}', [ShippingOptionController::class, 'destroy']); // Soft delete
+    Route::patch('/{id}/toggle-status', [ShippingOptionController::class, 'toggleStatus']); // Activar/Desactivar
+});
+
+// Shipping zones
+Route::middleware('jwt.auth')->prefix('shipping-zones')->group(function () {
+    Route::get('/', [ShippingZoneController::class, 'index']);       // Listar todas
+    Route::get('/{id}', [ShippingZoneController::class, 'show']);   // Ver una
+    Route::post('/', [ShippingZoneController::class, 'store']);     // Crear
+    Route::put('/{id}', [ShippingZoneController::class, 'update']); // Actualizar
+    Route::delete('/{id}', [ShippingZoneController::class, 'destroy']); // Soft delete
+    Route::patch('/{id}/toggle-status', [ShippingZoneController::class, 'toggleStatus']); // Activar/Desactivar
 });
 
 Route::get('/mercadopago/success', [MercadoPagoController::class, 'success'])->name('mercadopago.success');
