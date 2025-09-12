@@ -14,6 +14,7 @@ use App\Traits\FindObject;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Validator;
 use App\Traits\Auditable;
@@ -236,10 +237,10 @@ class SaleController extends Controller
             $sale->products()->create($product);
         }
 
-        return response()->json([
-            'message' => 'Venta creada correctamente',
-            'data' => $sale->load('products.variant')
-        ], 201);
+        $sale->load('products.variant');
+
+        $this->logAudit(Auth::user() ?? null, 'Add Sale', $request->all(), $sale);
+        return $this->success($sale, 'Venta creada correctamente');
     }
 
     public function update(Request $request, $id)
@@ -264,10 +265,10 @@ class SaleController extends Controller
         $sale = Sale::findOrFail($id);
         $sale->update($request->only(array_keys($rules)));
 
-        return response()->json([
-            'message' => 'Venta actualizada correctamente',
-            'data' => $sale
-        ]);
+        $sale->load('products.variant');
+
+        $this->logAudit(Auth::user() ?? null, 'Update Sale', $request->all(), $sale);
+        return $this->success($sale, 'Venta actualizada correctamente');
     }
 
     // 📌 Eliminar venta
@@ -276,7 +277,8 @@ class SaleController extends Controller
         $sale = Sale::findOrFail($id);
         $sale->delete();
 
-        return response()->json(['message' => 'Venta eliminada correctamente']);
+        $this->logAudit(Auth::user() ?? null, 'Delete Sale', $id, $sale);
+        return $this->success($sale, 'Venta eliminada correctamente');
     }
 
     // 📌 Cambiar estado de venta
@@ -293,9 +295,138 @@ class SaleController extends Controller
             'date' => Carbon::now(),
         ]);
 
-        return response()->json([
-            'message' => 'Estado de venta actualizado correctamente',
-            'data' => $sale
+        $sale->load('products.variant');
+
+        $this->logAudit(Auth::user() ?? null, 'Update Status Sale', $request->all(), $sale);
+        return $this->success($sale, 'Estado de venta actualizada correctamente');
+    }
+
+    public function changeStatusAdmin(Request $request, $id)
+    {
+        $user = Auth::user();
+        $sale = Sale::findOrFail($id);
+        $sale->sale_status_id = $request->sale_status_id;
+        $sale->save();
+
+        if (!$user->profile_id) {
+            $this->logAudit(Auth::user(), 'Sale Validation Fail (Update Status)', $request->all(), 'No tienes los permisos necesarios');
+            return $this->error('No tienes los permisos necesarios', 401);
+        }
+
+        // Guardar historial
+        SaleStatusHistory::create([
+            'sale_id' => $sale->id,
+            'sale_status_id' => $request->sale_status_id,
+            'date' => Carbon::now(),
         ]);
+
+        $sale->load('products.variant');
+
+        $this->logAudit(Auth::user() ?? null, 'Update Status Sale', $request->all(), $sale);
+        return $this->success($sale, 'Estado de venta actualizada correctamente');
+    }
+
+    public function updateInternalComment(Request $request, $id)
+    {
+        $user = Auth::user();
+
+        if (!$user->profile_id) {
+            $this->logAudit(Auth::user(), 'Sale Validation Fail (Update Internal Comment)', $request->all(), 'No tienes los permisos necesarios');
+            return $this->error('No tienes los permisos necesarios', 401);
+        }
+
+        $rules = [
+            'internal_comments' => 'required|string',
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails()) {
+            $this->logAudit(Auth::user(), 'Sale Validation Fail (Update Internal Comment)', $request->all(), $validator->errors());
+            return $this->validationError($validator->errors());
+        }
+
+        $sale = Sale::findOrFail($id);
+        $sale->internal_comments = $request->internal_comments;
+        $sale->save();
+
+        $this->logAudit(Auth::user(), 'Update Internal Comment', ['id' => $id], $sale);
+
+        return $this->success($sale, 'Comentario interno actualizado correctamente');
+    }
+
+    public function updateClientData(Request $request, $id)
+    {
+        $user = Auth::user();
+
+        if (!$user->profile_id) {
+            $this->logAudit(Auth::user(), 'Sale Validation Fail (Update Client Data)', $request->all(), 'No tienes los permisos necesarios');
+            return $this->error('No tienes los permisos necesarios', 401);
+        }
+
+        $rules = [
+            'name' => 'nullable|string|max:255',
+            'lastName' => 'nullable|string|max:255',
+            'email' => 'nullable|string|email|max:255|unique:clients,email',
+            'locality_id' => 'nullable|integer|exists:localities,id',
+            'address' => 'nullable|string|max:255',
+            'postal_code' => 'nullable|string|max:20',
+            'phone' => 'nullable|string|max:50',
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails()) {
+            $this->logAudit(Auth::user(), 'Sale Validation Fail (Update Client Data)', $request->all(), $validator->errors());
+            return $this->validationError($validator->errors());
+        }
+
+        $sale = Sale::findOrFail($id);
+        $client = $sale->client;
+
+        if (!$client) {
+            return $this->error('Cliente no asociado a esta venta', 404);
+        }
+
+        $sale->update($request->only([
+            'locality_id',
+            'postal_code',
+            'address'
+        ]));
+
+        $client->update($request->only([
+            'name',
+            'lastName',
+            'email',
+            'phone'
+        ]));
+
+        $sale->load(['client', 'channel', 'products.product', 'products.variant', 'status', 'statusHistory']);
+
+        $this->logAudit(Auth::user(), 'Update Client Data From Sale', ['id' => $id], $sale);
+
+        return $this->success($sale, 'Datos del cliente actualizados correctamente');
+    }
+
+    public function assignUser(Request $request, $id)
+    {
+        $rules = [
+            'client_id' => 'required|integer|exists:clients,id',
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails()) {
+            $this->logAudit(Auth::user(), 'Sale Validation Fail (Assign User)', $request->all(), $validator->errors());
+            return $this->validationError($validator->errors());
+        }
+
+        $sale = Sale::findOrFail($id);
+        $sale->client_id = $request->client_id; // reemplaza si ya existía
+        $sale->save();
+
+        $sale->load(['client', 'channel', 'products.product', 'products.variant', 'status', 'statusHistory']);
+
+
+        $this->logAudit(Auth::user(), 'Assign User To Sale', ['id' => $id, 'user_id' => $request->user_id], $sale);
+
+        return $this->success($sale, 'Usuario asignado a la venta correctamente');
     }
 }
