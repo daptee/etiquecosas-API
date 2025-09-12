@@ -32,19 +32,19 @@ INSERT INTO channels (name) VALUES ('Web'), ('Local Comercial'), ('MercadoLibre'
 
 CREATE TABLE sales (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    client_id BIGINT UNSIGNED NOT NULL, -- referencia a cliente
+    client_id BIGINT UNSIGNED NULL, -- referencia a cliente
     channel_id BIGINT NOT NULL, -- canal de venta
     external_id VARCHAR(255) NULL, -- id externo (ej: MercadoLibre)
 
     -- Datos de envío
-    address VARCHAR(255) NOT NULL,
-    locality_id BIGINT NOT NULL,
-    postal_code VARCHAR(20) NOT NULL,
+    address VARCHAR(255) NULL,
+    locality_id BIGINT NULL,
+    postal_code VARCHAR(20) NULL,
     client_shipping_id BIGINT NULL, -- si usó dirección guardada del cliente
 
     subtotal DECIMAL(12,2) NOT NULL DEFAULT 0.00,
     shipping_cost DECIMAL(12,2) NOT NULL DEFAULT 0.00,
-    shipping_method_id BIGINT NOT NULL,
+    shipping_method_id BIGINT NULL,
 
     customer_notes TEXT NULL,
     internal_comments TEXT NULL,
@@ -93,3 +93,45 @@ CREATE TABLE sales_status_history (
 ALTER TABLE sales 
 ADD COLUMN coupon_id BIGINT UNSIGNED NULL AFTER sale_id,
 ADD CONSTRAINT fk_sales_coupon FOREIGN KEY (coupon_id) REFERENCES coupons(id);
+
+CREATE TABLE payment_methods (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE, -- nombre del método de pago
+    description VARCHAR(255) NULL, -- descripción opcional
+    status_id BIGINT UNSIGNED NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_payment_methods_status FOREIGN KEY (status_id) REFERENCES general_statuses(id)
+);
+
+INSERT INTO payment_methods (name, description, status_id) VALUES
+('Pago desde la web', 'Pago realizado atravez de la pagina web', 1),
+('Efectivo', 'Pago en efectivo en el local', 1),
+('Tarjeta de Débito', 'Pago con tarjeta de débito', 1),
+('Tarjeta de Crédito', 'Pago con tarjeta de crédito', 1),
+('Transferencia Bancaria', 'Transferencia directa a cuenta bancaria', 1),
+('QR', 'Pago con QR (ej: MercadoPago, Ualá, etc.)', 1);
+
+
+ALTER TABLE sales
+    ADD COLUMN discount_percent DECIMAL(5,2) NULL AFTER subtotal,
+    ADD COLUMN discount_amount DECIMAL(12,2) NULL AFTER discount_percent,
+    ADD COLUMN total DECIMAL(12,2) NOT NULL DEFAULT 0.00 AFTER discount_amount,
+    ADD COLUMN payment_method_id BIGINT NULL AFTER total;
+
+-- Llaves foráneas
+ALTER TABLE sales
+    ADD CONSTRAINT fk_sales_payment_method FOREIGN KEY (payment_method_id) REFERENCES payment_methods(id);
+
+ALTER TABLE sales
+DROP FOREIGN KEY fk_sales_client;
+
+ALTER TABLE sales
+MODIFY client_id BIGINT UNSIGNED NULL,
+MODIFY address VARCHAR(255) NULL,
+MODIFY locality_id BIGINT UNSIGNED NULL,
+MODIFY postal_code VARCHAR(20) NULL,
+MODIFY shipping_method_id BIGINT NULL;
+
+ALTER TABLE sales
+ADD CONSTRAINT fk_sales_client FOREIGN KEY (client_id) REFERENCES clients(id);

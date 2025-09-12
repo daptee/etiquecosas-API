@@ -6,6 +6,7 @@ use App\Mail\NewClientForSale;
 use App\Models\Client;
 use App\Models\ClientAddress;
 use App\Models\Coupon;
+use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleProduct;
 use App\Models\SaleStatusHistory;
@@ -199,6 +200,10 @@ class SaleController extends Controller
         // agregamos el client_id al request para crear la venta
         $request->merge(['client_id' => $client->id]);
 
+        $subtotal = $request->subtotal ?? 0;
+        $shippingCost = $request->shipping_cost ?? 0;
+        $total = $subtotal + $shippingCost;
+
         $sale = Sale::create([
             'client_id' => $client->id,
             'channel_id' => $request->channel_id,
@@ -208,8 +213,10 @@ class SaleController extends Controller
             'postal_code' => $request->shipping_postal_code,
             'client_shipping_id' => $request->client_shipping_id,
             'subtotal' => $request->subtotal,
+            'total' => $total,
             'shipping_cost' => $request->shipping_cost,
             'shipping_method_id' => $request->shipping_method_id,
+            'payment_method_id' => 1,
             'customer_notes' => $request->customer_notes,
             'internal_comments' => $request->internal_comments,
             'sale_status_id' => $request->sale_status_id,
@@ -262,8 +269,15 @@ class SaleController extends Controller
             return $this->validationError($validator->errors());
         }
 
+        // Calcular total (subtotal + shipping_cost)
+        $subtotal = $request->subtotal ?? 0;
+        $shippingCost = $request->shipping_cost ?? 0;
+        $total = $subtotal + $shippingCost;
+
         $sale = Sale::findOrFail($id);
-        $sale->update($request->only(array_keys($rules)));
+        $data = $request->only(array_keys($rules));
+        $data['total'] = $total;
+        $sale->update($data);
 
         $sale->load('products.variant');
 
@@ -428,5 +442,186 @@ class SaleController extends Controller
         $this->logAudit(Auth::user(), 'Assign User To Sale', ['id' => $id, 'user_id' => $request->user_id], $sale);
 
         return $this->success($sale, 'Usuario asignado a la venta correctamente');
+    }
+
+    public function storeLocalSale(Request $request)
+    {
+        $user = Auth::user();
+
+        if (!$user->profile_id) {
+            $this->logAudit(Auth::user(), 'Sale Validation Fail (Update Client Data)', $request->all(), 'No tienes los permisos necesarios');
+            return $this->error('No tienes los permisos necesarios', 401);
+        }
+
+        $rules = [
+            'client_id' => 'nullable|integer|exists:clients,id',
+            'products' => 'required|array|min:1',
+            'products.*.product_id' => 'required|integer|exists:products,id',
+            'products.*.variant_id' => 'nullable|integer|exists:product_variants,id',
+            'products.*.quantity' => 'required|integer|min:1',
+            'products.*.unit_price' => 'required|numeric|min:0',
+            'products.*.comment' => 'nullable|string',
+            'products.*.customization_data' => 'nullable|json',
+            'discount_percent' => 'nullable|numeric|min:0|max:100',
+            'payment_method_id' => 'required|integer|exists:payment_methods,id',
+            'customer_notes' => 'nullable|string',
+            'internal_comments' => 'nullable|string',
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails()) {
+            $this->logAudit(Auth::user(), 'Local Sale Validation Fail (Create)', $request->all(), $validator->errors());
+            return $this->validationError($validator->errors());
+        }
+
+        // 📌 Verificar rol del usuario
+        $user = Auth::user();
+        if (!$user->profile_id == 1 || !$user->profile_id == 2) {
+            return $this->error('No autorizado para crear ventas locales', 403);
+        }
+
+        $subtotal = 0;
+        $productsData = [];
+
+        foreach ($request->products as $productInput) {
+            $product = Product::findOrFail($productInput['product_id']);
+            $unitPrice = $product->price; // 📌 asumo que `products` tiene un campo `price`
+            $quantity = $productInput['quantity'];
+            $lineTotal = $unitPrice * $quantity;
+
+            $subtotal += $lineTotal;
+
+            $productsData[] = [
+                'product_id' => $product->id,
+                'variant_id' => $productInput['variant_id'] ?? null,
+                'quantity' => $quantity,
+                'unit_price' => $unitPrice,
+                'comment' => $productInput['comment'] ?? null,
+                'customization_data' => $productInput['customization_data'] ?? null,
+            ];
+        }
+
+        $discountPercent = $request->discount_percent ?? 0;
+        $subtotal = (float) $subtotal; // aseguro que sea float
+
+        $discountAmount = ($subtotal * $discountPercent) / 100;
+        $discountAmount = round($discountAmount); // 🔥 redondea al entero más cercano
+
+        $total = $subtotal - $discountAmount;
+        $total = round($total);
+
+        $sale = Sale::create([
+            'client_id' => $request->client_id,
+            'channel_id' => 2, // 👈 siempre local comercial
+            'subtotal' => $subtotal,
+            'discount_percent' => $discountPercent,
+            'discount_amount' => $discountAmount,
+            'total' => $total,
+            'payment_method_id' => $request->payment_method_id,
+            'customer_notes' => $request->customer_notes,
+            'internal_comments' => $request->internal_comments,
+            'sale_status_id' => 7, // 📌 asumo "pendiente" o inicial
+        ]);
+
+        foreach ($productsData as $product) {
+            $sale->products()->create($product);
+        }
+
+        // Guardar historial de estado
+        SaleStatusHistory::create([
+            'sale_id' => $sale->id,
+            'sale_status_id' => $sale->sale_status_id,
+            'date' => Carbon::now(),
+        ]);
+
+        $this->logAudit($user, 'Create Local Sale', $request->all(), $sale);
+
+        return $this->success($sale->load('products.product', 'products.variant'), 'Venta local creada correctamente');
+    }
+
+    public function updateLocalSale(Request $request, $id)
+    {
+        $user = Auth::user();
+
+        if (!$user->profile_id) {
+            $this->logAudit(Auth::user(), 'Sale Validation Fail (Update Client Data)', $request->all(), 'No tienes los permisos necesarios');
+            return $this->error('No tienes los permisos necesarios', 401);
+        }
+
+        $rules = [
+            'products' => 'nullable|array|min:1',
+            'products.*.product_id' => 'required_with:products|integer|exists:products,id',
+            'products.*.variant_id' => 'nullable|integer|exists:product_variants,id',
+            'products.*.quantity' => 'required_with:products|integer|min:1',
+            'discount_percent' => 'nullable|numeric|min:0|max:100',
+            'payment_method_id' => 'nullable|integer|exists:payment_methods,id',
+            'customer_notes' => 'nullable|string',
+            'internal_comments' => 'nullable|string',
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails()) {
+            $this->logAudit(Auth::user(), 'Local Sale Validation Fail (Update)', $request->all(), $validator->errors());
+            return $this->validationError($validator->errors());
+        }
+
+        $sale = Sale::findOrFail($id);
+
+        if ($sale->channel_id !== 2) {
+            return $this->error('Solo se pueden editar ventas del canal local (channel_id = 2)', 400);
+        }
+
+        $user = Auth::user();
+        if (!$user->profile_id == 1 || !$user->profile_id == 2) {
+            return $this->error('No autorizado para editar ventas locales', 403);
+        }
+
+        $subtotal = $sale->subtotal;
+
+        // Si vienen productos, recalcular
+        if ($request->has('products')) {
+            $subtotal = 0;
+            $sale->products()->delete(); // 👈 reemplazo productos anteriores
+
+            foreach ($request->products as $productInput) {
+                $product = Product::findOrFail($productInput['product_id']);
+                $unitPrice = $product->price;
+                $quantity = $productInput['quantity'];
+                $lineTotal = $unitPrice * $quantity;
+
+                $subtotal += $lineTotal;
+
+                $sale->products()->create([
+                    'product_id' => $product->id,
+                    'variant_id' => $productInput['variant_id'] ?? null,
+                    'quantity' => $quantity,
+                    'unit_price' => $unitPrice,
+                    'total_price' => $lineTotal,
+                    'comment' => $productInput['comment'] ?? null,
+                    'customization_data' => $productInput['customization_data'] ?? null,
+                ]);
+            }
+        }
+
+        $discountPercent = $request->discount_percent ?? $sale->discount_percent ?? 0;
+        $discountAmount = ($subtotal * $discountPercent) / 100;
+        $total = $subtotal - $discountAmount;
+
+        $discountAmount = round($discountAmount, 2);
+        $total = round($total, 2);
+
+        $sale->update([
+            'subtotal' => $subtotal,
+            'discount_percent' => $discountPercent,
+            'discount_amount' => $discountAmount,
+            'total' => $total,
+            'payment_method_id' => $request->payment_method_id ?? $sale->payment_method_id,
+            'customer_notes' => $request->customer_notes ?? $sale->customer_notes,
+            'internal_comments' => $request->internal_comments ?? $sale->internal_comments,
+        ]);
+
+        $this->logAudit($user, 'Update Local Sale', $request->all(), $sale);
+
+        return $this->success($sale->load('products.product', 'products.variant'), 'Venta local actualizada correctamente');
     }
 }
