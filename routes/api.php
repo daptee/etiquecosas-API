@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\LoginClientController;
 use App\Http\Controllers\CacheController;
 use App\Http\Controllers\MercadoPagoController;
 use App\Http\Controllers\SaleController;
@@ -32,12 +33,16 @@ Route::get('/clear-cache', [CacheController::class, 'clearCache'])->name('clearC
 // Auth
 Route::post('login', [LoginController::class, 'login']);
 Route::post('forgot-password', [LoginController::class, 'forgotPassword']);
-Route::post('client-login', [LoginController::class, 'clientLogin']);
-Route::post('client-forgot-password', [LoginController::class, 'clientForgotPassword']);
 Route::post('create-admin-user', [UserController::class, 'store']);
 
 // Publica
 Route::prefix('v1')->group(function () {
+
+    // Auth client
+    Route::post('auth/client-login', [LoginClientController::class, 'clientLogin']);
+    Route::post('auth/client-forgot-password', [LoginClientController::class, 'clientForgotPassword']);
+    Route::post('auth/register', [LoginClientController::class, 'register']);
+
     // Product
     Route::get('products', [ProductController::class, 'index']);
     Route::get('products/best-sellers', [ProductController::class, 'bestSellers']);

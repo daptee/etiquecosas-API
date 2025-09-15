@@ -10,8 +10,10 @@ use App\Models\GeneralStatus;
 use App\Models\ClientShipping;
 use App\Models\ClientWholesale;
 use App\Models\ClientAddress;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Tymon\JWTAuth\Contracts\JWTSubject;
 
-class Client extends Model
+class Client extends Authenticatable implements JWTSubject
 {
     use HasFactory, SoftDeletes;
 
@@ -50,5 +52,22 @@ class Client extends Model
     public function addresses()
     {
         return $this->hasMany(ClientAddress::class);
+    }
+
+    public function getJWTIdentifier()
+    {
+        return $this->getKey();
+    }
+
+    public function getJWTCustomClaims()
+    {
+        return [
+            'id' => $this->id,
+            'name' => $this->name,
+            'lastName' => $this->lastName,
+            'email' => $this->email,
+            'photo' => $this->photo,
+            'profile' => optional($this->profile)->name,
+        ];
     }
 }
