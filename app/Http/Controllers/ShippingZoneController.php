@@ -21,7 +21,13 @@ class ShippingZoneController extends Controller
         $page = $request->query('page', 1);
         $search = $request->query('search');
 
-        $query = ShippingZone::query()->with('options', 'status');
+        $query = ShippingZone::query()
+            ->with([
+                'options' => function ($q) {
+                    $q->orderBy('options_order', 'asc');
+                },
+                'status'
+            ]);
 
         if ($search) {
             $query->where('name', 'like', "%{$search}%");
@@ -51,7 +57,12 @@ class ShippingZoneController extends Controller
     public function show($id)
     {
         $zone = $this->findObject(ShippingZone::class, $id);
-        $zone->load('options', 'status');
+        $zone->load([
+            'options' => function ($q) {
+                $q->orderBy('options_order', 'asc');
+            },
+            'status'
+        ]);
         $this->logAudit(Auth::user(), 'Get Shipping Zone Details', $id, $zone);
         return $this->success($zone, 'Zona obtenida');
     }
@@ -125,7 +136,7 @@ class ShippingZoneController extends Controller
     {
         $zone = ShippingZone::findOrFail($id);
 
-        $zone->status_id = $zone->status_id == 1 ? 2 : 1; 
+        $zone->status_id = $zone->status_id == 1 ? 2 : 1;
         // Ej: 1 = Activo, 2 = Inactivo
         $zone->save();
         $zone->load('status');

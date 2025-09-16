@@ -33,7 +33,8 @@ class ShippingOptionController extends Controller
             $query->where('zone_id', $zoneId);
         }
 
-        $query->orderBy('name', 'asc');
+        $query->orderBy('zone_id', 'asc')
+            ->orderBy('options_order', 'asc');
 
         if (!$perPage) {
             $options = $query->get();
@@ -76,6 +77,7 @@ class ShippingOptionController extends Controller
             ],
             'price' => 'required|numeric|min:0',
             'status_id' => 'required|exists:general_statuses,id',
+            'options_order' => 'required|numeric'
         ]);
 
         if ($validator->fails()) {
@@ -88,8 +90,12 @@ class ShippingOptionController extends Controller
             'name' => $request->name,
             'price' => $request->price,
             'status_id' => $request->status_id,
+            'options_order' => $request->options_order,
             'is_shipping_free' => 0
         ]);
+
+        // Reordenar para que quede consecutivo
+        $this->reorderOptions($request->zone_id, $option->id, $request->options_order);
 
         $option->load(['zone', 'status']);
         $this->logAudit(Auth::user(), 'Store Shipping Option', $request->all(), $option);
@@ -115,6 +121,7 @@ class ShippingOptionController extends Controller
             ],
             'price' => 'sometimes|numeric|min:0',
             'status_id' => 'sometimes|exists:general_statuses,id',
+            'options_order' => 'required|numeric'
         ]);
 
         if ($validator->fails()) {
@@ -122,7 +129,20 @@ class ShippingOptionController extends Controller
             return $this->validationError($validator->errors());
         }
 
-        $option->update($request->only(['zone_id', 'name', 'price', 'status_id']));
+        $oldZoneId = $option->zone_id;
+        $desiredOrder = $request->options_order;
+
+        // Actualizar la opción sin cambiar el order todavía
+        $option->update($request->only(['zone_id', 'name', 'price', 'status_id', 'options_order']));
+
+        // Reordenar la zona original si cambió
+        if ($oldZoneId != $option->zone_id) {
+            $this->reorderOptions($oldZoneId);
+        }
+
+        // Reordenar la zona actual, colocando la opción en el orden deseado
+        $this->reorderOptions($option->zone_id, $option->id, $desiredOrder);
+
         $option->load(['zone', 'status']);
         $this->logAudit(Auth::user(), 'Update Shipping Option', $request->all(), $option);
         return $this->success($option, 'Opción de envío actualizada');
@@ -145,4 +165,30 @@ class ShippingOptionController extends Controller
         $this->logAudit(Auth::user(), 'Toggle Shipping Option Status', $id, $option);
         return $this->success($option, 'Estado de la opción actualizado');
     }
+
+    private function reorderOptions($zoneId, $insertOptionId = null, $desiredOrder = null)
+    {
+        $options = ShippingOption::where('zone_id', $zoneId)
+            ->orderBy('options_order')
+            ->get();
+
+        $order = 1;
+
+        foreach ($options as $option) {
+            if ($insertOptionId && $order == $desiredOrder) {
+                // Saltar la posición deseada para la opción que estamos moviendo
+                $order++;
+            }
+
+            if ($option->id == $insertOptionId) {
+                $option->options_order = $desiredOrder;
+            } else {
+                $option->options_order = $order;
+                $order++;
+            }
+
+            $option->save();
+        }
+    }
+
 }

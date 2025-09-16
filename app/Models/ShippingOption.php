@@ -16,7 +16,8 @@ class ShippingOption extends Model
         'name',
         'price',
         'status_id',
-        'is_shipping_free'
+        'is_shipping_free',
+        'options_order'
     ];
 
     public function zone()

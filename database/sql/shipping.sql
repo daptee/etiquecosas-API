@@ -35,3 +35,6 @@ VALUES ('{
     "free_shipping_min": 100000.00,
     "active": true
 }');
+
+ALTER TABLE shipping_options
+    ADD COLUMN options_order int NULL DEFAULT 1 AFTER status_id

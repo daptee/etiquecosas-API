@@ -102,6 +102,29 @@ class SaleController extends Controller
 
     }
 
+    public function showRecort($id)
+    {
+        $sale = $this->findObject(Sale::class, $id);
+
+        if (!$sale) {
+            return $this->error('Venta no encontrada', 404);
+        }
+
+        // Cargar solo las relaciones necesarias
+        $sale->load(['products.product', 'products.variant', 'status']);
+
+        // Preparar la respuesta resumida
+        $data = [
+            'id' => $sale->id,
+            'status' => $sale->status, // puedes ajustar si quieres solo el nombre o todo el objeto
+            'products' => $sale->products,
+        ];
+
+        $this->logAudit(null, 'Get Sale Summary', ['id' => $id], $data);
+
+        return $this->success($data, 'Venta resumida obtenida correctamente');
+    }
+
     // 📌 Crear una venta
     public function store(Request $request)
     {
