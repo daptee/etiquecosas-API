@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\LoginClientController;
 use App\Http\Controllers\CacheController;
 use App\Http\Controllers\MercadoPagoController;
+use App\Http\Controllers\SaleClientController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\ShippingOptionController;
 use App\Http\Controllers\ShippingZoneController;
@@ -210,6 +211,14 @@ Route::middleware('jwt.auth')->prefix('sales')->group(function () {
     Route::put('/assign-client/{id}', [SaleController::class, 'assignUser']);
     Route::post('/local', [SaleController::class, 'storeLocalSale']);
     Route::put('/local/{id}', [SaleController::class, 'updateLocalSale']);
+});
+
+// Sales Client
+Route::middleware('auth:client')->prefix('sales-client')->group(function () {
+    Route::get('/history', [SaleClientController::class, 'orderHistory']);
+    Route::post('/note', [SaleClientController::class, 'requestOrderModification']);
+    Route::post('/change-address', [SaleClientController::class, 'requestAddressChange']);
+    Route::post('/claim', [SaleClientController::class, 'requestShippingClaim']);
 });
 
 // Shipping options
