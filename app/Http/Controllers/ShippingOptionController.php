@@ -38,12 +38,12 @@ class ShippingOptionController extends Controller
 
         if (!$perPage) {
             $options = $query->get();
-            $this->logAudit(Auth::user(), 'Get Shipping Options List', $request->all(), $options);
+            $this->logAudit(Auth::user() ?? null, 'Get Shipping Options List', $request->all(), $options);
             return $this->success($options, 'Opciones de envío obtenidas');
         }
 
         $options = $query->paginate($perPage, ['*'], 'page', $page);
-        $this->logAudit(Auth::user(), 'Get Shipping Options List', $request->all(), $options);
+        $this->logAudit(Auth::user() ?? null, 'Get Shipping Options List', $request->all(), $options);
         $metaData = [
             'current_page' => $options->currentPage(),
             'last_page' => $options->lastPage(),
@@ -59,7 +59,7 @@ class ShippingOptionController extends Controller
     {
         $option = $this->findObject(ShippingOption::class, $id);
         $option->load(['zone', 'status']);
-        $this->logAudit(Auth::user(), 'Get Shipping Option Details', $id, $option);
+        $this->logAudit(Auth::user() ?? null, 'Get Shipping Option Details', $id, $option);
         return $this->success($option, 'Opción de envío obtenida');
     }
 

@@ -37,12 +37,12 @@ class ShippingZoneController extends Controller
 
         if (!$perPage) {
             $zones = $query->get();
-            $this->logAudit(Auth::user(), 'Get Shipping Zones List', $request->all(), $zones);
+            $this->logAudit(Auth::user() ?? null, 'Get Shipping Zones List', $request->all(), $zones);
             return $this->success($zones, 'Zonas obtenidas');
         }
 
         $zones = $query->paginate($perPage, ['*'], 'page', $page);
-        $this->logAudit(Auth::user(), 'Get Shipping Zones List', $request->all(), $zones);
+        $this->logAudit(Auth::user() ?? null, 'Get Shipping Zones List', $request->all(), $zones);
         $metaData = [
             'current_page' => $zones->currentPage(),
             'last_page' => $zones->lastPage(),
@@ -63,7 +63,7 @@ class ShippingZoneController extends Controller
             },
             'status'
         ]);
-        $this->logAudit(Auth::user(), 'Get Shipping Zone Details', $id, $zone);
+        $this->logAudit(Auth::user() ?? null, 'Get Shipping Zone Details', $id, $zone);
         return $this->success($zone, 'Zona obtenida');
     }
 

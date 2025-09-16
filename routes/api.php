@@ -18,13 +18,13 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ClientTypeController;
 use App\Http\Controllers\ProvinceController;
-use App\Http\Controllers\PersonalizationColorController; 
-use App\Http\Controllers\PersonalizationIconController; 
+use App\Http\Controllers\PersonalizationColorController;
+use App\Http\Controllers\PersonalizationIconController;
 use App\Http\Controllers\ShippingTemplateController;
 use App\Http\Controllers\TemplateCategoryController;
 use App\Http\Controllers\ProductTypeController;
 use App\Http\Controllers\ProductStatusController;
-use App\Http\Controllers\ProductStockStatusController; 
+use App\Http\Controllers\ProductStockStatusController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CouponController;
 
@@ -64,6 +64,14 @@ Route::prefix('v1')->group(function () {
 
     // Coupons
     Route::patch('coupons/validate', [CouponController::class, 'validateCoupon']);
+
+    // Shipping options
+    Route::get('shipping-options/', [ShippingOptionController::class, 'index']);       // Listar todas
+    Route::get('shipping-options/{id}', [ShippingOptionController::class, 'show']);
+
+    // Shipping zones
+    Route::get('shipping-zones/', [ShippingZoneController::class, 'index']);       // Listar todas
+    Route::get('shipping-zones/{id}', [ShippingZoneController::class, 'show']); 
 });
 
 // User
@@ -90,7 +98,7 @@ Route::middleware('jwt.auth')->prefix('categories')->group(function () {
 Route::middleware('jwt.auth')->prefix('provinces')->group(function () {
     Route::get('/', [ProvinceController::class, 'index']);
 });
-    
+
 
 // Attribute
 Route::middleware('jwt.auth')->prefix('attributes')->group(function () {
@@ -104,7 +112,7 @@ Route::middleware('jwt.auth')->prefix('attributes')->group(function () {
 Route::middleware('jwt.auth')->prefix('costs')->group(function () {
     Route::get('/', [CostController::class, 'index']);
     Route::get('/{id}', [CostController::class, 'show']);
-    Route::post('/', [CostController::class, 'store']);   
+    Route::post('/', [CostController::class, 'store']);
     Route::put('/{id}', [CostController::class, 'update']);
     Route::delete('/{id}', [CostController::class, 'delete']);
 
@@ -127,7 +135,7 @@ Route::middleware('jwt.auth')->prefix('profiles')->group(function () {
 
 // Client
 Route::middleware('jwt.auth')->prefix('clients')->group(function () {
-    Route::get('/', [ClientController::class, 'index']);    
+    Route::get('/', [ClientController::class, 'index']);
     Route::get('/{id}', [ClientController::class, 'show']);
     Route::post('/', [ClientController::class, 'store']);
     Route::put('/{id}', [ClientController::class, 'update']);
@@ -145,7 +153,7 @@ Route::middleware('jwt.auth')->prefix('colors')->group(function () {
     Route::post('/', [PersonalizationColorController::class, 'store']);
     Route::put('/{id}', [PersonalizationColorController::class, 'update']);
     Route::delete('/{id}', [PersonalizationColorController::class, 'delete']);
-});  
+});
 
 // PersonalizationIcon
 Route::middleware('jwt.auth')->prefix('icons')->group(function () {
