@@ -5,6 +5,7 @@ use App\Http\Controllers\CacheController;
 use App\Http\Controllers\MercadoPagoController;
 use App\Http\Controllers\SaleClientController;
 use App\Http\Controllers\SaleController;
+use App\Http\Controllers\ShippingConfigController;
 use App\Http\Controllers\ShippingOptionController;
 use App\Http\Controllers\ShippingZoneController;
 use Illuminate\Support\Facades\Route;
@@ -72,6 +73,10 @@ Route::prefix('v1')->group(function () {
     // Shipping zones
     Route::get('shipping-zones/', [ShippingZoneController::class, 'index']);       // Listar todas
     Route::get('shipping-zones/{id}', [ShippingZoneController::class, 'show']); 
+
+    // Shipping config
+    Route::get('shipping-config', [ShippingConfigController::class, 'index']);
+    Route::get('shipping-config/{id}', [ShippingConfigController::class, 'show']);
 });
 
 // User
@@ -242,6 +247,11 @@ Route::middleware('jwt.auth')->prefix('shipping-zones')->group(function () {
     Route::put('/{id}', [ShippingZoneController::class, 'update']); // Actualizar
     Route::delete('/{id}', [ShippingZoneController::class, 'destroy']); // Soft delete
     Route::patch('/{id}/toggle-status', [ShippingZoneController::class, 'toggleStatus']); // Activar/Desactivar
+});
+
+// Shipping config
+Route::middleware('jwt.auth')->prefix('shipping-config')->group(function () {
+    Route::put('/{id}', [ShippingConfigController::class, 'update']);
 });
 
 Route::get('/mercadopago/success', [MercadoPagoController::class, 'success'])->name('mercadopago.success');
