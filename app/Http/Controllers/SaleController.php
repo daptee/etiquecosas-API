@@ -111,11 +111,16 @@ class SaleController extends Controller
         }
 
         // Cargar solo las relaciones necesarias
-        $sale->load(['products.product', 'products.variant', 'status']);
+        $sale->load(['products.product.images', 'products.variant', 'status']);
 
         // Preparar la respuesta resumida
         $data = [
             'id' => $sale->id,
+            'subtotal' => $sale->subtotal,
+            'total' => $sale->total,
+            'shipping_cost' => $sale->shipping_cost,
+            'shipping_method_id' => $sale->shipping_method_id,
+            'payment_method_id' => $sale->payment_method_id,
             'status' => $sale->status, // puedes ajustar si quieres solo el nombre o todo el objeto
             'products' => $sale->products,
         ];

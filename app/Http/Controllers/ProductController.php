@@ -204,7 +204,7 @@ class ProductController extends Controller
             'attributeValues:id,value,attribute_id',
             'tag:id,name',
             'images:id,product_id,img,is_main',
-            'costs:id,name',
+            'costs:id,name,price',
             'customization',
             'wholesales:id,product_id,amount,discount',
             'relatedProducts:id,name,sku,slug,price,discounted_price,product_type_id,product_status_id,product_stock_status_id',
