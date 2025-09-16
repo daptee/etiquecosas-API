@@ -223,12 +223,6 @@ Route::middleware('jwt.auth')->prefix('sales')->group(function () {
 });
 
 // Sales Client
-Route::middleware('auth:client')->prefix('sales-client')->group(function () {
-    Route::get('/history', [SaleClientController::class, 'orderHistory']);
-    Route::post('/note', [SaleClientController::class, 'requestOrderModification']);
-    Route::post('/change-address', [SaleClientController::class, 'requestAddressChange']);
-    Route::post('/claim', [SaleClientController::class, 'requestShippingClaim']);
-});
 
 // Shipping options
 Route::middleware('jwt.auth')->prefix('shipping-options')->group(function () {
@@ -253,3 +247,13 @@ Route::middleware('jwt.auth')->prefix('shipping-zones')->group(function () {
 Route::get('/mercadopago/success', [MercadoPagoController::class, 'success'])->name('mercadopago.success');
 Route::get('/mercadopago/failure', [MercadoPagoController::class, 'failure'])->name('mercadopago.failure');
 Route::get('/mercadopago/pending', [MercadoPagoController::class, 'pending'])->name('mercadopago.pending');
+
+// client
+Route::middleware('auth:client')->prefix('web')->group(function () {
+
+    // Sale client
+    Route::get('/sales-client/history', [SaleClientController::class, 'orderHistory']);
+    Route::post('/sales-client/note', [SaleClientController::class, 'requestOrderModification']);
+    Route::post('/sales-client/change-address', [SaleClientController::class, 'requestAddressChange']);
+    Route::post('/sales-client/claim', [SaleClientController::class, 'requestShippingClaim']);
+});
