@@ -660,6 +660,7 @@ class ProductController extends Controller
         $this->createOrUpdateProductCustomization($product, $request);
         $this->createProductImages($product, $request);
         DB::commit();
+        $this->logAudit(Auth::user(), 'Product Created', $request->all(), $product);
         $product->load([
             'type',
             'status',
@@ -675,7 +676,6 @@ class ProductController extends Controller
             'wholesales',
             'relatedProducts',
         ]);
-        $this->logAudit(Auth::user(), 'Product Created', $request->all(), $product);
         return $this->success($product, 'Producto creado exitosamente', 201);
     }
 
@@ -1199,6 +1199,7 @@ class ProductController extends Controller
         $this->updateProductWholesales($product, $request);
         $this->createOrUpdateProductCustomization($product, $request);
         DB::commit();
+        $this->logAudit(Auth::user(), 'Product Updated', $request->all(), $product);
         $product->load([
             'type',
             'status',
@@ -1214,7 +1215,6 @@ class ProductController extends Controller
             'customization',
             'relatedProducts',
         ]);
-        $this->logAudit(Auth::user(), 'Product Updated', $request->all(), $product);
         return $this->success($product, 'Producto actualizado exitosamente', 200);
     }
 
