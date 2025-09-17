@@ -23,7 +23,6 @@ class Client extends Authenticatable implements JWTSubject
         'email',
         'password',
         'phone',
-        'billing_data',
         'status_id',
         'cuit',
     ];
