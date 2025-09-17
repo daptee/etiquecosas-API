@@ -31,7 +31,7 @@ class OrderAddressChangeMail extends Mailable
         return new Content(
             view: 'emails.orderAddressChange',
             with: [
-                'clientId' => $this->mailData['client_id'],
+                'clientName' => $this->mailData['client_name'],
                 'orderId' => $this->mailData['order_id'],
                 'newAddress' => $this->mailData['new_address'],
                 'clientMessage' => $this->mailData['message'] ?? null,

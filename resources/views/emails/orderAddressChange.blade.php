@@ -12,7 +12,7 @@
                     <tr>
                         <td>
                             <h2 style="color:#2c3e50; margin-bottom:20px;">Solicitud de cambio de dirección</h2>
-                            <p style="font-size:15px; color:#333;">El cliente <strong>#{{ $clientId }}</strong> solicitó un cambio de dirección para el pedido <strong>#{{ $orderId }}</strong>.</p>
+                            <p style="font-size:15px; color:#333;">El cliente <strong>{{ $clientName }}</strong> solicitó un cambio de dirección para el pedido <strong>#{{ $orderId }}</strong>.</p>
 
                             <div style="margin-top:20px; padding:15px; background:#f9f9f9; border-left:4px solid #27ae60;">
                                 <p style="margin:0; font-size:14px; color:#555;"><strong>Nueva dirección:</strong></p>

@@ -12,7 +12,7 @@
                     <tr>
                         <td>
                             <h2 style="color:#2c3e50; margin-bottom:20px;">Solicitud de modificación de pedido</h2>
-                            <p style="font-size:15px; color:#333;">El cliente <strong>#{{ $clientId }}</strong> solicitó modificar el pedido <strong>#{{ $orderId }}</strong>.</p>
+                            <p style="font-size:15px; color:#333;">El cliente <strong>{{ $clientName }}</strong> solicitó modificar el pedido <strong>#{{ $orderId }}</strong>.</p>
 
                             <div style="margin-top:20px; padding:15px; background:#f9f9f9; border-left:4px solid #3498db;">
                                 <p style="margin:0; font-size:14px; color:#555;"><strong>Mensaje del cliente:</strong></p>

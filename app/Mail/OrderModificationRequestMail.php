@@ -33,7 +33,7 @@ class OrderModificationRequestMail extends Mailable
         return new Content(
             view: 'emails.orderModificationRequest',
             with: [
-                'clientId' => $this->mailData['client_id'],
+                'clientName' => $this->mailData['client_name'],
                 'orderId' => $this->mailData['order_id'],
                 'clientMessage' => $this->mailData['message'],
             ],

@@ -87,7 +87,7 @@ class SaleClientController extends Controller
         }
 
         $mailData = [
-            'client_id' => $client->id,
+            'client_name' => $client->name,
             'order_id' => $request->order_id,
             'message' => $request->note,
         ];
@@ -129,7 +129,7 @@ class SaleClientController extends Controller
         }
 
         $mailData = [
-            'client_id' => $client->id,
+            'client_name' => $client->name,
             'order_id' => $request->order_id,
             'new_address' => $request->new_address,
             'message' => $request->message,
@@ -168,7 +168,7 @@ class SaleClientController extends Controller
         }
 
         $mailData = [
-            'client_id' => $client->id,
+            'client_name' => $client->name,
             'order_id' => $request->order_id,
             'message' => $request->message,
         ];

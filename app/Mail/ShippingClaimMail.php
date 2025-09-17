@@ -31,7 +31,7 @@ class ShippingClaimMail extends Mailable
         return new Content(
             view: 'emails.shippingClaim',
             with: [
-                'clientId' => $this->mailData['client_id'],
+                'clientName' => $this->mailData['client_name'],
                 'orderId' => $this->mailData['order_id'],
                 'clientMessage' => $this->mailData['message'],
             ],
