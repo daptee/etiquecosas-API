@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\ClientType;
 use App\Models\GeneralStatus;
-use App\Models\ClientShipping;
 use App\Models\ClientWholesale;
 use App\Models\ClientAddress;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -42,11 +41,6 @@ class Client extends Authenticatable implements JWTSubject
     public function generalStatus()
     {
         return $this->belongsTo(GeneralStatus::class);
-    }
-
-    public function shippings()
-    {
-        return $this->hasMany(ClientShipping::class);
     }
 
     public function wholesales()

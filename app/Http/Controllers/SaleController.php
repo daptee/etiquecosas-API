@@ -222,6 +222,7 @@ class SaleController extends Controller
                     'client_id' => $client->id,
                     'address' => $request->client_address,
                     'locality_id' => $request->client_locality_id,
+                    'postal_code' => $request->client_postal_code ?? null,
                 ]);
             }
 

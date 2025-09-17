@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
-use App\Models\ClientShipping;
 use App\Models\ClientWholesale;
 use APp\Models\ClientAddress;
 use Illuminate\Http\Request;
@@ -57,7 +56,7 @@ class ClientController extends Controller
     public function show($id)
     {
         $client = $this->findObject(Client::class, $id);
-        $client->load('clientType', 'generalStatus', 'shippings.locality', 'wholesales.locality', 'addresses.locality');
+        $client->load('clientType', 'generalStatus', 'wholesales.locality', 'addresses.locality');
         $this->logAudit(Auth::user(), 'Get Client Details', $id, $client);
         return $this->success($client, 'Cliente obtenido');
     }
@@ -72,20 +71,18 @@ class ClientController extends Controller
             'password' => 'nullable|string|min:6',
             'phone' => 'nullable|string|max:20',
             'cuit' => 'nullable|string|max:20|unique:clients,cuit',
-            'billing_data' => 'nullable|array',
-            'billing_data.*.localityId' => 'required|exists:localities,id',
-            'billing_data.*.address' => 'required|string|max:255',
             'statusId' => 'nullable|exists:general_statuses,id',
             'wholesale_data' => 'nullable|array',
             'wholesale_data.*.name' => 'required|string|max:255',
             'wholesale_data.*.localityId' => 'required|exists:localities,id',
             'wholesale_data.*.address' => 'required|string|max:255',
-            'shippings' => 'nullable|array',
-            'shippings.*.name' => 'required|string',
-            'shippings.*.address' => 'required|string',
-            'shippings.*.localityId' => 'required|exists:localities,id',
-            'shippings.*.postalCode' => 'required|string',
-            'shippings.*.observations' => 'nullable|string',
+            'wholesale_data.*.postalCode' => 'required|string',
+            'address_data' => 'nullable|array',
+            'address_data.*.name' => 'required|string',
+            'address_data.*.address' => 'required|string',
+            'address_data.*.localityId' => 'required|exists:localities,id',
+            'address_data.*.postalCode' => 'required|string',
+            'address_data.*.observations' => 'nullable|string',
         ]);
         if ($validator->fails()) {
             $this->logAudit(Auth::user(), 'Store Client', $request->all(), $validator->errors());
@@ -103,41 +100,32 @@ class ClientController extends Controller
             'status_id' => $request->statusId,
         ]);
 
-        if ($request->has('billing_data') && is_array($request->billing_data)) {
-            foreach ($request->billing_data as $billingItem) {
-                $client->addresses()->create([
-                    'locality_id' => $billingItem['localityId'],
-                    'address' => $billingItem['address'],
-                ]);
-            }
-        }
-
         if ($request->has('wholesale_data') && is_array($request->wholesale_data)) {
             foreach ($request->wholesale_data as $wholesaleItem) {
                 $client->wholesales()->create([
                     'name' => $wholesaleItem['name'],
                     'locality_id' => $wholesaleItem['localityId'],
                     'address' => $wholesaleItem['address'],
+                    'postal_code' => $wholesaleItem['postalCode'],
                 ]);
             }
         }
 
-        if ($request->has('shippings')) {
-            foreach ($request->shippings as $shipping) {
-                ClientShipping::create([
+        if ($request->has('address_data')) {
+            foreach ($request->address_data as $address) {
+                $client->addresses()->create([
                     'client_id' => $client->id,
-                    'name' => $shipping['name'],
-                    'address' => $shipping['address'],
-                    'locality_id' => $shipping['localityId'],
-                    'postal_code' => $shipping['postalCode'],
-                    'observations' => $shipping['observations'] ?? null,
+                    'name' => $address['name'],
+                    'address' => $address['address'],
+                    'locality_id' => $address['localityId'],
+                    'postal_code' => $address['postalCode'],
+                    'observations' => $address['observations'] ?? null,
                 ]);
             }
         }
 
         $client->load([
             'clientType',
-            'shippings',
             'wholesales',
             'addresses'
         ]);
@@ -150,9 +138,9 @@ class ClientController extends Controller
         $client = $this->findObject(Client::class, $id);
         $client->load('wholesales');
         $validator = Validator::make($request->all(), [
-            'clientTypeId' => 'required|exists:client_types,id',
-            'name' => 'required|string|max:255',
-            'lastName' => 'required|string|max:255',
+            'clientTypeId' => 'nullable|exists:client_types,id',
+            'name' => 'nullable|string|max:255',
+            'lastName' => 'nullable|string|max:255',
             'email' => Rule::unique('clients', 'email')->ignore($client->id),
             'password' => 'nullable|string|min:6',
             'phone' => 'nullable|string|max:20',
@@ -166,13 +154,14 @@ class ClientController extends Controller
             'wholesale_data.*.name' => 'required|string|max:255',
             'wholesale_data.*.localityId' => 'required|exists:localities,id',
             'wholesale_data.*.address' => 'required|string|max:255',
-            'shippings' => 'nullable|array',
-            'shippings.*.id' => 'nullable|exists:clients_shipping,id',
-            'shippings.*.name' => 'required|string',
-            'shippings.*.address' => 'required|string',
-            'shippings.*.localityId' => 'required|exists:localities,id',
-            'shippings.*.postalCode' => 'required|string',
-            'shippings.*.observations' => 'nullable|string',
+            'wholesale_data.*.postalCode' => 'required|string',
+            'address_data' => 'nullable|array',
+            'address_data.*.id' => 'nullable|exists:client_addresses,id',
+            'address_data.*.name' => 'required|string',
+            'address_data.*.address' => 'required|string',
+            'address_data.*.localityId' => 'required|exists:localities,id',
+            'address_data.*.postalCode' => 'required|string',
+            'address_data.*.observations' => 'nullable|string',
         ]);
         if ($validator->fails()) {
             $this->logAudit(Auth::user(), 'Update Client', $request->all(), $validator->errors());
@@ -194,7 +183,7 @@ class ClientController extends Controller
             $client->save();
         }
 
-        $existingAddressIds = $client->addresses->pluck('id')->toArray();
+        /* $existingAddressIds = $client->addresses->pluck('id')->toArray();
         $incomingAddressIds = collect($request->billing_data ?? [])->pluck('id')->toArray();
         $addressesToDelete = array_diff($existingAddressIds, $incomingAddressIds);
         if (!empty($addressesToDelete)) {
@@ -215,7 +204,7 @@ class ClientController extends Controller
                     ]);
                 }
             }
-        }
+        } */
 
         $existingWholesaleIds = $client->wholesales->pluck('id')->toArray();
         $incomingWholesaleIds = collect($request->wholesale_data ?? [])->pluck('id')->toArray();
@@ -231,39 +220,41 @@ class ClientController extends Controller
                         'name' => $wholesaleItem['name'],
                         'locality_id' => $wholesaleItem['localityId'],
                         'address' => $wholesaleItem['address'],
+                        'postal_code' => $wholesaleItem['postalCode'],
                     ]);
                 } else {
                     $client->wholesales()->create([
                         'name' => $wholesaleItem['name'],
                         'locality_id' => $wholesaleItem['localityId'],
                         'address' => $wholesaleItem['address'],
+                        'postal_code' => $wholesaleItem['postalCode'],
                     ]);
                 }
             }
         }
 
-        $existingShippingIds = $client->shippings()->pluck('id')->toArray();
-        $incomingShippingIds = collect($request->shippings ?? [])->pluck('id')->filter()->toArray();
-        $toDelete = array_diff($existingShippingIds, $incomingShippingIds);
-        ClientShipping::whereIn('id', $toDelete)->delete();
-        if ($request->has('shippings')) {
-            foreach ($request->shippings as $shipping) {
-                if (isset($shipping['id']) && in_array($shipping['id'], $existingShippingIds)) {
-                    ClientShipping::where('id', $shipping['id'])->update([
-                        'name' => $shipping['name'],
-                        'address' => $shipping['address'],
-                        'locality_id' => $shipping['localityId'],
-                        'postal_code' => $shipping['postalCode'],
-                        'observations' => $shipping['observations'] ?? null,
+        $existingAddressIds = $client->addresses()->pluck('id')->toArray();
+        $incomingAddressIds = collect($request->address_data ?? [])->pluck('id')->filter()->toArray();
+        $toDelete = array_diff($existingAddressIds, $incomingAddressIds);
+        ClientAddress::whereIn('id', $toDelete)->delete();
+        if ($request->has('address_data')) {
+            foreach ($request->address_data as $address) {
+                if (isset($address['id']) && in_array($address['id'], $existingAddressIds)) {
+                    ClientAddress::where('id', $address['id'])->update([
+                        'name' => $address['name'],
+                        'address' => $address['address'],
+                        'locality_id' => $address['localityId'],
+                        'postal_code' => $address['postalCode'],
+                        'observations' => $address['observations'] ?? null,
                     ]);
                 } else {
-                    ClientShipping::create([
+                    ClientAddress::create([
                         'client_id' => $client->id,
-                        'name' => $shipping['name'],
-                        'address' => $shipping['address'],
-                        'locality_id' => $shipping['localityId'],
-                        'postal_code' => $shipping['postalCode'],
-                        'observations' => $shipping['observations'] ?? null,
+                        'name' => $address['name'],
+                        'address' => $address['address'],
+                        'locality_id' => $address['localityId'],
+                        'postal_code' => $address['postalCode'],
+                        'observations' => $address['observations'] ?? null,
                     ]);
                 }
             }
@@ -271,7 +262,6 @@ class ClientController extends Controller
 
         $client->load([
             'clientType',
-            'shippings',
             'wholesales',
             'addresses'
         ]);
@@ -312,8 +302,9 @@ class ClientController extends Controller
             if (!Hash::check($request->current_password, $client->password)) {
                 $this->logAudit(null, 'Update Password client', $request->all(), ['error' => 'Contraseña actual incorrecta']);
                 return $this->validationError(['current_password' => ['La contraseña actual es incorrecta.']]);
-            };
-            
+            }
+            ;
+
             $client->password = Hash::make($request->password);
             $client->save();
         }

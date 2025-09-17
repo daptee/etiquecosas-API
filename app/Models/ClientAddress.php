@@ -12,9 +12,13 @@ class ClientAddress extends Model
     use HasFactory;
 
     protected $fillable = [
-        'client_id',        
+        'client_id',
         'locality_id',
         'address',
+        'locality_id',
+        'postal_code',
+        'observations',
+        'name',
     ];
 
     public function client()
