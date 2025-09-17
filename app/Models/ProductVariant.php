@@ -45,7 +45,16 @@ class ProductVariant extends Model
             'stock_quantity' => $this->variant['stock_quantity'] ?? null,
             'wholesale_price' => $this->variant['wholesale_price'] ?? null,
             'wholesale_min_amount' => $this->variant['wholesale_min_amount'] ?? null,
-            'attributesvalues' => $this->attributes_values, // 👈 devuelve modelos completos
+            'attributesvalues' => $this->attributes_values->map(function ($attr) {
+                return [
+                    'id' => $attr->id,
+                    'value' => $attr->value,
+                    'attribute' => [
+                        'id' => $attr->attribute->id ?? null,
+                        'name' => $attr->attribute->name ?? null,
+                    ],
+                ];
+            })->toArray(),
         ];
 
         return $array;

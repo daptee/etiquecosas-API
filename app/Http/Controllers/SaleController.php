@@ -277,6 +277,8 @@ class SaleController extends Controller
 
         $sale->load(['client', 'products.product', 'products.variant', 'shippingMethod', 'locality']);
 
+        Log::info($sale);
+
         $notifyEmail = env('MAIL_NOTIFICATION_TO');
 
         Mail::to($sale->client->email)->send(new OrderSummaryMail($sale));
