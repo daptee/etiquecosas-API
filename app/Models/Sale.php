@@ -72,4 +72,8 @@ class Sale extends Model
         return $this->belongsTo(Coupon::class, 'coupon_id');
     }
 
+    public function locality()
+    {
+        return $this->belongsTo(Locality::class, 'locality_id');
+    }
 }

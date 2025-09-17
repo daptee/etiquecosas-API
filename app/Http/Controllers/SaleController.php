@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Mail\NewClientForSale;
+use App\Mail\OrderSummaryMail;
+use App\Mail\OrderSummaryMailTo;
 use App\Models\Client;
 use App\Models\ClientAddress;
 use App\Models\Coupon;
@@ -273,7 +275,12 @@ class SaleController extends Controller
             $sale->products()->create($product);
         }
 
-        $sale->load('products.variant');
+        $sale->load(['client', 'products.product', 'products.variant', 'shippingMethod', 'locality']);
+
+        $notifyEmail = env('MAIL_NOTIFICATION_TO');
+
+        Mail::to($sale->client->email)->send(new OrderSummaryMail($sale));
+        Mail::to($notifyEmail)->send(new OrderSummaryMailTo($sale));
 
         $this->logAudit(Auth::user() ?? null, 'Add Sale', $request->all(), $sale);
         return $this->success($sale, 'Venta creada correctamente');
