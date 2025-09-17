@@ -36,7 +36,8 @@ class SaleController extends Controller
                 'products.product',
                 'products.variant',
                 'status:id,name',
-                'statusHistory'
+                'statusHistory',
+                'shippingMethod'
             ])
             ->orderBy('created_at', 'desc');
 
@@ -65,13 +66,13 @@ class SaleController extends Controller
         // Si no hay perPage, traer todo
         if (!$perPage) {
             $sales = $query->get();
-            $this->logAudit(Auth::user(), 'Get Sales List', $request->all(), $sales->take(10));
+            $this->logAudit(Auth::user(), 'Get Sales List', $request->all(), $sales->take(1));
             return $this->success($sales, 'Ventas obtenidas');
         }
 
         // Paginación
         $sales = $query->paginate($perPage, ['*'], 'page', $page);
-        $this->logAudit(Auth::user(), 'Get Sales List', $request->all(), collect($sales->items())->take(10));
+        $this->logAudit(Auth::user(), 'Get Sales List', $request->all(), collect($sales->items())->take(1));
 
         $metaData = [
             'current_page' => $sales->currentPage(),
@@ -94,7 +95,7 @@ class SaleController extends Controller
         if (!$sale) {
             return $this->error('Producto no encontrado', 404);
         }
-        $sale->load(['client', 'channel', 'products.product', 'products.variant', 'status', 'statusHistory'])
+        $sale->load(['client', 'channel', 'products.product', 'products.variant', 'status', 'statusHistory', 'shippingMethod'])
             ->findOrFail($id);
 
         $this->logAudit(Auth::user(), 'Get Sale Detail', ['id' => $id], $sale);

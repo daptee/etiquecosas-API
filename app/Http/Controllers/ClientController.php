@@ -8,26 +8,29 @@ use App\Models\ClientWholesale;
 use APp\Models\ClientAddress;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use App\Traits\FindObject;
 use App\Traits\ApiResponse;
 use App\Traits\Auditable;
 use Illuminate\Validation\Rule;
+use Tymon\JWTAuth\Facades\JWTAuth;
+use Illuminate\Support\Facades\Hash;
 class ClientController extends Controller
 {
     use FindObject, ApiResponse, Auditable;
-    
+
     public function index(Request $request)
     {
         $perPage = $request->query('quantity');
         $page = $request->query('page', 1);
         $search = $request->query('search');
-        $query = Client::query()->select('id', 'client_type_id', 'name', 'lastName', 'email', 'phone', 'status_id', 'cuit')->with('wholesales', 'addresses');         
+        $query = Client::query()->select('id', 'client_type_id', 'name', 'lastName', 'email', 'phone', 'status_id', 'cuit')->with('wholesales', 'addresses');
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                ->orWhere('lastName', 'like', "%{$search}%")
-                ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('lastName', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
@@ -47,19 +50,19 @@ class ClientController extends Controller
             'total' => $clients->total(),
             'from' => $clients->firstItem(),
             'to' => $clients->lastItem(),
-        ];        
+        ];
         return $this->success($clients->items(), 'Clientes obtenidos', $metaData);
     }
 
     public function show($id)
     {
         $client = $this->findObject(Client::class, $id);
-        $client->load('clientType', 'generalStatus', 'shippings.locality', 'wholesales.locality', 'addresses.locality'); 
+        $client->load('clientType', 'generalStatus', 'shippings.locality', 'wholesales.locality', 'addresses.locality');
         $this->logAudit(Auth::user(), 'Get Client Details', $id, $client);
         return $this->success($client, 'Cliente obtenido');
     }
-    
-   public function store(Request $request)
+
+    public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'clientTypeId' => 'required|exists:client_types,id',
@@ -96,7 +99,7 @@ class ClientController extends Controller
             'email' => $request->email,
             'password' => $request->password ? bcrypt($request->password) : null,
             'phone' => $request->phone,
-            'cuit' => $request->cuit, 
+            'cuit' => $request->cuit,
             'status_id' => $request->statusId,
         ]);
 
@@ -131,7 +134,7 @@ class ClientController extends Controller
                 ]);
             }
         }
-        
+
         $client->load([
             'clientType',
             'shippings',
@@ -150,16 +153,16 @@ class ClientController extends Controller
             'clientTypeId' => 'required|exists:client_types,id',
             'name' => 'required|string|max:255',
             'lastName' => 'required|string|max:255',
-            'email' => Rule::unique('clients', 'email')->ignore($client->id), 
+            'email' => Rule::unique('clients', 'email')->ignore($client->id),
             'password' => 'nullable|string|min:6',
             'phone' => 'nullable|string|max:20',
-            'cuit' => Rule::unique('clients', 'cuit')->ignore($client->id), 
+            'cuit' => Rule::unique('clients', 'cuit')->ignore($client->id),
             'billing_data' => 'nullable|array',
             'billing_data.*.localityId' => 'required|exists:localities,id',
             'billing_data.*.address' => 'required|string|max:255',
             'statusId' => 'nullable|exists:general_statuses,id',
             'wholesale_data' => 'nullable|array',
-            'wholesale_data.*.id' => 'nullable|integer|exists:client_wholesales,id', 
+            'wholesale_data.*.id' => 'nullable|integer|exists:client_wholesales,id',
             'wholesale_data.*.name' => 'required|string|max:255',
             'wholesale_data.*.localityId' => 'required|exists:localities,id',
             'wholesale_data.*.address' => 'required|string|max:255',
@@ -182,17 +185,17 @@ class ClientController extends Controller
             'lastName' => $request->lastName,
             'email' => $request->email,
             'phone' => $request->phone,
-            'cuit' => $request->cuit, 
+            'cuit' => $request->cuit,
             'status_id' => $request->statusId,
         ]);
 
         if ($request->password) {
             $client->password = bcrypt($request->password);
-            $client->save(); 
+            $client->save();
         }
 
         $existingAddressIds = $client->addresses->pluck('id')->toArray();
-        $incomingAddressIds = collect($request->billing_data ?? [])->pluck('id')->toArray();     
+        $incomingAddressIds = collect($request->billing_data ?? [])->pluck('id')->toArray();
         $addressesToDelete = array_diff($existingAddressIds, $incomingAddressIds);
         if (!empty($addressesToDelete)) {
             ClientAddress::whereIn('id', $addressesToDelete)->delete();
@@ -215,7 +218,7 @@ class ClientController extends Controller
         }
 
         $existingWholesaleIds = $client->wholesales->pluck('id')->toArray();
-        $incomingWholesaleIds = collect($request->wholesale_data ?? [])->pluck('id')->toArray();     
+        $incomingWholesaleIds = collect($request->wholesale_data ?? [])->pluck('id')->toArray();
         $wholesalesToDelete = array_diff($existingWholesaleIds, $incomingWholesaleIds);
         if (!empty($wholesalesToDelete)) {
             ClientWholesale::whereIn('id', $wholesalesToDelete)->delete();
@@ -265,7 +268,7 @@ class ClientController extends Controller
                 }
             }
         }
-        
+
         $client->load([
             'clientType',
             'shippings',
@@ -282,5 +285,48 @@ class ClientController extends Controller
         $client->delete();
         $this->logAudit(Auth::user(), 'Delete Client', $id, $client);
         return $this->success($client, 'Cliente eliminado');
+    }
+
+    public function updateProfile(Request $request)
+    {
+
+        $client = Auth::guard('client')->user();
+        if (!$client) {
+            return $this->error('Usuario no autenticado', 401);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'name' => 'nullable|string|max:255',
+            'lastName' => 'nullable|string|max:255',
+            'email' => 'nullable|string|email|max:255|unique:clients,email,' . $client->id,
+            'current_password' => 'nullable|string|min:8',
+            'password' => 'nullable|string|min:8|confirmed|different:current_password',
+        ]);
+
+        if ($validator->fails()) {
+            $this->logAudit(null, 'Update Profile Client Failed', $request->all(), $validator->errors());
+            return $this->validationError($validator->errors());
+        }
+
+        if ($request->has('current_password') && $request->has('password')) {
+            if (!Hash::check($request->current_password, $client->password)) {
+                $this->logAudit(null, 'Update Password client', $request->all(), ['error' => 'Contraseña actual incorrecta']);
+                return $this->validationError(['current_password' => ['La contraseña actual es incorrecta.']]);
+            };
+            
+            $client->password = Hash::make($request->password);
+            $client->save();
+        }
+
+        $client->name = $request->input('name', $client->name);
+        $client->lastname = $request->input('lastName', $client->lastname);
+        $client->email = $request->input('email', $client->email);
+        $client->save();
+        $this->logAudit(null, 'Update Profile', $request->all(), $client);
+        $token = JWTAuth::fromUser($client);
+        return $this->success([
+            'user' => $client,
+            'token' => $token
+        ], 'Perfil actualizado y nuevo token generado');
     }
 }

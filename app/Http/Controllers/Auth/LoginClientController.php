@@ -21,7 +21,7 @@ class LoginClientController extends Controller
 {
     use ApiResponse, Auditable;
 
-   public function Register(Request $request)
+    public function Register(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',

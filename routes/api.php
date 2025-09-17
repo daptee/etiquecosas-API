@@ -260,6 +260,8 @@ Route::get('/mercadopago/pending', [MercadoPagoController::class, 'pending'])->n
 
 // client
 Route::middleware('auth:client')->prefix('web')->group(function () {
+    // profile
+    Route::put('/profile', [ClientController::class, 'updateProfile']);
 
     // Sale client
     Route::get('/sales-client/history', [SaleClientController::class, 'orderHistory']);

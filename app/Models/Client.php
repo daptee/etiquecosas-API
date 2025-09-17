@@ -29,6 +29,11 @@ class Client extends Authenticatable implements JWTSubject
         'cuit',
     ];
 
+    protected $hidden = [
+        'password',
+        'remember_token', // si lo usás
+    ];
+
     public function clientType()
     {
         return $this->belongsTo(ClientType::class, 'client_type_id');
@@ -64,10 +69,9 @@ class Client extends Authenticatable implements JWTSubject
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'lastName' => $this->lastName,
+            'lastName' => $this->lastname,
             'email' => $this->email,
-            'photo' => $this->photo,
-            'profile' => optional($this->profile)->name,
+            'photo' => $this->photo
         ];
     }
 }
