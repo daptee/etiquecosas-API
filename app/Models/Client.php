@@ -64,7 +64,8 @@ class Client extends Authenticatable implements JWTSubject
             'name' => $this->name,
             'lastName' => $this->lastname,
             'email' => $this->email,
-            'photo' => $this->photo
+            'photo' => $this->photo,
+            'clientTypeId' => $this->client_type_id
         ];
     }
 }

@@ -34,7 +34,7 @@ class SaleClientController extends Controller
         $page = $request->query('page', 1);
 
         $query = Sale::query()
-            ->with(['channel', 'products.product', 'products.variant', 'status', 'statusHistory'])
+            ->with(['channel', 'products.product.images', 'products.product.categories', 'products.variant', 'status', 'statusHistory', 'shippingMethod', 'coupon'])
             ->where('client_id', $client->id)
             ->orderBy('created_at', 'desc');
 

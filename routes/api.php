@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Auth\LoginClientController;
 use App\Http\Controllers\CacheController;
+use App\Http\Controllers\ClientAddressController;
+use App\Http\Controllers\ClientWholesaleController;
 use App\Http\Controllers\MercadoPagoController;
 use App\Http\Controllers\SaleClientController;
 use App\Http\Controllers\SaleController;
@@ -268,4 +270,14 @@ Route::middleware('auth:client')->prefix('web')->group(function () {
     Route::post('/sales-client/note', [SaleClientController::class, 'requestOrderModification']);
     Route::post('/sales-client/change-address', [SaleClientController::class, 'requestAddressChange']);
     Route::post('/sales-client/claim', [SaleClientController::class, 'requestShippingClaim']);
+
+    // Address client
+    Route::get('addresses', [ClientAddressController::class, 'index']);
+    Route::post('addresses', [ClientAddressController::class, 'store']);
+    Route::put('addresses/{id}', [ClientAddressController::class, 'update']);
+
+    // wholesales client
+    Route::get('wholesales', [ClientWholesaleController::class, 'index']);
+    Route::post('wholesales', [ClientWholesaleController::class, 'store']);
+    Route::put('wholesales/{id}', [ClientWholesaleController::class, 'update']);
 });

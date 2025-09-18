@@ -1,4 +1,4 @@
-<?php
+<?php 
 
 namespace App\Console\Commands;
 
@@ -10,38 +10,38 @@ use Illuminate\Support\Facades\DB;
 class ImportCategoriesFromProducts extends Command
 {
     protected $signature = 'categories:import-from-products';
-    protected $description = 'Importa categorías y subcategorías desde products.shipping_text y relaciona con products';
+    protected $description = 'Importa categorías desde products.shipping_text y relaciona con products (sin crear nuevas categorías), soportando comas escapadas';
 
     public function handle()
     {
         $products = Product::whereNotNull('shipping_text')->get();
 
         foreach ($products as $product) {
-            $categoryTexts = explode(',', $product->shipping_text);
+            // Dividir por comas NO escapadas
+            $categoryTexts = preg_split('/(?<!\\\\),/', $product->shipping_text);
+
+            // Reemplazar comas escapadas '\,' por comas reales dentro del nombre
+            $categoryTexts = array_map(function($text) {
+                return trim(str_replace('\,', ',', $text));
+            }, $categoryTexts);
 
             foreach ($categoryTexts as $categoryPath) {
-                $categoryPath = trim($categoryPath);
-
-                // Dividir por jerarquía
+                // Dividir jerarquía por ">"
                 $levels = array_map('trim', explode('>', $categoryPath));
 
                 $parentId = null;
                 $lastCategory = null;
 
                 foreach ($levels as $levelName) {
-                    // Buscar categoría
+                    // Buscar categoría existente
                     $category = Category::where('name', $levelName)
                         ->where('category_id', $parentId)
                         ->first();
 
                     if (!$category) {
-                        $category = Category::create([
-                            'name' => $levelName,
-                            'category_id' => $parentId,
-                            'status_id' => 1, // Ajusta según tu lógica
-                        ]);
-
-                        $this->info("✅ Creada categoría: {$levelName} (Padre: {$parentId})");
+                        $this->warn("⚠️ Categoría no encontrada: {$levelName} (Padre: {$parentId}) en producto {$product->id}, se ignora este path.");
+                        $lastCategory = null;
+                        break; // salimos porque la jerarquía no existe completa
                     }
 
                     $parentId = $category->id;
@@ -49,17 +49,19 @@ class ImportCategoriesFromProducts extends Command
                 }
 
                 // ✅ Reglas de relación
-                if (count($levels) > 1) {
-                    // Relacionar solo al último nivel
-                    $this->attachCategory($product->id, $lastCategory->id);
-                } else {
-                    // Relacionar al padre único
-                    $this->attachCategory($product->id, $lastCategory->id);
+                if ($lastCategory) {
+                    if (count($levels) > 1) {
+                        // Relacionar solo al último nivel
+                        $this->attachCategory($product->id, $lastCategory->id);
+                    } else {
+                        // Relacionar al padre único
+                        $this->attachCategory($product->id, $lastCategory->id);
+                    }
                 }
             }
         }
 
-        $this->info('🎉 Importación de categorías y relaciones completada.');
+        $this->info('🎉 Importación de relaciones completada (sin crear categorías nuevas).');
     }
 
     private function attachCategory($productId, $categoryId)
