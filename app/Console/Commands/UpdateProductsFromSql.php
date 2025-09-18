@@ -24,7 +24,7 @@ class UpdateProductsFromSql extends Command
      */
     public function handle()
     {
-        $filePath = $this->argument('file');
+        $filePath = public_path('sql/updates.sql');
 
         if (!file_exists($filePath)) {
             $this->error("El archivo no existe: $filePath");
