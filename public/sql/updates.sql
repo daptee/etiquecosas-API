@@ -156,14 +156,14 @@ VALUES
 INSERT INTO products( id,shipping_text )
 VALUES
 (
-    10827,'Cumpleaños, Cumpleaños > Decoración, Cumpleaños > Souvenirs'
+    10827,'Cumpleaños, Cumpleaños > Cumpleaños decoración, Cumpleaños > Souvenirs'
 );
 
 /* INSERT QUERY */
 INSERT INTO products( id,shipping_text )
 VALUES
 (
-    11010,'Cumpleaños, Cumpleaños > Decoración, Cumpleaños > Souvenirs'
+    11010,'Cumpleaños, Cumpleaños > Cumpleaños decoración, Cumpleaños > Souvenirs'
 );
 
 /* INSERT QUERY */
@@ -219,7 +219,7 @@ VALUES
 INSERT INTO products( id,shipping_text )
 VALUES
 (
-    2822,'Hogar > Cocina, Cumpleaños, Cumpleaños > Decoración, Hogar, Etiquetas para escribir > Para objetos y útiles, Etiquetas para escribir > Para viandas, Productos escolares express'
+    2822,'Hogar > Cocina, Cumpleaños, Cumpleaños > Cumpleaños decoración, Hogar, Etiquetas para escribir > Para objetos y útiles, Etiquetas para escribir > Para viandas, Productos escolares express'
 );
 
 /* INSERT QUERY */
@@ -254,7 +254,7 @@ VALUES
 INSERT INTO products( id,shipping_text )
 VALUES
 (
-    68236,'Identificadores > Para chupetes, Regalos personalizados'
+    68236,'Identificadores > Identificadores para chupetes, Regalos personalizados'
 );
 
 /* INSERT QUERY */
@@ -485,14 +485,14 @@ VALUES
 INSERT INTO products( id,shipping_text )
 VALUES
 (
-    481,'Sellos > Personalizados, Sellos'
+    481,'Sellos > Sellos personalizados, Sellos'
 );
 
 /* INSERT QUERY */
 INSERT INTO products( id,shipping_text )
 VALUES
 (
-    34528,'Sellos > Personalizados, Sellos'
+    34528,'Sellos > Sellos personalizados, Sellos'
 );
 
 /* INSERT QUERY */
@@ -569,14 +569,14 @@ VALUES
 INSERT INTO products( id,shipping_text )
 VALUES
 (
-    29440,'Cumpleaños, Cumpleaños > Decoración'
+    29440,'Cumpleaños, Cumpleaños > Cumpleaños decoración'
 );
 
 /* INSERT QUERY */
 INSERT INTO products( id,shipping_text )
 VALUES
 (
-    13547,'Cumpleaños, Cumpleaños > Decoración, Fechas especiales > Dia de la niñez, Fechas especiales > Navidad'
+    13547,'Cumpleaños, Cumpleaños > Cumpleaños decoración, Fechas especiales > Dia de la niñez, Fechas especiales > Navidad'
 );
 
 /* INSERT QUERY */
@@ -625,14 +625,14 @@ VALUES
 INSERT INTO products( id,shipping_text )
 VALUES
 (
-    30899,'Cumpleaños, Cumpleaños > Decoración, Outlet'
+    30899,'Cumpleaños, Cumpleaños > Cumpleaños decoración, Outlet'
 );
 
 /* INSERT QUERY */
 INSERT INTO products( id,shipping_text )
 VALUES
 (
-    30772,'Cumpleaños, Cumpleaños > Decoración'
+    30772,'Cumpleaños, Cumpleaños > Cumpleaños decoración'
 );
 
 /* INSERT QUERY */
@@ -646,35 +646,35 @@ VALUES
 INSERT INTO products( id,shipping_text )
 VALUES
 (
-    30782,'Cumpleaños, Cumpleaños > Decoración'
+    30782,'Cumpleaños, Cumpleaños > Cumpleaños decoración'
 );
 
 /* INSERT QUERY */
 INSERT INTO products( id,shipping_text )
 VALUES
 (
-    30822,'Cumpleaños, Cumpleaños > Decoración'
+    30822,'Cumpleaños, Cumpleaños > Cumpleaños decoración'
 );
 
 /* INSERT QUERY */
 INSERT INTO products( id,shipping_text )
 VALUES
 (
-    30795,'Cumpleaños, Cumpleaños > Decoración, Outlet'
+    30795,'Cumpleaños, Cumpleaños > Cumpleaños decoración, Outlet'
 );
 
 /* INSERT QUERY */
 INSERT INTO products( id,shipping_text )
 VALUES
 (
-    30887,'Cumpleaños, Cumpleaños > Decoración, Outlet'
+    30887,'Cumpleaños, Cumpleaños > Cumpleaños decoración, Outlet'
 );
 
 /* INSERT QUERY */
 INSERT INTO products( id,shipping_text )
 VALUES
 (
-    30876,'Cumpleaños, Cumpleaños > Decoración, Outlet'
+    30876,'Cumpleaños, Cumpleaños > Cumpleaños decoración, Outlet'
 );
 
 /* INSERT QUERY */
@@ -688,14 +688,14 @@ VALUES
 INSERT INTO products( id,shipping_text )
 VALUES
 (
-    30745,'Cumpleaños, Cumpleaños > Decoración, Outlet'
+    30745,'Cumpleaños, Cumpleaños > Cumpleaños decoración, Outlet'
 );
 
 /* INSERT QUERY */
 INSERT INTO products( id,shipping_text )
 VALUES
 (
-    30755,'Cumpleaños, Cumpleaños > Decoración'
+    30755,'Cumpleaños, Cumpleaños > Cumpleaños decoración'
 );
 
 /* INSERT QUERY */
@@ -723,28 +723,28 @@ VALUES
 INSERT INTO products( id,shipping_text )
 VALUES
 (
-    31913,'Sellos > Personalizados, Sellos'
+    31913,'Sellos > Sellos personalizados, Sellos'
 );
 
 /* INSERT QUERY */
 INSERT INTO products( id,shipping_text )
 VALUES
 (
-    2488,'Etiquetas con tu marca, Sellos > Personalizados, Sellos'
+    2488,'Etiquetas con tu marca, Sellos > Sellos personalizados, Sellos'
 );
 
 /* INSERT QUERY */
 INSERT INTO products( id,shipping_text )
 VALUES
 (
-    2449,'Etiquetas con tu marca, Sellos > Personalizados, Sellos'
+    2449,'Etiquetas con tu marca, Sellos > Sellos personalizados, Sellos'
 );
 
 /* INSERT QUERY */
 INSERT INTO products( id,shipping_text )
 VALUES
 (
-    2501,'Etiquetas con tu marca, Sellos > Personalizados, Sellos > Repuestos, Sellos'
+    2501,'Etiquetas con tu marca, Sellos > Sellos personalizados, Sellos > Repuestos, Sellos'
 );
 
 /* INSERT QUERY */
