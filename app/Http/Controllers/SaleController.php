@@ -127,6 +127,7 @@ class SaleController extends Controller
             'payment_method_id' => $sale->payment_method_id,
             'status' => $sale->status, // puedes ajustar si quieres solo el nombre o todo el objeto
             'products' => $sale->products,
+            'coupon' => $sale->coupon
         ];
 
         $this->logAudit(null, 'Get Sale Summary', ['id' => $id], $data);
