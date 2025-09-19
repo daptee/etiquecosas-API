@@ -25,6 +25,7 @@ class Coupon extends Model
         'max_use_per_user',
         'max_use_per_code',
         'coupon_status_id',
+        'value'
     ];
 
     protected $casts = [
