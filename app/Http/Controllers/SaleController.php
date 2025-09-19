@@ -115,7 +115,7 @@ class SaleController extends Controller
         }
 
         // Cargar solo las relaciones necesarias
-        $sale->load(['products.product.images', 'products.variant', 'status']);
+        $sale->load(['products.product.images', 'products.variant', 'status', 'coupon']);
 
         // Preparar la respuesta resumida
         $data = [
