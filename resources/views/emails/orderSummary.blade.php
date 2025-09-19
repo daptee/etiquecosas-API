@@ -53,6 +53,11 @@
             color: #e63946;
             font-weight: bold;
         }
+
+        .muted {
+            color: #666;
+            font-size: 0.9em;
+        }
     </style>
 </head>
 
@@ -84,35 +89,20 @@
                         <td>
                             <strong>{{ $item->product->name ?? ('ID producto: ' . ($item->product_id ?? '-')) }}</strong><br>
                             <span class="muted">SKU: {{ $item->product->sku ?? '-' }}</span>
-                            @if(isset($item->product->shortDescription))
+                            @if(isset($item->product->shortDescription) && is_string($item->product->shortDescription))
                                 <div class="muted" style="margin-top:6px;">
-                                    {!! Str::limit(strip_tags($item->product->shortDescription), 140) !!}
+                                    {!! \Illuminate\Support\Str::limit(strip_tags($item->product->shortDescription), 140) !!}
                                 </div>
                             @endif
                         </td>
 
                         <!-- Variante + atributos + imagen -->
-                        <!-- Producto + Variante + Atributos + Personalización -->
                         <td>
                             @if(!empty($item['variant']))
-                                {{-- SKU de la variante --}}
                                 <div><strong>SKU variante:</strong> {{ $item['variant']['variant']['sku'] ?? '-' }}</div>
-
-                                {{-- Imagen de la variante (opcional) --}}
-                                <!-- @if(!empty($item['variant']['img']))
-                                    <div style="margin-top:8px;">
-                                        <img class="product-img"
-                                            src="{{ (strpos($item['variant']['img'], 'http') === 0) ? $item['variant']['img'] : asset($item['variant']['img']) }}"
-                                            alt="imagen variante">
-                                    </div>
-                                @endif -->
-
-                                {{-- Atributos de la variante --}}
                                 @php
-                                    // Usamos la relación para traer los atributos completos
                                     $attrs = $item['variant']->attributes_values ?? collect();
                                 @endphp
-
                                 @if($attrs->count() > 0)
                                     @foreach($attrs as $attr)
                                         <div class="muted">
@@ -127,16 +117,20 @@
                             @endif
                         </td>
 
-
                         <!-- Personalización -->
                         <td>
                             @if($item->customization_data)
                                 @php
-                                    $custom = is_string($item->customization_data) ? json_decode($item->customization_data, true) : (array) $item->customization_data;
+                                    $custom = is_string($item->customization_data)
+                                        ? json_decode($item->customization_data, true)
+                                        : (array) $item->customization_data;
                                 @endphp
                                 @if(is_array($custom) && count($custom) > 0)
                                     @foreach($custom as $k => $v)
-                                        <div><strong>{{ ucfirst($k) }}:</strong> {{ $v }}</div>
+                                        <div>
+                                            <strong>{{ ucfirst($k) }}:</strong>
+                                            {{ is_array($v) ? json_encode($v, JSON_UNESCAPED_UNICODE) : $v }}
+                                        </div>
                                     @endforeach
                                 @else
                                     <div class="muted">-</div>
@@ -158,7 +152,6 @@
                 @endforeach
             </tbody>
         </table>
-
 
         <h2>Envío</h2>
         <p><strong>Método:</strong> {{ $sale->shippingMethod->name }}</p>
@@ -183,5 +176,4 @@
         <p><strong>Interno:</strong> {{ $sale->internal_comments ?? '-' }}</p>
     </div>
 </body>
-
 </html>
