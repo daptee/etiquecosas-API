@@ -20,38 +20,53 @@ class ClientController extends Controller
     use FindObject, ApiResponse, Auditable;
 
     public function index(Request $request)
-    {
-        $perPage = $request->query('quantity');
-        $page = $request->query('page', 1);
-        $search = $request->query('search');
-        $query = Client::query()->select('id', 'client_type_id', 'name', 'lastName', 'email', 'phone', 'status_id', 'cuit')->with('wholesales', 'addresses');
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('lastName', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
-            });
-        }
+{
+    $perPage = $request->query('quantity');
+    $page = $request->query('page', 1);
+    $search = $request->query('search');
+    $clientTypeId = $request->query('clientTypeId'); // 👈 nuevo parámetro
 
-        $query->orderBy('name', 'asc');
-        if (!$perPage) {
-            $clients = $query->get();
-            $this->logAudit(Auth::user(), 'Get Clients List', $request->all(), $clients);
-            return $this->success($clients, 'Clientes obtenidos');
-        }
+    $query = Client::query()
+        ->select('id', 'client_type_id', 'name', 'lastName', 'email', 'phone', 'status_id', 'cuit')
+        ->with('wholesales', 'addresses');
 
-        $clients = $query->paginate($perPage, ['*'], 'page', $page);
-        $this->logAudit(Auth::user(), 'Get Clients List', $request->all(), $clients);
-        $metaData = [
-            'current_page' => $clients->currentPage(),
-            'last_page' => $clients->lastPage(),
-            'per_page' => $clients->perPage(),
-            'total' => $clients->total(),
-            'from' => $clients->firstItem(),
-            'to' => $clients->lastItem(),
-        ];
-        return $this->success($clients->items(), 'Clientes obtenidos', $metaData);
+    // 🔍 Filtro por búsqueda
+    if ($search) {
+        $query->where(function ($q) use ($search) {
+            $q->where('name', 'like', "%{$search}%")
+                ->orWhere('lastName', 'like', "%{$search}%")
+                ->orWhere('email', 'like', "%{$search}%");
+        });
     }
+
+    // 🏷️ Filtro por tipo de cliente
+    if ($clientTypeId) {
+        $query->where('client_type_id', $clientTypeId);
+    }
+
+    $query->orderBy('name', 'asc');
+
+    if (!$perPage) {
+        $clients = $query->get();
+        $this->logAudit(Auth::user(), 'Get Clients List', $request->all(), $clients);
+        return $this->success($clients, 'Clientes obtenidos');
+    }
+
+    $clients = $query->paginate($perPage, ['*'], 'page', $page);
+
+    $this->logAudit(Auth::user(), 'Get Clients List', $request->all(), $clients);
+
+    $metaData = [
+        'current_page' => $clients->currentPage(),
+        'last_page' => $clients->lastPage(),
+        'per_page' => $clients->perPage(),
+        'total' => $clients->total(),
+        'from' => $clients->firstItem(),
+        'to' => $clients->lastItem(),
+    ];
+
+    return $this->success($clients->items(), 'Clientes obtenidos', $metaData);
+}
 
     public function show($id)
     {
