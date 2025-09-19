@@ -303,7 +303,7 @@ public function update(Request $request, $id)
             'name' => $coupon->name,
             'code' => $coupon->code,
             'type' => $coupon->type, // Fijo o Porcentaje
-            'value' => $coupon->min_amount, // o el campo que uses para el monto/descuento
+            'value' => $coupon->value, // o el campo que uses para el monto/descuento
             'applies_to_shipping' => $coupon->applies_to_shipping,
             'applies_to_all_products' => $coupon->applies_to_all_products,
             'categories' => $coupon->categories,
