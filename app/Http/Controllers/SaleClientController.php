@@ -41,14 +41,14 @@ class SaleClientController extends Controller
         // Si no hay perPage, traer todo
         if (!$perPage) {
             $orders = $query->get();
-            $this->logAudit(null, 'Get Order History', $request->all(), $orders->take(10));
+            $this->logAudit(null, 'Get Order History', $request->all(), $orders->take(1));
             return $this->success($orders, 'Historial de pedidos obtenido correctamente');
         }
 
         // Paginación
         $orders = $query->paginate($perPage, ['*'], 'page', $page);
 
-        $this->logAudit(null, 'Get Order History', $request->all(), collect($orders->items())->take(10));
+        $this->logAudit(null, 'Get Order History', $request->all(), collect($orders->items())->take(1));
 
         $metaData = [
             'current_page' => $orders->currentPage(),
