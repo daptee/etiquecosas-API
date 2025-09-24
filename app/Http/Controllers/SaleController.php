@@ -125,6 +125,7 @@ class SaleController extends Controller
             'shipping_cost' => $sale->shipping_cost,
             'shipping_method_id' => $sale->shipping_method_id,
             'payment_method_id' => $sale->payment_method_id,
+            'discount_amount' => $sale->discount_amount,
             'status' => $sale->status, // puedes ajustar si quieres solo el nombre o todo el objeto
             'products' => $sale->products,
             'coupon' => $sale->coupon
@@ -148,9 +149,9 @@ class SaleController extends Controller
             'client_postal_code' => 'nullable|string|max:20',
             'channel_id' => 'required|integer|exists:channels,id',
             'external_id' => 'nullable|string|max:255',
-            'shipping_address' => 'required|string|max:255',
-            'shipping_locality_id' => 'required|integer|exists:localities,id',
-            'shipping_postal_code' => 'required|string|max:20',
+            'shipping_address' => 'nullable|string|max:255',
+            'shipping_locality_id' => 'nullable|integer|exists:localities,id',
+            'shipping_postal_code' => 'nullable|string|max:20',
             'shipping_save' => 'nullable|boolean',
             'client_shipping_id' => 'nullable|integer|exists:client_shippings,id',
             'subtotal' => 'required|numeric|min:0',
@@ -161,6 +162,7 @@ class SaleController extends Controller
             'sale_status_id' => 'required|integer|exists:sale_status,id',
             'sale_id' => 'nullable|integer|exists:sales,id',
             'coupon_code' => 'nullable|string|exists:coupons,code',
+            'discount_amount' => 'nullable|numeric|min:0',
             'products' => 'required|array|min:1',
             'products.*.product_id' => 'required|integer|exists:products,id',
             'products.*.variant_id' => 'nullable|integer|exists:product_variants,id',
@@ -261,6 +263,7 @@ class SaleController extends Controller
             $coupon = Coupon::where('code', $request->coupon_code)->first();
             if ($coupon) {
                 $sale->coupon_id = $coupon->id;
+                $sale->discount_amount = $request->discount_amount;
                 $sale->save();
             }
         }

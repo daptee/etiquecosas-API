@@ -71,7 +71,7 @@ class ShippingZoneController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255|unique:shipping_zones,name',
-            'postal_codes' => 'required|array',
+            'postal_codes' => 'nullable|array',
             'status_id' => 'required|exists:general_statuses,id',
         ]);
         if ($validator->fails()) {
@@ -81,7 +81,7 @@ class ShippingZoneController extends Controller
 
         $zone = ShippingZone::create([
             'name' => $request->name,
-            'postal_codes' => $request->postal_codes,
+            'postal_codes' => $request->postal_codes ?? null,
             'status_id' => $request->status_id,
         ]);
 

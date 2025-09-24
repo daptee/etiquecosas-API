@@ -38,3 +38,6 @@ VALUES ('{
 
 ALTER TABLE shipping_options
     ADD COLUMN options_order int NULL DEFAULT 1 AFTER status_id
+
+ALTER TABLE shipping_zones
+    MODIFY postal_codes JSON NULL;

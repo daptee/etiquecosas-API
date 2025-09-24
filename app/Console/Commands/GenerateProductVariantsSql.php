@@ -56,9 +56,31 @@ class GenerateProductVariantsSql extends Command
 
             $productId = $product->id;
 
+            // Generar número aleatorio de 2 dígitos
+            $randomNumber = rand(10, 99);
+
+            // Tomar la primera letra de cada palabra, solo letras
+            $words = preg_split('/\s+/', $nombreProducto); // separa por espacios
+            $initials = '';
+            foreach ($words as $word) {
+                $letter = preg_replace('/[^A-Za-z]/', '', substr($word, 0, 1)); // solo letras
+                if ($letter) {
+                    $initials .= strtoupper($letter);
+                }
+            }
+
+            // Fallback si no hay letras
+            if (empty($initials)) {
+                $initials = 'X';
+            }
+
+            // Generar SKU: iniciales + '-' + id del producto
+            $sku = $initials . '-' . $data['ID'];
+
+
             // Construir JSON de variante
             $variant = [
-                'sku' => $data['SKU'] ?: 'null',
+                'sku' => $sku,
                 'price' => $data['Precio normal'] ?: "0",
                 'stock_status' => ($data['¿En stock?'] === '1') ? "1" : "3",
                 'stock_quantity' => $data['Stock'] ?: "0",
@@ -102,10 +124,14 @@ class GenerateProductVariantsSql extends Command
                 }
             }
 
-            $variantJson = json_encode($variant, JSON_UNESCAPED_UNICODE);
-            $img = $data['Img'] ?: null;
+            // JSON seguro para SQL
+            $variantJson = addslashes(json_encode($variant, JSON_UNESCAPED_UNICODE));
 
-            $inserts[] = "INSERT INTO product_variants (product_id, variant, img, created_at, updated_at) VALUES ($productId, '$variantJson', $img, NOW(), NOW());";
+            // Imagen: extraer solo el nombre y dejar path relativo
+            $img = !empty($data['Img']) ? "'images/product_variants/" . basename($data['Img']) . "'" : "NULL";
+
+            $inserts[] = "INSERT INTO product_variants (product_id, variant, img, created_at, updated_at) 
+VALUES ($productId, '$variantJson', $img, NOW(), NOW());";
         }
 
         fclose($handle);
