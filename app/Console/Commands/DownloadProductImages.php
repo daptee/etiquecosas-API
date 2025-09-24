@@ -24,6 +24,8 @@ class DownloadProductImages extends Command
             File::makeDirectory($outputDir, 0755, true);
         }
 
+        $logFile = storage_path('logs/download_images.log');
+
         $handle = fopen($file, 'r');
         if (!$handle) {
             $this->error("No se pudo abrir el archivo: $file");
@@ -47,9 +49,14 @@ class DownloadProductImages extends Command
             }
 
             try {
-                $imageContents = file_get_contents($imageUrl);
+                $imageContents = @file_get_contents($imageUrl);
                 if ($imageContents === false) {
                     $this->warn("No se pudo descargar: $imageUrl");
+                    file_put_contents(
+                        $logFile,
+                        "[" . now() . "] ERROR: No se pudo descargar -> $imageUrl" . PHP_EOL,
+                        FILE_APPEND
+                    );
                     $skipped++;
                     continue;
                 }
@@ -63,8 +70,20 @@ class DownloadProductImages extends Command
                 $filePath = $outputDir . '/' . $fileName;
                 file_put_contents($filePath, $imageContents);
                 $downloaded++;
+
+                $this->info("Imagen guardada: $fileName");
+                file_put_contents(
+                    $logFile,
+                    "[" . now() . "] OK: Imagen guardada -> $filePath" . PHP_EOL,
+                    FILE_APPEND
+                );
             } catch (\Exception $e) {
                 $this->warn("Error al descargar $imageUrl: " . $e->getMessage());
+                file_put_contents(
+                    $logFile,
+                    "[" . now() . "] ERROR: {$e->getMessage()} en -> $imageUrl" . PHP_EOL,
+                    FILE_APPEND
+                );
                 $skipped++;
             }
         }
@@ -74,6 +93,7 @@ class DownloadProductImages extends Command
         $this->info("✅ Descargadas: $downloaded imágenes.");
         $this->info("⚠️ Omitidas: $skipped imágenes.");
         $this->info("📂 Carpeta de destino: $outputDir");
+        $this->info("📝 Log generado en: $logFile");
 
         return Command::SUCCESS;
     }
