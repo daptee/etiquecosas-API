@@ -5,6 +5,10 @@ namespace App\Http\Controllers;
 use App\Mail\NewClientForSale;
 use App\Mail\OrderSummaryMail;
 use App\Mail\OrderSummaryMailTo;
+use App\Mail\OrderProductionsMail;
+use App\Mail\OrderSendMail;
+use App\Mail\OrderRetiredMail;
+use App\Mail\OrderWithdrawMail;
 use App\Models\Client;
 use App\Models\ClientAddress;
 use App\Models\Coupon;
@@ -355,6 +359,22 @@ class SaleController extends Controller
 
         $sale->load('products.variant');
 
+        if ($sale->sale_status_id == 2) { // estado "en producción"
+            Mail::to($sale->client->email)->send(new OrderProductionsMail($sale));
+        }
+
+        if ($sale->sale_status_id == 3 && $sale->payment_method_id != 1) { // estado "enviado"
+            Mail::to($sale->client->email)->send(new OrderSendMail($sale));
+        }
+
+        if ($sale->sale_status_id == 3 && $sale->payment_method_id == 1) { // estado "enviado"
+            Mail::to($sale->client->email)->send(new OrderWithdrawMail($sale));
+        }
+
+        if ($sale->sale_status_id == 4) { // estado "Retirado"
+            Mail::to($sale->client->email)->send(new OrderRetiredMail($sale));
+        }
+
         $this->logAudit(Auth::user() ?? null, 'Update Status Sale', $request->all(), $sale);
         return $this->success($sale, 'Estado de venta actualizada correctamente');
     }
@@ -379,6 +399,22 @@ class SaleController extends Controller
         ]);
 
         $sale->load('products.variant');
+
+        if (sale->sale_status_id == 2) { // estado "en producción"
+            Mail::to($sale->client->email)->send(new OrderRetiredMail($sale));
+        }
+
+        if (sale->sale_status_id == 3 && sale->payment_method_id != 1) { // estado "enviado"
+            Mail::to($sale->client->email)->send(new OrderSendMail($sale));
+        }
+
+        if (sale->sale_status_id == 3 && sale->payment_method_id == 1) { // estado "enviado"
+            Mail::to($sale->client->email)->send(new OrderWithdrawMail($sale));
+        }
+
+        if (sale->sale_status_id == 4) { // estado "Retirado"
+            Mail::to($sale->client->email)->send(new OrderRetiredMail($sale));
+        }
 
         $this->logAudit(Auth::user() ?? null, 'Update Status Sale', $request->all(), $sale);
         return $this->success($sale, 'Estado de venta actualizada correctamente');

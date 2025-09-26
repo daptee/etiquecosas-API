@@ -58,12 +58,30 @@
             color: #666;
             font-size: 0.9em;
         }
+
+        .intro {
+            margin-bottom: 20px;
+            font-size: 1em;
+        }
+
+        .closing {
+            margin-top: 30px;
+            font-size: 1em;
+        }
     </style>
 </head>
 
 <body>
     <div class="container">
         <h1>Resumen de tu compra</h1>
+
+        <!-- Mensaje inicial -->
+        <div class="intro">
+            <p>Hola <strong>{{ $sale->client->name }} {{ $sale->client->lastname }}</strong>, 👋</p>
+            <p>¡Tu compra ingresó correctamente! 🎉<br>
+               Ya aprobamos tu pedido <strong>#{{ $sale->id }}</strong> y en breve lo pondremos en marcha.</p>
+            <p>Te vamos a estar avisando por este medio todas las novedades del proceso.</p>
+        </div>
 
         <h2>Datos del cliente</h2>
         <p><strong>Nombre:</strong> {{ $sale->client->name }} {{ $sale->client->lastname }}</p>
@@ -88,15 +106,9 @@
                         <!-- Producto -->
                         <td>
                             <strong>{{ $item->product->name ?? ('ID producto: ' . ($item->product_id ?? '-')) }}</strong><br>
-                            <span class="muted">SKU: {{ $item->product->sku ?? '-' }}</span>
-                            @if(isset($item->product->shortDescription) && is_string($item->product->shortDescription))
-                                <div class="muted" style="margin-top:6px;">
-                                    {!! \Illuminate\Support\Str::limit(strip_tags($item->product->shortDescription), 140) !!}
-                                </div>
-                            @endif
                         </td>
 
-                        <!-- Variante + atributos + imagen -->
+                        <!-- Variante + atributos -->
                         <td>
                             @if(!empty($item['variant']))
                                 <div><strong>SKU variante:</strong> {{ $item['variant']['variant']['sku'] ?? '-' }}</div>
@@ -156,8 +168,7 @@
         <h2>Envío</h2>
         <p><strong>Método:</strong> {{ $sale->shippingMethod->name }}</p>
         @if($sale->shippingMethod->id !== 1)
-            <p><strong>Dirección:</strong> {{ $sale->address }}, {{ $sale->locality->name }} (CP {{ $sale->postal_code }})
-            </p>
+            <p><strong>Dirección:</strong> {{ $sale->address }}, {{ $sale->locality->name }} (CP {{ $sale->postal_code }})</p>
         @else
             <p><strong>Retiro en local</strong></p>
         @endif
@@ -165,8 +176,7 @@
         <h2>Resumen</h2>
         <p><strong>Subtotal:</strong> ${{ number_format($sale->subtotal, 0, ',', '.') }}</p>
         @if(isset($sale->discount_percent) && $sale->discount_percent > 0)
-            <p><strong>Descuento ({{ $sale->discount_percent }}%):</strong>
-                -${{ number_format($sale->discount_amount, 0, ',', '.') }}</p>
+            <p><strong>Descuento ({{ $sale->discount_percent }}%):</strong> -${{ number_format($sale->discount_amount, 0, ',', '.') }}</p>
         @endif
         <p><strong>Costo de envío:</strong> ${{ number_format($sale->shipping_cost, 0, ',', '.') }}</p>
         <p class="total">Total: <span class="highlight">${{ number_format($sale->total, 0, ',', '.') }}</span></p>
@@ -174,6 +184,11 @@
         <h2>Notas</h2>
         <p><strong>Cliente:</strong> {{ $sale->customer_notes ?? '-' }}</p>
         <p><strong>Interno:</strong> {{ $sale->internal_comments ?? '-' }}</p>
+
+        <!-- Mensaje de cierre -->
+        <div class="closing">
+            <p>Muchas gracias por elegir <strong>Etiquecosas 💛</strong></p>
+        </div>
     </div>
 </body>
 </html>
