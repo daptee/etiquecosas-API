@@ -60,7 +60,8 @@ Route::prefix('v1')->group(function () {
     Route::get('provinces', [ProvinceController::class, 'index']);
 
     // Sale
-    Route::get('sales/{id}', [SaleController::class, 'showRecort']);
+    Route::get('sales/statuses', [SaleController::class, 'allSaleStatus']);
+    Route::get('sales/{id}', [SaleController::class, 'showRecort']);    
     Route::post('sales', [SaleController::class, 'store']);
     Route::put('sales/change-status/{id}', [SaleController::class, 'changeStatus']);
     Route::post('mercadopago/create-preference', [MercadoPagoController::class, 'createPreference']);

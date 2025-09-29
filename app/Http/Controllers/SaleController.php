@@ -15,6 +15,7 @@ use App\Models\Coupon;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleProduct;
+use App\Models\SaleStatus;
 use App\Models\SaleStatusHistory;
 use App\Services\EtiquetaService;
 use App\Traits\ApiResponse;
@@ -103,7 +104,7 @@ class SaleController extends Controller
         if (!$sale) {
             return $this->error('Producto no encontrado', 404);
         }
-        $sale->load(['client', 'channel', 'products.product', 'products.variant', 'status', 'statusHistory', 'shippingMethod', 'coupon'])
+        $sale->load(['client', 'channel', 'products.product', 'products.variant', 'status', 'statusHistory', 'shippingMethod', 'coupon', 'user'])
             ->findOrFail($id);
 
         $this->logAudit(Auth::user(), 'Get Sale Detail', ['id' => $id], $sale);
@@ -831,5 +832,11 @@ class SaleController extends Controller
             Log::error('Error al generar PDF: ' . $th->getMessage());
             return $this->error('Error al generar PDF', 500);
         }
+    }
+
+    public function allSaleStatus()
+    {
+        $statuses = SaleStatus::all();
+        return $this->success($statuses, 'Estados de venta obtenidos correctamente');
     }
 }
