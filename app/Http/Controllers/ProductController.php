@@ -29,6 +29,8 @@ class ProductController extends Controller
     {
         $perPage = $request->query('quantity');
         $page = $request->query('page', 1);
+        //status_id defaul 2
+        $statusId = $request->query('status_id', 2);
         $query = Product::query()
             ->select([
                 'id',
@@ -64,7 +66,7 @@ class ProductController extends Controller
         }
 
         if ($request->has('status_id')) {
-            $query->where('product_status_id', $request->query('status_id'));
+            $query->where('product_status_id', $request->query($statusId));
         }
 
         if ($request->has('category_id')) {
@@ -817,9 +819,9 @@ class ProductController extends Controller
         $productData['is_feature'] = (bool) ($request->input('is_feature', false));
         $productData['is_customizable'] = (bool) ($request->input('is_customizable', false));
 
-        // ⚡️ Si se edita el nombre, actualizamos slug y SKU
         if ($request->filled('name') && $request->input('name') !== $product->name) {
             $productData['slug'] = $this->generateUniqueSlug($request->input('name'), $product->id);
+            $productData['sku'] = $this->generateUniqueSku($request->input('name'), $product->id);
         }
 
         $jsonFields = ['meta_data'];
@@ -1212,22 +1214,6 @@ class ProductController extends Controller
 
         DB::beginTransaction();
         $productData = $this->prepareProductUpdateData($request, $product);
-        // actualizamos el slug si se cambió el nombre
-        if (isset($productData['name']) && $productData['name'] !== $product->name) {
-            $productData['slug'] = $this->generateUniqueSlug($productData['name'], $product->id);
-        }
-        // actualizamos el SKU si se cambió el nombre y no se envió SKU
-        if (isset($productData['name']) && $productData['name'] !== $product->name && !$request->filled('sku')) {
-            $words = explode(' ', $productData['name']);
-            $initials = '';
-            foreach ($words as $word) {
-                $initials .= strtoupper(mb_substr($word, 0, 1));
-            }
-            $productData['sku'] = $initials . '-' . ($product->id ??
-    uniqid());
-        } elseif ($request->filled('sku')) {
-            $productData['sku'] = $request->input('sku');
-        }
         $product->update($productData);
         $this->syncProductUpdateRelations($product, $request);
         $variantDbIds = $this->updateProductVariants($product, $request);
@@ -1266,6 +1252,7 @@ class ProductController extends Controller
     {
         // Convertimos el nombre a slug básico
         $slug = Str::slug($name);
+        $slug = $slug . '-' . $productId;
 
         // Guardamos el slug original para usarlo en caso de duplicados
         $originalSlug = $slug;
@@ -1284,4 +1271,17 @@ class ProductController extends Controller
 
         return $slug;
     }
+
+    protected function generateUniqueSku(string $name, int $productId = null): string
+    {
+        $baseSku = strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $name), 0, 8));
+        $sku = $baseSku . '-' . $productId;
+
+        while (Product::where('sku', $sku)->when($productId, fn($q) => $q->where('id', '!=', $productId))->exists()) {
+            $sku = $baseSku . '-' . $productId;
+        }
+
+        return $sku;
+    }
+
 }
