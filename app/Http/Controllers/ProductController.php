@@ -819,25 +819,7 @@ class ProductController extends Controller
 
         // ⚡️ Si se edita el nombre, actualizamos slug y SKU
         if ($request->filled('name') && $request->input('name') !== $product->name) {
-            // Actualizar slug
-            $productData['slug'] = Str::slug($request->input('name')) . '-' . $product->id;
-
-            // Actualizar SKU solo si no viene enviado
-            if (!$request->filled('sku')) {
-                $words = explode(' ', $request->input('name'));
-                $initials = '';
-                foreach ($words as $word) {
-                    $initials .= strtoupper(mb_substr($word, 0, 1));
-                }
-                $productData['sku'] = $initials . '-' . ($product->id ?? uniqid());
-            } else {
-                $productData['sku'] = $request->input('sku');
-            }
-        } else {
-            // Si no se edita el nombre, solo actualizar SKU si viene enviado
-            if ($request->filled('sku')) {
-                $productData['sku'] = $request->input('sku');
-            }
+            $productData['slug'] = $this->generateUniqueSlug($request->input('name'), $product->id);
         }
 
         $jsonFields = ['meta_data'];
@@ -1230,6 +1212,22 @@ class ProductController extends Controller
 
         DB::beginTransaction();
         $productData = $this->prepareProductUpdateData($request, $product);
+        // actualizamos el slug si se cambió el nombre
+        if (isset($productData['name']) && $productData['name'] !== $product->name) {
+            $productData['slug'] = $this->generateUniqueSlug($productData['name'], $product->id);
+        }
+        // actualizamos el SKU si se cambió el nombre y no se envió SKU
+        if (isset($productData['name']) && $productData['name'] !== $product->name && !$request->filled('sku')) {
+            $words = explode(' ', $productData['name']);
+            $initials = '';
+            foreach ($words as $word) {
+                $initials .= strtoupper(mb_substr($word, 0, 1));
+            }
+            $productData['sku'] = $initials . '-' . ($product->id ??
+    uniqid());
+        } elseif ($request->filled('sku')) {
+            $productData['sku'] = $request->input('sku');
+        }
         $product->update($productData);
         $this->syncProductUpdateRelations($product, $request);
         $variantDbIds = $this->updateProductVariants($product, $request);
