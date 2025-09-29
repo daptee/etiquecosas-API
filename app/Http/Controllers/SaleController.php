@@ -288,13 +288,6 @@ class SaleController extends Controller
 
         $sale->load(['client', 'products.product', 'products.variant', 'shippingMethod', 'locality']);
 
-        Log::info($sale);
-
-        $notifyEmail = env('MAIL_NOTIFICATION_TO');
-
-        Mail::to($sale->client->email)->send(new OrderSummaryMail($sale));
-        Mail::to($notifyEmail)->send(new OrderSummaryMailTo($sale));
-
         $this->logAudit(Auth::user() ?? null, 'Add Sale', $request->all(), $sale);
         return $this->success($sale, 'Venta creada correctamente');
     }
@@ -377,6 +370,11 @@ class SaleController extends Controller
         }
 
         if ($sale->sale_status_id == 1) {
+            $notifyEmail = env('MAIL_NOTIFICATION_TO');
+
+            Mail::to($sale->client->email)->send(new OrderSummaryMail($sale));
+            Mail::to($notifyEmail)->send(new OrderSummaryMailTo($sale));
+
             foreach ($sale->products as $productOrder) {
                 // Obtener nombre completo desde customization_data
                 $customData = json_decode($productOrder->customization_data, true);
