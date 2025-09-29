@@ -54,7 +54,8 @@
     height: 1.4cm;
     width: auto;
     margin: 0 auto !important;
-    margin-left: -0.2cm; /* ajusta el valor a gusto */
+    position: relative;
+    left: -0.2cm;  /* ajusta el valor a gusto */
 }
 
 .etiqueta-maxi-content-container img.iconoGrande {
