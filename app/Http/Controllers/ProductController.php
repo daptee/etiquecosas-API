@@ -357,12 +357,11 @@ class ProductController extends Controller
             'wholesales',
             'related_products',
         ]);
+
         $productData['is_feature'] = (bool) ($request->input('is_feature', false));
         $productData['is_customizable'] = (bool) ($request->input('is_customizable', false));
 
-        // Generamos el slug único a partir del name
-        $productData['slug'] = $this->generateUniqueSlug($request->input('name'), $request->id ?? null);
-
+        // Decodificar JSON de campos como meta_data y customization
         $jsonFields = ['meta_data'];
         foreach ($jsonFields as $field) {
             if ($request->has($field)) {
@@ -377,6 +376,7 @@ class ProductController extends Controller
                 $productData[$field] = null;
             }
         }
+
         return $productData;
     }
 
@@ -654,6 +654,26 @@ class ProductController extends Controller
         DB::beginTransaction();
         $productData = $this->prepareProductData($request);
         $product = Product::create($productData);
+        // Generamos SKU si no viene enviado
+        if (!$request->filled('sku')) {
+            $words = explode(' ', $request->input('name'));
+            $initials = '';
+            foreach ($words as $word) {
+                $initials .= strtoupper(mb_substr($word, 0, 1));
+            }
+            $productData['sku'] = $initials . '-' . ($product->id ?? uniqid());
+            $product->sku = $productData['sku'];
+            $product->save();
+        } else {
+            $productData['sku'] = $request->input('sku');
+            $product->sku = $productData['sku'];
+            $product->save();
+        }
+        // Generar slug si no viene enviado
+        if (!$request->filled('slug')) {
+            $product->slug = Str::slug($product->name) . '-' . $product->id;
+            $product->save();
+        }
         $this->syncProductRelations($product, $request);
         $variantDbIds = $this->createProductVariants($product, $request);
         $this->createProductWholesales($product, $request);
@@ -1243,6 +1263,8 @@ class ProductController extends Controller
         ) {
             $slug = $originalSlug . '-' . $counter++;
         }
+
+        Log::info("Generated unique slug: $slug for product name: $name");
 
         return $slug;
     }
