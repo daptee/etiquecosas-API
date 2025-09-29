@@ -36,8 +36,26 @@
     left: 0;
 }
 
+.personajeChico {
+    width: 55%;
+    height: auto;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-20%, -50%);
+}
+
 .personajeAlto {
-    width: 49%;
+    width: 42%;
+    height: auto;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-20%, -50%);
+}
+
+.personajeMedioChico {
+    width: 46%;
     height: auto;
     position: absolute;
     top: 50%;
@@ -59,8 +77,10 @@
 .numeroOrder {
     position: absolute;
     top: 70%;
-    left: -1.5cm; /* Lo empuja al costado izquierdo */
-    transform: translateY(-50%); /* Lo centra verticalmente */
+    left: -1.5cm;
+    /* Lo empuja al costado izquierdo */
+    transform: translateY(-50%);
+    /* Lo centra verticalmente */
 }
 
 .texto3 {
