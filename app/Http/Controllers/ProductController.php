@@ -819,7 +819,25 @@ class ProductController extends Controller
 
         // ⚡️ Si se edita el nombre, actualizamos slug y SKU
         if ($request->filled('name') && $request->input('name') !== $product->name) {
-            $productData['slug'] = $this->generateUniqueSlug($request->input('name'), $product->id);
+            // Actualizar slug
+            $productData['slug'] = Str::slug($request->input('name')) . '-' . $product->id;
+
+            // Actualizar SKU solo si no viene enviado
+            if (!$request->filled('sku')) {
+                $words = explode(' ', $request->input('name'));
+                $initials = '';
+                foreach ($words as $word) {
+                    $initials .= strtoupper(mb_substr($word, 0, 1));
+                }
+                $productData['sku'] = $initials . '-' . ($product->id ?? uniqid());
+            } else {
+                $productData['sku'] = $request->input('sku');
+            }
+        } else {
+            // Si no se edita el nombre, solo actualizar SKU si viene enviado
+            if ($request->filled('sku')) {
+                $productData['sku'] = $request->input('sku');
+            }
         }
 
         $jsonFields = ['meta_data'];
