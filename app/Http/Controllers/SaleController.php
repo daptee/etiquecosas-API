@@ -38,7 +38,7 @@ class SaleController extends Controller
 
         $query = Sale::query()
             ->with([
-                'client:id,name,email',
+                'client',
                 'channel:id,name',
                 'products.product',
                 'products.variant',
