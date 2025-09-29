@@ -54,6 +54,7 @@
     height: 1.4cm;
     width: auto;
     margin: 0 auto !important;
+    margin-left: -0.2cm; /* ajusta el valor a gusto */
 }
 
 .etiqueta-maxi-content-container img.iconoGrande {
@@ -81,7 +82,7 @@
     /* no corta palabras */
     overflow-wrap: normal;
     /* solo corta en espacios */
-    width: 1.3cm;
+    width: 1.2cm;
     /* ancho fijo de la etiqueta */
 }
 
