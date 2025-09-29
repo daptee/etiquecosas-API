@@ -55,7 +55,7 @@
     width: auto;
     margin: 0 auto !important;
     position: relative;
-    left: -0.2cm;  /* ajusta el valor a gusto */
+    left: -0.4cm;  /* ajusta el valor a gusto */
 }
 
 .etiqueta-maxi-content-container img.iconoGrande {
@@ -74,7 +74,7 @@
     line-height: 0.9;
     /* ajustá a gusto */
     color: #FFF;
-    margin: 0 auto !important;
+    margin: 0 2px 0 0 !important;
     padding: 2px 0 0px 0 !important;
 
     white-space: normal;
@@ -183,6 +183,8 @@
     height: 1.8cm;
     width: auto;
     margin: 0 auto !important;
+    position: relative;
+    left: -0.6cm; 
 }
 
 .etiqueta-super-maxi-content-container img.iconoGrande {
