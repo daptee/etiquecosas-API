@@ -46,7 +46,8 @@ class SaleController extends Controller
                 'status:id,name',
                 'statusHistory',
                 'shippingMethod',
-                'coupon'
+                'coupon', 
+                'user'
             ])
             ->orderBy('created_at', 'desc');
 
