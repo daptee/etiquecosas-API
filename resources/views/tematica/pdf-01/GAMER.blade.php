@@ -4,6 +4,8 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Lora:400,700,400italic|Oswald:400,700" media="screen">
+    
     <style>
         @font-face {
             font-family: 'Lora';
@@ -44,7 +46,7 @@
                 <td class="etiqueta-maxi" style="background: cmyk({{ $plantilla['colores'][0] }})">
                     <table class="etiqueta-maxi-content-container">
                         <tr>
-                            <td><img src="{{ $plantilla['imagen'][0] }}" alt=""></td>
+                            <td><img src="{{ $plantilla['imagen'][6] }}" alt=""></td>
                             <td style="width: 0.3cm;"></td>
                             <td>
                                 <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
@@ -56,7 +58,19 @@
                 <td class="etiqueta-maxi" style="background: cmyk({{ $plantilla['colores'][1] }})">
                     <table class="etiqueta-maxi-content-container">
                         <tr>
-                            <td><img src="{{ $plantilla['imagen'][6] }}" alt=""></td>
+                            <td><img src="{{ $plantilla['imagen'][14] }}" alt=""></td>
+                            <td style="width: 0.3cm;"></td>
+                            <td>
+                                <p class="texto-azul {{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 6px;"></td>
+                <td class="etiqueta-maxi" style="background: cmyk({{ $plantilla['colores'][0] }})">
+                    <table class="etiqueta-maxi-content-container">
+                        <tr>
+                            <td><img src="{{ $plantilla['imagen'][3] }}" alt=""></td>
                             <td style="width: 0.3cm;"></td>
                             <td>
                                 <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
@@ -68,19 +82,7 @@
                 <td class="etiqueta-maxi" style="background: cmyk({{ $plantilla['colores'][2] }})">
                     <table class="etiqueta-maxi-content-container">
                         <tr>
-                            <td><img class="iconoGrande" src="{{ $plantilla['imagen'][1] }}" alt=""></td>
-                            <td style="width: 0.3cm;"></td>
-                            <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-                <td style="width: 6px;"></td>
-                <td class="etiqueta-maxi" style="background: cmyk({{ $plantilla['colores'][3] }})">
-                    <table class="etiqueta-maxi-content-container">
-                        <tr>
-                            <td><img class="iconoGrande" src="{{ $plantilla['imagen'][9] }}" alt=""></td>
+                            <td><img src="{{ $plantilla['imagen'][8] }}" alt=""></td>
                             <td style="width: 0.3cm;"></td>
                             <td>
                                 <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
@@ -93,10 +95,10 @@
                 <td colspan="7" style="height: 4px;"></td>
             </tr>
             <tr>
-                <td class="etiqueta-maxi" style="background: cmyk({{ $plantilla['colores'][4] }})">
+                <td class="etiqueta-maxi" style="background: cmyk({{ $plantilla['colores'][3] }})">
                     <table class="etiqueta-maxi-content-container">
                         <tr>
-                            <td><img class="iconoMediano" src="{{ $plantilla['imagen'][10] }}" alt=""></td>
+                            <td><img src="{{ $plantilla['imagen'][1] }}" alt=""></td>
                             <td style="width: 0.3cm;"></td>
                             <td>
                                 <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
@@ -105,10 +107,10 @@
                     </table>
                 </td>
                 <td style="width: 6px;"></td>
-                <td class="etiqueta-maxi" style="background: cmyk({{ $plantilla['colores'][5] }})">
+                <td class="etiqueta-maxi" style="background: cmyk({{ $plantilla['colores'][0] }})">
                     <table class="etiqueta-maxi-content-container">
                         <tr>
-                            <td><img src="{{ $plantilla['imagen'][2] }}" alt=""></td>
+                            <td><img src="{{ $plantilla['imagen'][12] }}" alt=""></td>
                             <td style="width: 0.3cm;"></td>
                             <td>
                                 <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
@@ -117,10 +119,10 @@
                     </table>
                 </td>
                 <td style="width: 6px;"></td>
-                <td class="etiqueta-maxi" style="background: cmyk({{ $plantilla['colores'][6] }})">
+                <td class="etiqueta-maxi" style="background: cmyk({{ $plantilla['colores'][2] }})">
                     <table class="etiqueta-maxi-content-container">
                         <tr>
-                            <td><img src="{{ $plantilla['imagen'][4] }}" alt=""></td>
+                            <td><img src="{{ $plantilla['imagen'][7] }}" alt=""></td>
                             <td style="width: 0.3cm;"></td>
                             <td>
                                 <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
@@ -129,10 +131,10 @@
                     </table>
                 </td>
                 <td style="width: 6px;"></td>
-                <td class="etiqueta-maxi" style="background: cmyk({{ $plantilla['colores'][7] }})">
+                <td class="etiqueta-maxi" style="background: cmyk({{ $plantilla['colores'][0] }})">
                     <table class="etiqueta-maxi-content-container">
                         <tr>
-                            <td><img src="{{ $plantilla['imagen'][3] }}" alt=""></td>
+                            <td><img class="iconoExtraGrande" src="{{ $plantilla['imagen'][11] }}" alt=""></td>
                             <td style="width: 0.3cm;"></td>
                             <td>
                                 <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
@@ -148,7 +150,7 @@
                 <td class="etiqueta-maxi" style="background: cmyk({{ $plantilla['colores'][0] }})">
                     <table class="etiqueta-maxi-content-container">
                         <tr>
-                            <td><img src="{{ $plantilla['imagen'][0] }}" alt=""></td>
+                            <td><img src="{{ $plantilla['imagen'][6] }}" alt=""></td>
                             <td style="width: 0.3cm;"></td>
                             <td>
                                 <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
@@ -160,7 +162,19 @@
                 <td class="etiqueta-maxi" style="background: cmyk({{ $plantilla['colores'][1] }})">
                     <table class="etiqueta-maxi-content-container">
                         <tr>
-                            <td><img src="{{ $plantilla['imagen'][6] }}" alt=""></td>
+                            <td><img src="{{ $plantilla['imagen'][14] }}" alt=""></td>
+                            <td style="width: 0.3cm;"></td>
+                            <td>
+                                <p class="texto-azul {{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 6px;"></td>
+                <td class="etiqueta-maxi" style="background: cmyk({{ $plantilla['colores'][0] }})">
+                    <table class="etiqueta-maxi-content-container">
+                        <tr>
+                            <td><img src="{{ $plantilla['imagen'][3] }}" alt=""></td>
                             <td style="width: 0.3cm;"></td>
                             <td>
                                 <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
@@ -172,19 +186,7 @@
                 <td class="etiqueta-maxi" style="background: cmyk({{ $plantilla['colores'][2] }})">
                     <table class="etiqueta-maxi-content-container">
                         <tr>
-                            <td><img class="iconoGrande" src="{{ $plantilla['imagen'][1] }}" alt=""></td>
-                            <td style="width: 0.3cm;"></td>
-                            <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-                <td style="width: 6px;"></td>
-                <td class="etiqueta-maxi" style="background: cmyk({{ $plantilla['colores'][3] }})">
-                    <table class="etiqueta-maxi-content-container">
-                        <tr>
-                            <td><img class="iconoGrande" src="{{ $plantilla['imagen'][9] }}" alt=""></td>
+                            <td><img src="{{ $plantilla['imagen'][8] }}" alt=""></td>
                             <td style="width: 0.3cm;"></td>
                             <td>
                                 <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
@@ -197,10 +199,10 @@
                 <td colspan="7" style="height: 4px;"></td>
             </tr>
             <tr>
-                <td class="etiqueta-maxi" style="background: cmyk({{ $plantilla['colores'][4] }})">
+                <td class="etiqueta-maxi" style="background: cmyk({{ $plantilla['colores'][3] }})">
                     <table class="etiqueta-maxi-content-container">
                         <tr>
-                            <td><img class="iconoMediano" src="{{ $plantilla['imagen'][10] }}" alt=""></td>
+                            <td><img src="{{ $plantilla['imagen'][1] }}" alt=""></td>
                             <td style="width: 0.3cm;"></td>
                             <td>
                                 <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
@@ -209,10 +211,10 @@
                     </table>
                 </td>
                 <td style="width: 6px;"></td>
-                <td class="etiqueta-maxi" style="background: cmyk({{ $plantilla['colores'][5] }})">
+                <td class="etiqueta-maxi" style="background: cmyk({{ $plantilla['colores'][0] }})">
                     <table class="etiqueta-maxi-content-container">
                         <tr>
-                            <td><img src="{{ $plantilla['imagen'][2] }}" alt=""></td>
+                            <td><img src="{{ $plantilla['imagen'][12] }}" alt=""></td>
                             <td style="width: 0.3cm;"></td>
                             <td>
                                 <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
@@ -221,10 +223,10 @@
                     </table>
                 </td>
                 <td style="width: 6px;"></td>
-                <td class="etiqueta-maxi" style="background: cmyk({{ $plantilla['colores'][6] }})">
+                <td class="etiqueta-maxi" style="background: cmyk({{ $plantilla['colores'][2] }})">
                     <table class="etiqueta-maxi-content-container">
                         <tr>
-                            <td><img src="{{ $plantilla['imagen'][4] }}" alt=""></td>
+                            <td><img src="{{ $plantilla['imagen'][7] }}" alt=""></td>
                             <td style="width: 0.3cm;"></td>
                             <td>
                                 <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
@@ -233,10 +235,10 @@
                     </table>
                 </td>
                 <td style="width: 6px;"></td>
-                <td class="etiqueta-maxi" style="background: cmyk({{ $plantilla['colores'][7] }})">
+                <td class="etiqueta-maxi" style="background: cmyk({{ $plantilla['colores'][0] }})">
                     <table class="etiqueta-maxi-content-container">
                         <tr>
-                            <td><img src="{{ $plantilla['imagen'][3] }}" alt=""></td>
+                            <td><img class="iconoExtraGrande" src="{{ $plantilla['imagen'][11] }}" alt=""></td>
                             <td style="width: 0.3cm;"></td>
                             <td>
                                 <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
@@ -252,39 +254,7 @@
         {{-- ETIQUETAS VERTICALES --}}
         <table class="etiquetas-verticales-container">
             <tr>
-                <td class="etiqueta-vertical" style="background: cmyk({{ $plantilla['colores'][2] }})">
-                    <table class="etiqueta-vertical-content-container">
-                        <tr>
-                            <td><img src="{{ $plantilla['imagen'][1] }}" alt=""></td>
-                        </tr>
-                        <tr>
-                            <td style="height: 0.2cm;"></td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-                <td style="width: 10px;"></td>
-                <td class="etiqueta-vertical" style="background: cmyk({{ $plantilla['colores'][5] }})">
-                    <table class="etiqueta-vertical-content-container">
-                        <tr>
-                            <td><img src="{{ $plantilla['imagen'][8] }}" alt=""></td>
-                        </tr>
-                        <tr>
-                            <td style="height: 0.2cm;"></td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-                <td style="width: 10px;"></td>
-                <td class="etiqueta-vertical" style="background: cmyk({{ $plantilla['colores'][1] }})">
+                <td class="etiqueta-vertical" style="background: cmyk({{ $plantilla['colores'][0] }})">
                     <table class="etiqueta-vertical-content-container">
                         <tr>
                             <td><img src="{{ $plantilla['imagen'][3] }}" alt=""></td>
@@ -300,10 +270,10 @@
                     </table>
                 </td>
                 <td style="width: 10px;"></td>
-                <td class="etiqueta-vertical" style="background: cmyk({{ $plantilla['colores'][6] }})">
+                <td class="etiqueta-vertical" style="background: cmyk({{ $plantilla['colores'][2] }})">
                     <table class="etiqueta-vertical-content-container">
                         <tr>
-                            <td><img src="{{ $plantilla['imagen'][10] }}" alt=""></td>
+                            <td><img src="{{ $plantilla['imagen'][8] }}" alt=""></td>
                         </tr>
                         <tr>
                             <td style="height: 0.2cm;"></td>
@@ -316,10 +286,42 @@
                     </table>
                 </td>
                 <td style="width: 10px;"></td>
-                <td class="etiqueta-vertical" style="background: cmyk({{ $plantilla['colores'][4] }})">
+                <td class="etiqueta-vertical" style="background: cmyk({{ $plantilla['colores'][0] }})">
                     <table class="etiqueta-vertical-content-container">
                         <tr>
-                            <td><img src="{{ $plantilla['imagen'][2] }}" alt=""></td>
+                            <td><img src="{{ $plantilla['imagen'][1] }}" alt=""></td>
+                        </tr>
+                        <tr>
+                            <td style="height: 0.2cm;"></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 10px;"></td>
+                <td class="etiqueta-vertical" style="background: cmyk({{ $plantilla['colores'][1] }})">
+                    <table class="etiqueta-vertical-content-container">
+                        <tr>
+                            <td><img src="{{ $plantilla['imagen'][7] }}" alt=""></td>
+                        </tr>
+                        <tr>
+                            <td style="height: 0.2cm;"></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <p class="texto-azul {{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 10px;"></td>
+                <td class="etiqueta-vertical" style="background: cmyk({{ $plantilla['colores'][0] }})">
+                    <table class="etiqueta-vertical-content-container">
+                        <tr>
+                            <td><img src="{{ $plantilla['imagen'][13] }}" alt=""></td>
                         </tr>
                         <tr>
                             <td style="height: 0.2cm;"></td>
@@ -352,39 +354,7 @@
                 <td colspan="11" style="height: 6px;"></td>
             </tr>
             <tr>
-                <td class="etiqueta-vertical" style="background: cmyk({{ $plantilla['colores'][2] }})">
-                    <table class="etiqueta-vertical-content-container">
-                        <tr>
-                            <td><img src="{{ $plantilla['imagen'][1] }}" alt=""></td>
-                        </tr>
-                        <tr>
-                            <td style="height: 0.2cm;"></td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-                <td style="width: 10px;"></td>
-                <td class="etiqueta-vertical" style="background: cmyk({{ $plantilla['colores'][5] }})">
-                    <table class="etiqueta-vertical-content-container">
-                        <tr>
-                            <td><img src="{{ $plantilla['imagen'][8] }}" alt=""></td>
-                        </tr>
-                        <tr>
-                            <td style="height: 0.2cm;"></td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-                <td style="width: 10px;"></td>
-                <td class="etiqueta-vertical" style="background: cmyk({{ $plantilla['colores'][1] }})">
+                <td class="etiqueta-vertical" style="background: cmyk({{ $plantilla['colores'][0] }})">
                     <table class="etiqueta-vertical-content-container">
                         <tr>
                             <td><img src="{{ $plantilla['imagen'][3] }}" alt=""></td>
@@ -400,10 +370,10 @@
                     </table>
                 </td>
                 <td style="width: 10px;"></td>
-                <td class="etiqueta-vertical" style="background: cmyk({{ $plantilla['colores'][6] }})">
+                <td class="etiqueta-vertical" style="background: cmyk({{ $plantilla['colores'][2] }})">
                     <table class="etiqueta-vertical-content-container">
                         <tr>
-                            <td><img src="{{ $plantilla['imagen'][10] }}" alt=""></td>
+                            <td><img src="{{ $plantilla['imagen'][8] }}" alt=""></td>
                         </tr>
                         <tr>
                             <td style="height: 0.2cm;"></td>
@@ -416,10 +386,42 @@
                     </table>
                 </td>
                 <td style="width: 10px;"></td>
-                <td class="etiqueta-vertical" style="background: cmyk({{ $plantilla['colores'][4] }})">
+                <td class="etiqueta-vertical" style="background: cmyk({{ $plantilla['colores'][0] }})">
                     <table class="etiqueta-vertical-content-container">
                         <tr>
-                            <td><img src="{{ $plantilla['imagen'][2] }}" alt=""></td>
+                            <td><img src="{{ $plantilla['imagen'][1] }}" alt=""></td>
+                        </tr>
+                        <tr>
+                            <td style="height: 0.2cm;"></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 10px;"></td>
+                <td class="etiqueta-vertical" style="background: cmyk({{ $plantilla['colores'][1] }})">
+                    <table class="etiqueta-vertical-content-container">
+                        <tr>
+                            <td><img src="{{ $plantilla['imagen'][7] }}" alt=""></td>
+                        </tr>
+                        <tr>
+                            <td style="height: 0.2cm;"></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <p class="texto-azul {{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 10px;"></td>
+                <td class="etiqueta-vertical" style="background: cmyk({{ $plantilla['colores'][0] }})">
+                    <table class="etiqueta-vertical-content-container">
+                        <tr>
+                            <td><img src="{{ $plantilla['imagen'][13] }}" alt=""></td>
                         </tr>
                         <tr>
                             <td style="height: 0.2cm;"></td>
@@ -455,10 +457,10 @@
         {{-- SUPER MAXI --}}
         <table class="etiquetas-super-maxi-container">
             <tr>
-                <td class="etiqueta-super-maxi" style="background: cmyk({{ $plantilla['colores'][6] }})">
+                <td class="etiqueta-super-maxi" style="background: cmyk({{ $plantilla['colores'][0] }})">
                     <table class="etiqueta-super-maxi-content-container">
                         <tr>
-                            <td><img class="iconoGrande" src="{{ $plantilla['imagen'][11] }}" alt=""></td>
+                            <td><img src="{{ $plantilla['imagen'][10] }}" alt=""></td>
                             <td style="width: 0.3cm;"></td>
                             <td>
                                 <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
@@ -470,19 +472,19 @@
                 <td class="etiqueta-super-maxi" style="background: cmyk({{ $plantilla['colores'][1] }})">
                     <table class="etiqueta-super-maxi-content-container">
                         <tr>
-                            <td><img src="{{ $plantilla['imagen'][3] }}" alt=""></td>
+                            <td><img src="{{ $plantilla['imagen'][0] }}" alt=""></td>
                             <td style="width: 0.3cm;"></td>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                                <p class="texto-azul {{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
                             </td>
                         </tr>
                     </table>
                 </td>
                 <td style="width: 4px;"></td>
-                <td class="etiqueta-super-maxi" style="background: cmyk({{ $plantilla['colores'][2] }})">
+                <td class="etiqueta-super-maxi" style="background: cmyk({{ $plantilla['colores'][0] }})">
                     <table class="etiqueta-super-maxi-content-container">
                         <tr>
-                            <td><img class="iconoGrande" src="{{ $plantilla['imagen'][1] }}" alt=""></td>
+                            <td><img src="{{ $plantilla['imagen'][7] }}" alt=""></td>
                             <td style="width: 0.3cm;"></td>
                             <td>
                                 <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
@@ -495,7 +497,7 @@
                 <td colspan="5" style="height: 4px;"></td>
             </tr>
             <tr>
-                <td class="etiqueta-super-maxi" style="background: cmyk({{ $plantilla['colores'][4] }})">
+                <td class="etiqueta-super-maxi" style="background: cmyk({{ $plantilla['colores'][2] }})">
                     <table class="etiqueta-super-maxi-content-container">
                         <tr>
                             <td><img src="{{ $plantilla['imagen'][2] }}" alt=""></td>
@@ -507,10 +509,10 @@
                     </table>
                 </td>
                 <td style="width: 4px;"></td>
-                <td class="etiqueta-super-maxi" style="background: cmyk({{ $plantilla['colores'][5] }})">
+                <td class="etiqueta-super-maxi" style="background: cmyk({{ $plantilla['colores'][0] }})">
                     <table class="etiqueta-super-maxi-content-container">
                         <tr>
-                            <td><img src="{{ $plantilla['imagen'][4] }}" alt=""></td>
+                            <td><img src="{{ $plantilla['imagen'][6] }}" alt=""></td>
                             <td style="width: 0.3cm;"></td>
                             <td>
                                 <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
@@ -522,7 +524,7 @@
                 <td class="etiqueta-super-maxi" style="background: cmyk({{ $plantilla['colores'][3] }})">
                     <table class="etiqueta-super-maxi-content-container">
                         <tr>
-                            <td><img src="{{ $plantilla['imagen'][7] }}" alt=""></td>
+                            <td><img src="{{ $plantilla['imagen'][4] }}" alt=""></td>
                             <td style="width: 0.3cm;"></td>
                             <td>
                                 <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
@@ -538,6 +540,16 @@
         {{-- SUPER MINI --}}
         <table class="etiquetas-super-mini-container">
             <tr>
+                <td class="etiqueta-super-mini" style="background: cmyk({{ $plantilla['colores'][0] }})">
+                    <table class="etiqueta-super-mini-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 6px;"></td>
                 <td class="etiqueta-super-mini" style="background: cmyk({{ $plantilla['colores'][2] }})">
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
@@ -552,43 +564,33 @@
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-                <td style="width: 6px;"></td>
-                <td class="etiqueta-super-mini" style="background: cmyk({{ $plantilla['colores'][4] }})">
-                    <table class="etiqueta-super-mini-content-container">
-                        <tr>
-                            <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-                <td style="width: 6px;"></td>
-                <td class="etiqueta-super-mini" style="background: cmyk({{ $plantilla['colores'][5] }})">
-                    <table class="etiqueta-super-mini-content-container">
-                        <tr>
-                            <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-                <td style="width: 6px;"></td>
-                <td class="etiqueta-super-mini" style="background: cmyk({{ $plantilla['colores'][6] }})">
-                    <table class="etiqueta-super-mini-content-container">
-                        <tr>
-                            <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                                <p class="texto-azul {{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
                             </td>
                         </tr>
                     </table>
                 </td>
                 <td style="width: 6px;"></td>
                 <td class="etiqueta-super-mini" style="background: cmyk({{ $plantilla['colores'][3] }})">
+                    <table class="etiqueta-super-mini-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 6px;"></td>
+                <td class="etiqueta-super-mini" style="background: cmyk({{ $plantilla['colores'][0] }})">
+                    <table class="etiqueta-super-mini-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 6px;"></td>
+                <td class="etiqueta-super-mini" style="background: cmyk({{ $plantilla['colores'][2] }})">
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
                             <td>
@@ -602,6 +604,16 @@
                 <td colspan="11" style="height: 10px;"></td>
             </tr>
             <tr>
+                <td class="etiqueta-super-mini" style="background: cmyk({{ $plantilla['colores'][0] }})">
+                    <table class="etiqueta-super-mini-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 6px;"></td>
                 <td class="etiqueta-super-mini" style="background: cmyk({{ $plantilla['colores'][2] }})">
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
@@ -616,43 +628,33 @@
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-                <td style="width: 6px;"></td>
-                <td class="etiqueta-super-mini" style="background: cmyk({{ $plantilla['colores'][4] }})">
-                    <table class="etiqueta-super-mini-content-container">
-                        <tr>
-                            <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-                <td style="width: 6px;"></td>
-                <td class="etiqueta-super-mini" style="background: cmyk({{ $plantilla['colores'][5] }})">
-                    <table class="etiqueta-super-mini-content-container">
-                        <tr>
-                            <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-                <td style="width: 6px;"></td>
-                <td class="etiqueta-super-mini" style="background: cmyk({{ $plantilla['colores'][6] }})">
-                    <table class="etiqueta-super-mini-content-container">
-                        <tr>
-                            <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                                <p class="texto-azul {{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
                             </td>
                         </tr>
                     </table>
                 </td>
                 <td style="width: 6px;"></td>
                 <td class="etiqueta-super-mini" style="background: cmyk({{ $plantilla['colores'][3] }})">
+                    <table class="etiqueta-super-mini-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 6px;"></td>
+                <td class="etiqueta-super-mini" style="background: cmyk({{ $plantilla['colores'][0] }})">
+                    <table class="etiqueta-super-mini-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 6px;"></td>
+                <td class="etiqueta-super-mini" style="background: cmyk({{ $plantilla['colores'][2] }})">
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
                             <td>
@@ -666,6 +668,16 @@
                 <td colspan="11" style="height: 10px;"></td>
             </tr>
             <tr>
+                <td class="etiqueta-super-mini" style="background: cmyk({{ $plantilla['colores'][0] }})">
+                    <table class="etiqueta-super-mini-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 6px;"></td>
                 <td class="etiqueta-super-mini" style="background: cmyk({{ $plantilla['colores'][2] }})">
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
@@ -680,43 +692,33 @@
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-                <td style="width: 6px;"></td>
-                <td class="etiqueta-super-mini" style="background: cmyk({{ $plantilla['colores'][4] }})">
-                    <table class="etiqueta-super-mini-content-container">
-                        <tr>
-                            <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-                <td style="width: 6px;"></td>
-                <td class="etiqueta-super-mini" style="background: cmyk({{ $plantilla['colores'][5] }})">
-                    <table class="etiqueta-super-mini-content-container">
-                        <tr>
-                            <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-                <td style="width: 6px;"></td>
-                <td class="etiqueta-super-mini" style="background: cmyk({{ $plantilla['colores'][6] }})">
-                    <table class="etiqueta-super-mini-content-container">
-                        <tr>
-                            <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                                <p class="texto-azul {{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
                             </td>
                         </tr>
                     </table>
                 </td>
                 <td style="width: 6px;"></td>
                 <td class="etiqueta-super-mini" style="background: cmyk({{ $plantilla['colores'][3] }})">
+                    <table class="etiqueta-super-mini-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 6px;"></td>
+                <td class="etiqueta-super-mini" style="background: cmyk({{ $plantilla['colores'][0] }})">
+                    <table class="etiqueta-super-mini-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 6px;"></td>
+                <td class="etiqueta-super-mini" style="background: cmyk({{ $plantilla['colores'][2] }})">
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
                             <td>

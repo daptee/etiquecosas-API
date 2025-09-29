@@ -1,0 +1,97 @@
+.textoAplanado {
+    text-align: center;
+    line-height: 0.9em;
+    color: white;
+    margin: 0;
+    position: relative;
+    top: 50%;
+    left: 50%;
+    transform: translate(-40%, -50%);
+    display: block;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    word-wrap: break-word;
+    overflow: hidden;
+}
+
+.icon-cuadro {
+    width: 5.4cm;
+    height: 1.8cm;
+    margin-top: 2px;
+    margin-left: 2px;
+    margin-right: 2px;
+    margin-bottom: 5px;
+    border-radius: 23px;
+    vertical-align: top;
+    display: inline-block;
+    position: relative;
+}
+
+.imagen {
+    width: 2cm;
+    height: 100%;
+    position: relative;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.personajeAlto {
+    width: 49%;
+    height: auto;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-20%, -50%);
+}
+
+.texto2 {
+    text-align: center;
+    line-height: 12px;
+    color: white;
+    margin: 0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-40%, -50%)
+}
+
+.numeroOrder {
+    position: absolute;
+    top: 70%;
+    left: -1.5cm; /* Lo empuja al costado izquierdo */
+    transform: translateY(-50%); /* Lo centra verticalmente */
+}
+
+.texto3 {
+    transform: rotate(270deg);
+}
+
+.columna {
+    position: relative;
+    margin-right: 10px;
+    width: 30%;
+    float: left;
+}
+
+.cuadro {
+    width: 2.5cm;
+    height: 100%;
+    position: relative;
+    /* position: absolute; */
+    top: 0;
+    left: 2cm;
+}
+
+.hoja {
+    padding-left: 5px;
+    width: 18.5cm;
+    height: 29cm;
+}
+
+@page {
+    margin-left: 1.0cm;
+    margin-right: 1.5cm;
+    margin-top: 0.4cm;
+    margin-bottom: 0.2cm;
+}

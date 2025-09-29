@@ -69,18 +69,25 @@
 .etiqueta-maxi-content-container p {
     font-family: 'Oswald';
     text-align: center;
-    line-height: 0.9; /* ajustá a gusto */
+    line-height: 0.9;
+    /* ajustá a gusto */
     color: #FFF;
     margin: 0 auto !important;
     padding: 2px 0 0px 0 !important;
 
-    white-space: normal;      /* permite saltos en espacios */
-    word-break: keep-all;     /* no corta palabras */
-    overflow-wrap: normal;    /* solo corta en espacios */
-    width: 1cm;               /* ancho fijo de la etiqueta */
+    white-space: normal;
+    /* permite saltos en espacios */
+    word-break: keep-all;
+    /* no corta palabras */
+    overflow-wrap: normal;
+    /* solo corta en espacios */
+    width: 1.2cm;
+    /* ancho fijo de la etiqueta */
 }
 
-
+.texto-negro {
+    color: #000 !important;
+}
 
 /* ETIQUETAS VERTICALES */
 .etiquetas-verticales-container {
