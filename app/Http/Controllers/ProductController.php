@@ -30,7 +30,6 @@ class ProductController extends Controller
         $perPage = $request->query('quantity');
         $page = $request->query('page', 1);
         //status_id defaul 2
-        $statusId = $request->query('status_id', 2);
         $query = Product::query()
             ->select([
                 'id',
@@ -65,8 +64,12 @@ class ProductController extends Controller
             });
         }
 
-        if ($request->has('status_id')) {
-            $query->where('product_status_id', $request->query($statusId));
+        // Aplicar filtros de la request
+        if ($request->has('product_status_id')) {
+            $query->where('product_status_id', $request->input('product_status_id'));
+        } else {
+            // Por defecto traer solo status = 2
+            $query->where('product_status_id', 2);
         }
 
         if ($request->has('category_id')) {
@@ -821,7 +824,18 @@ class ProductController extends Controller
 
         if ($request->filled('name') && $request->input('name') !== $product->name) {
             $productData['slug'] = $this->generateUniqueSlug($request->input('name'), $product->id);
-            $productData['sku'] = $this->generateUniqueSku($request->input('name'), $product->id);
+        }
+
+        // solo actualizar SKU si viene en request o si no existe
+        if ($request->filled('sku')) {
+            $productData['sku'] = $request->input('sku');
+        } elseif (empty($product->sku)) {
+            $words = explode(' ', $request->input('name'));
+            $initials = '';
+            foreach ($words as $word) {
+                $initials .= strtoupper(mb_substr($word, 0, 1));
+            }
+            $productData['sku'] = $initials . '-' . ($product->id ?? uniqid());
         }
 
         $jsonFields = ['meta_data'];
