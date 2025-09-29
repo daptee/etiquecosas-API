@@ -64,12 +64,8 @@ class ProductController extends Controller
             });
         }
 
-        // Aplicar filtros de la request
-        if ($request->has('product_status_id')) {
-            $query->where('product_status_id', $request->input('product_status_id'));
-        } else {
-            // Por defecto traer solo status = 2
-            $query->where('product_status_id', 2);
+        if ($request->has('status_id')) {
+            $query->where('product_status_id', $request->query('status_id'));
         }
 
         if ($request->has('category_id')) {
