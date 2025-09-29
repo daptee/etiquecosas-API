@@ -41,6 +41,8 @@ class ProductVariant extends Model
 
         $array['variant'] = [
             'sku' => $this->variant['sku'] ?? null,
+            'price' => $this->variant['price'] ?? null,
+            'discounted_price' => $this->variant['discounted_price'] ?? null,
             'stock_status' => $this->variant['stock_status'] ?? null,
             'stock_quantity' => $this->variant['stock_quantity'] ?? null,
             'wholesale_price' => $this->variant['wholesale_price'] ?? null,
