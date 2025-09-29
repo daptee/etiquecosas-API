@@ -576,7 +576,7 @@ class SaleController extends Controller
     public function assignUser(Request $request, $id)
     {
         $rules = [
-            'client_id' => 'required|integer|exists:clients,id',
+            'user_id' => 'required|integer|exists:users,id',
         ];
 
         $validator = Validator::make($request->all(), $rules);
@@ -586,10 +586,10 @@ class SaleController extends Controller
         }
 
         $sale = Sale::findOrFail($id);
-        $sale->client_id = $request->client_id; // reemplaza si ya existía
+        $sale->user_id = $request->user_id; // reemplaza si ya existía
         $sale->save();
 
-        $sale->load(['client', 'channel', 'products.product', 'products.variant', 'status', 'statusHistory']);
+        $sale->load(['client', 'channel', 'products.product', 'products.variant', 'status', 'statusHistory', 'user']);
 
 
         $this->logAudit(Auth::user(), 'Assign User To Sale', ['id' => $id, 'user_id' => $request->user_id], $sale);

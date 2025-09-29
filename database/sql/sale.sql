@@ -134,4 +134,5 @@ MODIFY postal_code VARCHAR(20) NULL,
 MODIFY shipping_method_id BIGINT NULL;
 
 ALTER TABLE sales
-ADD CONSTRAINT fk_sales_client FOREIGN KEY (client_id) REFERENCES clients(id);
+    ADD COLUMN user_id BIGINT UNSIGNED NULL,
+    ADD CONSTRAINT fk_sales_user FOREIGN KEY (user_id) REFERENCES users(id);

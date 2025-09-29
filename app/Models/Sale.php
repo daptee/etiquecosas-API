@@ -29,12 +29,18 @@ class Sale extends Model
         'internal_comments',
         'sale_status_id',
         'sale_id',
+        'user_id'
     ];
 
     // 🔹 Relaciones
     public function client()
     {
         return $this->belongsTo(Client::class, 'client_id');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function channel()
