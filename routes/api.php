@@ -227,6 +227,7 @@ Route::middleware('jwt.auth')->prefix('sales')->group(function () {
     Route::put('/assign-client/{id}', [SaleController::class, 'assignUser']);
     Route::post('/local', [SaleController::class, 'storeLocalSale']);
     Route::put('/local/{id}', [SaleController::class, 'updateLocalSale']);
+    Route::get('/generate-pdf/{id}', [SaleController::class, 'generarPdfSale']);
 });
 
 // Sales Client

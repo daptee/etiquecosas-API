@@ -5,6 +5,10 @@ namespace App\Http\Controllers;
 use App\Mail\NewClientForSale;
 use App\Mail\OrderSummaryMail;
 use App\Mail\OrderSummaryMailTo;
+use App\Mail\OrderProductionsMail;
+use App\Mail\OrderSendMail;
+use App\Mail\OrderRetiredMail;
+use App\Mail\OrderWithdrawMail;
 use App\Models\Client;
 use App\Models\ClientAddress;
 use App\Models\Coupon;
@@ -12,6 +16,7 @@ use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleProduct;
 use App\Models\SaleStatusHistory;
+use App\Services\EtiquetaService;
 use App\Traits\ApiResponse;
 use App\Traits\FindObject;
 use Illuminate\Http\Request;
@@ -283,6 +288,41 @@ class SaleController extends Controller
 
         $sale->load(['client', 'products.product', 'products.variant', 'shippingMethod', 'locality']);
 
+        foreach ($sale->products as $productOrder) {
+            // Obtener nombre completo desde customization_data
+            $customData = json_decode($productOrder->customization_data, true);
+            $nombreCompleto = trim(($customData['Nombre'] ?? '') . ' ' . ($customData['Apellido'] ?? ''));
+
+            // Acceso seguro al Variant real
+            $variant = $productOrder->variant?->variant;
+
+            if (!$variant) {
+                Log::warning("No se encontró variante para {$nombreCompleto}, product_order ID: {$productOrder->id}");
+                continue; // saltar a siguiente producto
+            }
+
+            // Obtener temática de manera segura
+            $tematicaId = $variant['attributesvalues'][0]['id'] ?? null;
+
+            if (!$tematicaId) {
+                Log::warning("No se encontró temática para {$nombreCompleto}, product_order ID: {$productOrder->id}");
+                continue; // saltar a siguiente producto
+            }
+
+            // Generar PDF dentro de su propio try/catch para que no detenga el bucle
+            try {
+                $pdfPath = EtiquetaService::generarEtiquetas($sale->id, $tematicaId, [$nombreCompleto], $productOrder);
+                $pdfPaths[] = $pdfPath;
+                Log::info("PDF generado para {$nombreCompleto}, temática ID: {$tematicaId}");
+            } catch (\Throwable $e) {
+                Log::error("Error generando PDF para {$nombreCompleto}, temática ID: {$tematicaId}", [
+                    'error' => $e->getMessage(),
+                    'product_order_id' => $productOrder->id,
+                ]);
+                // continuar con el siguiente producto
+            }
+        }
+
         Log::info($sale);
 
         $notifyEmail = env('MAIL_NOTIFICATION_TO');
@@ -355,6 +395,22 @@ class SaleController extends Controller
 
         $sale->load('products.variant');
 
+        if ($sale->sale_status_id == 2) { // estado "en producción"
+            Mail::to($sale->client->email)->send(new OrderProductionsMail($sale));
+        }
+
+        if ($sale->sale_status_id == 3 && $sale->payment_method_id != 1) { // estado "enviado"
+            Mail::to($sale->client->email)->send(new OrderSendMail($sale));
+        }
+
+        if ($sale->sale_status_id == 3 && $sale->payment_method_id == 1) { // estado "enviado"
+            Mail::to($sale->client->email)->send(new OrderWithdrawMail($sale));
+        }
+
+        if ($sale->sale_status_id == 4) { // estado "Retirado"
+            Mail::to($sale->client->email)->send(new OrderRetiredMail($sale));
+        }
+
         $this->logAudit(Auth::user() ?? null, 'Update Status Sale', $request->all(), $sale);
         return $this->success($sale, 'Estado de venta actualizada correctamente');
     }
@@ -379,6 +435,22 @@ class SaleController extends Controller
         ]);
 
         $sale->load('products.variant');
+
+        if (sale->sale_status_id == 2) { // estado "en producción"
+            Mail::to($sale->client->email)->send(new OrderRetiredMail($sale));
+        }
+
+        if (sale->sale_status_id == 3 && sale->payment_method_id != 1) { // estado "enviado"
+            Mail::to($sale->client->email)->send(new OrderSendMail($sale));
+        }
+
+        if (sale->sale_status_id == 3 && sale->payment_method_id == 1) { // estado "enviado"
+            Mail::to($sale->client->email)->send(new OrderWithdrawMail($sale));
+        }
+
+        if (sale->sale_status_id == 4) { // estado "Retirado"
+            Mail::to($sale->client->email)->send(new OrderRetiredMail($sale));
+        }
 
         $this->logAudit(Auth::user() ?? null, 'Update Status Sale', $request->all(), $sale);
         return $this->success($sale, 'Estado de venta actualizada correctamente');
@@ -667,5 +739,60 @@ class SaleController extends Controller
         $this->logAudit($user, 'Update Local Sale', $request->all(), $sale);
 
         return $this->success($sale->load('products.product', 'products.variant'), 'Venta local actualizada correctamente');
+    }
+
+    public function generarPdfSale($id)
+    {
+        try {
+            // Cargar la venta con sus productos y variantes
+            $sale = Sale::with('products.product', 'products.variant')->findOrFail($id);
+
+            $pdfPaths = [];
+
+            foreach ($sale->products as $productOrder) {
+                // Obtener nombre completo desde customization_data
+                $customData = json_decode($productOrder->customization_data, true);
+                $nombreCompleto = trim(($customData['Nombre'] ?? '') . ' ' . ($customData['Apellido'] ?? ''));
+
+                // Acceso seguro al Variant real
+                $variant = $productOrder->variant?->variant;
+
+                if (!$variant) {
+                    Log::warning("No se encontró variante para {$nombreCompleto}, product_order ID: {$productOrder->id}");
+                    continue; // saltar a siguiente producto
+                }
+
+                // Obtener temática de manera segura
+                $tematicaId = $variant['attributesvalues'][0]['id'] ?? null;
+
+                if (!$tematicaId) {
+                    Log::warning("No se encontró temática para {$nombreCompleto}, product_order ID: {$productOrder->id}");
+                    continue; // saltar a siguiente producto
+                }
+
+                // Generar PDF dentro de su propio try/catch para que no detenga el bucle
+                try {
+                    $pdfPath = EtiquetaService::generarEtiquetas($sale->id, $tematicaId, [$nombreCompleto], $productOrder);
+                    $pdfPaths[] = $pdfPath;
+                    Log::info("PDF generado para {$nombreCompleto}, temática ID: {$tematicaId}");
+                } catch (\Throwable $e) {
+                    Log::error("Error generando PDF para {$nombreCompleto}, temática ID: {$tematicaId}", [
+                        'error' => $e->getMessage(),
+                        'product_order_id' => $productOrder->id,
+                    ]);
+                    // continuar con el siguiente producto
+                }
+            }
+
+            return $this->success(
+                $sale->load('products.product', 'products.variant'),
+                'PDF generado correctamente',
+                ['pdf_paths' => $pdfPaths]
+            );
+
+        } catch (\Throwable $th) {
+            Log::error('Error al generar PDF: ' . $th->getMessage());
+            return $this->error('Error al generar PDF', 500);
+        }
     }
 }
