@@ -791,7 +791,7 @@ class SaleController extends Controller
             foreach ($sale->products as $productOrder) {
                 // Obtener nombre completo desde customization_data
                 $customData = json_decode($productOrder->customization_data, true);
-                $nombreCompleto = trim(($customData['Nombre'] ?? '') . ' ' . ($customData['Apellido'] ?? ''));
+                $nombreCompleto = trim(($customData['form']['name'] ?? '') . ' ' . ($customData['form']['lastName'] ?? ''));
 
                 // Acceso seguro al Variant real
                 $variant = $productOrder->variant?->variant;
