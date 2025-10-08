@@ -60,6 +60,10 @@ class SaleController extends Controller
             $query->where('sale_status_id', $request->query('sale_status_id'));
         }
 
+        if ($request->has('channel_id')) {
+            $query->where('channel_id', $request->query('channel_id'));
+        }
+
         if ($request->has('search')) {
             $search = $request->query('search');
             $query->where(function ($q) use ($search) {
