@@ -79,7 +79,7 @@
         <div class="intro">
             <p>Hola <strong>{{ $sale->client->name }} {{ $sale->client->lastname }}</strong>, 👋</p>
             <p>¡Tu compra ingresó correctamente! 🎉<br>
-               Ya aprobamos tu pedido <strong>#{{ $sale->id }}</strong> y en breve lo pondremos en marcha.</p>
+                Ya aprobamos tu pedido <strong>#{{ $sale->id }}</strong> y en breve lo pondremos en marcha.</p>
             <p>Te vamos a estar avisando por este medio todas las novedades del proceso.</p>
         </div>
 
@@ -136,13 +136,38 @@
                                     $custom = is_string($item->customization_data)
                                         ? json_decode($item->customization_data, true)
                                         : (array) $item->customization_data;
+
+                                    // Traducciones de claves principales
+                                    $translations = [
+                                        'color' => 'Color',
+                                        'icon' => 'Ícono',
+                                        'form' => 'Formulario',
+                                    ];
+
+                                    // Traducciones de campos internos de form
+                                    $formTranslations = [
+                                        'name' => 'Nombre',
+                                        'lastName' => 'Apellido',
+                                    ];
                                 @endphp
+
                                 @if(is_array($custom) && count($custom) > 0)
                                     @foreach($custom as $k => $v)
-                                        <div>
-                                            <strong>{{ ucfirst($k) }}:</strong>
-                                            {{ is_array($v) ? json_encode($v, JSON_UNESCAPED_UNICODE) : $v }}
-                                        </div>
+                                        @php
+                                            $label = $translations[$k] ?? ucfirst($k);
+                                        @endphp
+
+                                        @if($k === 'color' && !empty($v['name']))
+                                            <div><strong>{{ $label }}:</strong> {{ $v['name'] }}</div>
+                                        @elseif($k === 'icon' && !empty($v['name']))
+                                            <div><strong>{{ $label }}:</strong> {{ $v['name'] }}</div>
+                                        @elseif($k === 'form' && is_array($v))
+                                            @foreach($formTranslations as $fk => $ft)
+                                                @if(!empty($v[$fk]))
+                                                    <div><strong>{{ $ft }}:</strong> {{ $v[$fk] }}</div>
+                                                @endif
+                                            @endforeach
+                                        @endif
                                     @endforeach
                                 @else
                                     <div class="muted">-</div>
@@ -168,7 +193,8 @@
         <h2>Envío</h2>
         <p><strong>Método:</strong> {{ $sale->shippingMethod->name }}</p>
         @if($sale->shippingMethod->id !== 1)
-            <p><strong>Dirección:</strong> {{ $sale->address }}, {{ $sale->locality->name }} (CP {{ $sale->postal_code }})</p>
+            <p><strong>Dirección:</strong> {{ $sale->address }}, {{ $sale->locality->name }} (CP {{ $sale->postal_code }})
+            </p>
         @else
             <p><strong>Retiro en local</strong></p>
         @endif
@@ -176,7 +202,8 @@
         <h2>Resumen</h2>
         <p><strong>Subtotal:</strong> ${{ number_format($sale->subtotal, 0, ',', '.') }}</p>
         @if(isset($sale->discount_percent) && $sale->discount_percent > 0)
-            <p><strong>Descuento ({{ $sale->discount_percent }}%):</strong> -${{ number_format($sale->discount_amount, 0, ',', '.') }}</p>
+            <p><strong>Descuento ({{ $sale->discount_percent }}%):</strong>
+                -${{ number_format($sale->discount_amount, 0, ',', '.') }}</p>
         @endif
         <p><strong>Costo de envío:</strong> ${{ number_format($sale->shipping_cost, 0, ',', '.') }}</p>
         <p class="total">Total: <span class="highlight">${{ number_format($sale->total, 0, ',', '.') }}</span></p>
@@ -191,4 +218,5 @@
         </div>
     </div>
 </body>
+
 </html>
