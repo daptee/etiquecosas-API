@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\SalesExport;
 use App\Mail\NewClientForSale;
 use App\Mail\OrderSummaryMail;
 use App\Mail\OrderSummaryMailTo;
@@ -25,6 +26,7 @@ use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Maatwebsite\Excel\Facades\Excel;
 use Validator;
 use App\Traits\Auditable;
 
@@ -844,4 +846,21 @@ class SaleController extends Controller
         $statuses = SaleStatus::all();
         return $this->success($statuses, 'Estados de venta obtenidos correctamente');
     }
+
+    public function exportExcel(Request $request)
+{
+    $from = $request->query('start_date') . ' 00:00:00';
+        $to = $request->query('end_date') . ' 23:59:59';
+
+    $salesExport = new SalesExport($from, $to);
+
+    // Guardar en storage/app/exports
+    $fileName = 'sales_' . now()->format('Ymd_His') . '.xlsx';
+    $filePath = 'exports/' . $fileName;
+
+    Excel::store($salesExport, $filePath, 'local'); // 'local' = storage/app
+
+    // Luego, si querés devolverlo para descargar:
+    return response()->download(storage_path('app/' . $filePath));
+}
 }
