@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Mail\WelcomeMail;
 use App\Models\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -51,6 +52,10 @@ class LoginClientController extends Controller
         $client->load([
             'clientType'
         ]);
+        $mailData = [
+            'name' => $client->name . ' ' . $client->lastName
+        ];
+        Mail::to($client->email)->send(new WelcomeMail($mailData));
         $this->logAudit(null, 'Register Client', $request->all(), $client);
         return $this->success($client, 'Cliente registrado');
     }

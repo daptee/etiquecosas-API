@@ -290,6 +290,15 @@ class SaleController extends Controller
             'sale_id' => $request->sale_id,
         ]);
 
+        if ($request->shipping_save) {
+            ClientAddress::create([
+                'client_id' => $client->id,
+                'address' => $request->shipping_address,
+                'locality_id' => $request->shipping_locality_id ?? null,
+                'postal_code' => $request->shipping_postal_code ?? null,
+            ]);
+        }
+
         if ($request->coupon_code) {
             $coupon = Coupon::where('code', $request->coupon_code)->first();
             if ($coupon) {
