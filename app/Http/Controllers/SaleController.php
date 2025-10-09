@@ -48,45 +48,63 @@ class SaleController extends Controller
                 'status:id,name',
                 'statusHistory',
                 'shippingMethod',
-                'coupon', 
+                'coupon',
                 'user'
             ])
             ->orderBy('created_at', 'desc');
 
-        // Filtros opcionales
-        if ($request->has('client_id')) {
-            $query->where('client_id', $request->query('client_id'));
+        // 🔹 Buscador
+        if ($request->has('search')) {
+            $search = $request->query('search');
+            $query->where(function ($q) use ($search) {
+                if (is_numeric($search)) {
+                    $q->where('id', $search);
+                } else {
+                    $q->whereHas('products.product', function ($q2) use ($search) {
+                        $q2->where('name', 'like', "%{$search}%");
+                    });
+                }
+            });
         }
 
+        // 🔹 Filtros
         if ($request->has('sale_status_id')) {
             $query->where('sale_status_id', $request->query('sale_status_id'));
         }
 
-        if ($request->has('channel_id')) {
-            $query->where('channel_id', $request->query('channel_id'));
+        if ($request->has('user_id')) {
+            $query->where('user_id', $request->query('user_id'));
         }
 
-        if ($request->has('search')) {
-            $search = $request->query('search');
-            $query->where(function ($q) use ($search) {
-                $q->whereHas('client', function ($q2) use ($search) {
-                    $q2->where('name', 'like', "%{$search}%");
-                })
-                    ->orWhereHas('products.product', function ($q2) use ($search) {
-                        $q2->where('name', 'like', "%{$search}%")
-                            ->orWhere('sku', 'like', "%{$search}%");
-                    });
-            });
+        if ($request->has('unassigned_user') && $request->query('unassigned_user')) {
+            $query->whereNull('user_id');
         }
 
-        // Si no hay perPage, traer todo
+        if ($request->has('client_id')) {
+            $query->where('client_id', $request->query('client_id'));
+        }
+
+        // 🔹 Tipo de envío: retiro / envío / todos
+        if ($request->has('shipping_method_id')) {
+            $query->where('shipping_method_id', $request->query('shipping_method_id'));
+        }
+
+        // 🔹 Rango de fechas
+        if ($request->has('from_date')) {
+            $query->whereDate('created_at', '>=', $request->query('from_date'));
+        }
+        if ($request->has('to_date')) {
+            $query->whereDate('created_at', '<=', $request->query('to_date'));
+        }
+
+        // 🔹 Si no hay perPage, traer todo
         if (!$perPage) {
             $sales = $query->get();
             $this->logAudit(Auth::user(), 'Get Sales List', $request->all(), $sales->take(1));
             return $this->success($sales, 'Ventas obtenidas');
         }
 
-        // Paginación
+        // 🔹 Paginación
         $sales = $query->paginate($perPage, ['*'], 'page', $page);
         $this->logAudit(Auth::user(), 'Get Sales List', $request->all(), collect($sales->items())->take(1));
 
@@ -848,19 +866,19 @@ class SaleController extends Controller
     }
 
     public function exportExcel(Request $request)
-{
-    $from = $request->query('start_date') . ' 00:00:00';
+    {
+        $from = $request->query('start_date') . ' 00:00:00';
         $to = $request->query('end_date') . ' 23:59:59';
 
-    $salesExport = new SalesExport($from, $to);
+        $salesExport = new SalesExport($from, $to);
 
-    // Guardar en storage/app/exports
-    $fileName = 'sales_' . now()->format('Ymd_His') . '.xlsx';
-    $filePath = 'exports/' . $fileName;
+        // Guardar en storage/app/exports
+        $fileName = 'sales_' . now()->format('Ymd_His') . '.xlsx';
+        $filePath = 'exports/' . $fileName;
 
-    Excel::store($salesExport, $filePath, 'local'); // 'local' = storage/app
+        Excel::store($salesExport, $filePath, 'local'); // 'local' = storage/app
 
-    // Luego, si querés devolverlo para descargar:
-    return response()->download(storage_path('app/' . $filePath));
-}
+        // Luego, si querés devolverlo para descargar:
+        return response()->download(storage_path('app/' . $filePath));
+    }
 }

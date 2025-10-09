@@ -87,6 +87,21 @@ class ProductController extends Controller
             $query->where('product_type_id', $request->query('product_type_id'));
         }
 
+        if ($request->has('is_feature')) {
+            $query->where('is_feature', $request->query('is_feature'));
+        }
+        if ($request->has('is_customizable')) {
+            $query->where('is_customizable', $request->query('is_customizable'));
+        }
+        if ($request->has('has_seo')) {
+            $hasSeo = $request->query('has_seo');
+            if ($hasSeo) {
+                $query->whereNotNull('meta_data')->where('meta_data', '!=', '[]');
+            } else {
+                $query->whereNull('meta_data')->orWhere('meta_data', '[]');
+            }
+        }
+
         $query->orderBy('name', 'asc');
         if (!$perPage) {
             $products = $query->get();

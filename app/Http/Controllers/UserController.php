@@ -23,23 +23,40 @@ class UserController extends Controller
         $perPage = $request->query('quantity');
         $page = $request->query('page', 1);
         $search = $request->query('search');
+
         $query = User::with('profile');
+
+        // 🔹 Buscador por nombre, apellido o email
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('lastName', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('lastName', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
+        // 🔹 Filtro por tipo de usuario (perfil)
+        if ($request->has('profile_id')) {
+            $query->where('profile_id', $request->query('profile_id'));
+        }
+
+        // 🔹 Filtro por estado (activo/inactivo)
+        if ($request->has('is_active')) {
+            $query->where('is_active', $request->query('is_active'));
+        }
+
         $query->orderBy('name', 'asc');
+
+        // 🔹 Si no hay paginación, traer todo
         if (!$perPage) {
             $users = $query->get();
             $this->logAudit(Auth::user(), 'Get Users List', $request->all(), $users);
             return $this->success($users, 'Usuarios obtenidos');
         }
 
-        $users = $query->paginate($perPage, ['*'], 'page', $page);        
+        // 🔹 Paginación
+        $users = $query->paginate($perPage, ['*'], 'page', $page);
+
         $metaData = [
             'current_page' => $users->currentPage(),
             'last_page' => $users->lastPage(),
@@ -48,6 +65,7 @@ class UserController extends Controller
             'from' => $users->firstItem(),
             'to' => $users->lastItem(),
         ];
+
         $this->logAudit(Auth::user(), 'Get Users List', $request->all(), $users);
         return $this->success($users->items(), 'Usuarios obtenidos', $metaData);
     }
@@ -104,7 +122,7 @@ class UserController extends Controller
         $user->save();
         $this->logAudit(Auth::user(), 'Update User', $request->all(), $user);
         return $this->success($user, 'Usuario actualizado');
-    }    
+    }
 
     public function updateProfile(Request $request)
     {
