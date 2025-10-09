@@ -892,6 +892,6 @@ class SaleController extends Controller
         Excel::store($salesExport, $filePath, 'local'); // 'local' = storage/app
 
         // Luego, si querés devolverlo para descargar:
-        return response()->download(storage_path('app/' . $filePath));
+        return Excel::download($salesExport, $fileName);
     }
 }
