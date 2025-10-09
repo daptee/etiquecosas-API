@@ -67,6 +67,10 @@ class SaleController extends Controller
             });
         }
 
+        if ($request->has('channel_id')) {
+            $query->where('channel_id', $request->query('channel_id'));
+        }
+
         // 🔹 Filtros
         if ($request->has('sale_status_id')) {
             $query->where('sale_status_id', $request->query('sale_status_id'));
