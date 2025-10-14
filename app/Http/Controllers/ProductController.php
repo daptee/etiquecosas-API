@@ -38,6 +38,7 @@ class ProductController extends Controller
                 'slug',
                 'price',
                 'discounted_price',
+                'stock_quantity',
                 'tag_id',
                 'meta_data',
                 'is_feature',
