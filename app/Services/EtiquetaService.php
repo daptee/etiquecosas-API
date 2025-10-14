@@ -80,6 +80,9 @@ class EtiquetaService
                 ? 'small-text-size'
                 : 'normal-text-size';
 
+            Log::info($fontClass);
+            Log::info($nombre);
+
             $plantilla = [
                 'colores'   => $colores,
                 'imagen'    => $imagenes,

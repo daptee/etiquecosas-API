@@ -54,8 +54,6 @@
     height: 1.4cm;
     width: auto;
     margin: 0 auto !important;
-    position: relative;
-    left: -0.4cm;  /* ajusta el valor a gusto */
 }
 
 .etiqueta-maxi-content-container img.iconoGrande {
@@ -70,25 +68,12 @@
 
 .etiqueta-maxi-content-container p {
     font-family: 'Oswald';
+    font-size: 12pt;
     text-align: center;
-    line-height: 0.9;
-    /* ajustá a gusto */
+    line-height: 0.75;
     color: #FFF;
-    margin: 0 2px 0 0 !important;
+    margin: 0 auto !important;
     padding: 2px 0 0px 0 !important;
-
-    white-space: normal;
-    /* permite saltos en espacios */
-    word-break: keep-all;
-    /* no corta palabras */
-    overflow-wrap: normal;
-    /* solo corta en espacios */
-    width: 1.2cm;
-    /* ancho fijo de la etiqueta */
-}
-
-.texto-negro {
-    color: #000 !important;
 }
 
 /* ETIQUETAS VERTICALES */
@@ -183,8 +168,6 @@
     height: 1.8cm;
     width: auto;
     margin: 0 auto !important;
-    position: relative;
-    left: -0.6cm; 
 }
 
 .etiqueta-super-maxi-content-container img.iconoGrande {
@@ -206,7 +189,6 @@
     color: #FFF;
     margin: 0 auto !important;
     padding: 2px 0 0px 0 !important;
-    width: 1.5cm;
 }
 
 /* ETIQUETAS SUPER MINI */
@@ -281,20 +263,20 @@
 }
 
 .small-text-size {
-    font-size: 11pt !important;
+    font-size: 10pt !important;
     line-height: 0.7 !important;
 }
 
 .etiqueta-maxi-content-container p.small-text-size {
-    font-size: 12pt !important;
+    font-size: 11pt !important;
 }
 
 .etiqueta-super-maxi-content-container p.small-text-size {
-    font-size: 15pt !important;
+    font-size: 14pt !important;
 }
 
 .etiqueta-super-mini-content-container p.small-text-size {
-    font-size: 9pt !important;
+    font-size: 8pt !important;
 }
 
 .extra-small-text-size {

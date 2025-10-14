@@ -33,7 +33,6 @@ use App\Http\Controllers\CouponController;
 
 // cache
 Route::get('/clear-cache', [CacheController::class, 'clearCache'])->name('clearCache');
-Route::get('/export-excel', [SaleController::class, 'exportExcel']);
 
 // Auth
 Route::post('login', [LoginController::class, 'login']);
