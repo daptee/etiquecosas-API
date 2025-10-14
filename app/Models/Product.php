@@ -30,6 +30,8 @@ class Product extends Model
         'product_status_id',
         'price',
         'discounted_price',
+        'discounted_start',
+        'discounted_end',
         'product_stock_status_id',
         'stock_quantity',
         'wholesale_price',
