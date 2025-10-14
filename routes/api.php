@@ -61,6 +61,7 @@ Route::prefix('v1')->group(function () {
 
     // Sale
     Route::get('sales/statuses', [SaleController::class, 'allSaleStatus']);
+    Route::get('sales/payment-method', [SaleController::class, 'allPaymentMethod']);
     Route::get('sales/{id}', [SaleController::class, 'showRecort']);    
     Route::post('sales', [SaleController::class, 'store']);
     Route::put('sales/change-status/{id}', [SaleController::class, 'changeStatus']);

@@ -13,6 +13,7 @@ use App\Mail\OrderWithdrawMail;
 use App\Models\Client;
 use App\Models\ClientAddress;
 use App\Models\Coupon;
+use App\Models\PaymentMethod;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleProduct;
@@ -876,6 +877,15 @@ class SaleController extends Controller
     {
         $statuses = SaleStatus::all();
         return $this->success($statuses, 'Estados de venta obtenidos correctamente');
+    }
+
+    public function allPaymentMethod()
+    {
+        $payment = PaymentMethod::all();
+
+        $this->logAudit(null, 'Payment Method', $payment, $payment);
+
+        return $this->success($payment->load('status'), 'Metodos de pago obtenidos correctamente');
     }
 
     public function exportExcel(Request $request)
