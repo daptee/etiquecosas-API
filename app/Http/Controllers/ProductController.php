@@ -881,6 +881,13 @@ class ProductController extends Controller
             }
         }
 
+        if (!$request->filled('discounted_start')) {
+            $productData['discounted_start'] = null;
+        }
+        if (!$request->filled('discounted_end')) {
+            $productData['discounted_end'] = null;
+        }
+
         return $productData;
     }
 
