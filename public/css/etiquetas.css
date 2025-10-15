@@ -263,20 +263,20 @@
 }
 
 .small-text-size {
-    font-size: 10pt !important;
+    font-size: 11pt !important;
     line-height: 0.7 !important;
 }
 
 .etiqueta-maxi-content-container p.small-text-size {
-    font-size: 11pt !important;
+    font-size: 12pt !important;
 }
 
 .etiqueta-super-maxi-content-container p.small-text-size {
-    font-size: 14pt !important;
+    font-size: 15pt !important;
 }
 
 .etiqueta-super-mini-content-container p.small-text-size {
-    font-size: 8pt !important;
+    font-size: 9pt !important;
 }
 
 .extra-small-text-size {

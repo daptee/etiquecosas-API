@@ -44,6 +44,8 @@ class ProductVariant extends Model
             'sku' => $this->variant['sku'] ?? null,
             'price' => $this->variant['price'] ?? null,
             'discounted_price' => $this->variant['discounted_price'] ?? null,
+            'discounted_start' => $this->variant['discounted_start'] ?? null,
+            'discounted_end' => $this->variant['discounted_end'] ?? null,
             'stock_status' => $this->variant['stock_status'] ?? null,
             'stock_quantity' => $this->variant['stock_quantity'] ?? null,
             'wholesale_price' => $this->variant['wholesale_price'] ?? null,
