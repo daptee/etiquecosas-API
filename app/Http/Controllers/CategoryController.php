@@ -68,6 +68,7 @@ class CategoryController extends Controller
             'description' => 'nullable|string',
             'banner' => 'nullable|max:2048',
             'statusId' => 'nullable|in:1,2',
+            'is_outstanding' => 'nullable|boolean',
             'tagId' => 'nullable',
         ]);
         $fieldsToNormalize = ['tagId', 'categoryId', 'img', 'icon', 'banner'];
@@ -116,6 +117,7 @@ class CategoryController extends Controller
             'description' => $request->description,
             'banner' => $bannerPath,
             'status_id' => $request->statusId ?? 1,
+            'is_outstanding' => $request->is_outstanding ?? true,
             'tag_id' => $request->tagId,
         ]);
         $this->logAudit(Auth::user(), 'Store Category', $request->all(), $category);
@@ -163,6 +165,7 @@ class CategoryController extends Controller
             'description' => 'nullable|string',
             'banner' => 'nullable|max:2048',
             'statusId' => 'nullable|in:1,2',
+            'is_outstanding' => 'nullable|boolean',
             'tagId' => 'nullable|exists:configuration_tags,id',
         ]);
         if ($validator->fails()) {
@@ -233,6 +236,7 @@ class CategoryController extends Controller
         $category->meta_data = $request->input('metaData', $category->meta_data);
         $category->description = $request->input('description', $category->description);
         $category->status_id = $request->input('statusId', $category->status_id);
+        $category->is_outstanding = $request->input('is_outstanding', $category->is_outstanding);
         $category->tag_id = $request->input('tagId', $category->tag_id);
         if ($request->hasFile('img') || $request->has('img')) {
             $category->img = $imgPath;
@@ -292,6 +296,7 @@ class CategoryController extends Controller
             'description' => $category->description,
             'banner' => $category->banner ? asset($category->banner) : null,
             'status_id' => $category->status_id,
+            'is_outstanding' => $category->is_outstanding,
             'tag' => $category->tag ? ['id' => $category->tag->id, 'name' => $category->tag->name, 'color' => $category->tag->color] : null,
         ];
 

@@ -42,6 +42,7 @@ class ProductVariant extends Model
 
         $array['variant'] = [
             'sku' => $this->variant['sku'] ?? null,
+            'name' => $this->variant['name'] ?? null,
             'price' => $this->variant['price'] ?? null,
             'discounted_price' => $this->variant['discounted_price'] ?? null,
             'discounted_start' => $this->variant['discounted_start'] ?? null,

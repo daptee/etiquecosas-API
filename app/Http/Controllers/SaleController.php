@@ -15,6 +15,7 @@ use App\Models\ClientAddress;
 use App\Models\Coupon;
 use App\Models\PaymentMethod;
 use App\Models\Product;
+use App\Models\ProductPdf;
 use App\Models\Sale;
 use App\Models\SaleProduct;
 use App\Models\SaleStatus;
@@ -101,6 +102,8 @@ class SaleController extends Controller
         if ($request->has('to_date')) {
             $query->whereDate('created_at', '<=', $request->query('to_date'));
         }
+
+        $query->whereNotIn('sale_status_id', [8, 9]);
 
         // 🔹 Si no hay perPage, traer todo
         if (!$perPage) {
@@ -420,6 +423,45 @@ class SaleController extends Controller
                 $customData = json_decode($productOrder->customization_data, true);
                 $nombreCompleto = trim(($customData['form']['name'] ?? '') . ' ' . ($customData['form']['lastName'] ?? ''));
 
+                $productPdf = ProductPdf::where('product_id', $productOrder->product_id)->first();
+
+                if ($productPdf) {
+                    Log::info($productPdf);
+                    // Obtener temáticas guardadas en el JSON
+                    $tematicasGuardadas = $productPdf['data']['tematicas'] ?? [];
+
+                    Log::info("Temáticas guardadas en ProductPdf: " . count($tematicasGuardadas));
+
+                    foreach ($tematicasGuardadas as $tematica) {
+                        $tematicaId = $tematica['id'] ?? null;
+
+                        if (!$tematicaId) {
+                            Log::warning("Temática sin ID en ProductPdf, product_order ID: {$productOrder->id}");
+                            continue;
+                        }
+
+                        try {
+                            // Generar PDF por cada temática
+                            $pdfPath = EtiquetaService::generarEtiquetas(
+                                $sale->id,
+                                $tematicaId,
+                                [$nombreCompleto],
+                                $productOrder,
+                                $tematica['pdf']
+                            );
+
+                            $pdfPaths[] = $pdfPath;
+
+                            Log::info("PDF generado para {$nombreCompleto}, temática ID: {$tematicaId}");
+                        } catch (\Throwable $e) {
+                            Log::error("Error generando PDF para {$nombreCompleto}, temática ID: {$tematicaId}", [
+                                'error' => $e->getMessage(),
+                                'product_order_id' => $productOrder->id,
+                            ]);
+                        }
+                    }
+                }
+
                 // Acceso seguro al Variant real
                 $variant = $productOrder->variant?->variant;
 
@@ -435,10 +477,11 @@ class SaleController extends Controller
                     Log::warning("No se encontró temática para {$nombreCompleto}, product_order ID: {$productOrder->id}");
                     continue; // saltar a siguiente producto
                 }
+                ;
 
                 // Generar PDF dentro de su propio try/catch para que no detenga el bucle
                 try {
-                    $pdfPath = EtiquetaService::generarEtiquetas($sale->id, $tematicaId, [$nombreCompleto], $productOrder);
+                    $pdfPath = EtiquetaService::generarEtiquetas($sale->id, $tematicaId, [$nombreCompleto], $productOrder, null);
                     $pdfPaths[] = $pdfPath;
                     Log::info("PDF generado para {$nombreCompleto}, temática ID: {$tematicaId}");
                 } catch (\Throwable $e) {
@@ -449,6 +492,7 @@ class SaleController extends Controller
                     // continuar con el siguiente producto
                 }
             }
+
         }
 
         $this->logAudit(Auth::user() ?? null, 'Update Status Sale', $request->all(), $sale);
@@ -496,7 +540,46 @@ class SaleController extends Controller
             foreach ($sale->products as $productOrder) {
                 // Obtener nombre completo desde customization_data
                 $customData = json_decode($productOrder->customization_data, true);
-                $nombreCompleto = trim(($customData['Nombre'] ?? '') . ' ' . ($customData['Apellido'] ?? ''));
+                $nombreCompleto = trim(($customData['form']['name'] ?? '') . ' ' . ($customData['form']['lastName'] ?? ''));
+
+                $productPdf = ProductPdf::where('product_id', $productOrder->product_id)->first();
+
+                if ($productPdf) {
+                    Log::info($productPdf);
+                    // Obtener temáticas guardadas en el JSON
+                    $tematicasGuardadas = $productPdf['data']['tematicas'] ?? [];
+
+                    Log::info("Temáticas guardadas en ProductPdf: " . count($tematicasGuardadas));
+
+                    foreach ($tematicasGuardadas as $tematica) {
+                        $tematicaId = $tematica['id'] ?? null;
+
+                        if (!$tematicaId) {
+                            Log::warning("Temática sin ID en ProductPdf, product_order ID: {$productOrder->id}");
+                            continue;
+                        }
+
+                        try {
+                            // Generar PDF por cada temática
+                            $pdfPath = EtiquetaService::generarEtiquetas(
+                                $sale->id,
+                                $tematicaId,
+                                [$nombreCompleto],
+                                $productOrder,
+                                $tematica['pdf']
+                            );
+
+                            $pdfPaths[] = $pdfPath;
+
+                            Log::info("PDF generado para {$nombreCompleto}, temática ID: {$tematicaId}");
+                        } catch (\Throwable $e) {
+                            Log::error("Error generando PDF para {$nombreCompleto}, temática ID: {$tematicaId}", [
+                                'error' => $e->getMessage(),
+                                'product_order_id' => $productOrder->id,
+                            ]);
+                        }
+                    }
+                }
 
                 // Acceso seguro al Variant real
                 $variant = $productOrder->variant?->variant;
@@ -513,10 +596,11 @@ class SaleController extends Controller
                     Log::warning("No se encontró temática para {$nombreCompleto}, product_order ID: {$productOrder->id}");
                     continue; // saltar a siguiente producto
                 }
+                ;
 
                 // Generar PDF dentro de su propio try/catch para que no detenga el bucle
                 try {
-                    $pdfPath = EtiquetaService::generarEtiquetas($sale->id, $tematicaId, [$nombreCompleto], $productOrder);
+                    $pdfPath = EtiquetaService::generarEtiquetas($sale->id, $tematicaId, [$nombreCompleto], $productOrder, null);
                     $pdfPaths[] = $pdfPath;
                     Log::info("PDF generado para {$nombreCompleto}, temática ID: {$tematicaId}");
                 } catch (\Throwable $e) {
@@ -831,6 +915,45 @@ class SaleController extends Controller
                 $customData = json_decode($productOrder->customization_data, true);
                 $nombreCompleto = trim(($customData['form']['name'] ?? '') . ' ' . ($customData['form']['lastName'] ?? ''));
 
+                $productPdf = ProductPdf::where('product_id', $productOrder->product_id)->first();
+
+                if ($productPdf) {
+                    Log::info($productPdf);
+                    // Obtener temáticas guardadas en el JSON
+                    $tematicasGuardadas = $productPdf['data']['tematicas'] ?? [];
+
+                    Log::info("Temáticas guardadas en ProductPdf: " . count($tematicasGuardadas));
+
+                    foreach ($tematicasGuardadas as $tematica) {
+                        $tematicaId = $tematica['id'] ?? null;
+
+                        if (!$tematicaId) {
+                            Log::warning("Temática sin ID en ProductPdf, product_order ID: {$productOrder->id}");
+                            continue;
+                        }
+
+                        try {
+                            // Generar PDF por cada temática
+                            $pdfPath = EtiquetaService::generarEtiquetas(
+                                $sale->id,
+                                $tematicaId,
+                                [$nombreCompleto],
+                                $productOrder,
+                                $tematica['pdf']
+                            );
+
+                            $pdfPaths[] = $pdfPath;
+
+                            Log::info("PDF generado para {$nombreCompleto}, temática ID: {$tematicaId}");
+                        } catch (\Throwable $e) {
+                            Log::error("Error generando PDF para {$nombreCompleto}, temática ID: {$tematicaId}", [
+                                'error' => $e->getMessage(),
+                                'product_order_id' => $productOrder->id,
+                            ]);
+                        }
+                    }
+                }
+
                 // Acceso seguro al Variant real
                 $variant = $productOrder->variant?->variant;
 
@@ -846,10 +969,11 @@ class SaleController extends Controller
                     Log::warning("No se encontró temática para {$nombreCompleto}, product_order ID: {$productOrder->id}");
                     continue; // saltar a siguiente producto
                 }
+                ;
 
                 // Generar PDF dentro de su propio try/catch para que no detenga el bucle
                 try {
-                    $pdfPath = EtiquetaService::generarEtiquetas($sale->id, $tematicaId, [$nombreCompleto], $productOrder);
+                    $pdfPath = EtiquetaService::generarEtiquetas($sale->id, $tematicaId, [$nombreCompleto], $productOrder, null);
                     $pdfPaths[] = $pdfPath;
                     Log::info("PDF generado para {$nombreCompleto}, temática ID: {$tematicaId}");
                 } catch (\Throwable $e) {

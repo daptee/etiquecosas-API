@@ -45,6 +45,7 @@ class ProductController extends Controller
                 'meta_data',
                 'is_feature',
                 'is_customizable',
+                'is_sale',
                 'product_type_id',
                 'product_status_id',
                 'product_stock_status_id',
@@ -96,6 +97,9 @@ class ProductController extends Controller
         if ($request->has('is_customizable')) {
             $query->where('is_customizable', $request->query('is_customizable'));
         }
+        if ($request->has('is_sale')) {
+            $query->where('is_sale', $request->query('is_sale'));
+        }
         if ($request->has('has_seo')) {
             $hasSeo = $request->query('has_seo');
             if ($hasSeo) {
@@ -143,6 +147,7 @@ class ProductController extends Controller
                 'meta_data',
                 'is_feature',
                 'is_customizable',
+                'is_sale',
                 'product_type_id',
                 'product_status_id',
                 'product_stock_status_id',
@@ -299,6 +304,7 @@ class ProductController extends Controller
             'tutorial_link' => 'nullable|url|max:2048',
             'is_customizable' => 'nullable|boolean',
             'is_feature' => 'nullable|boolean',
+            'is_sale' => 'nullable|boolean',
             'product_status_id' => 'required|integer|exists:product_statuses,id',
             'related_products' => 'nullable|array',
             'related_products.*' => 'exists:products,id',
@@ -309,6 +315,7 @@ class ProductController extends Controller
             'variants' => 'nullable|array',
             'variants.*.attributesvalues' => 'nullable|array',
             'variants.*.attributesvalues.*.id' => 'nullable|numeric',
+            'variants.*.name' => 'nullable|string|max:255',
             'variants.*.sku' => ['nullable', 'string', 'max:255'],
             'variants.*.price' => 'nullable|numeric',
             'variants.*.discounted_price' => 'nullable|numeric',
@@ -385,6 +392,7 @@ class ProductController extends Controller
 
         $productData['is_feature'] = (bool) ($request->input('is_feature', false));
         $productData['is_customizable'] = (bool) ($request->input('is_customizable', false));
+        $productData['is_sale'] = (bool) ($request->input('is_sale', true));
 
         // Decodificar JSON de campos como meta_data y customization
         $jsonFields = ['meta_data'];
@@ -543,6 +551,7 @@ class ProductController extends Controller
                     'attributesvalues' => 'nullable|array',
                     'attributesvalues.*.id' => 'nullable|numeric|exists:attribute_values,id',
                     'attributesvalues.*.attribute_id' => 'nullable|integer|exists:attributes,id',
+                    'name' => 'nullable|string|max:255',
                     'sku' => ['nullable', 'string', 'max:255'],
                     'price' => 'nullable|numeric',
                     'discounted_price' => 'nullable|numeric|lt:price',
@@ -637,6 +646,7 @@ class ProductController extends Controller
                         'product_id' => $product->id,
                         'variant' => $variantDataCopy,
                         'sku' => $variantData['sku'] ?? null,
+                        'name' => $variantData['name'] ?? null,
                         'price' => $variantData['price'] ?? null,
                         'discounted_price' => $variantData['discounted_price'] ?? null,
                         'discounted_start' => $variantData['discounted_start'] ?? null,
@@ -759,6 +769,7 @@ class ProductController extends Controller
             'tutorial_link' => 'nullable|url|max:2048',
             'is_customizable' => 'nullable|boolean',
             'is_feature' => 'nullable|boolean',
+            'is_sale' => 'nullable|boolean',
             'product_status_id' => 'required|integer|exists:product_statuses,id',
             'related_products' => 'nullable|array',
             'related_products.*' => 'integer|exists:products,id',
@@ -772,6 +783,7 @@ class ProductController extends Controller
             'variants.*.attributesvalues.*.attribute_id' => 'nullable|integer|exists:attributes,id',
             'variants.*.attributesvalues.*.id' => 'nullable|numeric',
             'variants.*.sku' => ['nullable', 'string', 'max:255'],
+            'variants.*.name' => 'nullable|string|max:255',
             'variants.*.price' => 'nullable|numeric',
             'variants.*.discounted_price' => 'nullable|numeric',
             'variants.*.discounted_start' => 'nullable|date',
@@ -849,6 +861,7 @@ class ProductController extends Controller
         ]);
         $productData['is_feature'] = (bool) ($request->input('is_feature', false));
         $productData['is_customizable'] = (bool) ($request->input('is_customizable', false));
+        $productData['is_sale'] = (bool) ($request->input('is_sale', true));
 
         if ($request->filled('name') && $request->input('name') !== $product->name) {
             $productData['slug'] = $this->generateUniqueSlug($request->input('name'), $product->id);
@@ -980,6 +993,7 @@ class ProductController extends Controller
                     'attributesvalues.*.id' => 'nullable|numeric',
                     'attributesvalues.*.attribute_id' => 'nullable|integer|exists:attributes,id',
                     'sku' => ['nullable', 'string', 'max:255'],
+                    'name' => 'nullable|string|max:255',
                     'price' => 'nullable|numeric',
                     'discounted_price' => 'nullable|numeric|lt:price',
                     'discounted_start' => 'nullable|date',
@@ -1087,6 +1101,7 @@ class ProductController extends Controller
                         $variant->update([
                             'variant' => $variantDataCopy,
                             'sku' => $variantData['sku'] ?? null,
+                            'name' => $variantData['name'] ?? null,
                             'price' => $variantData['price'] ?? null,
                             'discounted_price' => $variantData['discounted_price'] ?? null,
                             'discounted_start' => $variantData['discounted_start'] ?? null,
@@ -1109,6 +1124,7 @@ class ProductController extends Controller
                             'product_id' => $product->id,
                             'variant' => $variantDataCopy,
                             'sku' => $variantData['sku'] ?? null,
+                            'name' => $variantData['name'] ?? null,
                             'price' => $variantData['price'] ?? null,
                             'discounted_price' => $variantData['discounted_price'] ?? null,
                             'discounted_start' => $variantData['discounted_start'] ?? null,

@@ -16,14 +16,8 @@ class EtiquetaService
      * @param array $nombres
      * @return array Rutas de los PDFs generados
      */
-    public static function generarEtiquetas(int $ventaId, int $tematicaId, array $nombres, $productOrder): array
+    public static function generarEtiquetas(int $ventaId, int $tematicaId, array $nombres, $productOrder, $pdf): array
     {
-        Log::info("🔹 Iniciando generación de etiquetas", [
-            'ventaId' => $ventaId,
-            'tematicaId' => $tematicaId,
-            'nombres_count' => count($nombres),
-        ]);
-
         // 1. Buscar temática
         $attributeValue = DB::table('attribute_values')->where('id', $tematicaId)->first();
         if (!$attributeValue) {
@@ -61,11 +55,30 @@ class EtiquetaService
         }
 
         // 3. Vistas de PDF
-        $views = [
-            "tematica/pdf-01/{$tematica}",
-            "tematica/pdf-02/{$tematica}",
-            "tematica/pdf-03/{$tematica}",
-        ];
+        Log::info($pdf);
+
+        if ($pdf) {
+            $nameToView = [
+                'Etiquetas maxi, verticales, super-maxi, super-mini' => "tematica/pdf-01/{$tematica}",
+                'Etiquetas vinilo' => "tematica/pdf-02/{$tematica}",
+                'Etiquetas super-mini' => "tematica/pdf-03/{$tematica}",
+            ];
+
+            // Generar solo las vistas que correspondan a los nombres recibidos
+            $views = [];
+
+            foreach ($pdf as $name) {
+                if (isset($nameToView[$name])) {
+                    $views[] = $nameToView[$name];
+                }
+            }
+        } else {
+            $views = [
+                "tematica/pdf-01/{$tematica}",
+                "tematica/pdf-02/{$tematica}",
+                "tematica/pdf-03/{$tematica}",
+            ];
+        }
 
         // 4. Generar PDFs individuales (uno por nombre)
         $outputFiles = [];
@@ -84,22 +97,23 @@ class EtiquetaService
             Log::info($nombre);
 
             $plantilla = [
-                'colores'   => $colores,
-                'imagen'    => $imagenes,
+                'colores' => $colores,
+                'imagen' => $imagenes,
                 'fontClass' => $fontClass,
-                'columna'   => $columna,
-                'filas'     => 19,
+                'columna' => $columna,
+                'filas' => 19,
             ];
 
             $product_order = (object) [
-                'name'  => $nombre,
+                'name' => $nombre,
                 'order' => (object) ['id_external' => $ventaId],
             ];
 
             // empezar desde 1 para nombres legibles
             foreach ($views as $vKey => $view) {
-                $vKey += 1;                
+                $vKey += 1;
                 try {
+                    Log::info(json_encode($product_order));
                     $pdf = Pdf::loadView($view, compact('plantilla', 'product_order'))
                         ->setPaper('a4', 'portrait');
 

@@ -49,6 +49,7 @@ class ShippingTemplateController extends Controller
         $validator = Validator::make($request->all(), [
             'id_shipping_template_category' => 'nullable|integer',
             'description' => 'required|string',
+            'name' => 'required|string',
             'statusId' => 'nullable|in:1,2',
         ]);
         if ($validator->fails()) {
@@ -59,6 +60,7 @@ class ShippingTemplateController extends Controller
         $shippingTemplate = ShippingTemplate::create([
             'id_shipping_template_category' => $request->idShippingTemplateCategory,
             'description' => $request->description,
+            'name' => $request->name,
             'status_id' => $request->statusId ?? 1,
         ]);
         $this->logAudit(Auth::user(), 'Store Shipping Template', $request->all(), $shippingTemplate);
@@ -72,6 +74,7 @@ class ShippingTemplateController extends Controller
         $validator = Validator::make($request->all(), [
             'id_shipping_template_category' => 'nullable|integer',
             'description' => 'required|string',
+            'name' => 'required|string',
             'statusId' => 'nullable|in:1,2',
         ]);
         if ($validator->fails()) {
@@ -81,6 +84,7 @@ class ShippingTemplateController extends Controller
 
         $shippingTemplate->id_shipping_template_category = $request->input('idShippingTemplateCategory', $shippingTemplate->id_shipping_template_category);
         $shippingTemplate->description = $request->input('description', $shippingTemplate->description);
+        $shippingTemplate->name = $request->input('name', $shippingTemplate->name);
         $shippingTemplate->status_id = $request->input('statusId', $shippingTemplate->status_id);
         $shippingTemplate->save();
         $this->logAudit(Auth::user(), 'Update Shipping Template', $request->all(), $shippingTemplate);

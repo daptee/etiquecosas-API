@@ -1,0 +1,2 @@
+ALTER TABLE categories
+    ADD COLUMN is_outstanding BOOLEAN NOT NULL DEFAULT TRUE;

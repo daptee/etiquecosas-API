@@ -46,6 +46,7 @@ class Product extends Model
         'tutorial_link',
         'is_feature',
         'is_customizable',
+        'is_sale',
         'meta_data',
     ];
 

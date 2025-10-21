@@ -23,6 +23,7 @@ class Category extends Model
         'banner',
         'status_id',
         'tag_id',
+        'is_outstanding'
     ];
 
     protected $casts = [

@@ -326,3 +326,211 @@ VALUES (
         "0.46,0,0.30,0"
     ]'
 );
+
+CREATE TABLE product_pdf (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    product_id BIGINT UNSIGNED NOT NULL,
+    data JSON NULL,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_product_pdf FOREIGN KEY (product_id) REFERENCES products(id)
+);
+
+// Etiquta tematicas
+
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    912,
+    '{"tematicas": [{"id": 154, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Unicornio"}]}'
+);
+
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    920,
+    '{"tematicas": [{"id": 140, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Emojis"}]}'
+);
+
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    929,
+    '{"tematicas": [{"id": 139, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Dinosaurios"}]}'
+);
+
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    939,
+    '{"tematicas": [{"id": 152, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Teen"}]}'
+);
+
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    948,
+    '{"tematicas": [{"id": 143, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Futbol"}]}'
+);
+
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    956,
+    '{"tematicas": [{"id": 146, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Nautica"}]}'
+);
+
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    960,
+    '{"tematicas": [{"id": 138, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Bosque"}]}'
+);
+
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    3627,
+    '{"tematicas": [{"id": 145, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Llamas"}]}'
+);
+
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    11071,
+    '{"tematicas": [{"id": 134, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Granja"}]}'
+);
+
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    11128,
+    '{"tematicas": [{"id": 153, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Transportes"}]}'
+);
+
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    11131,
+    '{"tematicas": [{"id": 137, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Basquet"}]}'
+);
+
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    11747,
+    '{"tematicas": [{"id": 142, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Estrellas pastel"}]}'
+);
+
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    31985,
+    '{"tematicas": [{"id": 28, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Sin dibujo"}]}'
+);
+
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    32233,
+    '{"tematicas": [{"id": 155, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Skate"}]}'
+);
+
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    55418,
+    '{"tematicas": [{"id": 136, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Aire"}]}'
+);
+
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    90411,
+    '{"tematicas": [{"id": 156, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Positive"}]}'
+);
+
+// Etiquetas vinilo
+
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    12332,
+    '{"tematicas": [{"id": 143, "pdf": ["Etiquetas vinilo"], "name": "Futbol"}]}'
+);
+
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    12337,
+    '{"tematicas": [{"id": 139, "pdf": ["Etiquetas vinilo"], "name": "Dinosaurios"}]}'
+);
+
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    12345,
+    '{"tematicas": [{"id": 137, "pdf": ["Etiquetas vinilo"], "name": "Basquet"}]}'
+);
+
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    12353,
+    '{"tematicas": [{"id": 152, "pdf": ["Etiquetas vinilo"], "name": "Teen"}]}'
+);
+
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    12361,
+    '{"tematicas": [{"id": 145, "pdf": ["Etiquetas vinilo"], "name": "Llamas"}]}'
+);
+
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    12383,
+    '{"tematicas": [{"id": 146, "pdf": ["Etiquetas vinilo"], "name": "Nautica"}]}'
+);
+
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    12371,
+    '{"tematicas": [{"id": 138, "pdf": ["Etiquetas vinilo"], "name": "Bosque"}]}'
+);
+
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    12392,
+    '{"tematicas": [{"id": 142, "pdf": ["Etiquetas vinilo"], "name": "Estrellas pastel"}]}'
+);
+
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    12647,
+    '{"tematicas": [{"id": 134, "pdf": ["Etiquetas vinilo"], "name": "Granja"}]}'
+);
+
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    12400,
+    '{"tematicas": [{"id": 153, "pdf": ["Etiquetas vinilo"], "name": "Transportes"}]}'
+);
+
+VALUES (
+    12444,
+    '{"tematicas": [{"id": 154, "pdf": ["Etiquetas vinilo"], "name": "Unicornio"}]}'
+);
+
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    12409,
+    '{"tematicas": [{"id": 140, "pdf": ["Etiquetas vinilo"], "name": "Emojis"}]}'
+);
+
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    12409,
+    '{"tematicas": [{"id": 141, "pdf": ["Etiquetas vinilo"], "name": "Estrellas blue"}]}'
+);
+
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    33696,
+    '{"tematicas": [{"id": 28, "pdf": ["Etiquetas vinilo"], "name": "Sin dibujo"}]}'
+);
+
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    56202,
+    '{"tematicas": [{"id": 136, "pdf": ["Etiquetas vinilo"], "name": "Aire"}]}'
+);
+
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    90497,
+    '{"tematicas": [{"id": 156, "pdf": ["Etiquetas vinilo"], "name": "Positive"}]}'
+);
+
+data: '{"tematicas": [{"id": 154, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo", "Etiquetas super-mini"], "name": "unicornio"}]}'
