@@ -1081,22 +1081,24 @@ class ProductController extends Controller
                         // 🔹 Update
                         $variant = ProductVariant::find($variantData['id']);
 
-                        if ($variantImageFile instanceof \Illuminate\Http\UploadedFile && $variantImageFile->isValid()) {
-                            if ($variant->img && Storage::disk('public_uploads')->exists($variant->img)) {
-                                Storage::disk('public_uploads')->delete($variant->img);
-                            }
-                            $imageName = 'images/product_variants/' . uniqid('img_') . '.' . $variantImageFile->getClientOriginalExtension();
-                            Storage::disk('public_uploads')->put($imageName, file_get_contents($variantImageFile->getRealPath()));
-                            $imagePath = $imageName;
-                        } else {
-                            $imagePath = $variant->img;
-                            if (!empty($variantData['delete_img']) && $variantData['delete_img']) {
-                                if ($variant->img && Storage::disk('public_uploads')->exists($variant->img)) {
-                                    Storage::disk('public_uploads')->delete($variant->img);
-                                }
-                                $imagePath = null;
-                            }
-                        }
+                        if (!empty($variantData['delete_img']) && $variantData['delete_img']) {
+    // 🔹 Solo borrar si se pidió explícitamente eliminar
+    if ($variant->img && Storage::disk('public_uploads')->exists($variant->img)) {
+        Storage::disk('public_uploads')->delete($variant->img);
+    }
+    $imagePath = null;
+} elseif ($variantImageFile instanceof \Illuminate\Http\UploadedFile && $variantImageFile->isValid()) {
+    // 🔹 Solo reemplazar si se sube una imagen nueva
+    if ($variant->img && Storage::disk('public_uploads')->exists($variant->img)) {
+        Storage::disk('public_uploads')->delete($variant->img);
+    }
+    $imageName = 'images/product_variants/' . uniqid('img_') . '.' . $variantImageFile->getClientOriginalExtension();
+    Storage::disk('public_uploads')->put($imageName, file_get_contents($variantImageFile->getRealPath()));
+    $imagePath = $imageName;
+} else {
+    // 🔹 Mantener la imagen actual
+    $imagePath = $variant->img;
+}
 
                         $variant->update([
                             'variant' => $variantDataCopy,
