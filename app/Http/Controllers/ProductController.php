@@ -1311,6 +1311,90 @@ class ProductController extends Controller
         return $this->success($product, 'Producto actualizado exitosamente', 200);
     }
 
+    public function bulkAssignCategories(Request $request)
+    {
+        $rules = [
+            'product_ids' => 'required|array|min:1',
+            'product_ids.*' => 'integer|exists:products,id',
+            'category_ids' => 'required|array|min:1',
+            'category_ids.*' => 'integer|exists:categories,id',
+            'mode' => 'nullable|string|in:sync,attach,detach', // Opcional: para definir el comportamiento
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $productIds = $request->input('product_ids');
+        $categoryIds = $request->input('category_ids');
+        $mode = $request->input('mode', 'sync');
+
+        DB::beginTransaction();
+
+        try {
+            $updatedProducts = [];
+
+            foreach ($productIds as $productId) {
+                $product = Product::find($productId);
+                if (!$product)
+                    continue;
+
+                switch ($mode) {
+                    case 'attach':
+                        $product->categories()->syncWithoutDetaching($categoryIds);
+                        break;
+
+                    case 'detach':
+                        $product->categories()->detach($categoryIds);
+                        break;
+
+                    case 'sync':
+                    default:
+                        $product->categories()->sync($categoryIds);
+                        break;
+                }
+
+                // 🔹 Recargar el producto con sus categorías actualizadas
+                $product->load('categories:id,name');
+                $updatedProducts[] = $product;
+            }
+
+            DB::commit();
+
+            $this->logAudit(Auth::user(), 'Bulk Assign Categories', $request->all(), [
+                'product_ids' => $productIds,
+                'category_ids' => $categoryIds,
+                'mode' => $mode,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Categorías asignadas exitosamente a los productos seleccionados.',
+                'data' => $updatedProducts,
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            Log::error('Error en bulkAssignCategories: ' . $e->getMessage(), [
+                'request' => $request->all(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Ocurrió un error al asignar las categorías.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+
+
     public function delete($id)
     {
         $product = $this->findObject(Product::class, $id);
