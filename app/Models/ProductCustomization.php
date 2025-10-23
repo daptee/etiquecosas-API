@@ -48,6 +48,9 @@ class ProductCustomization extends Model
             'is_details_active' => $this->customization['is_details_active'] ?? 0,
             'is_colors_active' => $this->customization['is_colors_active'] ?? 0,
             'is_icons_active' => $this->customization['is_icons_active'] ?? 0,
+            'is_name_active' => $this->customization['is_name_active'] ?? 0,
+            'is_last_name_active ' => $this->customization['is_last_name_active'] ?? 0,
+            'is_text_active' => $this->customization['is_text_active'] ?? 0,
             'colors' => $this->colors, // 👈 trae objetos PersonalizationColor
             'icons' => $this->icons,  // 👈 trae objetos PersonalizationIcon
         ];

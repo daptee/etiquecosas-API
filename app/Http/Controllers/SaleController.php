@@ -721,6 +721,36 @@ class SaleController extends Controller
         return $this->success($sale, 'Usuario asignado a la venta correctamente');
     }
 
+    public function assignUserToMultipleSales(Request $request)
+    {
+        $rules = [
+            'user_id' => 'required|integer|exists:users,id',
+            'sale_ids' => 'required|array|min:1',
+            'sale_ids.*' => 'integer|exists:sales,id',
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails()) {
+            $this->logAudit(Auth::user(), 'Sales Validation Fail (Assign User)', $request->all(), $validator->errors());
+            return $this->validationError($validator->errors());
+        }
+
+        $sales = Sale::whereIn('id', $request->sale_ids)->get();
+
+        foreach ($sales as $sale) {
+            $sale->user_id = $request->user_id; // asigna o reemplaza si ya tenía usuario
+            $sale->save();
+        }
+
+        // Opcional: cargar relaciones solo una vez
+        $sales->load(['client', 'channel', 'products.product', 'products.variant', 'status', 'statusHistory', 'user']);
+
+        $this->logAudit(Auth::user(), 'Assign User To Multiple Sales', ['sale_ids' => $request->sale_ids, 'user_id' => $request->user_id], $sales);
+
+        return $this->success($sales, 'Usuario asignado correctamente a las ventas seleccionadas');
+    }
+
+
     public function storeLocalSale(Request $request)
     {
         $user = Auth::user();

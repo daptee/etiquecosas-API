@@ -224,6 +224,7 @@ Route::middleware('jwt.auth')->prefix('sales')->group(function () {
     Route::get('/', [SaleController::class, 'index']);
     Route::get('/export', [SaleController::class, 'exportExcel']);
     Route::get('/{id}', [SaleController::class, 'show']);
+    Route::put('/assign-user-sale-multiple', [SaleController::class, 'assignUserToMultipleSales']);
     Route::put('/{id}', [SaleController::class, 'update']);
     Route::put('/change-status-admin/{id}', [SaleController::class, 'changeStatusAdmin']);
     Route::put('/internal_comments/{id}', [SaleController::class, 'updateInternalComment']);
