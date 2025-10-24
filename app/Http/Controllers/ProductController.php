@@ -46,6 +46,7 @@ class ProductController extends Controller
                 'is_feature',
                 'is_customizable',
                 'is_sale',
+                'is_wholesale',
                 'product_type_id',
                 'product_status_id',
                 'product_stock_status_id',
@@ -100,6 +101,9 @@ class ProductController extends Controller
         if ($request->has('is_sale')) {
             $query->where('is_sale', $request->query('is_sale'));
         }
+        if ($request->has('is_wholesale')) {
+            $query->where('is_wholesale', $request->query('is_wholesale'));
+        }
         if ($request->has('has_seo')) {
             $hasSeo = $request->query('has_seo');
             if ($hasSeo) {
@@ -148,6 +152,7 @@ class ProductController extends Controller
                 'is_feature',
                 'is_customizable',
                 'is_sale',
+                'is_wholesale',
                 'product_type_id',
                 'product_status_id',
                 'product_stock_status_id',
@@ -305,6 +310,7 @@ class ProductController extends Controller
             'is_customizable' => 'nullable|boolean',
             'is_feature' => 'nullable|boolean',
             'is_sale' => 'nullable|boolean',
+            'is_wholesale' => 'nullable|boolean',
             'product_status_id' => 'required|integer|exists:product_statuses,id',
             'related_products' => 'nullable|array',
             'related_products.*' => 'exists:products,id',
@@ -396,6 +402,7 @@ class ProductController extends Controller
         $productData['is_feature'] = (bool) ($request->input('is_feature', false));
         $productData['is_customizable'] = (bool) ($request->input('is_customizable', false));
         $productData['is_sale'] = (bool) ($request->input('is_sale', true));
+        $productData['is_wholesale'] = (bool) ($request->input('is_wholesale', false));
 
         // Decodificar JSON de campos como meta_data y customization
         $jsonFields = ['meta_data'];
@@ -773,6 +780,7 @@ class ProductController extends Controller
             'is_customizable' => 'nullable|boolean',
             'is_feature' => 'nullable|boolean',
             'is_sale' => 'nullable|boolean',
+            'is_wholesale' => 'nullable|boolean',
             'product_status_id' => 'required|integer|exists:product_statuses,id',
             'related_products' => 'nullable|array',
             'related_products.*' => 'integer|exists:products,id',
@@ -868,6 +876,7 @@ class ProductController extends Controller
         $productData['is_feature'] = (bool) ($request->input('is_feature', false));
         $productData['is_customizable'] = (bool) ($request->input('is_customizable', false));
         $productData['is_sale'] = (bool) ($request->input('is_sale', true));
+        $productData['is_wholesale'] = (bool) ($request->input('is_wholesale', false));
 
         if ($request->filled('name') && $request->input('name') !== $product->name) {
             $productData['slug'] = $this->generateUniqueSlug($request->input('name'), $product->id);

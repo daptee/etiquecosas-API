@@ -47,6 +47,7 @@ class Product extends Model
         'is_feature',
         'is_customizable',
         'is_sale',
+        'is_wholesale',
         'meta_data',
     ];
 
