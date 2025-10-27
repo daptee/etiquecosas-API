@@ -533,4 +533,39 @@ VALUES (
     '{"tematicas": [{"id": 156, "pdf": ["Etiquetas vinilo"], "name": "Positive"}]}'
 );
 
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    59035,
+    '{
+        "tematicas": [
+            { "id": 148, "pdf": ["Etiquetas super-maxi"], "name": "Sin dibujo multicolor" },
+            { "id": 151, "pdf": ["Etiquetas super-maxi"], "name": "Sin dibujo sports" },
+            { "id": 150, "pdf": ["Etiquetas super-maxi"], "name": "Sin dibujo rainbow" },
+            { "id": 147, "pdf": ["Etiquetas super-maxi"], "name": "Sin dibujo blue" },
+            { "id": 149, "pdf": ["Etiquetas super-maxi"], "name": "Sin dibujo pastel" },
+            { "id": 136, "pdf": ["Etiquetas super-maxi"], "name": "Aire" },
+            { "id": 155, "pdf": ["Etiquetas super-maxi"], "name": "Skate" },
+            { "id": 142, "pdf": ["Etiquetas super-maxi"], "name": "Estrellas pastel" },
+            { "id": 141, "pdf": ["Etiquetas super-maxi"], "name": "Estrellas blue" },
+            { "id": 145, "pdf": ["Etiquetas super-maxi"], "name": "Llamas" },
+            { "id": 139, "pdf": ["Etiquetas super-maxi"], "name": "Dinosaurios" },
+            { "id": 138, "pdf": ["Etiquetas super-maxi"], "name": "Bosque" },
+            { "id": 144, "pdf": ["Etiquetas super-maxi"], "name": "Granja" },
+            { "id": 154, "pdf": ["Etiquetas super-maxi"], "name": "Unicornio" },
+            { "id": 140, "pdf": ["Etiquetas super-maxi"], "name": "Emojis" },
+            { "id": 152, "pdf": ["Etiquetas super-maxi"], "name": "Teen" },
+            { "id": 153, "pdf": ["Etiquetas super-maxi"], "name": "Transportes" },
+            { "id": 143, "pdf": ["Etiquetas super-maxi"], "name": "Futbol" },
+            { "id": 137, "pdf": ["Etiquetas super-maxi"], "name": "Basquet" },
+            { "id": 146, "pdf": ["Etiquetas super-maxi"], "name": "Nautica" }
+        ]
+    }'
+);
+
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    1224,
+    '{"tematicas": [{"pdf": ["Etiquetas maxi"], "name": "Personalizacion"}]}'
+);
+
 data: '{"tematicas": [{"id": 154, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo", "Etiquetas super-mini"], "name": "unicornio"}]}'

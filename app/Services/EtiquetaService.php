@@ -12,13 +12,105 @@ class EtiquetaService
      * Generar etiquetas PDF
      *
      * @param int   $ventaId
-     * @param int   $tematicaId
      * @param array $nombres
      * @return array Rutas de los PDFs generados
      */
-    public static function generarEtiquetas(int $ventaId, int $tematicaId, array $nombres, $productOrder, $pdf): array
+    public static function generarEtiquetas(int $ventaId, $tematicaId, array $nombres, $productOrder, $pdf, $customColor, $customIcon): array
     {
-        // 1. Buscar temática
+        $outputFiles = [];
+        $hoy = date('Y-m-d');
+        $dirPath = storage_path("app/pdf/planchas/{$hoy}/{$ventaId}");
+        if (!is_dir($dirPath)) {
+            mkdir($dirPath, 0755, true);
+        }
+
+        Log::info($customColor);
+        Log::info($customIcon);
+
+        /**
+         * 🟣 CASO 1: PDF PERSONALIZABLE (no hay temática)
+         */
+        if ($customIcon && $customColor) {
+            Log::info("🟣 Generando PDF PERSONALIZABLE");
+
+            $customIconPath = public_path($customIcon);
+
+            // 📄 Mapeo de vistas igual que en las temáticas normales
+            $nameToView = [
+                'Etiquetas maxi, verticales, super-maxi, super-mini' => "tematica/principal/PERSONALIZABLE",
+                'Etiquetas vinilo' => "tematica/vinilo/PERSONALIZABLE",
+                'Etiquetas super-mini' => "tematica/super-mini/PERSONALIZABLE",
+                'Etiquetas super-maxi' => "tematica/super-maxi/PERSONALIZABLE",
+                'Etiquetas maxi' => "tematica/maxi/PERSONALIZABLE",
+            ];
+
+            $views = [];
+            if ($pdf) {
+                foreach ($pdf as $name) {
+                    if (isset($nameToView[$name])) {
+                        $views[] = $nameToView[$name];
+                    }
+                }
+            } else {
+                $views = [
+                    "tematica/principal/PERSONALIZABLE",
+                    "tematica/vinilo/PERSONALIZABLE",
+                    "tematica/super-mini/PERSONALIZABLE",
+                ];
+            }
+
+            foreach ($nombres as $i => $nombre) {
+                $fontClass = mb_strlen($nombre, 'UTF-8') > 16
+                    ? 'small-text-size'
+                    : 'normal-text-size';
+
+                $plantilla = [
+                    'colores' => $customColor,
+                    'imagen' => $customIconPath,
+                    'fontClass' => $fontClass,
+                    'columna' => 2,
+                    'filas' => 19,
+                ];
+
+                Log::info($plantilla);
+
+                $product_order = (object) [
+                    'name' => $nombre,
+                    'order' => (object) ['id_external' => $ventaId],
+                ];
+
+                foreach ($views as $vKey => $view) {
+                    $vKey += 1;
+                    try {
+                        $pdf = Pdf::loadView($view, compact('plantilla', 'product_order'))
+                            ->setPaper('a4', 'portrait');
+
+                        $dompdf = $pdf->getDomPDF();
+                        $dompdf->getOptions()->setFontDir(public_path('fonts'));
+                        $dompdf->getOptions()->setFontCache(storage_path('fonts_cache'));
+
+                        $filePath = "{$dirPath}/{$ventaId}-{$productOrder->product->name}-PERSONALIZABLE-{$vKey}.pdf";
+                        $pdf->save($filePath);
+
+                        $outputFiles[] = $filePath;
+
+                        Log::info("✅ PDF PERSONALIZABLE generado", ['path' => $filePath]);
+                    } catch (\Throwable $e) {
+                        Log::error("❌ Error generando PDF PERSONALIZABLE", [
+                            'nombre' => $nombre,
+                            'view' => $view,
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
+                }
+            }
+
+            return $outputFiles; // 🚪 Salimos antes de procesar temática
+        }
+
+        /**
+         * 🟢 CASO 2: PDF NORMAL CON TEMÁTICA
+         */
         $attributeValue = DB::table('attribute_values')->where('id', $tematicaId)->first();
         if (!$attributeValue) {
             throw new \Exception("Temática no encontrada: {$tematicaId}");
@@ -59,9 +151,10 @@ class EtiquetaService
 
         if ($pdf) {
             $nameToView = [
-                'Etiquetas maxi, verticales, super-maxi, super-mini' => "tematica/pdf-01/{$tematica}",
-                'Etiquetas vinilo' => "tematica/pdf-02/{$tematica}",
-                'Etiquetas super-mini' => "tematica/pdf-03/{$tematica}",
+                'Etiquetas maxi, verticales, super-maxi, super-mini' => "tematica/principal/{$tematica}",
+                'Etiquetas vinilo' => "tematica/vinilo/{$tematica}",
+                'Etiquetas super-mini' => "tematica/super-mini/{$tematica}",
+                'Etiquetas super-maxi' => "tematica/super-maxi/{$tematica}"
             ];
 
             // Generar solo las vistas que correspondan a los nombres recibidos
@@ -74,18 +167,10 @@ class EtiquetaService
             }
         } else {
             $views = [
-                "tematica/pdf-01/{$tematica}",
-                "tematica/pdf-02/{$tematica}",
-                "tematica/pdf-03/{$tematica}",
+                "tematica/principal/{$tematica}",
+                "tematica/vinilo/{$tematica}",
+                "tematica/super-mini/{$tematica}",
             ];
-        }
-
-        // 4. Generar PDFs individuales (uno por nombre)
-        $outputFiles = [];
-        $hoy = date('Y-m-d');
-        $dirPath = storage_path("app/pdf/planchas/{$hoy}/{$ventaId}");
-        if (!is_dir($dirPath)) {
-            mkdir($dirPath, 0755, true);
         }
 
         foreach ($nombres as $i => $nombre) {

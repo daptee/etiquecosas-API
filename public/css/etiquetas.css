@@ -298,6 +298,10 @@
     line-height: 0.7 !important;
 }
 
+.texto-negro {
+    color: #000 !important;
+}
+
 
 /* NUMERO DE PEDIDO VERTICAL ABAJO A LA IZQUIERDA DE LA PANTALLA */
 .numeroOrder {
