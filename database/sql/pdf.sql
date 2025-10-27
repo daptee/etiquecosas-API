@@ -568,4 +568,34 @@ VALUES (
     '{"tematicas": [{"pdf": ["Etiquetas maxi"], "name": "Personalizacion"}]}'
 );
 
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    14120,
+    '{
+        "tematicas": [
+            { "id": 156, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "name": "Positive" },
+            { "id": 151, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "name": "Sin dibujo sports" },
+            { "id": 148, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "name": "Sin dibujo multicolor" },
+            { "id": 150, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "name": "Sin dibujo rainbow" },
+            { "id": 147, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "name": "Sin dibujo blue" },
+            { "id": 149, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "name": "Sin dibujo pastel" },
+            { "id": 136, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "name": "Aire" },
+            { "id": 155, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "name": "Skate" },
+            { "id": 142, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "name": "Estrellas pastel" },
+            { "id": 141, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "name": "Estrellas blue" },
+            { "id": 145, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "name": "Llamas" },
+            { "id": 139, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "name": "Dinosaurios" },
+            { "id": 138, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "name": "Bosque" },
+            { "id": 144, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "name": "Granja" },
+            { "id": 154, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "name": "Unicornio" },
+            { "id": 140, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "name": "Emojis" },
+            { "id": 152, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "name": "Teen" },
+            { "id": 153, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "name": "Transportes" },
+            { "id": 143, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "name": "Futbol" },
+            { "id": 137, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "name": "Basquet" },
+            { "id": 146, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "name": "Nautica" }
+        ]
+    }'
+);
+
 data: '{"tematicas": [{"id": 154, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo", "Etiquetas super-mini"], "name": "unicornio"}]}'
