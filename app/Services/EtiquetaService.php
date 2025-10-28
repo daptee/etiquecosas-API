@@ -42,6 +42,9 @@ class EtiquetaService
                 'Etiquetas super-mini' => "tematica/super-mini/PERSONALIZABLE",
                 'Etiquetas super-maxi' => "tematica/super-maxi/PERSONALIZABLE",
                 'Etiquetas maxi' => "tematica/maxi/PERSONALIZABLE",
+                'Etiquetas spot and maxi' => "tematica/spot-and-maxi/PERSONALIZABLE",
+                'Etiquetas maxi and super maxi and super mini' => "tematica/maxi-and-super-maxi-and-super-mini/PERSONALIZABLE",
+                'Etiquetas planchables' => "tematica/planchable/PERSONALIZABLE",
             ];
 
             $views = [];

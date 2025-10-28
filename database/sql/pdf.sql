@@ -598,4 +598,16 @@ VALUES (
     }'
 );
 
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    141,
+    '{"tematicas": [{"pdf": ["Etiquetas spot and maxi", "Etiquetas planchables"], "name": "Personalizacion"}]}'
+);
+
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    79,
+    '{"tematicas": [{"pdf": ["Etiquetas maxi and super maxi and super mini", "Etiquetas planchables"], "name": "Personalizacion"}]}'
+);
+
 data: '{"tematicas": [{"id": 154, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo", "Etiquetas super-mini"], "name": "unicornio"}]}'
