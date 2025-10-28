@@ -53,7 +53,7 @@ class LoginClientController extends Controller
             'clientType'
         ]);
         $mailData = [
-            'name' => $client->name . ' ' . $client->lastName
+            'name' => $client->name . ' ' . $client->lastName,
         ];
         Mail::to($client->email)->send(new WelcomeMail($mailData));
         $this->logAudit(null, 'Register Client', $request->all(), $client);
