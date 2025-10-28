@@ -30,7 +30,7 @@
             <tr>
               <td class="sm-py-32 sm-px-24" style="padding: 48px; text-align: center;">
                 <a href="{{ config('services.front_url') }}">
-                  <img src="https://etiquecosas.ar/wp-content/uploads/2019/09/etiquecosas_logo-rosa.svg" width="180" alt="Etiquecosas" style="max-width: 100%; vertical-align: middle; border: 0;">
+                  <img src="https://api.etiquecosaslab.com.ar/icons/mail/etiquecosas_logo-rosa.png" width="180" alt="Etiquecosas" style="max-width: 100%; vertical-align: middle; border: 0;">
                 </a>
               </td>
             </tr>
@@ -42,7 +42,7 @@
                   <tr>
                     <td class="sm-px-24" style="padding: 48px; text-align: left; font-size: 16px; line-height: 26px; color: #444;">
                       <p style="font-family: 'Montserrat', sans-serif; mso-line-height-rule: exactly; margin-bottom: 0; font-size: 20px; font-weight: 600;">Hola</p>
-                      <p style="font-family: 'Montserrat', sans-serif; mso-line-height-rule: exactly; margin-top: 0; font-size: 24px; font-weight: 700; color: #EBA4AB;">{{ $name }}</p>
+                      <p style="font-family: 'Montserrat', sans-serif; mso-line-height-rule: exactly; margin-top: 0; font-size: 24px; font-weight: 700; color: #347AA7;">{{ $name }}</p>
                       <p style="margin: 0; font-size: 18px; font-weight: 600;">¡Bienvenida/o a la web de <strong>Etiquecosas</strong>!</p>
 
                       @if(!empty($temporary_password))
@@ -57,7 +57,7 @@
                         </p>
 
                         <p>👉 Tu contraseña temporal es:<br>
-                          <strong style="color: #EBA4AB;">{{ $temporary_password }}</strong>
+                          <strong style="color: #347AA7;">{{ $temporary_password }}</strong>
                         </p>
 
                         <p style="margin-top: 24px;">Te recomendamos ingresar y cambiarla por una que te resulte fácil de recordar 💪</p>
@@ -79,7 +79,7 @@
                         <table cellpadding="0" cellspacing="0" role="presentation" align="center">
                           <tr>
                             <td style="border-radius: 6px; background-color: #EBA4AB;">
-                              <a href="{{ config('services.front_url') }}/login"
+                              <a href="{{ config('services.front_url') }}/iniciar-sesion"
                               style="display: inline-block; padding: 14px 28px; font-size: 16px; font-weight: 600; color: #ffffff; text-decoration: none; font-family: 'Montserrat', sans-serif;">
                               IR A MI CUENTA
                               </a>
@@ -98,13 +98,13 @@
               <td style="padding: 40px 24px; text-align: center; color: #999; font-size: 14px;">
                 <p style="margin-bottom: 16px;">
                   <a href="https://www.instagram.com/etiquecosas" style="margin: 0 6px;">
-                    <img width="24" height="24" src="https://api.etiquecosaslab.com.ar/icons/personalization/instagram_solid.svg" alt="Instagram" style="vertical-align: middle; border: 0;">
+                    <img width="24" height="24" src="https://api.etiquecosaslab.com.ar/icons/mail/instagram_solid.png" alt="Instagram" style="vertical-align: middle; border: 0;">
                   </a>
                   <a href="https://www.facebook.com/etiquecosas" style="margin: 0 6px;">
-                    <img width="24" height="24" src="https://api.etiquecosaslab.com.ar/icons/personalization/facebook_solid.svg" alt="Facebook" style="vertical-align: middle; border: 0;">
+                    <img width="24" height="24" src="https://api.etiquecosaslab.com.ar/icons/mail/facebook_solid.png" alt="Facebook" style="vertical-align: middle; border: 0;">
                   </a>
                   <a href="https://www.youtube.com/@etiquecosas" style="margin: 0 6px;">
-                    <img width="24" height="24" src="https://api.etiquecosaslab.com.ar/icons/personalization/youtube_solid.svg" alt="YouTube" style="vertical-align: middle; border: 0;">
+                    <img width="24" height="24" src="https://api.etiquecosaslab.com.ar/icons/mail/youtube_solid.png" alt="YouTube" style="vertical-align: middle; border: 0;">
                   </a>
                 </p>
 

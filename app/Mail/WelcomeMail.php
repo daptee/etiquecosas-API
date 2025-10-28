@@ -7,6 +7,7 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use Log;
 
 class WelcomeMail extends Mailable
 {
@@ -28,10 +29,13 @@ class WelcomeMail extends Mailable
 
     public function content(): Content
     {
+        Log::info($this->mailData);
         return new Content(
             view: 'emails.welcome',
             with: [
                 'name' => $this->mailData['name'],
+                'temporary_password' => $this->mailData['password'] ?? null,
+                'email' => $this->mailData['email'] ?? null,
             ],
         );
     }
