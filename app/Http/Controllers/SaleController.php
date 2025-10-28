@@ -3,13 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Exports\SalesExport;
-use App\Mail\NewClientForSale;
 use App\Mail\OrderSummaryMail;
 use App\Mail\OrderSummaryMailTo;
 use App\Mail\OrderProductionsMail;
 use App\Mail\OrderSendMail;
 use App\Mail\OrderRetiredMail;
 use App\Mail\OrderWithdrawMail;
+use App\Mail\WelcomeMail;
 use App\Models\Client;
 use App\Models\ClientAddress;
 use App\Models\Coupon;
@@ -253,12 +253,11 @@ class SaleController extends Controller
             ]);
 
             $mailData = [
-                'name' => $client->name,
+                'name' => $client->name . ' ' . $client->lastName,
                 'password' => $randomPassword,
+                'email' => $client->email,
             ];
-
-            Mail::to(users: $request->client_mail)->send(new NewClientForSale($mailData));
-
+            Mail::to($request->client_mail)->send(new WelcomeMail($mailData));
 
             if ($request->client_address && $request->client_locality_id) {
                 ClientAddress::create([

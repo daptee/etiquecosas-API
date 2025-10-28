@@ -1,65 +1,102 @@
 <!DOCTYPE html>
-<html lang="es">
-
+<html lang="es" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
-    <meta charset="UTF-8">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f9f9f9;
-            padding: 20px;
-        }
-
-        .container {
-            background: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            max-width: 700px;
-            margin: auto;
-        }
-
-        h1 {
-            color: #333;
-        }
-
-        p {
-            font-size: 1em;
-            line-height: 1.5em;
-        }
-
-        .highlight {
-            font-weight: bold;
-        }
-
-        .closing {
-            margin-top: 30px;
-            font-size: 1em;
-        }
-
-        .section {
-            margin-bottom: 20px;
-        }
-    </style>
+  <meta charset="utf-8">
+  <meta name="x-apple-disable-message-reformatting">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
+  <title>Tu pedido entró en producción</title>
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,500,600,700&display=swap" rel="stylesheet" media="screen">
+  <style>
+    .hover-underline:hover { text-decoration: underline !important; }
+    @media (max-width: 600px) {
+      .sm-w-full { width: 100% !important; }
+      .sm-px-24 { padding-left: 24px !important; padding-right: 24px !important; }
+      .sm-py-32 { padding-top: 32px !important; padding-bottom: 32px !important; }
+    }
+  </style>
 </head>
+<body style="margin: 0; width: 100%; padding: 0; word-break: break-word; -webkit-font-smoothing: antialiased; background-color: #ECEFF1;">
+  <div style="font-family: 'Montserrat', sans-serif; mso-line-height-rule: exactly; display: none;">Tu pedido entró en producción</div>
+  <div role="article" aria-roledescription="email" aria-label="Tu pedido entró en producción" lang="es" style="font-family: 'Montserrat', sans-serif; mso-line-height-rule: exactly;">
+    <table style="width: 100%; font-family: Montserrat, -apple-system, 'Segoe UI', sans-serif;" cellpadding="0" cellspacing="0" role="presentation">
+      <tr>
+        <td align="center" style="background-color: #ECEFF1;">
+          <table class="sm-w-full" style="width: 600px;" cellpadding="0" cellspacing="0" role="presentation">
 
-<body>
-    <div class="container">
-        <div class="section">
-            <p>Hola <strong>{{ $sale->client->name }} {{ $sale->client->lastname }}</strong>, 👋</p>
+            <!-- LOGO -->
+            <tr>
+              <td class="sm-py-32 sm-px-24" style="padding: 48px; text-align: center;">
+                <a href="{{ config('services.front_url') }}">
+                  <img src="https://api.etiquecosaslab.com.ar/icons/mail/etiquecosas_logo-rosa.png" width="180" alt="Etiquecosas" style="max-width: 100%; vertical-align: middle; border: 0;">
+                </a>
+              </td>
+            </tr>
 
-            <p>¡Buenas noticias! Tu pedido <strong>#{{ $sale->id }}</strong> ya entró en producción 🎉</p>
+            <!-- CONTENIDO -->
+            <tr>
+              <td align="center" class="sm-px-24" style="border-radius:10px; background-color:#ffffff;">
+                <table style="width:100%;" cellpadding="0" cellspacing="0" role="presentation">
+                  <tr>
+                    <td class="sm-px-24" style="padding:48px; text-align:left; font-size:16px; line-height:26px; color:#444;">
 
-            <p>🔎 <strong>¿Qué significa?</strong><br>
-               En esta etapa diseñamos y armamos tus etiquetas, las imprimimos y luego las revisamos para asegurarnos de que todo te llegue perfecto.</p>
+                      <p style="font-family:'Montserrat', sans-serif; margin-bottom:0; font-size:20px; font-weight:600;">Hola</p>
+                      <p style="font-family:'Montserrat', sans-serif; margin-top:0; font-size:24px; font-weight:700; color:#EBA4AB;">{{ $sale->client->name }} {{ $sale->client->lastname }}</p>
 
-            <p>⏳ <strong>Tiempo estimado:</strong> este proceso puede demorar hasta 10 días hábiles, pero si lo tenemos antes, te avisamos enseguida.</p>
+                      <p style="margin-top:16px; font-size:18px; font-weight:600;">¡Tu pedido entró en producción! 🎉</p>
 
-            <p>Cuando tu pedido esté listo para enviar o retirar, te vamos a escribir nuevamente por este medio.</p>
-        </div>
+                      <div style="margin:16px 0; padding:15px; background:#f9f9f9; border-left:4px solid #EBA4AB;">
+                        <p style="margin:0; font-size:14px; color:#555;">📦 <strong>Número de pedido:</strong> #{{ $sale->id }}</p>
+                        <p style="margin:0; font-size:14px; color:#555;">🛠️ <strong>Estado:</strong> En producción</p>
+                        <p style="margin:0; font-size:14px; color:#555;">⏳ <strong>Tiempo estimado:</strong> Hasta 10 días hábiles</p>
+                      </div>
 
-        <div class="closing">
-            <p>💛 <strong>Muchas gracias por elegir Etiquecosas</strong></p>
-        </div>
-    </div>
+                      <p style="margin:16px 0; font-size:14px; color:#444;">En esta etapa diseñamos, imprimimos y revisamos tus etiquetas para asegurarnos de que lleguen perfectas 💛.</p>
+                      <p style="margin:16px 0; font-size:14px; color:#444;">Te avisaremos nuevamente cuando tu pedido esté listo para enviar o retirar.</p>
+
+                      <div style="text-align:center; margin-top:32px;">
+                        <p style="margin:0 0 24px 0; font-size:16px;">💛 <strong>Muchas gracias por elegir Etiquecosas</strong></p>
+                      </div>
+
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- FOOTER -->
+            <tr>
+              <td style="padding:40px 24px; text-align:center; color:#999; font-size:14px;">
+                <p style="margin-bottom:16px;">
+                  <a href="https://www.instagram.com/etiquecosas" style="margin:0 6px;">
+                    <img width="24" height="24" src="https://api.etiquecosaslab.com.ar/icons/mail/instagram_solid.png" alt="Instagram" style="vertical-align:middle; border:0;">
+                  </a>
+                  <a href="https://www.facebook.com/etiquecosas" style="margin:0 6px;">
+                    <img width="24" height="24" src="https://api.etiquecosaslab.com.ar/icons/mail/facebook_solid.png" alt="Facebook" style="vertical-align:middle; border:0;">
+                  </a>
+                  <a href="https://www.youtube.com/@etiquecosas" style="margin:0 6px;">
+                    <img width="24" height="24" src="https://api.etiquecosaslab.com.ar/icons/mail/youtube_solid.png" alt="YouTube" style="vertical-align:middle; border:0;">
+                  </a>
+                </p>
+
+                <p style="margin:8px 0; color:#777;">
+                  El uso de nuestro servicio y sitio web está sujeto a nuestros<br>
+                  <a href="https://etiquecosas.com.ar/terminos" style="color:#EBA4AB; text-decoration:none;">Términos de uso</a> y
+                  <a href="https://etiquecosas.com.ar/privacidad" style="color:#EBA4AB; text-decoration:none;">Política de privacidad</a>.
+                </p>
+
+                <p style="margin:12px 0 4px;">
+                  <a href="https://www.etiquecosas.com.ar" style="color:#EBA4AB; font-weight:600; text-decoration:none;">www.etiquecosas.com.ar</a>
+                </p>
+                <p style="font-size:12px; color:#aaa; margin:0;">Desarrollado por <strong>Daptee</strong></p>
+              </td>
+            </tr>
+
+          </table>
+        </td>
+      </tr>
+    </table>
+  </div>
 </body>
 </html>

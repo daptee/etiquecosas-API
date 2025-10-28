@@ -29,7 +29,7 @@ class OrderSummaryMailTo extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'emails.orderSummary',
+            view: 'emails.notifyOrderSummary',
             with: [
                 'sale' => $this->sale,
             ],

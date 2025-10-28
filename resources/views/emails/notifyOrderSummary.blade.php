@@ -25,7 +25,7 @@
 </head>
 
 <body style="margin: 0; width: 100%; padding: 0; word-break: break-word; -webkit-font-smoothing: antialiased; background-color: #ECEFF1;">
-  <div style="font-family: 'Montserrat', sans-serif; mso-line-height-rule: exactly; display:none;">Resumen de tu compra</div>
+  <div style="font-family: 'Montserrat', sans-serif; mso-line-height-rule: exactly; display:none;">Resumen de venta</div>
 
   <table style="width:100%; font-family: Montserrat, -apple-system, 'Segoe UI', sans-serif;" cellpadding="0" cellspacing="0" role="presentation">
     <tr>
@@ -47,13 +47,7 @@
                 <tr>
                   <td class="sm-px-24" style="padding:48px; text-align:left; font-size:16px; line-height:26px; color:#444;">
 
-                    <p style="font-size:20px; font-weight:600; margin-bottom:0;">Hola</p>
-                    <p style="font-size:20px; font-weight:700; color:#347AA7; margin-top:0;">
-                      {{ $sale->client->name }} {{ $sale->client->lastname }}
-                    </p>
-                    <p style="font-size:18px; font-weight:600; margin-bottom:16px;">¡Tu compra ingresó correctamente! 🎉</p>
-                    <p style="margin: 0; padding: 0;">Ya aprobamos tu pedido <strong>#{{ $sale->id }}</strong> y en breve lo pondremos en marcha.</p>
-                    <p style="margin: 0; padding: 0;">Te vamos a estar avisando por este medio todas las novedades del proceso.</p>
+                    <p style="font-size:18px; font-weight:600; margin-bottom:16px;">¡Nueva venta aprobada! 🎉</p>
 
                     <!-- Datos del cliente -->
                     <h2 style="margin-top:24px; color:#347AA7; font-size: 16px;">Datos del cliente</h2>
@@ -192,15 +186,12 @@
 
                     <!-- Botón IR A MI CUENTA -->
                     <div style="text-align:center; margin-top:32px;">
-                        <p style="margin: 0 0 24px 0; font-size: 16px;">
-                          ¡Muchas gracias por elegir <strong>Etiquecosas</strong>! 💛
-                        </p>
                       <table cellpadding="0" cellspacing="0" role="presentation" align="center">
                         <tr>
                           <td style="border-radius:6px; background-color:#EBA4AB; text-align:center; ">
                             <a href="{{ config('services.front_url') }}/iniciar-sesion"
                               style="display:inline-block; padding:14px 28px; font-size:16px; font-weight:600; color:#ffffff; text-decoration:none; font-family:'Montserrat', sans-serif;">
-                              IR A MI CUENTA
+                              IR A LA COMPRA
                             </a>
                           </td>
                         </tr>
