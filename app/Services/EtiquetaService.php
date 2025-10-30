@@ -8,182 +8,178 @@ use Illuminate\Support\Facades\Log;
 
 class EtiquetaService
 {
-    /**
-     * Generar etiquetas PDF
-     *
-     * @param int   $ventaId
-     * @param array $nombres
-     * @return array Rutas de los PDFs generados
-     */
-    public static function generarEtiquetas(int $ventaId, $tematicaId, array $nombres, $productOrder, $pdf, $customColor, $customIcon): array
+    public static function generarEtiquetas(int $ventaId, $tematicaId, array $nombres, $productOrder, $tematicaCoincidente, $customColor, $customIcon): array
     {
+        $logo = "https://api.etiquecosaslab.com.ar/icons/mail/etiquecosas_logo-rosa.png";
         $outputFiles = [];
         $hoy = date('Y-m-d');
         $dirPath = storage_path("app/pdf/planchas/{$hoy}/{$ventaId}");
-        if (!is_dir($dirPath)) {
-            mkdir($dirPath, 0755, true);
-        }
+        if (!is_dir($dirPath)) mkdir($dirPath, 0755, true);
 
-        Log::info($customColor);
-        Log::info($customIcon);
+        $pdf = $tematicaCoincidente['pdf'] ?? null;
+        $tematicaName = $tematicaCoincidente['name'] ?? null;
+        $colorRange = $tematicaCoincidente['color-range'] ?? null;
+        $imagesPdf = $tematicaCoincidente['images'] ?? null;
+        $urlPdf = $tematicaCoincidente['pdf-url'] ?? null;
+        $typography = $tematicaCoincidente['typography'] ?? null;
+        $numberLabels = $tematicaCoincidente['number-labels'] ?? null;
 
         /**
-         * 🟣 CASO 1: PDF PERSONALIZABLE (no hay temática)
+         * 🔧 Helper para obtener vistas según tipo o URL personalizada
+         */
+        $getViews = function ($pdf, string $prefix, $urlPdf = null) {
+            // 🟣 Si llegan URLs personalizadas desde la web
+            if ($urlPdf) {
+                // Acepta una o varias rutas
+                $urls = is_array($urlPdf) ? $urlPdf : [$urlPdf];
+                // Asegura el prefijo "tematica/" si no lo tiene
+                return array_map(function ($u) {
+                    return str_starts_with($u, 'tematica/') ? $u : "tematica/{$u}";
+                }, $urls);
+            }
+
+            // 🟢 Map clásico de PDFs
+            /* $map = [
+                'Etiquetas maxi, verticales, super-maxi, super-mini' => "tematica/principal/$prefix",
+                'Etiquetas vinilo' => "tematica/vinilo/$prefix",
+                'Etiquetas super-mini' => "tematica/super-mini/$prefix",
+                'Etiquetas super-maxi' => "tematica/super-maxi/$prefix",
+                'Etiquetas maxi' => "tematica/maxi/$prefix",
+                'Etiquetas spot and maxi' => "tematica/spot-and-maxi/$prefix",
+                'Etiquetas maxi and super maxi and super mini' => "tematica/maxi-and-super-maxi-and-super-mini/$prefix",
+                'Etiquetas planchables' => "tematica/planchable/$prefix",
+                'Etiquetas transfer' => "tematica/transfer/$prefix",
+            ];
+
+            if ($pdf) {
+                return array_values(array_intersect_key($map, array_flip($pdf)));
+            } */
+
+            // 🟠 Vistas por defecto si no hay coincidencias
+            return [
+                "tematica/principal/$prefix",
+                "tematica/vinilo/$prefix",
+                "tematica/super-mini/$prefix",
+            ];
+        };
+
+        /**
+         * 🧩 Helper para generar y guardar un PDF
+         */
+        $renderPdf = function ($view, $plantilla, $product_order, $filePath) use (&$outputFiles) {
+            try {
+                $pdf = Pdf::loadView($view, compact('plantilla', 'product_order'))->setPaper('a4', 'portrait');
+                $dompdf = $pdf->getDomPDF();
+                $dompdf->getOptions()->setFontDir(public_path('fonts'));
+                $dompdf->getOptions()->setFontCache(storage_path('fonts_cache'));
+                $pdf->save($filePath);
+                $outputFiles[] = $filePath;
+                Log::info("✅ PDF generado", ['path' => $filePath]);
+            } catch (\Throwable $e) {
+                Log::error("❌ Error generando PDF", [
+                    'view' => $view,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        };
+
+        /**
+         * 🟣 CASO 1: PDF PERSONALIZABLE
          */
         if ($customIcon && $customColor) {
             Log::info("🟣 Generando PDF PERSONALIZABLE");
-
+            $views = $getViews($pdf, "PERSONALIZABLE", $urlPdf);
             $customIconPath = public_path($customIcon);
 
-            // 📄 Mapeo de vistas igual que en las temáticas normales
-            $nameToView = [
-                'Etiquetas maxi, verticales, super-maxi, super-mini' => "tematica/principal/PERSONALIZABLE",
-                'Etiquetas vinilo' => "tematica/vinilo/PERSONALIZABLE",
-                'Etiquetas super-mini' => "tematica/super-mini/PERSONALIZABLE",
-                'Etiquetas super-maxi' => "tematica/super-maxi/PERSONALIZABLE",
-                'Etiquetas maxi' => "tematica/maxi/PERSONALIZABLE",
-                'Etiquetas spot and maxi' => "tematica/spot-and-maxi/PERSONALIZABLE",
-                'Etiquetas maxi and super maxi and super mini' => "tematica/maxi-and-super-maxi-and-super-mini/PERSONALIZABLE",
-                'Etiquetas planchables' => "tematica/planchable/PERSONALIZABLE",
-            ];
-
-            $views = [];
-            if ($pdf) {
-                foreach ($pdf as $name) {
-                    if (isset($nameToView[$name])) {
-                        $views[] = $nameToView[$name];
-                    }
-                }
-            } else {
-                $views = [
-                    "tematica/principal/PERSONALIZABLE",
-                    "tematica/vinilo/PERSONALIZABLE",
-                    "tematica/super-mini/PERSONALIZABLE",
-                ];
-            }
-
-            foreach ($nombres as $i => $nombre) {
-                $fontClass = mb_strlen($nombre, 'UTF-8') > 16
-                    ? 'small-text-size'
-                    : 'normal-text-size';
-
+            foreach ($nombres as $nombre) {
+                $fontClass = mb_strlen($nombre, 'UTF-8') > 16 ? 'small-text-size' : 'normal-text-size';
                 $plantilla = [
                     'colores' => $customColor,
                     'imagen' => $customIconPath,
                     'fontClass' => $fontClass,
                     'columna' => 2,
                     'filas' => 19,
+                    'label' => $numberLabels ?? 24
                 ];
+                $product_order = (object)['name' => $nombre, 'order' => (object)['id_external' => $ventaId]];
 
-                Log::info($plantilla);
-
-                $product_order = (object) [
-                    'name' => $nombre,
-                    'order' => (object) ['id_external' => $ventaId],
-                ];
-
-                foreach ($views as $vKey => $view) {
-                    $vKey += 1;
-                    try {
-                        $pdf = Pdf::loadView($view, compact('plantilla', 'product_order'))
-                            ->setPaper('a4', 'portrait');
-
-                        $dompdf = $pdf->getDomPDF();
-                        $dompdf->getOptions()->setFontDir(public_path('fonts'));
-                        $dompdf->getOptions()->setFontCache(storage_path('fonts_cache'));
-
-                        $filePath = "{$dirPath}/{$ventaId}-{$productOrder->product->name}-PERSONALIZABLE-{$vKey}.pdf";
-                        $pdf->save($filePath);
-
-                        $outputFiles[] = $filePath;
-
-                        Log::info("✅ PDF PERSONALIZABLE generado", ['path' => $filePath]);
-                    } catch (\Throwable $e) {
-                        Log::error("❌ Error generando PDF PERSONALIZABLE", [
-                            'nombre' => $nombre,
-                            'view' => $view,
-                            'error' => $e->getMessage(),
-                        ]);
-                    }
+                foreach ($views as $i => $view) {
+                    $filePath = "{$dirPath}/{$ventaId}-{$productOrder->product->name}-PERSONALIZABLE-" . ($i + 1) . ".pdf";
+                    $renderPdf($view, $plantilla, $product_order, $filePath);
                 }
             }
-
-            return $outputFiles; // 🚪 Salimos antes de procesar temática
+            return $outputFiles;
         }
 
         /**
-         * 🟢 CASO 2: PDF NORMAL CON TEMÁTICA
+         * 🟢 CASO 2: PDF GAMA DE COLORES
          */
-        $attributeValue = DB::table('attribute_values')->where('id', $tematicaId)->first();
-        if (!$attributeValue) {
-            throw new \Exception("Temática no encontrada: {$tematicaId}");
-        }
-        $tematica = strtoupper($attributeValue->value); // normalizamos may/min
+        if ($colorRange) {
+            Log::info("🟢 Generando PDF GAMA DE COLORES");
+            $views = $getViews($pdf, "COLOR RANGE", $urlPdf);
 
+            foreach ($nombres as $nombre) {
+                $isWhiteAndBlack = $tematicaName === 'Blanco y Negro';
+                $isWhite = $tematicaName === 'Blanco';
+                $fontClass = mb_strlen($nombre, 'UTF-8') > 16 ? 'small-text-size' : 'normal-text-size';
+
+                $plantilla = [
+                    'colores' => $isWhiteAndBlack ? ["#FFF", "#FFF", "#FFF"] : $colorRange,
+                    'images' => $imagesPdf ? array_map(fn($img) => storage_path("app/pdf/Iconos/Tematicas/$img"), $imagesPdf) : [],
+                    'colorText' => $isWhiteAndBlack ? '#000' : '#fff',
+                    'fontClass' => $fontClass,
+                    'fontSize' => $typography ? self::getFontSize($nombre, $typography) : null,
+                    'logo' => $logo,
+                    'filas' => 19,
+                    'label' => $numberLabels ?? 24,
+                    'isWhite' => $isWhite ?? null
+                ];
+
+                $product_order = (object)['name' => $nombre, 'order' => (object)['id_external' => $ventaId]];
+
+                foreach ($views as $i => $view) {
+                    $filePath = "{$dirPath}/{$ventaId}-{$productOrder->product->name}-COLOR_RANGE-" . ($i + 1) . ".pdf";
+                    $renderPdf($view, $plantilla, $product_order, $filePath);
+                }
+            }
+            return $outputFiles;
+        }
+
+        /**
+         * 🟢 CASO 3: PDF NORMAL CON TEMÁTICA
+         */
+        $attributeValue = DB::table('attribute_values')->find($tematicaId);
+        if (!$attributeValue) throw new \Exception("Temática no encontrada: {$tematicaId}");
+        $tematica = strtoupper($attributeValue->value);
         Log::info("🔹 Temática encontrada: {$tematica}");
 
-        // 1.a Colores
-        $colores = [];
         $tematicaDb = DB::table('tematicas')->where('name', $attributeValue->value)->first();
-        if (!empty($tematicaDb->colors)) {
-            $colores = json_decode($tematicaDb->colors, true) ?: [];
-        }
+        $colores = !empty($tematicaDb->colors) ? json_decode($tematicaDb->colors, true) ?: [] : [];
 
-        // 1.b Columnas
+        // columnas
         $columna = 2;
-        foreach (['columna', 'columns', 'cols'] as $field) {
-            if (isset($tematicaDb->$field) && is_numeric($tematicaDb->$field)) {
-                $columna = (int) $tematicaDb->$field;
+        foreach (['columna', 'columns', 'cols'] as $f) {
+            if (isset($tematicaDb->$f) && is_numeric($tematicaDb->$f)) {
+                $columna = (int) $tematicaDb->$f;
                 break;
             }
         }
 
-        // 2. Cargar imágenes
+        // imágenes
         $iconosPath = storage_path("app/pdf/Iconos/Tematicas/{$tematica}");
         $imagenes = [];
         if (is_dir($iconosPath)) {
-            foreach (scandir($iconosPath) as $file) {
-                if (in_array(strtolower(pathinfo($file, PATHINFO_EXTENSION)), ['png', 'jpg', 'jpeg', 'svg'])) {
-                    $imagenes[] = $iconosPath . DIRECTORY_SEPARATOR . $file;
+            foreach (scandir($iconosPath) as $f) {
+                if (preg_match('/\.(png|jpg|jpeg|svg)$/i', $f)) {
+                    $imagenes[] = $iconosPath . DIRECTORY_SEPARATOR . $f;
                 }
             }
         }
 
-        // 3. Vistas de PDF
-        Log::info($pdf);
+        $views = $getViews($pdf, $tematica, $urlPdf);
 
-        if ($pdf) {
-            $nameToView = [
-                'Etiquetas maxi, verticales, super-maxi, super-mini' => "tematica/principal/{$tematica}",
-                'Etiquetas vinilo' => "tematica/vinilo/{$tematica}",
-                'Etiquetas super-mini' => "tematica/super-mini/{$tematica}",
-                'Etiquetas super-maxi' => "tematica/super-maxi/{$tematica}"
-            ];
-
-            // Generar solo las vistas que correspondan a los nombres recibidos
-            $views = [];
-
-            foreach ($pdf as $name) {
-                if (isset($nameToView[$name])) {
-                    $views[] = $nameToView[$name];
-                }
-            }
-        } else {
-            $views = [
-                "tematica/principal/{$tematica}",
-                "tematica/vinilo/{$tematica}",
-                "tematica/super-mini/{$tematica}",
-            ];
-        }
-
-        foreach ($nombres as $i => $nombre) {
-            $fontClass = mb_strlen($nombre, 'UTF-8') > 16
-                ? 'small-text-size'
-                : 'normal-text-size';
-
-            Log::info($fontClass);
-            Log::info($nombre);
-
+        foreach ($nombres as $nombre) {
+            $fontClass = mb_strlen($nombre, 'UTF-8') > 16 ? 'small-text-size' : 'normal-text-size';
             $plantilla = [
                 'colores' => $colores,
                 'imagen' => $imagenes,
@@ -192,39 +188,38 @@ class EtiquetaService
                 'filas' => 19,
             ];
 
-            $product_order = (object) [
-                'name' => $nombre,
-                'order' => (object) ['id_external' => $ventaId],
-            ];
+            $product_order = (object)['name' => $nombre, 'order' => (object)['id_external' => $ventaId]];
 
-            // empezar desde 1 para nombres legibles
-            foreach ($views as $vKey => $view) {
-                $vKey += 1;
-                try {
-                    Log::info(json_encode($product_order));
-                    $pdf = Pdf::loadView($view, compact('plantilla', 'product_order'))
-                        ->setPaper('a4', 'portrait');
-
-                    $dompdf = $pdf->getDomPDF();
-                    $dompdf->getOptions()->setFontDir(public_path('fonts'));
-                    $dompdf->getOptions()->setFontCache(storage_path('fonts_cache'));
-
-                    $filePath = "{$dirPath}/{$ventaId}-{$productOrder->product->name}-{$tematica}-{$vKey}.pdf";
-                    $pdf->save($filePath);
-
-                    $outputFiles[] = $filePath;
-
-                    Log::info("✅ PDF generado", ['path' => $filePath]);
-                } catch (\Throwable $e) {
-                    Log::error("❌ Error generando PDF", [
-                        'nombre' => $nombre,
-                        'view' => $view,
-                        'error' => $e->getMessage(),
-                    ]);
-                }
+            foreach ($views as $i => $view) {
+                $filePath = "{$dirPath}/{$ventaId}-{$productOrder->product->name}-{$tematica}-" . ($i + 1) . ".pdf";
+                $renderPdf($view, $plantilla, $product_order, $filePath);
             }
         }
 
         return $outputFiles;
+    }
+
+    /**
+     * 🔠 Devuelve el tamaño de fuente según la cantidad de caracteres y la variación.
+     */
+    private static function getFontSize(string $name, string $typography = ''): string
+    {
+        $cantCharsName = mb_strlen($name, 'UTF-8');
+
+        if (strtoupper($typography) === 'BOLD') {
+            $fontSize = '78px';
+            if ($cantCharsName > 5) $fontSize = '70px';
+            if ($cantCharsName > 7) $fontSize = '46px';
+            if ($cantCharsName > 9) $fontSize = '36px';
+            if ($cantCharsName > 11) $fontSize = '32px';
+        } else {
+            $fontSize = '90px';
+            if ($cantCharsName > 5) $fontSize = '82px';
+            if ($cantCharsName > 7) $fontSize = '68px';
+            if ($cantCharsName > 9) $fontSize = '52px';
+            if ($cantCharsName > 11) $fontSize = '46px';
+        }
+
+        return $fontSize;
     }
 }

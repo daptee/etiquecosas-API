@@ -98,31 +98,11 @@
                 $fontsize = '0.9em';
             }
         @endphp
-        @for ($i = 0; $i < 8; $i++)
+        @for ($i = 0; $i < $plantilla['label']; $i++)
             <div class="icon-cuadro">
                 <div class="imagen">
                     <img class="personaje" src="{{ $plantilla['imagen'] }}">
                 </div>
-                <div class="cuadro">
-                    <p class="texto2" style="color:{{ $plantilla['colores'] }};font-size: {{ $fontsize }};">
-                        {{ mb_strtoupper($product_order->name)  }}</p>
-                </div>
-            </div>
-            <div class="icon-cuadro">
-                <div class="imagen">
-                    <img class="personaje" src="{{ $plantilla['imagen'] }}">
-                </div>
-{{--                <img class="personaje" src="{{ $plantilla['imagen'] }}">--}}
-                <div class="cuadro">
-                    <p class="texto2" style="color:{{ $plantilla['colores'] }};font-size: {{ $fontsize }};">
-                        {{ mb_strtoupper($product_order->name)  }}</p>
-                </div>
-            </div>
-            <div class="icon-cuadro">
-                <div class="imagen">
-                    <img class="personaje" src="{{ $plantilla['imagen'] }}">
-                </div>
-{{--                <img class="personaje" src="{{ $plantilla['imagen'] }}">--}}
                 <div class="cuadro">
                     <p class="texto2" style="color:{{ $plantilla['colores'] }};font-size: {{ $fontsize }};">
                         {{ mb_strtoupper($product_order->name)  }}</p>

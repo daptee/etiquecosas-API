@@ -52,6 +52,7 @@ Route::prefix('v1')->group(function () {
     Route::get('products/best-sellers', [ProductController::class, 'bestSellers']);
     Route::get('products/{id}', [ProductController::class, 'show']);
     Route::get('products/slug/{slug}', [ProductController::class, 'slug']);
+    Route::post('products/consult-price', [ProductController::class, 'sendProductInquiry']);
 
     // Category
     Route::get('categories', [CategoryController::class, 'getPublicCategories']);

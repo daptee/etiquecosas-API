@@ -23,7 +23,7 @@ class CategoryController extends Controller
         $search = $request->query('search');
         $statusId = $request->query('statusId');
         $categoryId = $request->query('categoryId');
-        $query = Category::query();
+        $query = Category::with('parent'); 
         if ($search) {
             $query->where('name', 'like', "%{$search}%");
         }
@@ -39,12 +39,13 @@ class CategoryController extends Controller
         $query->orderBy('name', 'asc');
         if (!$perPage) {
             $categories = $query->get();
-            $this->logAudit(Auth::user(), 'Get Categories List', $request->all(), $categories);
+            $this->logAudit(Auth::user(), 'Get Categories List', $request->all(), $categories->first());
             return $this->success($categories, 'Categorias obtenidas');
         }
 
         $categories = $query->paginate($perPage, ['*'], 'page', $page);
-        $this->logAudit(Auth::user(), 'Get Categories List', $request->all(), $categories);
+        
+        $this->logAudit(Auth::user(), 'Get Categories List', $request->all(), $categories->first());
         $metaData = [
             'current_page' => $categories->currentPage(),
             'last_page' => $categories->lastPage(),

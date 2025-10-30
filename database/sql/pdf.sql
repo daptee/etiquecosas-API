@@ -343,194 +343,193 @@ CREATE TABLE product_pdf (
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     912,
-    '{"tematicas": [{"id": 154, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Unicornio"}]}'
+    '{"tematicas": [{"id": 154, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Unicornio", "pdf_url": ["principal/UNICORNIO.pdf"]}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     920,
-    '{"tematicas": [{"id": 140, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Emojis"}]}'
+    '{"tematicas": [{"id": 140, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Emojis", "pdf_url": ["principal/EMOJIS.pdf"]}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     929,
-    '{"tematicas": [{"id": 139, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Dinosaurios"}]}'
+    '{"tematicas": [{"id": 139, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Dinosaurios", "pdf_url": ["principal/DINOSAURIOS.pdf"]}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     939,
-    '{"tematicas": [{"id": 152, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Teen"}]}'
+    '{"tematicas": [{"id": 152, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Teen", "pdf_url": ["principal/TEEN.pdf"]}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     948,
-    '{"tematicas": [{"id": 143, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Futbol"}]}'
+    '{"tematicas": [{"id": 143, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Futbol", "pdf_url": ["principal/FUTBOL.pdf"]}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     956,
-    '{"tematicas": [{"id": 146, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Nautica"}]}'
+    '{"tematicas": [{"id": 146, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Nautica", "pdf_url": ["principal/NAUTICA.pdf"]}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     960,
-    '{"tematicas": [{"id": 138, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Bosque"}]}'
+    '{"tematicas": [{"id": 138, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Bosque", "pdf_url": ["principal/BOSQUE.pdf"]}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     3627,
-    '{"tematicas": [{"id": 145, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Llamas"}]}'
+    '{"tematicas": [{"id": 145, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Llamas", "pdf_url": ["principal/LLAMAS.pdf"]}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     11071,
-    '{"tematicas": [{"id": 134, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Granja"}]}'
+    '{"tematicas": [{"id": 134, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Granja", "pdf_url": ["principal/GRANJA.pdf"]}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     11128,
-    '{"tematicas": [{"id": 153, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Transportes"}]}'
+    '{"tematicas": [{"id": 153, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Transportes", "pdf_url": ["principal/TRANSPORTES.pdf"]}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     11131,
-    '{"tematicas": [{"id": 137, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Basquet"}]}'
+    '{"tematicas": [{"id": 137, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Basquet", "pdf_url": ["principal/BASQUET.pdf"]}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     11747,
-    '{"tematicas": [{"id": 142, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Estrellas pastel"}]}'
+    '{"tematicas": [{"id": 142, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Estrellas pastel", "pdf_url": ["principal/ESTRELLAS PASTEL.pdf"]}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     31985,
-    '{"tematicas": [{"id": 28, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Sin dibujo"}]}'
+    '{"tematicas": [{"id": 28, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Sin dibujo", "pdf_url": ["principal/SIN DIBUJO.pdf"]}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     32233,
-    '{"tematicas": [{"id": 155, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Skate"}]}'
+    '{"tematicas": [{"id": 155, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Skate", "pdf_url": ["principal/SKATE.pdf"]}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     55418,
-    '{"tematicas": [{"id": 136, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Aire"}]}'
+    '{"tematicas": [{"id": 136, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Aire", "pdf_url": ["principal/AIRE.pdf"]}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     90411,
-    '{"tematicas": [{"id": 156, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Positive"}]}'
+    '{"tematicas": [{"id": 156, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Positive", "pdf_url": ["principal/POSITIVE.pdf"]}]}'
 );
-
-// Etiquetas vinilo
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     12332,
-    '{"tematicas": [{"id": 143, "pdf": ["Etiquetas vinilo"], "name": "Futbol"}]}'
+    '{"tematicas": [{"id": 143, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/FUTBOL"], "name": "Futbol"}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     12337,
-    '{"tematicas": [{"id": 139, "pdf": ["Etiquetas vinilo"], "name": "Dinosaurios"}]}'
+    '{"tematicas": [{"id": 139, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/DINOSAURIOS"], "name": "Dinosaurios"}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     12345,
-    '{"tematicas": [{"id": 137, "pdf": ["Etiquetas vinilo"], "name": "Basquet"}]}'
+    '{"tematicas": [{"id": 137, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/BASQUET"], "name": "Basquet"}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     12353,
-    '{"tematicas": [{"id": 152, "pdf": ["Etiquetas vinilo"], "name": "Teen"}]}'
+    '{"tematicas": [{"id": 152, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/TEEN"], "name": "Teen"}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     12361,
-    '{"tematicas": [{"id": 145, "pdf": ["Etiquetas vinilo"], "name": "Llamas"}]}'
+    '{"tematicas": [{"id": 145, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/LLAMAS"], "name": "Llamas"}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     12383,
-    '{"tematicas": [{"id": 146, "pdf": ["Etiquetas vinilo"], "name": "Nautica"}]}'
+    '{"tematicas": [{"id": 146, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/NAUTICA"], "name": "Nautica"}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     12371,
-    '{"tematicas": [{"id": 138, "pdf": ["Etiquetas vinilo"], "name": "Bosque"}]}'
+    '{"tematicas": [{"id": 138, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/BOSQUE"], "name": "Bosque"}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     12392,
-    '{"tematicas": [{"id": 142, "pdf": ["Etiquetas vinilo"], "name": "Estrellas pastel"}]}'
+    '{"tematicas": [{"id": 142, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/ESTRELLAS PASTEL"], "name": "Estrellas pastel"}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     12647,
-    '{"tematicas": [{"id": 134, "pdf": ["Etiquetas vinilo"], "name": "Granja"}]}'
+    '{"tematicas": [{"id": 134, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/GRANJA"], "name": "Granja"}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     12400,
-    '{"tematicas": [{"id": 153, "pdf": ["Etiquetas vinilo"], "name": "Transportes"}]}'
+    '{"tematicas": [{"id": 153, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/TRANSPORTES"], "name": "Transportes"}]}'
 );
 
+INSERT INTO product_pdf (product_id, data)
 VALUES (
     12444,
-    '{"tematicas": [{"id": 154, "pdf": ["Etiquetas vinilo"], "name": "Unicornio"}]}'
+    '{"tematicas": [{"id": 154, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/UNICORNIO"], "name": "Unicornio"}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     12409,
-    '{"tematicas": [{"id": 140, "pdf": ["Etiquetas vinilo"], "name": "Emojis"}]}'
+    '{"tematicas": [{"id": 140, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/EMOJIS"], "name": "Emojis"}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     12409,
-    '{"tematicas": [{"id": 141, "pdf": ["Etiquetas vinilo"], "name": "Estrellas blue"}]}'
+    '{"tematicas": [{"id": 141, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/ESTRELLAS BLUE"], "name": "Estrellas blue"}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     33696,
-    '{"tematicas": [{"id": 28, "pdf": ["Etiquetas vinilo"], "name": "Sin dibujo"}]}'
+    '{"tematicas": [{"id": 28, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/SIN DIBUJO"], "name": "Sin dibujo"}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     56202,
-    '{"tematicas": [{"id": 136, "pdf": ["Etiquetas vinilo"], "name": "Aire"}]}'
+    '{"tematicas": [{"id": 136, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/AIRE"], "name": "Aire"}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     90497,
-    '{"tematicas": [{"id": 156, "pdf": ["Etiquetas vinilo"], "name": "Positive"}]}'
+    '{"tematicas": [{"id": 156, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/POSITIVE"], "name": "Positive"}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
@@ -538,26 +537,126 @@ VALUES (
     59035,
     '{
         "tematicas": [
-            { "id": 148, "pdf": ["Etiquetas super-maxi"], "name": "Sin dibujo multicolor" },
-            { "id": 151, "pdf": ["Etiquetas super-maxi"], "name": "Sin dibujo sports" },
-            { "id": 150, "pdf": ["Etiquetas super-maxi"], "name": "Sin dibujo rainbow" },
-            { "id": 147, "pdf": ["Etiquetas super-maxi"], "name": "Sin dibujo blue" },
-            { "id": 149, "pdf": ["Etiquetas super-maxi"], "name": "Sin dibujo pastel" },
-            { "id": 136, "pdf": ["Etiquetas super-maxi"], "name": "Aire" },
-            { "id": 155, "pdf": ["Etiquetas super-maxi"], "name": "Skate" },
-            { "id": 142, "pdf": ["Etiquetas super-maxi"], "name": "Estrellas pastel" },
-            { "id": 141, "pdf": ["Etiquetas super-maxi"], "name": "Estrellas blue" },
-            { "id": 145, "pdf": ["Etiquetas super-maxi"], "name": "Llamas" },
-            { "id": 139, "pdf": ["Etiquetas super-maxi"], "name": "Dinosaurios" },
-            { "id": 138, "pdf": ["Etiquetas super-maxi"], "name": "Bosque" },
-            { "id": 144, "pdf": ["Etiquetas super-maxi"], "name": "Granja" },
-            { "id": 154, "pdf": ["Etiquetas super-maxi"], "name": "Unicornio" },
-            { "id": 140, "pdf": ["Etiquetas super-maxi"], "name": "Emojis" },
-            { "id": 152, "pdf": ["Etiquetas super-maxi"], "name": "Teen" },
-            { "id": 153, "pdf": ["Etiquetas super-maxi"], "name": "Transportes" },
-            { "id": 143, "pdf": ["Etiquetas super-maxi"], "name": "Futbol" },
-            { "id": 137, "pdf": ["Etiquetas super-maxi"], "name": "Basquet" },
-            { "id": 146, "pdf": ["Etiquetas super-maxi"], "name": "Nautica" }
+            {
+                "id": 148,
+                "pdf": ["Etiquetas super-maxi"],
+                "pdf-url": ["super-maxi/SIN DIBUJO MULTICOLOR"],
+                "name": "Sin dibujo multicolor"
+            },
+            {
+                "id": 151,
+                "pdf": ["Etiquetas super-maxi"],
+                "pdf-url": ["super-maxi/SIN DIBUJO SPORTS"],
+                "name": "Sin dibujo sports"
+            },
+            {
+                "id": 150,
+                "pdf": ["Etiquetas super-maxi"],
+                "pdf-url": ["super-maxi/SIN DIBUJO RAINBOW"],
+                "name": "Sin dibujo rainbow"
+            },
+            {
+                "id": 147,
+                "pdf": ["Etiquetas super-maxi"],
+                "pdf-url": ["super-maxi/SIN DIBUJO BLUE"],
+                "name": "Sin dibujo blue"
+            },
+            {
+                "id": 149,
+                "pdf": ["Etiquetas super-maxi"],
+                "pdf-url": ["super-maxi/SIN DIBUJO PASTEL"],
+                "name": "Sin dibujo pastel"
+            },
+            {
+                "id": 136,
+                "pdf": ["Etiquetas super-maxi"],
+                "pdf-url": ["super-maxi/AIRE"],
+                "name": "Aire"
+            },
+            {
+                "id": 155,
+                "pdf": ["Etiquetas super-maxi"],
+                "pdf-url": ["super-maxi/SKATE"],
+                "name": "Skate"
+            },
+            {
+                "id": 142,
+                "pdf": ["Etiquetas super-maxi"],
+                "pdf-url": ["super-maxi/ESTRELLAS PASTEL"],
+                "name": "Estrellas pastel"
+            },
+            {
+                "id": 141,
+                "pdf": ["Etiquetas super-maxi"],
+                "pdf-url": ["super-maxi/ESTRELLAS BLUE"],
+                "name": "Estrellas blue"
+            },
+            {
+                "id": 145,
+                "pdf": ["Etiquetas super-maxi"],
+                "pdf-url": ["super-maxi/LLAMAS"],
+                "name": "Llamas"
+            },
+            {
+                "id": 139,
+                "pdf": ["Etiquetas super-maxi"],
+                "pdf-url": ["super-maxi/DINOSAURIOS"],
+                "name": "Dinosaurios"
+            },
+            {
+                "id": 138,
+                "pdf": ["Etiquetas super-maxi"],
+                "pdf-url": ["super-maxi/BOSQUE"],
+                "name": "Bosque"
+            },
+            {
+                "id": 144,
+                "pdf": ["Etiquetas super-maxi"],
+                "pdf-url": ["super-maxi/GRANJA"],
+                "name": "Granja"
+            },
+            {
+                "id": 154,
+                "pdf": ["Etiquetas super-maxi"],
+                "pdf-url": ["super-maxi/UNICORNIO"],
+                "name": "Unicornio"
+            },
+            {
+                "id": 140,
+                "pdf": ["Etiquetas super-maxi"],
+                "pdf-url": ["super-maxi/EMOJIS"],
+                "name": "Emojis"
+            },
+                {
+                "id": 152,
+                "pdf": ["Etiquetas super-maxi"],
+                "pdf-url": ["super-maxi/TEEN"],
+                "name": "Teen"
+            },
+            {
+                "id": 153,
+                "pdf": ["Etiquetas super-maxi"],
+                "pdf-url": ["super-maxi/TRANSPORTES"],
+                "name": "Transportes"
+            },
+            {
+                "id": 143,
+                "pdf": ["Etiquetas super-maxi"],
+                "pdf-url": ["super-maxi/FUTBOL"],
+                "name": "Futbol"
+            },
+            {
+                "id": 137,
+                "pdf": ["Etiquetas super-maxi"],
+                "pdf-url": ["super-maxi/BASQUET"],
+                "name": "Basquet"
+            },
+            {
+                "id": 146,
+                "pdf": ["Etiquetas super-maxi"],
+                "pdf-url": ["super-maxi/NAUTICA"],
+                "name": "Nautica"
+            }
         ]
     }'
 );
@@ -565,7 +664,7 @@ VALUES (
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     1224,
-    '{"tematicas": [{"pdf": ["Etiquetas maxi"], "name": "Personalizacion"}]}'
+    '{"tematicas": [{"pdf": ["Etiquetas maxi"], "pdf-url": ["maxi/PERSONALIZABLE"], "name": "Personalizacion"}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
@@ -573,27 +672,27 @@ VALUES (
     14120,
     '{
         "tematicas": [
-            { "id": 156, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "name": "Positive" },
-            { "id": 151, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "name": "Sin dibujo sports" },
-            { "id": 148, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "name": "Sin dibujo multicolor" },
-            { "id": 150, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "name": "Sin dibujo rainbow" },
-            { "id": 147, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "name": "Sin dibujo blue" },
-            { "id": 149, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "name": "Sin dibujo pastel" },
-            { "id": 136, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "name": "Aire" },
-            { "id": 155, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "name": "Skate" },
-            { "id": 142, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "name": "Estrellas pastel" },
-            { "id": 141, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "name": "Estrellas blue" },
-            { "id": 145, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "name": "Llamas" },
-            { "id": 139, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "name": "Dinosaurios" },
-            { "id": 138, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "name": "Bosque" },
-            { "id": 144, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "name": "Granja" },
-            { "id": 154, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "name": "Unicornio" },
-            { "id": 140, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "name": "Emojis" },
-            { "id": 152, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "name": "Teen" },
-            { "id": 153, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "name": "Transportes" },
-            { "id": 143, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "name": "Futbol" },
-            { "id": 137, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "name": "Basquet" },
-            { "id": 146, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "name": "Nautica" }
+            { "id": 156, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "pdf-url": ["principal/POSITIVE", "vinilo/POSITIVE"], "name": "Positive" },
+            { "id": 151, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "pdf-url": ["principal/SIN DIBUJO SPORTS", "vinilo/SIN DIBUJO SPORTS"], "name": "Sin dibujo sports" },
+            { "id": 148, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "pdf-url": ["principal/SIN DIBUJO MULTICOLOR", "vinilo/SIN DIBUJO MULTICOLOR"], "name": "Sin dibujo multicolor" },
+            { "id": 150, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "pdf-url": ["principal/SIN DIBUJO RAINBOW", "vinilo/SIN DIBUJO RAINBOW"], "name": "Sin dibujo rainbow" },
+            { "id": 147, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "pdf-url": ["principal/SIN DIBUJO BLUE", "vinilo/SIN DIBUJO BLUE"], "name": "Sin dibujo blue" },
+            { "id": 149, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "pdf-url": ["principal/SIN DIBUJO PASTEL", "vinilo/SIN DIBUJO PASTEL"], "name": "Sin dibujo pastel" },
+            { "id": 136, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "pdf-url": ["principal/AIRE", "vinilo/AIRE"], "name": "Aire" },
+            { "id": 155, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "pdf-url": ["principal/SKATE", "vinilo/SKATE"], "name": "Skate" },
+            { "id": 142, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "pdf-url": ["principal/ESTRELLAS PASTEL", "vinilo/ESTRELLAS PASTEL"], "name": "Estrellas pastel" },
+            { "id": 141, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "pdf-url": ["principal/ESTRELLAS BLUE", "vinilo/ESTRELLAS BLUE"], "name": "Estrellas blue" },
+            { "id": 145, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "pdf-url": ["principal/LLAMAS", "vinilo/LLAMAS"], "name": "Llamas" },
+            { "id": 139, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "pdf-url": ["principal/DINOSAURIOS", "vinilo/DINOSAURIOS"], "name": "Dinosaurios" },
+            { "id": 138, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "pdf-url": ["principal/BOSQUE", "vinilo/BOSQUE"], "name": "Bosque" },
+            { "id": 144, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "pdf-url": ["principal/GRANJA", "vinilo/GRANJA"], "name": "Granja" },
+            { "id": 154, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "pdf-url": ["principal/UNICORNIO", "vinilo/UNICORNIO"], "name": "Unicornio" },
+            { "id": 140, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "pdf-url": ["principal/EMOJIS", "vinilo/EMOJIS"], "name": "Emojis" },
+            { "id": 152, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "pdf-url": ["principal/TEEN", "vinilo/TEEN"], "name": "Teen" },
+            { "id": 153, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "pdf-url": ["principal/TRANSPORTES", "vinilo/TRANSPORTES"], "name": "Transportes" },
+            { "id": 143, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "pdf-url": ["principal/FUTBOL", "vinilo/FUTBOL"], "name": "Futbol" },
+            { "id": 137, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "pdf-url": ["principal/BASQUET", "vinilo/BASQUET"], "name": "Basquet" },
+            { "id": 146, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo"], "pdf-url": ["principal/NAUTICA", "vinilo/NAUTICA"], "name": "Nautica" }
         ]
     }'
 );
@@ -601,13 +700,202 @@ VALUES (
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     141,
-    '{"tematicas": [{"pdf": ["Etiquetas spot and maxi", "Etiquetas planchables"], "name": "Personalizacion"}]}'
+    '{"tematicas": [{"pdf": ["Etiquetas spot and maxi", "Etiquetas planchables"], "pdf-url": ["spot-and-maxi/PERSONALIZABLE", "planchable/PERSONALIZABLE"], "name": "Personalizacion"}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     79,
-    '{"tematicas": [{"pdf": ["Etiquetas maxi and super maxi and super mini", "Etiquetas planchables"], "name": "Personalizacion"}]}'
+    '{"tematicas": [{"pdf": ["Etiquetas maxi and super maxi and super mini", "Etiquetas planchables"], "pdf-url": ["maxi-and-super-maxi-and-super-mini/PERSONALIZABLE", "planchable/PERSONALIZABLE"], "name": "Personalizacion"}]}'
+);
+
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    965,
+    '{
+        "tematicas": [
+            { "id": 323, "pdf": ["Etiquetas super-mini"], "pdf-url": ["super-mini/COLOR RANGE"], "name": "Blanco y Negro", "color-range": ["#FFFFFF", "#000000", "#0000FF"] },
+            { "id": 319, "pdf": ["Etiquetas super-mini"], "pdf-url": ["super-mini/COLOR RANGE"], "name": "Maíz, celeste, azul marino", "color-range": ["#FAAB51", "#65B6BF", "#006B77"] },
+            { "id": 318, "pdf": ["Etiquetas super-mini"], "pdf-url": ["super-mini/COLOR RANGE"], "name": "Tierra, rosa, aqua", "color-range": ["#E7C6B5", "#ECA199", "#A4BBB1"] },
+            { "id": 317, "pdf": ["Etiquetas super-mini"], "pdf-url": ["super-mini/COLOR RANGE"], "name": "Violeta, fucsia, rosa", "color-range": ["#A25CBF", "#F5426C", "#FEA3BB"] },
+            { "id": 316, "pdf": ["Etiquetas super-mini"], "pdf-url": ["super-mini/COLOR RANGE"], "name": "turquesa, salmón, naranja", "color-range": ["#3FD5AE", "#FF8671", "#FFA400"] },
+            { "id": 315, "pdf": ["Etiquetas super-mini"], "pdf-url": ["super-mini/COLOR RANGE"], "name": "Multicolor", "color-range": ["#BA99C4", "#E45C71", "#F09D81", "#D7D769", "#8ACACB", "#E880B1"] },
+            { "id": 314, "pdf": ["Etiquetas super-mini"], "pdf-url": ["super-mini/COLOR RANGE"], "name": "Rojo, verde oscuro, verde claro", "color-range": ["#ED1C24", "#007549", "#3FAE2A"] },
+            { "id": 313, "pdf": ["Etiquetas super-mini"], "pdf-url": ["super-mini/COLOR RANGE"], "name": "Rojo, azul, celeste", "color-range": ["#E13131", "#00628A", "#00B0C1"] }
+        ]
+    }'
+);
+
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    11194,
+    '{
+        "tematicas": [
+            { "id": 323, "pdf": ["Etiquetas super-mini"], "pdf-url": ["super-mini/COLOR RANGE"], "name": "Blanco y Negro", "color-range": ["#FFFFFF", "#000000", "#0000FF"] },
+            { "id": 319, "pdf": ["Etiquetas super-mini"], "pdf-url": ["super-mini/COLOR RANGE"], "name": "Maíz, celeste, azul marino", "color-range": ["#FAAB51", "#65B6BF", "#006B77"] },
+            { "id": 318, "pdf": ["Etiquetas super-mini"], "pdf-url": ["super-mini/COLOR RANGE"], "name": "Tierra, rosa, aqua", "color-range": ["#E7C6B5", "#ECA199", "#A4BBB1"] },
+            { "id": 317, "pdf": ["Etiquetas super-mini"], "pdf-url": ["super-mini/COLOR RANGE"], "name": "Violeta, fucsia, rosa", "color-range": ["#A25CBF", "#F5426C", "#FEA3BB"] },
+            { "id": 316, "pdf": ["Etiquetas super-mini"], "pdf-url": ["super-mini/COLOR RANGE"], "name": "turquesa, salmón, naranja", "color-range": ["#3FD5AE", "#FF8671", "#FFA400"] },
+            { "id": 315, "pdf": ["Etiquetas super-mini"], "pdf-url": ["super-mini/COLOR RANGE"], "name": "Multicolor", "color-range": ["#BA99C4", "#E45C71", "#F09D81", "#D7D769", "#8ACACB", "#E880B1"] },
+            { "id": 314, "pdf": ["Etiquetas super-mini"], "pdf-url": ["super-mini/COLOR RANGE"], "name": "Rojo, verde oscuro, verde claro", "color-range": ["#ED1C24", "#007549", "#3FAE2A"] },
+            { "id": 313, "pdf": ["Etiquetas super-mini"], "pdf-url": ["super-mini/COLOR RANGE"], "name": "Rojo, azul, celeste", "color-range": ["#E13131", "#00628A", "#00B0C1"] }
+        ]
+    }'
+);
+
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    70449,
+    '{
+        "tematicas": [
+            { 
+                "id": 307, 
+                "name": "Blanco", 
+                "pdf": ["Etiquetas transfer"],
+                "pdf-url": ["stars/TRANSFER BOLD"], 
+                "typography": "Bold",
+                "color-range": ["0,0,0,0","0,0,0,0","0,0,0,0","0,0,0,0"],
+                "images": ["stars/star-blanco.svg","stars/star-blanco.svg","stars/star-blanco.svg","stars/star-blanco.svg"]
+            },
+            { 
+                "id": 306, 
+                "name": "Negro", 
+                "pdf": ["Etiquetas transfer"],
+                "pdf-url": ["stars/TRANSFER BOLD"],
+                "typography": "Bold",
+                "color-range": ["0,0,0,1","0,0,0,1","0,0,0,1","0,0,0,1"],
+                "images": ["stars/star-negro.svg","stars/star-negro.svg","stars/star-negro.svg","stars/star-negro.svg"]
+            },
+            { 
+                "id": 305, 
+                "name": "Verde agua, celeste, rojo, verde oscuro", 
+                "pdf": ["Etiquetas transfer"],
+                "pdf-url": ["stars/TRANSFER BOLD"],
+                "typography": "Bold",  
+                "color-range": ["0.53,0,0.47,0","0.6,0,0.25,0","0.18,1,0.9,0.08","0.79,0.39,0.9,0.34"],
+                "images": ["stars/star-verde-agua.svg","stars/star-celeste.svg","stars/star-rojo.svg","stars/star-verde-oscuro.svg"]
+            },
+            { 
+                "id": 304, 
+                "name": "Verde agua, violeta, amarillo, fucsia", 
+                "pdf": ["Etiquetas transfer"],
+                "pdf-url": ["stars/TRANSFER BOLD"],
+                "typography": "Bold",  
+                "color-range": ["0.53,0,0.47,0","0.45,0.53,0.23,0.05","0,0.18,0.72,0","0,0.81,0.16,0"],
+                "images": ["stars/star-verde-agua.svg","stars/star-violeta.svg","stars/star-amarillo.svg","stars/star-fucsia.svg"]
+            },
+            { 
+                "id": 303, 
+                "name": "Celeste, rosa, lila, verde claro", 
+                "pdf": ["Etiquetas transfer"],
+                "pdf-url": ["stars/TRANSFER BOLD"],
+                "typography": "Bold",  
+                "color-range": ["0.6,0,0.25,0","0.06,0.52,0,0","0.13,0.25,0,0","0.24,0,0.55,0"],
+                "images": ["stars/star-celeste.svg","stars/star-rosa.svg","stars/star-lila.svg","stars/star-verde-claro.svg"]
+            },
+            { 
+                "id": 193, 
+                "name": "rojo, verde agua, verde lima , azul oscuro", 
+                "pdf": ["Etiquetas transfer"],
+                "pdf-url": ["stars/TRANSFER BOLD"],
+                "typography": "Bold",  
+                "color-range": ["0.18,1,0.9,0.08","0.53,0,0.47,0","0.2,0,1,0","1,0.95,0.4,0.47"],
+                "images": ["stars/star-rojo.svg","stars/star-verde-agua.svg","stars/star-verde-lima.svg","stars/star-azul-oscuro.svg"]
+            }
+        ]
+    }'
+);
+
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    70467,
+    '{
+        "tematicas": [
+            { 
+                "id": 307, 
+                "name": "Blanco", 
+                "pdf": ["Etiquetas transfer"],
+                "pdf-url": ["stars/TRANSFER MAYUSCULA"], 
+                "typography": "Mayuscula",
+                "color-range": ["0,0,0,0","0,0,0,0","0,0,0,0","0,0,0,0"],
+                "images": ["stars/star-blanco.svg","stars/star-blanco.svg","stars/star-blanco.svg","stars/star-blanco.svg"]
+            },
+            { 
+                "id": 306, 
+                "name": "Negro", 
+                "pdf": ["Etiquetas transfer"],
+                "pdf-url": ["stars/TRANSFER MAYUSCULA"],
+                "typography": "Mayuscula",
+                "color-range": ["0,0,0,1","0,0,0,1","0,0,0,1","0,0,0,1"],
+                "images": ["stars/star-negro.svg","stars/star-negro.svg","stars/star-negro.svg","stars/star-negro.svg"]
+            },
+            { 
+                "id": 305, 
+                "name": "Verde agua, celeste, rojo, verde oscuro", 
+                "pdf": ["Etiquetas transfer"],
+                "pdf-url": ["stars/TRANSFER MAYUSCULA"],
+                "typography": "Mayuscula",  
+                "color-range": ["0.53,0,0.47,0","0.6,0,0.25,0","0.18,1,0.9,0.08","0.79,0.39,0.9,0.34"],
+                "images": ["stars/star-verde-agua.svg","stars/star-celeste.svg","stars/star-rojo.svg","stars/star-verde-oscuro.svg"]
+            },
+            { 
+                "id": 304, 
+                "name": "Verde agua, violeta, amarillo, fucsia", 
+                "pdf": ["Etiquetas transfer"],
+                "pdf-url": ["stars/TRANSFER MAYUSCULA"],
+                "typography": "Mayuscula",  
+                "color-range": ["0.53,0,0.47,0","0.45,0.53,0.23,0.05","0,0.18,0.72,0","0,0.81,0.16,0"],
+                "images": ["stars/star-verde-agua.svg","stars/star-violeta.svg","stars/star-amarillo.svg","stars/star-fucsia.svg"]
+            },
+            { 
+                "id": 303, 
+                "name": "Celeste, rosa, lila, verde claro", 
+                "pdf": ["Etiquetas transfer"],
+                "pdf-url": ["stars/TRANSFER MAYUSCULA"],
+                "typography": "Mayuscula",  
+                "color-range": ["0.6,0,0.25,0","0.06,0.52,0,0","0.13,0.25,0,0","0.24,0,0.55,0"],
+                "images": ["stars/star-celeste.svg","stars/star-rosa.svg","stars/star-lila.svg","stars/star-verde-claro.svg"]
+            },
+            { 
+                "id": 193, 
+                "name": "rojo, verde agua, verde lima , azul oscuro", 
+                "pdf": ["Etiquetas transfer"],
+                "pdf-url": ["stars/TRANSFER MAYUSCULA"],
+                "typography": "Mayuscula",  
+                "color-range": ["0.18,1,0.9,0.08","0.53,0,0.47,0","0.2,0,1,0","1,0.95,0.4,0.47"],
+                "images": ["stars/star-rojo.svg","stars/star-verde-agua.svg","stars/star-verde-lima.svg","stars/star-azul-oscuro.svg"]
+            }
+        ]
+    }'
+);
+
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    1233,
+    '{"tematicas": [{"pdf": ["Etiquetas spot"], "pdf-url": ["spot/PERSONALIZABLE"], "name": "Personalizacion"}]}'
+);
+
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    1247,
+    '{
+        "tematicas": [
+            { 
+                "id": 166, 
+                "name": "24 etiquetas", 
+                "pdf": ["Etiquetas planchables"],
+                "pdf-url": ["planchable/PERSONALIZABLE"], 
+                "number-labels": 24
+            },
+            { 
+                "id": 167, 
+                "name": "48 etiquetas", 
+                "pdf": ["Etiquetas planchables"],
+                "pdf-url": ["planchable/PERSONALIZABLE"], 
+                "number-labels": 48
+            }
+        ]
+    }'
 );
 
 data: '{"tematicas": [{"id": 154, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo", "Etiquetas super-mini"], "name": "unicornio"}]}'

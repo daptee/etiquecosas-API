@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\ProductInquiryMail;
 use App\Models\AttributeValue;
 use App\Models\Product;
 use App\Models\ProductVariant;
@@ -10,6 +11,7 @@ use App\Models\ProductImage;
 use App\Models\ProductWholesale;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
@@ -238,8 +240,10 @@ class ProductController extends Controller
             'costs:id,name,price',
             'customization',
             'wholesales:id,product_id,amount,discount',
-            'relatedProducts:id,name,sku,slug,price,discounted_price,discounted_start,discounted_end,product_type_id,product_status_id,product_stock_status_id',
+            'relatedProducts:id,name,sku,slug,price,discounted_price,discounted_start,discounted_end,product_type_id,product_status_id,product_stock_status_id,stock_quantity',
             'relatedProducts.images:id,product_id,img,is_main',
+            'relatedProducts.tag:id,name',
+            'relatedProducts.stockStatus:id,name',
             'variants'
         ])->makeHidden([
                     'created_at',
@@ -1101,23 +1105,23 @@ class ProductController extends Controller
                         $variant = ProductVariant::find($variantData['id']);
 
                         if (!empty($variantData['delete_img']) && $variantData['delete_img']) {
-    // 🔹 Solo borrar si se pidió explícitamente eliminar
-    if ($variant->img && Storage::disk('public_uploads')->exists($variant->img)) {
-        Storage::disk('public_uploads')->delete($variant->img);
-    }
-    $imagePath = null;
-} elseif ($variantImageFile instanceof \Illuminate\Http\UploadedFile && $variantImageFile->isValid()) {
-    // 🔹 Solo reemplazar si se sube una imagen nueva
-    if ($variant->img && Storage::disk('public_uploads')->exists($variant->img)) {
-        Storage::disk('public_uploads')->delete($variant->img);
-    }
-    $imageName = 'images/product_variants/' . uniqid('img_') . '.' . $variantImageFile->getClientOriginalExtension();
-    Storage::disk('public_uploads')->put($imageName, file_get_contents($variantImageFile->getRealPath()));
-    $imagePath = $imageName;
-} else {
-    // 🔹 Mantener la imagen actual
-    $imagePath = $variant->img;
-}
+                            // 🔹 Solo borrar si se pidió explícitamente eliminar
+                            if ($variant->img && Storage::disk('public_uploads')->exists($variant->img)) {
+                                Storage::disk('public_uploads')->delete($variant->img);
+                            }
+                            $imagePath = null;
+                        } elseif ($variantImageFile instanceof \Illuminate\Http\UploadedFile && $variantImageFile->isValid()) {
+                            // 🔹 Solo reemplazar si se sube una imagen nueva
+                            if ($variant->img && Storage::disk('public_uploads')->exists($variant->img)) {
+                                Storage::disk('public_uploads')->delete($variant->img);
+                            }
+                            $imageName = 'images/product_variants/' . uniqid('img_') . '.' . $variantImageFile->getClientOriginalExtension();
+                            Storage::disk('public_uploads')->put($imageName, file_get_contents($variantImageFile->getRealPath()));
+                            $imagePath = $imageName;
+                        } else {
+                            // 🔹 Mantener la imagen actual
+                            $imagePath = $variant->img;
+                        }
 
                         $variant->update([
                             'variant' => $variantDataCopy,
@@ -1332,14 +1336,16 @@ class ProductController extends Controller
         return $this->success($product, 'Producto actualizado exitosamente', 200);
     }
 
-    public function bulkAssignCategories(Request $request)
+    public function sendProductInquiry(Request $request)
     {
         $rules = [
-            'product_ids' => 'required|array|min:1',
-            'product_ids.*' => 'integer|exists:products,id',
-            'category_ids' => 'required|array|min:1',
-            'category_ids.*' => 'integer|exists:categories,id',
-            'mode' => 'nullable|string|in:sync,attach,detach', // Opcional: para definir el comportamiento
+            'id_product' => 'required|integer|exists:products,id',
+            'name' => 'required|string|max:100',
+            'last_name' => 'required|string|max:100',
+            'email' => 'required|email|max:150',
+            'phone' => 'nullable|string|max:30',
+            'amount' => 'required|integer|min:1',
+            'text' => 'nullable|string|max:500',
         ];
 
         $validator = Validator::make($request->all(), $rules);
@@ -1351,70 +1357,98 @@ class ProductController extends Controller
             ], 422);
         }
 
-        $productIds = $request->input('product_ids');
-        $categoryIds = $request->input('category_ids');
-        $mode = $request->input('mode', 'sync');
-
         DB::beginTransaction();
 
         try {
-            $updatedProducts = [];
+            $validated = $validator->validated();
 
-            foreach ($productIds as $productId) {
-                $product = Product::find($productId);
-                if (!$product)
-                    continue;
-
-                switch ($mode) {
-                    case 'attach':
-                        $product->categories()->syncWithoutDetaching($categoryIds);
-                        break;
-
-                    case 'detach':
-                        $product->categories()->detach($categoryIds);
-                        break;
-
-                    case 'sync':
-                    default:
-                        $product->categories()->sync($categoryIds);
-                        break;
-                }
-
-                // 🔹 Recargar el producto con sus categorías actualizadas
-                $product->load('categories:id,name');
-                $updatedProducts[] = $product;
+            // Obtener el producto
+            $product = Product::find($validated['id_product']);
+            if (!$product) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'El producto no fue encontrado.',
+                ], 404);
             }
+
+            $notifyEmail = env('MAIL_NOTIFICATION_TO');
+
+            // Enviar el correo
+            Mail::to($notifyEmail)
+                ->send(new ProductInquiryMail(
+                    $validated['name'],
+                    $validated['last_name'],
+                    $validated['email'],
+                    $validated['phone'] ?? null,
+                    $validated['amount'],
+                    $validated['text'] ?? null,
+                    $product->name
+                ));
 
             DB::commit();
 
-            $this->logAudit(Auth::user(), 'Bulk Assign Categories', $request->all(), [
-                'product_ids' => $productIds,
-                'category_ids' => $categoryIds,
-                'mode' => $mode,
-            ]);
+            // Registrar auditoría (si existe tu método logAudit)
+            if (method_exists($this, 'logAudit')) {
+                $this->logAudit(
+                    Auth::user(),
+                    'Product Inquiry',
+                    $request->all(),
+                    ['product_id' => $product->id]
+                );
+            }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Categorías asignadas exitosamente a los productos seleccionados.',
-                'data' => $updatedProducts,
+                'message' => 'Consulta enviada correctamente.',
+                'product' => $product->only(['id', 'name']),
             ], 200);
+
 
         } catch (\Exception $e) {
             DB::rollBack();
 
-            Log::error('Error en bulkAssignCategories: ' . $e->getMessage(), [
+            Log::error('Error en sendProductInquiry: ' . $e->getMessage(), [
                 'request' => $request->all(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Ocurrió un error al asignar las categorías.',
+                'message' => 'Ocurrió un error al enviar la consulta.',
                 'error' => $e->getMessage(),
             ], 500);
         }
     }
 
 
+    public function sendInquiry(Request $request)
+    {
+        $validated = $request->validate([
+            'id_producto' => 'required|integer|exists:products,id',
+            'nombre' => 'required|string|max:100',
+            'apellido' => 'required|string|max:100',
+            'email' => 'required|email',
+            'telefono' => 'nullable|string|max:30',
+            'cantidad' => 'required|integer|min:1',
+            'texto' => 'nullable|string|max:500',
+        ]);
+
+        // Buscar el nombre del producto
+        $producto = Product::find($validated['id_producto']);
+
+        // Enviar el mail
+        Mail::to(config('mail.notificaciones')) // 👈 agrega esta config más abajo
+            ->send(new ProductInquiryMail(
+                $validated['nombre'],
+                $validated['apellido'],
+                $validated['email'],
+                $validated['telefono'],
+                $validated['cantidad'],
+                $validated['texto'],
+                $producto->name
+            ));
+
+        return response()->json(['message' => 'Consulta enviada correctamente.'], 200);
+    }
 
     public function delete($id)
     {

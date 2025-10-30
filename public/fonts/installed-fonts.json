@@ -1,10 +1,5 @@
 {
-    "lora": {
-        "normal": "C:\\project\\etiquecosas-API\\public\\fonts\/lora_normal_c4633d83122c20d039ad1280b84ddbc8",
-        "bold": "lora_bold_644627fa180ca3b151bb181b522a936e"
-    },
-    "oswald": {
-        "normal": "C:\\project\\etiquecosas-API\\public\\fonts\/oswald_normal_cf75f02835ffc1be269e63217d755557",
-        "bold": "oswald_bold_7dd34669e9f6ae39e64567b5d441d9a7"
+    "antonio": {
+        "normal": "antonio_normal_bc2823a35798d23300e1c7602b12a399"
     }
 }
