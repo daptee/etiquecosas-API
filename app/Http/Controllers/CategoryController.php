@@ -60,7 +60,7 @@ class CategoryController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255|unique:categories',
+            'name' => 'required|string|max:255',
             'categoryId' => 'nullable',
             'img' => 'nullable|max:2048',
             'icon' => 'nullable|max:2048',
@@ -154,12 +154,7 @@ class CategoryController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'name' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('categories')->ignore($category->id),
-            ],
+            'name' => 'nullable|string|max:255',
             'categoryId' => 'nullable|exists:categories,id',
             'img' => 'nullable|max:2048',
             'icon' => 'nullable|max:2048',
