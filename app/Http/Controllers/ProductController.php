@@ -272,8 +272,10 @@ class ProductController extends Controller
             'costs:id,name',
             'customization',
             'wholesales:id,product_id,amount,discount',
-            'relatedProducts:id,name,sku,slug,price,discounted_price,discounted_start,discounted_end,product_type_id,product_status_id,product_stock_status_id',
+            'relatedProducts:id,name,sku,slug,price,discounted_price,discounted_start,discounted_end,product_type_id,product_status_id,product_stock_status_id,stock_quantity',
             'relatedProducts.images:id,product_id,img,is_main',
+            'relatedProducts.tag:id,name',
+            'relatedProducts.stockStatus:id,name',
             'variants'
         ])->makeHidden([
                     'created_at',
