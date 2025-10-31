@@ -48,6 +48,17 @@ class MercadoPagoController extends Controller
                     'currency_id' => 'ARS'
                 ];
             }
+
+            if (!empty($sale->shipping_cost) && $sale->shipping_cost > 0) {
+                $items[] = [
+                    'id' => 'shipping',
+                    'title' => 'Costo de envío',
+                    'description' => 'Envío de la venta',
+                    'quantity' => 1,
+                    'unit_price' => (float) $sale->shipping_cost,
+                    'currency_id' => 'ARS'
+                ];
+            }
         }
         ;
 
@@ -63,8 +74,13 @@ class MercadoPagoController extends Controller
 
         Log::info('Back URLs: ' . json_encode($backUrls));
 
+        $platformId = config('services.mercadopago.platform_id');
+
         // Crear preferencia vía HTTP
         $response = Http::withToken(config('services.mercadopago.token'))
+            ->withHeaders([
+                'X-Platform-Id' => $platformId
+            ])
             ->post('https://api.mercadopago.com/checkout/preferences', [
                 "items" => $items,
                 "back_urls" => $backUrls,
