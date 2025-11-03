@@ -249,6 +249,8 @@ class ProductController extends Controller
                     'created_at',
                     'updated_at'
                 ]);
+
+        $product->setRelation('variants', $product->variants->sortBy(fn($v) => $v->variant['order'] ?? 0)->values());
         return $this->success($product, 'Producto obtenido exitosamente');
     }
 
@@ -281,6 +283,9 @@ class ProductController extends Controller
                     'created_at',
                     'updated_at'
                 ]);
+
+        $product->setRelation('variants', $product->variants->sortBy(fn($v) => $v->variant['order'] ?? 0)->values());
+
         $this->logAudit(Auth::user(), 'Get Product Details', ['product_id' => $product->id], $product);
         return $this->success($product, 'Producto obtenido exitosamente');
     }
