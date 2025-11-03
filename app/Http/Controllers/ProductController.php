@@ -337,6 +337,7 @@ class ProductController extends Controller
             'variants.*.stock_quantity' => 'nullable|integer',
             'variants.*.wholesale_price' => 'nullable|numeric',
             'variants.*.wholesale_min_amount' => 'nullable|integer|min:0',
+            'variants.*.order' => 'nullable|integer|min:0',
             'variants.*.img' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'meta_data' => 'nullable|json',
             'customization' => 'nullable|json',
@@ -579,6 +580,7 @@ class ProductController extends Controller
                     'stock_quantity' => 'nullable|integer',
                     'wholesale_price' => 'nullable|numeric',
                     'wholesale_min_amount' => 'nullable|integer|min:0',
+                    'order' => 'nullable|integer|min:0',
                     'img' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
                 ]);
                 if ($singleVariantValidator->fails()) {
@@ -673,6 +675,7 @@ class ProductController extends Controller
                         'stock_quantity' => $variantData['stock_quantity'] ?? null,
                         'wholesale_price' => $variantData['wholesale_price'] ?? null,
                         'wholesale_min_amount' => $variantData['wholesale_min_amount'] ?? null,
+                        'order' => $variantData['order'] ?? null,
                         'img' => $imagePath ?? null,
                     ]);
 
@@ -811,6 +814,7 @@ class ProductController extends Controller
             'variants.*.stock_quantity' => 'nullable|integer',
             'variants.*.wholesale_price' => 'nullable|numeric',
             'variants.*.wholesale_min_amount' => 'nullable|integer|min:0',
+            'variants.*.order' => 'nullable|integer|min:0',
             'variants.*.img' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'variants.*.delete_img' => 'nullable|boolean',
             'meta_data' => 'nullable|json',
@@ -1027,6 +1031,7 @@ class ProductController extends Controller
                     'stock_quantity' => 'nullable|integer',
                     'wholesale_price' => 'nullable|numeric',
                     'wholesale_min_amount' => 'nullable|integer|min:0',
+                    'order' => 'nullable|integer|min:0',
                     'img' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
                 ]);
 
@@ -1137,6 +1142,7 @@ class ProductController extends Controller
                             'stock_quantity' => $variantData['stock_quantity'] ?? null,
                             'wholesale_price' => $variantData['wholesale_price'] ?? null,
                             'wholesale_min_amount' => $variantData['wholesale_min_amount'] ?? null,
+                            'order' => $variantData['order'] ?? null,
                             'img' => $imagePath,
                         ]);
                     } else {
@@ -1160,6 +1166,7 @@ class ProductController extends Controller
                             'stock_quantity' => $variantData['stock_quantity'] ?? null,
                             'wholesale_price' => $variantData['wholesale_price'] ?? null,
                             'wholesale_min_amount' => $variantData['wholesale_min_amount'] ?? null,
+                            'order' => $variantData['order'] ?? null,
                             'img' => $imagePath,
                         ]);
                     }
@@ -1424,32 +1431,83 @@ class ProductController extends Controller
 
     public function sendInquiry(Request $request)
     {
-        $validated = $request->validate([
-            'id_producto' => 'required|integer|exists:products,id',
-            'nombre' => 'required|string|max:100',
-            'apellido' => 'required|string|max:100',
-            'email' => 'required|email',
-            'telefono' => 'nullable|string|max:30',
-            'cantidad' => 'required|integer|min:1',
-            'texto' => 'nullable|string|max:500',
-        ]);
+        $rules = [
+            'id_product' => 'required|integer|exists:products,id',
+            'name' => 'required|string|max:100',
+            'last_name' => 'required|string|max:100',
+            'email' => 'required|email|max:150',
+            'phone' => 'nullable|string|max:30',
+            'amount' => 'required|integer|min:1',
+            'text' => 'nullable|string|max:500',
+        ];
 
-        // Buscar el nombre del producto
-        $producto = Product::find($validated['id_producto']);
+        $validator = Validator::make($request->all(), $rules);
 
-        // Enviar el mail
-        Mail::to(config('mail.notificaciones')) // 👈 agrega esta config más abajo
-            ->send(new ProductInquiryMail(
-                $validated['nombre'],
-                $validated['apellido'],
-                $validated['email'],
-                $validated['telefono'],
-                $validated['cantidad'],
-                $validated['texto'],
-                $producto->name
-            ));
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors(),
+            ], 422);
+        }
 
-        return response()->json(['message' => 'Consulta enviada correctamente.'], 200);
+        DB::beginTransaction();
+
+        try {
+            $validated = $validator->validated();
+
+            // Obtener el producto
+            $product = Product::find($validated['id_product']);
+            if (!$product) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'El producto no fue encontrado.',
+                ], 404);
+            }
+
+            $notifyEmail = env('MAIL_NOTIFICATION_TO');
+
+            // Enviar el correo
+            Mail::to($notifyEmail)
+                ->send(new ProductInquiryMail(
+                    $validated['name'],
+                    $validated['last_name'],
+                    $validated['email'],
+                    $validated['phone'] ?? null,
+                    $validated['amount'],
+                    $validated['text'] ?? null,
+                    $product->name
+                ));
+
+            DB::commit();
+
+            // Registrar auditoría (si existe tu método logAudit)
+            if (method_exists($this, 'logAudit')) {
+                $this->logAudit(
+                    Auth::user(),
+                    'Product Inquiry',
+                    $request->all(),
+                    ['product_id' => $product->id]
+                );
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Consulta enviada correctamente.',
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            Log::error('Error en sendProductInquiry: ' . $e->getMessage(), [
+                'request' => $request->all(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Ocurrió un error al enviar la consulta.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 
     public function delete($id)
