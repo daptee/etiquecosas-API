@@ -1559,4 +1559,64 @@ class ProductController extends Controller
         return $sku;
     }
 
+    public function bulkAssignCategories(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'product_ids' => 'required|array',
+                'product_ids.*' => 'integer|exists:products,id',
+                'category_ids' => 'required|array',
+                'category_ids.*' => 'integer|exists:categories,id',
+                'mode' => 'nullable|string|in:sync,attach,detach',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Datos inválidos',
+                    'errors' => $validator->errors(),
+                ], 402);
+            }
+
+            $productIds = $request->product_ids;
+            $categoryIds = $request->category_ids;
+            $mode = $request->mode ?? 'sync'; // Por defecto reemplaza todas las categorías
+
+            foreach ($productIds as $productId) {
+                $product = Product::find($productId);
+                if ($product) {
+                    switch ($mode) {
+                        case 'attach':
+                            $product->categories()->syncWithoutDetaching($categoryIds);
+                            break;
+
+                        case 'detach':
+                            $product->categories()->detach($categoryIds);
+                            break;
+
+                        case 'sync':
+                        default:
+                            $product->categories()->sync($categoryIds);
+                            break;
+                    }
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => match ($mode) {
+                    'attach' => 'Categorías agregadas correctamente',
+                    'detach' => 'Categorías eliminadas correctamente',
+                    default => 'Categorías sincronizadas correctamente',
+                }
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al asignar categorías',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }
