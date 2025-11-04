@@ -1619,4 +1619,55 @@ class ProductController extends Controller
             ], 500);
         }
     }
+
+    public function applyTextTemplate(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'product_ids' => 'required|array',
+                'product_ids.*' => 'integer|exists:products,id',
+                'templates' => 'required|array',
+                'templates.notifications_text' => 'nullable|string',
+                'templates.shipping_time_text' => 'nullable|string',
+                'templates.shipping_text' => 'nullable|string',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Datos inválidos',
+                    'errors' => $validator->errors()
+                ], 402);
+            }
+
+            $productIds = $request->product_ids;
+            $templates = $request->templates;
+
+            // Filtramos solo los textos que vienen en el body (para no pisar los ausentes)
+            $fieldsToUpdate = array_filter($templates, fn($value) => !is_null($value));
+
+            if (empty($fieldsToUpdate)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se recibió ninguna plantilla para asignar.'
+                ], 400);
+            }
+
+            // Actualizamos todos los productos seleccionados
+            Product::whereIn('id', $productIds)->update($fieldsToUpdate);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Plantillas aplicadas correctamente a los productos seleccionados.',
+                'updated_fields' => array_keys($fieldsToUpdate),
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al aplicar plantillas a los productos.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }
