@@ -30,7 +30,7 @@ class InitializeStockChannels extends Command
         // --- Productos ---
         Product::chunk(100, function ($products) {
             foreach ($products as $product) {
-                if ($product->stock_channels) {
+                if (empty($product->stock_channels)) {
                     $product->stock_channels = [
                         [
                             'channel' => 1,
@@ -50,7 +50,7 @@ class InitializeStockChannels extends Command
         // --- Variantes ---
         ProductVariant::chunk(100, function ($variants) {
             foreach ($variants as $variant) {
-                if ($variant->stock_channels) {
+                if (empty($variant->stock_channels)) {
                     $variant->stock_channels = [
                         [
                             'channel' => 1,
