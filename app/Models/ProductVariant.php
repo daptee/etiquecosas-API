@@ -14,11 +14,13 @@ class ProductVariant extends Model
     protected $fillable = [
         'product_id',
         'variant',
+        'stock_channels',
         'img',
     ];
 
     protected $casts = [
         'variant' => 'array',
+        'stock_channels' => 'array',
     ];
 
     public function product()

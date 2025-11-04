@@ -75,3 +75,9 @@ WHERE slug IN (
     'sello-personalizado-redondo-34528',
     'mochila-estrellas-personalizada-con-nombre-79168'
 );
+
+ALTER TABLE products
+ADD COLUMN stock_channels JSON NULL AFTER stock_quantity;
+
+ALTER TABLE product_variants
+ADD COLUMN stock_channels JSON NULL AFTER variant;

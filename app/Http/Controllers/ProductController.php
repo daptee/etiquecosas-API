@@ -45,6 +45,7 @@ class ProductController extends Controller
                 'stock_quantity',
                 'tag_id',
                 'meta_data',
+                'stock_channels',
                 'is_feature',
                 'is_customizable',
                 'is_sale',
@@ -151,6 +152,7 @@ class ProductController extends Controller
                 'discounted_end',
                 'tag_id',
                 'meta_data',
+                'stock_channels',
                 'is_feature',
                 'is_customizable',
                 'is_sale',
@@ -344,7 +346,9 @@ class ProductController extends Controller
             'variants.*.wholesale_min_amount' => 'nullable|integer|min:0',
             'variants.*.order' => 'nullable|integer|min:0',
             'variants.*.img' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'variants.*.stock_channels' => 'nullable|json',
             'meta_data' => 'nullable|json',
+            'stock_channels' => 'nullable|json',
             'customization' => 'nullable|json',
             'images' => 'nullable|array',
             'images.*.img' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
@@ -358,7 +362,7 @@ class ProductController extends Controller
         }
 
         $decodedData = $request->all();
-        $jsonFieldsToDecode = ['meta_data', 'customization'];
+        $jsonFieldsToDecode = ['meta_data', 'customization', 'stock_channels'];
         foreach ($jsonFieldsToDecode as $field) {
             if ($request->has($field) && is_string($request->input($field))) {
                 $decodedValue = json_decode($request->input($field), true);
@@ -389,6 +393,12 @@ class ProductController extends Controller
             'meta_data' => 'nullable|array',
             'meta_data.title' => 'nullable|string|max:255',
             'meta_data.description' => 'nullable|string',
+            'stock_channels' => 'nullable|array',
+            'stock_channels.*.channel' => 'integer|exists:channels,id',
+            'stock_channels.*.channel_name' => 'string|max:255',
+            'stock_channels.*.stock_status' => 'integer|exists:product_stock_statuses,id',
+            'stock_channels.*.stock_status_name' => 'string|max:100',
+            'stock_channels.*.stock_quantity' => 'nullable|integer',
         ];
         $internalValidator = Validator::make($decodedData, $internalJsonRules);
         if ($internalValidator->fails()) {
@@ -419,7 +429,7 @@ class ProductController extends Controller
         $productData['is_wholesale'] = (bool) ($request->input('is_wholesale', false));
 
         // Decodificar JSON de campos como meta_data y customization
-        $jsonFields = ['meta_data'];
+        $jsonFields = ['meta_data', 'stock_channels'];
         foreach ($jsonFields as $field) {
             if ($request->has($field)) {
                 $value = $request->input($field);
@@ -568,6 +578,19 @@ class ProductController extends Controller
                     ]);
                 }
 
+                if (!empty($variantData['stock_channels']) && is_string($variantData['stock_channels'])) {
+                    $decoded = json_decode($variantData['stock_channels'], true);
+
+                    if (json_last_error() === JSON_ERROR_NONE) {
+                        $variantData['stock_channels'] = $decoded;
+                    } else {
+                        Log::error("createProductVariants: Error al decodificar JSON en stock_channels para variante $index: " . json_last_error_msg());
+                        throw \Illuminate\Validation\ValidationException::withMessages([
+                            "variants.$index.stock_channels" => ['El formato de stock_channels no es un JSON válido.'],
+                        ]);
+                    }
+                }
+
                 // 1️⃣ Validación
                 $singleVariantValidator = Validator::make($variantData, [
                     'attributes' => 'nullable|array',
@@ -586,6 +609,12 @@ class ProductController extends Controller
                     'wholesale_price' => 'nullable|numeric',
                     'wholesale_min_amount' => 'nullable|integer|min:0',
                     'order' => 'nullable|integer|min:0',
+                    'stock_channels' => 'nullable|array',
+                    'stock_channels.*.channel' => 'integer|exists:channels,id',
+                    'stock_channels.*.channel_name' => 'string|max:255',
+                    'stock_channels.*.stock_status' => 'integer|exists:product_stock_statuses,id',
+                    'stock_channels.*.stock_status_name' => 'string|max:100',
+                    'stock_channels.*.stock_quantity' => 'nullable|integer',
                     'img' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
                 ]);
                 if ($singleVariantValidator->fails()) {
@@ -681,6 +710,7 @@ class ProductController extends Controller
                         'wholesale_price' => $variantData['wholesale_price'] ?? null,
                         'wholesale_min_amount' => $variantData['wholesale_min_amount'] ?? null,
                         'order' => $variantData['order'] ?? null,
+                        'stock_channels' => $variantData['stock_channels'] ?? null,
                         'img' => $imagePath ?? null,
                     ]);
 
@@ -820,9 +850,11 @@ class ProductController extends Controller
             'variants.*.wholesale_price' => 'nullable|numeric',
             'variants.*.wholesale_min_amount' => 'nullable|integer|min:0',
             'variants.*.order' => 'nullable|integer|min:0',
+            'variants.*.stock_channels' => 'nullable|json',
             'variants.*.img' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'variants.*.delete_img' => 'nullable|boolean',
             'meta_data' => 'nullable|json',
+            'stock_channels' => 'nullable|json',
             'customization' => 'nullable|json',
             'images' => 'nullable|array',
             'images.*.id' => 'nullable|integer|exists:product_images,id',
@@ -837,7 +869,7 @@ class ProductController extends Controller
         }
 
         $decodedData = $request->all();
-        $jsonFieldsToDecode = ['meta_data', 'customization'];
+        $jsonFieldsToDecode = ['meta_data', 'customization', 'stock_channels'];
 
         foreach ($jsonFieldsToDecode as $field) {
             if ($request->has($field) && is_string($request->input($field))) {
@@ -868,6 +900,12 @@ class ProductController extends Controller
             'meta_data' => 'nullable|array',
             'meta_data.title' => 'nullable|string|max:255',
             'meta_data.description' => 'nullable|string',
+            'stock_channels' => 'nullable|array',
+            'stock_channels.*.channel' => 'integer|exists:channels,id',
+            'stock_channels.*.channel_name' => 'string|max:255',
+            'stock_channels.*.stock_status' => 'integer|exists:product_stock_statuses,id',
+            'stock_channels.*.stock_status_name' => 'string|max:100',
+            'stock_channels.*.stock_quantity' => 'nullable|integer',
         ];
         $internalValidator = Validator::make($decodedData, $internalJsonRules);
         if ($internalValidator->fails()) {
@@ -913,7 +951,7 @@ class ProductController extends Controller
             $productData['sku'] = $initials . '-' . ($product->id ?? uniqid());
         }
 
-        $jsonFields = ['meta_data'];
+        $jsonFields = ['meta_data', 'stock_channels'];
         foreach ($jsonFields as $field) {
             if ($request->has($field)) {
                 $value = $request->input($field);
@@ -1018,6 +1056,20 @@ class ProductController extends Controller
                     ]);
                 }
 
+                // 🔄 Convertir stock_channels de JSON string a array si es necesario
+                if (!empty($variantData['stock_channels']) && is_string($variantData['stock_channels'])) {
+                    $decoded = json_decode($variantData['stock_channels'], true);
+
+                    if (json_last_error() === JSON_ERROR_NONE) {
+                        $variantData['stock_channels'] = $decoded;
+                    } else {
+                        Log::error("updateProductVariants: Error al decodificar JSON en stock_channels para variante $index: " . json_last_error_msg());
+                        throw \Illuminate\Validation\ValidationException::withMessages([
+                            "variants.$index.stock_channels" => ['El formato de stock_channels no es un JSON válido.'],
+                        ]);
+                    }
+                }
+
                 // 🔹 Validación básica
                 $singleVariantValidator = Validator::make($variantData, [
                     'id' => 'nullable|exists:product_variants,id',
@@ -1037,6 +1089,12 @@ class ProductController extends Controller
                     'wholesale_price' => 'nullable|numeric',
                     'wholesale_min_amount' => 'nullable|integer|min:0',
                     'order' => 'nullable|integer|min:0',
+                    'stock_channels' => 'nullable|array',
+                    'stock_channels.*.channel' => 'integer|exists:channels,id',
+                    'stock_channels.*.channel_name' => 'string|max:255',
+                    'stock_channels.*.stock_status' => 'integer|exists:product_stock_statuses,id',
+                    'stock_channels.*.stock_status_name' => 'string|max:100',
+                    'stock_channels.*.stock_quantity' => 'nullable|integer',
                     'img' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
                 ]);
 
@@ -1148,6 +1206,7 @@ class ProductController extends Controller
                             'wholesale_price' => $variantData['wholesale_price'] ?? null,
                             'wholesale_min_amount' => $variantData['wholesale_min_amount'] ?? null,
                             'order' => $variantData['order'] ?? null,
+                            'stock_channels' => $variantData['stock_channels'] ?? null,
                             'img' => $imagePath,
                         ]);
                     } else {
@@ -1172,6 +1231,7 @@ class ProductController extends Controller
                             'wholesale_price' => $variantData['wholesale_price'] ?? null,
                             'wholesale_min_amount' => $variantData['wholesale_min_amount'] ?? null,
                             'order' => $variantData['order'] ?? null,
+                            'stock_channels' => $variantData['stock_channels'] ?? null,
                             'img' => $imagePath,
                         ]);
                     }
