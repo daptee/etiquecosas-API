@@ -37,7 +37,7 @@ class AttributeController extends Controller
         }
 
         $attributes = $query->paginate($perPage, ['*'], 'page', $page);
-        $this->logAudit(Auth::user(), 'Get Attributes List', $request->all(), $attributes);
+        $this->logAudit(Auth::user(), 'Get Attributes List', $request->find(), $attributes->first());
         $metaData = [
             'current_page' => $attributes->currentPage(),
             'last_page' => $attributes->lastPage(),
