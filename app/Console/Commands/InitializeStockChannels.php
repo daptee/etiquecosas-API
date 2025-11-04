@@ -30,17 +30,37 @@ class InitializeStockChannels extends Command
         // --- Productos ---
         Product::chunk(100, function ($products) {
             foreach ($products as $product) {
-                if (empty($product->stock_channels)) {
-                    $product->stock_channels = [
-                        [
-                            'channel' => 1,
-                            'channel_name' => 'Web',
-                            'stock_status' => $product->stockStatus?->id ?? 1,
-                            'stock_status_name' => $product->stockStatus?->name ?? 'Existente',
-                            'stock_quantity' => $product->stock_quantity ?? 0,
-                        ],
-                    ];
-                    $product->save();
+                if ($product->stock_channels) {
+                    if ($product->is_customizable == 0 && $product->product_type_id == 1) {
+                        $product->stock_channels = [
+                            [
+                                'channel' => 1,
+                                'channel_name' => 'Web',
+                                'stock_status' => $product->stockStatus?->id ?? 1,
+                                'stock_status_name' => $product->stockStatus?->name ?? 'Existente',
+                                'stock_quantity' => $product->stock_quantity ?? 0,
+                            ],
+                            [
+                                'channel' => 2,
+                                'channel_name' => 'Local Comercial',
+                                'stock_status' => $product->stockStatus?->id ?? 1,
+                                'stock_status_name' => $product->stockStatus?->name ?? 'Existente',
+                                'stock_quantity' => $product->stock_quantity ?? 0,
+                            ],
+                        ];
+                        $product->save();
+                    } else {
+                        $product->stock_channels = [
+                            [
+                                'channel' => 1,
+                                'channel_name' => 'Web',
+                                'stock_status' => $product->stockStatus?->id ?? 1,
+                                'stock_status_name' => $product->stockStatus?->name ?? 'Existente',
+                                'stock_quantity' => $product->stock_quantity ?? 0,
+                            ],
+                        ];
+                        $product->save();
+                    }
 
                     $this->line("✅ Producto ID {$product->id} actualizado con canales de stock.");
                 }
