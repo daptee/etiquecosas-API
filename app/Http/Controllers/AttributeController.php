@@ -32,7 +32,7 @@ class AttributeController extends Controller
         $query->orderBy('name', 'asc');
         if (!$perPage) {
             $attributes = $query->get();
-            $this->logAudit(Auth::user(), 'Get Attributes List', $request->all(), $attributes);
+            $this->logAudit(Auth::user(), 'Get Attributes List', $request->all(), $attributes->first());
             return $this->success($attributes, 'Atributos obtenidos');
         }
 
