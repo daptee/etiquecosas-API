@@ -903,7 +903,7 @@ class SaleController extends Controller
             'payment_method_id' => $request->payment_method_id,
             'customer_notes' => $request->customer_notes,
             'internal_comments' => $request->internal_comments,
-            'sale_status_id' => 7, // 📌 asumo "pendiente" o inicial
+            'sale_status_id' => 1, // estado Aprobado
         ]);
 
         foreach ($productsData as $product) {

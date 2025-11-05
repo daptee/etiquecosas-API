@@ -47,7 +47,7 @@ class ImportSeoCommand extends Command
 
             // Normalizamos nombres de columnas
             $id = trim($row['ID'] ?? $row['id'] ?? '');
-            $description = trim($row['META'] ?? $row['meta'] ?? '');
+            $description = trim($row['Meta'] ?? $row['meta'] ?? '');
 
             if (!$id || !$description) {
                 $this->warn("Fila inválida: faltan datos (ID o meta).");

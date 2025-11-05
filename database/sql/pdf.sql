@@ -898,4 +898,57 @@ VALUES (
     }'
 );
 
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    1291,
+    '{
+        "tematicas": [
+            { 
+                "id": 166, 
+                "name": "24 etiquetas", 
+                "pdf": ["Etiquetas planchables"],
+                "pdf-url": ["planchable/PERSONALIZABLE"], 
+                "number-labels": 24
+            },
+            { 
+                "id": 167, 
+                "name": "48 etiquetas", 
+                "pdf": ["Etiquetas planchables"],
+                "pdf-url": ["planchable/PERSONALIZABLE"], 
+                "number-labels": 48
+            }
+        ]
+    }'
+);
+
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    4613,
+    '{
+        "tematicas": [
+            { "id": 136, "name": "Aire", "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "pdf-url": ["principal/AIRE"], "img": "images/product_variants/tematicas-AIRE.jpg" },
+            { "id": 156, "name": "Positive", "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "pdf-url": ["principal/POSITIVE"], "img": "images/product_variants/tematicas-positive.jpg" },
+            { "id": 148, "name": "Sin dibujo multicolor", "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "pdf-url": ["principal/SIN DIBUJO MULTICOLOR"], "img": "images/product_variants/tematicas-sindibujo-multicolor.jpg" },
+            { "id": 151, "name": "Sin dibujo sports", "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "pdf-url": ["principal/SIN DIBUJO SPORTS"], "img": "images/product_variants/tematicas-sindibujo-sports.jpg" },
+            { "id": 149, "name": "Sin dibujo pastel", "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "pdf-url": ["principal/SIN DIBUJO PASTEL"], "img": "images/product_variants/tematicas-lisas-pastel.jpg" },
+            { "id": 147, "name": "Sin dibujo blue", "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "pdf-url": ["principal/SIN DIBUJO BLUE"], "img": "images/product_variants/tematicas-sindibujo-blue.jpg" },
+            { "id": 150, "name": "Sin dibujo rainbow", "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "pdf-url": ["principal/SIN DIBUJO RAINBOW"], "img": "images/product_variants/tematicas-sindibujo-rainbow.jpg" },
+            { "id": 142, "name": "Estrellas pastel", "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "pdf-url": ["principal/ESTRELLAS PASTEL"], "img": "images/product_variants/pastel-estrellas.jpg" },
+            { "id": 141, "name": "Estrellas blue", "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "pdf-url": ["principal/ESTRELLAS BLUE"], "img": "images/product_variants/PLANCHAS-estrellas.jpg" },
+            { "id": 155, "name": "Skate", "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "pdf-url": ["principal/SKATE"], "img": "images/product_variants/PLANCHAS-SKATE.jpg" },
+            { "id": 145, "name": "Llamas", "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "pdf-url": ["principal/LLAMAS"], "img": "images/product_variants/PLANCHAS-llamas.jpg" },
+            { "id": 139, "name": "Dinosaurios", "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "pdf-url": ["principal/DINOSAURIOS"], "img": "images/product_variants/plancha-dinosaurio.jpg" },
+            { "id": 138, "name": "Bosque", "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "pdf-url": ["principal/BOSQUE"], "img": "images/product_variants/PLANCHA.jpg" },
+            { "id": 144, "name": "Granja", "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "pdf-url": ["principal/GRANJA"], "img": "images/product_variants/PLANCHAS-granja.jpg" },
+            { "id": 154, "name": "Unicornio", "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "pdf-url": ["principal/UNICORNIO"], "img": "images/product_variants/PLANCHAS-unicornio.jpg" },
+            { "id": 140, "name": "Emojis", "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "pdf-url": ["principal/EMOJIS"], "img": "images/product_variants/PLANCHA-emoji.jpg" },
+            { "id": 152, "name": "Teen", "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "pdf-url": ["principal/TEEN"], "img": "images/product_variants/PLANCHA-teen.jpg" },
+            { "id": 153, "name": "Transportes", "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "pdf-url": ["principal/TRANSPORTES"], "img": "images/product_variants/PLANCHAS-transportes.jpg" },
+            { "id": 143, "name": "Futbol", "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "pdf-url": ["principal/FUTBOL"], "img": "images/product_variants/plancha-futbol.jpg" },
+            { "id": 137, "name": "Basquet", "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "pdf-url": ["principal/BASQUET"], "img": "images/product_variants/PLANCHAS-basquet.jpg" },
+            { "id": 146, "name": "Nautica", "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "pdf-url": ["principal/NAUTICA"], "img": "images/product_variants/PLANCHA-MARINO.jpg" }
+        ]
+    }'
+);
+
 data: '{"tematicas": [{"id": 154, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo", "Etiquetas super-mini"], "name": "unicornio"}]}'
