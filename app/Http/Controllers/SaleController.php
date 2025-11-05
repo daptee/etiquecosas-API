@@ -10,6 +10,7 @@ use App\Mail\OrderSendMail;
 use App\Mail\OrderRetiredMail;
 use App\Mail\OrderWithdrawMail;
 use App\Mail\WelcomeMail;
+use App\Models\Channel;
 use App\Models\Client;
 use App\Models\ClientAddress;
 use App\Models\Coupon;
@@ -1155,6 +1156,15 @@ class SaleController extends Controller
         $this->logAudit(null, 'Payment Method', $payment, $payment);
 
         return $this->success($payment->load('status'), 'Metodos de pago obtenidos correctamente');
+    }
+
+    public function allChannelSale()
+    {
+        $channel = Channel::all();
+
+        $this->logAudit(null, 'Channel sale', $channel, $channel);
+
+        return $this->success($channel, 'Canales de ventas obtenidos correctamente');
     }
 
     public function exportExcel(Request $request)
