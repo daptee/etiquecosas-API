@@ -119,7 +119,7 @@ class ProductController extends Controller
         $query->orderBy('name', 'asc');
         if (!$perPage) {
             $products = $query->get();
-            $this->logAudit(Auth::user(), 'Get Product List', $request->all(), $products->first());
+            $this->logAudit(Auth::user(), 'Get Product List', $request->all(), $products);
             return $this->success($products, 'Productos obtenidos');
         }
 
