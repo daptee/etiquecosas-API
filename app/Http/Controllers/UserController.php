@@ -50,7 +50,7 @@ class UserController extends Controller
         // 🔹 Si no hay paginación, traer todo
         if (!$perPage) {
             $users = $query->get();
-            $this->logAudit(Auth::user(), 'Get Users List', $request->all(), $users);
+            $this->logAudit(Auth::user(), 'Get Users List', $request->all(), $users->first());
             return $this->success($users, 'Usuarios obtenidos');
         }
 
@@ -66,7 +66,7 @@ class UserController extends Controller
             'to' => $users->lastItem(),
         ];
 
-        $this->logAudit(Auth::user(), 'Get Users List', $request->all(), $users);
+        $this->logAudit(Auth::user(), 'Get Users List', $request->all(), $users->first());
         return $this->success($users->items(), 'Usuarios obtenidos', $metaData);
     }
 

@@ -56,14 +56,14 @@ class ClientController extends Controller
         // 📌 Sin paginación → traer todo
         if (!$perPage) {
             $clients = $query->get();
-            $this->logAudit(Auth::user(), 'Get Clients List', $request->all(), $clients);
+            $this->logAudit(Auth::user(), 'Get Clients List', $request->all(), $clients->first());
             return $this->success($clients, 'Clientes obtenidos');
         }
 
         // 📌 Con paginación
         $clients = $query->paginate($perPage, ['*'], 'page', $page);
 
-        $this->logAudit(Auth::user(), 'Get Clients List', $request->all(), $clients);
+        $this->logAudit(Auth::user(), 'Get Clients List', $request->all(), $clients->first());
 
         $metaData = [
             'current_page' => $clients->currentPage(),

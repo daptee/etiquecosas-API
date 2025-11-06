@@ -38,12 +38,12 @@ class ClientWholesaleController extends Controller
 
         if (!$perPage) {
             $wholesales = $query->get();
-            $this->logAudit(null, 'Get Client Wholesales', $request->all(), $wholesales);
+            $this->logAudit(null, 'Get Client Wholesales', $request->all(), $wholesales->first());
             return $this->success($wholesales, 'Clientes mayoristas obtenidos');
         }
 
         $wholesales = $query->paginate($perPage, ['*'], 'page', $page);
-        $this->logAudit(null, 'Get Client Wholesales', $request->all(), $wholesales);
+        $this->logAudit(null, 'Get Client Wholesales', $request->all(), $wholesales->first());
 
         $metaData = [
             'current_page' => $wholesales->currentPage(),
