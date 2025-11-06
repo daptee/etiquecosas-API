@@ -14,4 +14,8 @@ class PersonalizationColor extends Model
         'name',
         'color_code',
     ];
+
+    protected $casts = [
+        'color_code' => 'array'
+    ];
 }

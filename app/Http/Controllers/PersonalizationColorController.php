@@ -48,7 +48,7 @@ class PersonalizationColorController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255|unique:personalization_colors',
-            'colorCode' => 'required|string|max:50',
+            'colorCode' => 'required|array',
         ]);
         if ($validator->fails()) {
             $this->logAudit(Auth::user(), 'Store Personalization Color', $request->all(), $validator->errors());
@@ -68,7 +68,7 @@ class PersonalizationColorController extends Controller
         $color = $this->findObject(PersonalizationColor::class, $id);
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255|unique:personalization_colors,name,' . $color->id,
-            'colorCode' => 'required|string|max:50',
+            'colorCode' => 'required|array',
         ]);
         if ($validator->fails()) {
             $this->logAudit(Auth::user(), 'Update Personalization Color', $request->all(), $validator->errors());
