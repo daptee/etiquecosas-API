@@ -22,6 +22,7 @@ use App\Models\SaleProduct;
 use App\Models\SaleStatus;
 use App\Models\SaleStatusHistory;
 use App\Services\EtiquetaService;
+use App\Services\StockService;
 use App\Traits\ApiResponse;
 use App\Traits\FindObject;
 use Illuminate\Http\Request;
@@ -384,6 +385,7 @@ class SaleController extends Controller
     public function changeStatus(Request $request, $id)
     {
         $sale = Sale::findOrFail($id);
+        $saleStatusOld = $sale->sale_status_id;
         $sale->sale_status_id = $request->sale_status_id;
         $sale->save();
 
@@ -412,11 +414,13 @@ class SaleController extends Controller
             Mail::to($sale->client->email)->send(new OrderRetiredMail($sale));
         }
 
-        if ($sale->sale_status_id == 1) {
+        if ($sale->sale_status_id == 1 && $saleStatusOld != 1) {
             $notifyEmail = env('MAIL_NOTIFICATION_TO');
 
             Mail::to($sale->client->email)->send(new OrderSummaryMail($sale));
             Mail::to($notifyEmail)->send(new OrderSummaryMailTo($sale));
+
+            StockService::discountStock($sale);
 
             foreach ($sale->products as $productOrder) {
                 // === 1. Datos base ===
@@ -541,6 +545,7 @@ class SaleController extends Controller
     {
         $user = Auth::user();
         $sale = Sale::findOrFail($id);
+        $saleStatusOld = $sale->sale_status_id;
         $sale->sale_status_id = $request->sale_status_id;
         $sale->save();
 
@@ -574,7 +579,10 @@ class SaleController extends Controller
             Mail::to($sale->client->email)->send(new OrderRetiredMail($sale));
         }
 
-        if ($sale->sale_status_id == 1) {
+        if ($sale->sale_status_id == 1 && $saleStatusOld != 1) {
+            
+            StockService::discountStock($sale);
+
             foreach ($sale->products as $productOrder) {
                 // === 1. Datos base ===
                 $customData = json_decode($productOrder->customization_data, true);
@@ -909,7 +917,9 @@ class SaleController extends Controller
 
         foreach ($productsData as $product) {
             $sale->products()->create($product);
-        }
+        };
+        
+        StockService::discountStock($sale);
 
         // Guardar historial de estado
         SaleStatusHistory::create([
@@ -949,7 +959,7 @@ class SaleController extends Controller
             return $this->validationError($validator->errors());
         }
 
-        $sale = Sale::findOrFail($id);
+        $sale = Sale::with(['products.product', 'products.variant'])->findOrFail($id);
 
         if ($sale->channel_id !== 2) {
             return $this->error('Solo se pueden editar ventas del canal local (channel_id = 2)', 400);
@@ -961,6 +971,8 @@ class SaleController extends Controller
         }
 
         $subtotal = $sale->subtotal;
+        
+        StockService::restoreStock($sale);    
 
         // Si vienen productos, recalcular
         if ($request->has('products')) {
@@ -984,7 +996,7 @@ class SaleController extends Controller
                     'comment' => $productInput['comment'] ?? null,
                     'customization_data' => $productInput['customization_data'] ?? null,
                 ]);
-            }
+            };
         }
 
         $discountPercent = $request->discount_percent ?? $sale->discount_percent ?? 0;
@@ -1003,6 +1015,10 @@ class SaleController extends Controller
             'customer_notes' => $request->customer_notes ?? $sale->customer_notes,
             'internal_comments' => $request->internal_comments ?? $sale->internal_comments,
         ]);
+
+        $sale->load('products.product', 'products.variant');
+        
+        StockService::discountStock($sale);
 
         $this->logAudit($user, 'Update Local Sale', $request->all(), $sale);
 

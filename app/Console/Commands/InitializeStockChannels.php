@@ -70,17 +70,20 @@ class InitializeStockChannels extends Command
         // --- Variantes ---
         ProductVariant::chunk(100, function ($variants) {
             foreach ($variants as $variant) {
-                if (empty($variant->stock_channels)) {
+                if ($variant->stock_channels) {
                     $variant->stock_channels = [
                         [
                             'channel' => 1,
                             'channel_name' => 'Web',
                             'stock_status' => $variant->variant['stock_status'] ?? 1,
                             'stock_status_name' => match ($variant->variant['stock_status'] ?? 1) {
+                                "1" => 'Existente',
+                                "2" => 'Gestión de Stock',
+                                "3" => 'Sin Stock',
                                 1 => 'Existente',
                                 2 => 'Gestión de Stock',
                                 3 => 'Sin Stock',
-                                default => 'Sin Stock',
+                                default => 'Existente',
                             },
                             'stock_quantity' => $variant->variant['stock_quantity'] ?? 0,
                         ],
