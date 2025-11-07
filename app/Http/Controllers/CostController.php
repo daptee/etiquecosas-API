@@ -8,7 +8,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use App\Traits\FindObject;
 use App\Traits\ApiResponse;
-use App\Traits\Auditable; 
+use App\Traits\Auditable;
+use App\Services\ProductPriceService; 
 
 class CostController extends Controller
 {
@@ -91,11 +92,30 @@ class CostController extends Controller
             return $this->validationError($validator->errors());
         }
 
+        $oldPrice = $cost->price;
+
         $cost->update([
             'name' => $request->name,
             'price' => $request->price,
             'status_id' => $request->statusId ?? 1,
         ]);
+
+        // Si el precio cambió, actualizar precios de productos que usan este costo
+        if ($oldPrice != $request->price) {
+            $priceService = new ProductPriceService();
+            $updatedProducts = $priceService->updateProductsUsingCost($cost->id);
+
+            $this->logAudit(Auth::user(), 'Update Cost', $request->all(), [
+                'cost' => $cost,
+                'products_updated' => $updatedProducts,
+            ]);
+
+            return $this->success([
+                'cost' => $cost,
+                'products_updated' => $updatedProducts,
+            ], "Costo actualizado. Se actualizaron los precios de {$updatedProducts} productos.");
+        }
+
         $this->logAudit(Auth::user(), 'Update Cost', $request->all(), $cost);
         return $this->success($cost, 'Costo actualizado');
     }

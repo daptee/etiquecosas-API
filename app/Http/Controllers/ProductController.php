@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\DB;
 use App\Traits\FindObject;
 use App\Traits\ApiResponse;
 use App\Traits\Auditable;
+use App\Services\ProductPriceService;
 use Str;
 
 class ProductController extends Controller
@@ -465,6 +466,13 @@ class ProductController extends Controller
                 ->map(fn($id) => (int) $id)
                 ->toArray();
             $product->costs()->sync($costs);
+
+            // Calcular y guardar porcentajes después de sincronizar costos
+            $priceService = new ProductPriceService();
+            $product->refresh(); // Recargar para tener los costos actualizados
+            $product->load('costs');
+            $priceService->calculateAndSavePercentages($product);
+            $product->save();
         } else {
             $product->costs()->detach();
         }
@@ -694,6 +702,22 @@ class ProductController extends Controller
                         $imageName = 'images/product_variants/' . uniqid('img_') . '.' . $variantImageFile->getClientOriginalExtension();
                         Storage::disk('public_uploads')->put($imageName, file_get_contents($variantImageFile->getRealPath()));
                         $imagePath = $imageName;
+                    }
+
+                    // Calcular porcentajes de la variante
+                    $priceService = new ProductPriceService();
+                    $product->load('costs');
+                    $totalCosts = $product->costs->sum('price');
+
+                    $variantPrice = $variantData['price'] ?? null;
+                    $variantDiscountedPrice = $variantData['discounted_price'] ?? null;
+
+                    if ($variantPrice && $totalCosts > 0) {
+                        $variantDataCopy['profit_percentage'] = $priceService->calculateProfitPercentage($variantPrice, $totalCosts);
+                    }
+
+                    if ($variantPrice && $variantDiscountedPrice) {
+                        $variantDataCopy['discount_percentage'] = $priceService->calculateDiscountPercentage($variantPrice, $variantDiscountedPrice);
                     }
 
                     $newVariant = ProductVariant::create([
@@ -994,6 +1018,13 @@ class ProductController extends Controller
                 ->map(fn($id) => (int) $id)
                 ->toArray();
             $product->costs()->sync($costs);
+
+            // Calcular y guardar porcentajes después de sincronizar costos
+            $priceService = new ProductPriceService();
+            $product->refresh(); // Recargar para tener los costos actualizados
+            $product->load('costs');
+            $priceService->calculateAndSavePercentages($product);
+            $product->save();
         } else {
             $product->costs()->detach();
         }
@@ -1165,6 +1196,22 @@ class ProductController extends Controller
 
                     // Eliminar attributes
                     unset($variantDataCopy['attributes']);
+
+                    // Calcular porcentajes de la variante
+                    $priceService = new ProductPriceService();
+                    $product->load('costs');
+                    $totalCosts = $product->costs->sum('price');
+
+                    $variantPrice = $variantData['price'] ?? null;
+                    $variantDiscountedPrice = $variantData['discounted_price'] ?? null;
+
+                    if ($variantPrice && $totalCosts > 0) {
+                        $variantDataCopy['profit_percentage'] = $priceService->calculateProfitPercentage($variantPrice, $totalCosts);
+                    }
+
+                    if ($variantPrice && $variantDiscountedPrice) {
+                        $variantDataCopy['discount_percentage'] = $priceService->calculateDiscountPercentage($variantPrice, $variantDiscountedPrice);
+                    }
 
                     $variantImageFile = $request->file("variants.$index.img");
                     $imagePath = null;
