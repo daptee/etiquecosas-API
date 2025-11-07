@@ -120,11 +120,12 @@ class EtiquetaService
 
             foreach ($nombres as $nombre) {
                 $isWhiteAndBlack = $tematicaName === 'Blanco y Negro';
-                $isWhite = $tematicaName === 'Blanco';
+                $isWhite = $tematicaName === 'Blanco' || $tematicaName === 'Blanco y Negro' ? true : null;
                 $fontClass = mb_strlen($nombre, 'UTF-8') > 16 ? 'small-text-size' : 'normal-text-size';
 
                 $plantilla = [
                     'colores' => $isWhiteAndBlack ? ["#FFF", "#FFF", "#FFF"] : $colorRange,
+                    'color' => $colorRange,
                     'images' => $imagesPdf ? array_map(fn($img) => storage_path("app/pdf/Iconos/Tematicas/$img"), $imagesPdf) : [],
                     'colorText' => $isWhiteAndBlack ? '#000' : '#fff',
                     'fontClass' => $fontClass,

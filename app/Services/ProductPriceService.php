@@ -87,7 +87,7 @@ class ProductPriceService
         }
 
         // Calcular suma de costos
-        $totalCosts = $product->costs->sum('price');
+        $totalCosts = $product->costs ? $product->costs->sum('price') : 0;
 
         // Actualizar precio normal si hay porcentaje de ganancia
         if ($product->profit_percentage !== null && $totalCosts > 0) {
@@ -202,7 +202,7 @@ class ProductPriceService
             $product->load('costs');
         }
 
-        $totalCosts = $product->costs->sum('price');
+        $totalCosts = $product->costs ? $product->costs->sum('price') : 0;
 
         // Calcular porcentajes para el producto principal
         $product->profit_percentage = $this->calculateProfitPercentage($product->price, $totalCosts);

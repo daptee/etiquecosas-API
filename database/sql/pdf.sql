@@ -767,6 +767,15 @@ VALUES (
                 "images": ["stars/star-negro.svg","stars/star-negro.svg","stars/star-negro.svg","stars/star-negro.svg"]
             },
             { 
+                "id": 323, 
+                "name": "Blanco y Negro", 
+                "pdf": ["Etiquetas transfer"],
+                "pdf-url": ["stars/TRANSFER BOLD"],
+                "typography": "Bold",
+                "color-range": ["0,0,0,0","0,0,0,1","0,0,0,0","0,0,0,1"],
+                "images": ["stars/star-blanco.svg","stars/star-negro.svg","stars/star-blanco.svg","stars/star-negro.svg"]
+            },
+            { 
                 "id": 305, 
                 "name": "Verde agua, celeste, rojo, verde oscuro", 
                 "pdf": ["Etiquetas transfer"],
@@ -828,6 +837,15 @@ VALUES (
                 "typography": "Mayuscula",
                 "color-range": ["0,0,0,1","0,0,0,1","0,0,0,1","0,0,0,1"],
                 "images": ["stars/star-negro.svg","stars/star-negro.svg","stars/star-negro.svg","stars/star-negro.svg"]
+            },
+            { 
+                "id": 323, 
+                "name": "Blanco y Negro", 
+                "pdf": ["Etiquetas transfer"],
+                "pdf-url": ["stars/TRANSFER MAYUSCULA"],
+                "typography": "Mayuscula",
+                "color-range": ["0,0,0,0","0,0,0,1","0,0,0,0","0,0,0,1"],
+                "images": ["stars/star-blanco.svg","stars/star-negro.svg","stars/star-blanco.svg","stars/star-negro.svg"]
             },
             { 
                 "id": 305, 

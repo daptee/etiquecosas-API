@@ -173,16 +173,16 @@
       </div>
       <div class="tranfer-names-container">
         <div class="transfer-name-container">
-          <p class="name" style="color: cmyk({{ $plantilla['colores'][0] }}); font-size: {{ $plantilla['fontSize'] }}">{{ mb_strtoupper($product_order->name) }}</p>
+          <p class="name" style="color: cmyk({{ $plantilla['color'][0] }}); font-size: {{ $plantilla['fontSize'] }}">{{ mb_strtoupper($product_order->name) }}</p>
         </div>
         <div class="transfer-name-container">
-          <p class="name" style="color: cmyk({{ $plantilla['colores'][1] }}); font-size: {{ $plantilla['fontSize'] }}">{{ mb_strtoupper($product_order->name) }}</p>
+          <p class="name" style="color: cmyk({{ $plantilla['color'][1] }}); font-size: {{ $plantilla['fontSize'] }}">{{ mb_strtoupper($product_order->name) }}</p>
         </div>
         <div class="transfer-name-container">
-          <p class="name" style="color: cmyk({{ $plantilla['colores'][2] }}); font-size: {{ $plantilla['fontSize'] }}">{{ mb_strtoupper($product_order->name) }}</p>
+          <p class="name" style="color: cmyk({{ $plantilla['color'][2] }}); font-size: {{ $plantilla['fontSize'] }}">{{ mb_strtoupper($product_order->name) }}</p>
         </div>
         <div class="transfer-name-container">
-          <p class="name" style="color: cmyk({{ $plantilla['colores'][3] }}); font-size: {{ $plantilla['fontSize'] }}">{{ mb_strtoupper($product_order->name) }}</p>
+          <p class="name" style="color: cmyk({{ $plantilla['color'][3] }}); font-size: {{ $plantilla['fontSize'] }}">{{ mb_strtoupper($product_order->name) }}</p>
         </div>
       </div>
     </div>
