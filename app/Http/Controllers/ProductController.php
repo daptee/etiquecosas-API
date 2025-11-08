@@ -117,6 +117,12 @@ class ProductController extends Controller
             }
         }
 
+        // 🔹 Filtro por canal
+        if ($request->has('channel_id')) {
+            $channelId = $request->query('channel_id');
+            $query->whereJsonContains('stock_channels', ['channel' => (int)$channelId]);
+        }
+
         $query->orderBy('name', 'asc');
         if (!$perPage) {
             $products = $query->get();
@@ -201,6 +207,12 @@ class ProductController extends Controller
 
         if ($request->has('product_type_id')) {
             $query->where('product_type_id', $request->query('product_type_id'));
+        }
+
+        // 🔹 Filtro por canal
+        if ($request->has('channel_id')) {
+            $channelId = $request->query('channel_id');
+            $query->whereJsonContains('stock_channels', ['channel' => (int)$channelId]);
         }
 
         // cambiado el orden para los productos más vendidos
