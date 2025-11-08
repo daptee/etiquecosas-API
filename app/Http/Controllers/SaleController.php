@@ -105,7 +105,21 @@ class SaleController extends Controller
             $query->whereDate('created_at', '<=', $request->query('to_date'));
         }
 
-        $query->whereNotIn('sale_status_id', [8, 9]);
+        // 🔹 Filtro por estado de pago: 'paid' (cobradas) o 'unpaid' (no cobradas)
+        if ($request->has('payment_status')) {
+            $paymentStatus = $request->query('payment_status');
+            if ($paymentStatus === 'unpaid') {
+                // Solo ventas NO cobradas: Pendiente de pago (8) o Pago rechazado (9)
+                $query->whereIn('sale_status_id', [8, 9]);
+            } elseif ($paymentStatus === 'paid') {
+                // Solo ventas cobradas: todas excepto 8 y 9
+                $query->whereNotIn('sale_status_id', [8, 9]);
+            }
+            // Si se envía otro valor, no se aplica filtro
+        } else {
+            // Comportamiento por defecto: solo ventas cobradas
+            $query->whereNotIn('sale_status_id', [8, 9]);
+        }
 
         // 🔹 Si no hay perPage, traer todo
         if (!$perPage) {
