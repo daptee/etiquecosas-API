@@ -10,17 +10,97 @@
   <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,500,600,700&display=swap" rel="stylesheet" media="screen">
   <style>
     .hover-underline:hover { text-decoration: underline !important; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td {
+      padding: 10px;
+      text-align: left;
+      word-wrap: break-word;
+      word-break: break-word;
+    }
+    th {
+      background: #f3f3f3;
+      white-space: nowrap;
+      font-weight: 600;
+    }
+    .total { font-weight: bold; font-size: 1.2em; }
+    .highlight { color: #EBA4AB; font-weight: bold; }
+    .muted { color: #666; font-size: 0.9em; }
+
+    .products-table th,
+    .products-table td {
+      vertical-align: top;
+    }
+
+    .products-table th:nth-child(1),
+    .products-table td:nth-child(1) {
+      width: 18%;
+    }
+
+    .products-table th:nth-child(2),
+    .products-table td:nth-child(2) {
+      width: 22%;
+    }
+
+    .products-table th:nth-child(3),
+    .products-table td:nth-child(3) {
+      width: 10%;
+      white-space: nowrap !important;
+    }
+
+    .products-table th:nth-child(4),
+    .products-table td:nth-child(4) {
+      width: 22%;
+      white-space: nowrap !important;
+      min-width: 100px;
+    }
+
+    .products-table th:nth-child(5),
+    .products-table td:nth-child(5) {
+      width: 28%;
+      white-space: nowrap !important;
+      min-width: 120px;
+    }
+
+    .td-label {
+      display: none;
+    }
+
     @media (max-width: 600px) {
       .sm-w-full { width: 100% !important; }
       .sm-px-24 { padding-left: 24px !important; padding-right: 24px !important; }
       .sm-py-32 { padding-top: 32px !important; padding-bottom: 32px !important; }
+
+      .products-table thead { display: none; }
+      .products-table tbody { display: block; }
+      .products-table tr {
+        display: block;
+        margin-bottom: 20px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 15px;
+        background: #fafafa;
+      }
+      .products-table td {
+        display: block;
+        text-align: left !important;
+        padding: 10px 0 !important;
+        border: none !important;
+        border-bottom: 1px solid #eee !important;
+        width: 100% !important;
+        white-space: normal !important;
+      }
+      .products-table td:last-child {
+        border-bottom: none !important;
+      }
+      .td-label {
+        display: block !important;
+        font-weight: 700;
+        margin-bottom: 5px;
+        color: #347AA7;
+        font-size: 13px;
+        text-transform: uppercase;
+      }
     }
-    table { border-collapse: collapse; width: 100%; }
-    th, td { padding: 10px; text-align: left; }
-    th { background: #f3f3f3; }
-    .total { font-weight: bold; font-size: 1.2em; }
-    .highlight { color: #EBA4AB; font-weight: bold; }
-    .muted { color: #666; font-size: 0.9em; }
   </style>
 </head>
 
@@ -57,21 +137,25 @@
 
                     <!-- Productos -->
                     <h2 style="margin-top:24px; color:#347AA7; font-size: 16px;">Productos</h2>
-                    <table>
+                    <table class="products-table">
                       <thead>
                         <tr>
-                          <th style="width:30%; font-size: 14px;">Detalle</th>
-                          <th style="width:30%; font-size: 14px;">Personalización</th>
-                          <th style="width:10%; font-size: 14px;">Cant.</th>
-                          <th style="width:15%; font-size: 14px;">Unit.</th>
-                          <th style="width:15%; font-size: 14px;">Total</th>
+                          <th style="font-size: 14px;">Detalle</th>
+                          <th style="font-size: 14px;">Personalización</th>
+                          <th style="font-size: 14px;">Cant.</th>
+                          <th style="font-size: 14px;">Unit.</th>
+                          <th style="font-size: 14px;">Total</th>
                         </tr>
                       </thead>
                       <tbody>
                         @foreach($sale->products as $item)
                           <tr>
-                            <td style="font-size: 14px;"><strong>{{ $item->product->name ?? ('ID producto: ' . ($item->product_id ?? '-')) }}</strong></td>
                             <td style="font-size: 14px;">
+                              <span class="td-label">Detalle:</span>
+                              <strong>{{ $item->product->name ?? ('ID producto: ' . ($item->product_id ?? '-')) }}</strong>
+                            </td>
+                            <td style="font-size: 14px;">
+                              <span class="td-label">Personalización:</span>
                               @if($item->customization_data)
                                 @php
                                   $custom = is_string($item->customization_data)
@@ -102,9 +186,18 @@
                                 <div class="muted">-</div>
                               @endif
                             </td>
-                            <td style="font-size: 14px;">{{ $item->quantity }}</td>
-                            <td style="font-size: 14px;">${{ number_format((float)$item->unit_price,0,',','.') }}</td>
-                            <td style="font-size: 14px;">${{ number_format((float)$item->unit_price * $item->quantity,0,',','.') }}</td>
+                            <td style="font-size: 14px; white-space: nowrap;">
+                              <span class="td-label">Cant.:</span>
+                              <span style="white-space: nowrap;">{{ $item->quantity }}</span>
+                            </td>
+                            <td style="font-size: 14px; white-space: nowrap;">
+                              <span class="td-label">Unit.:</span>
+                              <span style="white-space: nowrap;">${{ number_format((float)$item->unit_price,0,',','.') }}</span>
+                            </td>
+                            <td style="font-size: 14px; white-space: nowrap;">
+                              <span class="td-label">Total:</span>
+                              <span style="white-space: nowrap;">${{ number_format((float)$item->unit_price * $item->quantity,0,',','.') }}</span>
+                            </td>
                           </tr>
                         @endforeach
                       </tbody>
