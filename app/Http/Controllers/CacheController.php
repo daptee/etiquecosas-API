@@ -14,10 +14,16 @@ class CacheController extends Controller
             Artisan::call('cache:clear');
             Artisan::call('route:clear');
             Artisan::call('view:clear');
-            
+
             return response()->json(['message' => 'Cache limpiada correctamente'], 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Error al limpiar la cache', 'details' => $e->getMessage()], 500);
+            return response()->json([
+                'message' => 'Ocurrió un error inesperado, inténtelo más tarde',
+                'data' => [
+                    'error' => $e->getMessage(),
+                    'type' => get_class($e)
+                ]
+            ], 500);
         }
     }
 }

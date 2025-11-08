@@ -1546,8 +1546,11 @@ class ProductController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Ocurrió un error al enviar la consulta.',
-                'error' => $e->getMessage(),
+                'message' => 'Ocurrió un error inesperado, inténtelo más tarde',
+                'data' => [
+                    'error' => $e->getMessage(),
+                    'type' => get_class($e)
+                ]
             ], 500);
         }
     }
@@ -1628,8 +1631,11 @@ class ProductController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Ocurrió un error al enviar la consulta.',
-                'error' => $e->getMessage(),
+                'message' => 'Ocurrió un error inesperado, inténtelo más tarde',
+                'data' => [
+                    'error' => $e->getMessage(),
+                    'type' => get_class($e)
+                ]
             ], 500);
         }
     }
@@ -1733,8 +1739,11 @@ class ProductController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error al asignar categorías',
-                'error' => $e->getMessage(),
+                'message' => 'Ocurrió un error inesperado, inténtelo más tarde',
+                'data' => [
+                    'error' => $e->getMessage(),
+                    'type' => get_class($e)
+                ]
             ], 500);
         }
     }
@@ -1784,8 +1793,11 @@ class ProductController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error al aplicar plantillas a los productos.',
-                'error' => $e->getMessage(),
+                'message' => 'Ocurrió un error inesperado, inténtelo más tarde',
+                'data' => [
+                    'error' => $e->getMessage(),
+                    'type' => get_class($e)
+                ]
             ], 500);
         }
     }
