@@ -40,7 +40,6 @@ class Product extends Model
         'wholesale_price',
         'wholesale_min_amount',
         'tag_id',
-        'costs',
         'description',
         'shortDescription',
         'shipping_text',
@@ -55,7 +54,6 @@ class Product extends Model
     ];
 
     protected $casts = [
-        'costs' => 'array',
         'meta_data' => 'array',
         'is_feature' => 'integer',
         'is_customizable' => 'integer',
