@@ -1,0 +1,318 @@
+.hoja {
+    padding-left: 5px;
+    width: 18.5cm;
+    height: 29cm;
+}
+
+@page {
+    margin-left: 1.0cm;
+    margin-right: 1.5cm;
+    margin-top: 0.4cm;
+    margin-bottom: 0.2cm;
+}
+
+/* ETIQUETAS MAXI */
+.etiquetas-maxi-container {
+    margin: 0 !important;
+    padding: 0 !important;
+    border-spacing: 0 !important;
+}
+
+.etiquetas-maxi-container tr td {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.etiqueta-maxi {
+    width: 4.4cm;
+    height: 2.4cm;
+    vertical-align: top;
+    display: inline-block;
+    position: relative;
+}
+
+.etiqueta-maxi-content-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    height: 1.2cm;
+    width: auto;
+    margin: 0 !important;
+    padding: 0 !important;
+    border-spacing: 0 !important;
+}
+
+.etiqueta-maxi-content-container tr td {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: fit-content;
+    vertical-align: middle;
+}
+
+.etiqueta-maxi-content-container img {
+    height: 1.4cm;
+    width: auto;
+    margin: 0 auto !important;
+}
+
+.etiqueta-maxi-content-container img.iconoGrande {
+    height: 1.1cm;
+    width: auto;
+}
+
+.etiqueta-maxi-content-container img.iconoMediano {
+    height: 1.3cm;
+    width: auto;
+}
+
+.etiqueta-maxi-content-container p {
+    font-family: 'Oswald';
+    font-size: 12pt;
+    text-align: center;
+    line-height: 0.75;
+    color: #FFF;
+    margin: 0 auto !important;
+    padding: 2px 0 0px 0 !important;
+}
+
+/* ETIQUETAS VERTICALES */
+.etiquetas-verticales-container {
+    margin: 0 !important;
+    padding: 0 !important;
+    border-spacing: 0 !important;
+}
+
+.etiqueta-vertical {
+    width: 2.7cm;
+    height: 3.2cm;
+    display: inline-block;
+    position: relative;
+}
+
+.etiqueta-vertical-content-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 2.05cm;
+    height: auto;
+    margin: 0 !important;
+    padding: 0 !important;
+    border-spacing: 0 !important;
+    text-align: center;
+}
+
+.etiqueta-vertical-content-container tr td {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: fit-content;
+    vertical-align: middle;
+}
+
+.etiqueta-vertical-content-container img {
+    width: auto;
+    height: 1.2cm;
+    margin: 0 auto !important;
+}
+
+.etiqueta-vertical-content-container p {
+    color: #FFF;
+    font-family: 'Oswald';
+    text-align: center;
+    line-height: 0.8;
+    margin: 0 !important;
+    padding: 2px 0 0px 0 !important;
+}
+
+
+/* ETIQUETAS SUPER MAXI */
+.etiquetas-super-maxi-container {
+    margin: 0 !important;
+    padding: 0 !important;
+    border-spacing: 0 !important;
+}
+
+.etiquetas-super-maxi-container tr td {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.etiqueta-super-maxi {
+    width: 6cm;
+    height: 3.6cm;
+    display: inline-block;
+    position: relative;
+}
+
+.etiqueta-super-maxi-content-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    height: 1.8cm;
+    width: auto;
+    margin: 0 !important;
+    padding: 0 !important;
+    border-spacing: 0 !important;
+}
+
+.etiqueta-super-maxi-content-container tr td {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: fit-content;
+    vertical-align: middle;
+}
+
+.etiqueta-super-maxi-content-container img {
+    height: 1.8cm;
+    width: auto;
+    margin: 0 auto !important;
+}
+
+.etiqueta-super-maxi-content-container img.iconoGrande {
+    height: 1.6cm;
+    width: auto;
+}
+
+.etiqueta-super-maxi-content-container img.iconoMediano {
+    height: 1.7cm;
+    width: auto;
+}
+
+.etiqueta-super-maxi-content-container p {
+    font-family: 'Oswald';
+    font-size: 17.25pt;
+    text-align: center;
+    line-height: 0.70;
+    /* line-height: 20pt; */
+    color: #FFF;
+    margin: 0 auto !important;
+    padding: 2px 0 0px 0 !important;
+}
+
+/* ETIQUETAS SUPER MINI */
+.etiquetas-super-mini-container {
+    margin: 0 !important;
+    padding: 0 !important;
+    border-spacing: 0 !important;
+}
+
+.etiquetas-super-mini-container tr td {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.etiqueta-super-mini {
+    width: 2.9cm;
+    height: 1.15cm;
+    display: inline-block;
+    position: relative;
+}
+
+.etiqueta-super-mini-content-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 2.4cm;
+    height: auto;
+    margin: 0 !important;
+    padding: 0 !important;
+    border-spacing: 0 !important;
+    text-align: center;
+    /* border: 1px solid red; */
+}
+
+.etiqueta-super-mini-content-container tr td {
+    margin: 0 !important;
+    padding: 0 !important;
+    height: fit-content;
+    vertical-align: middle;
+    /* border: 1px solid red; */
+}
+
+.etiqueta-super-mini-content-container p {
+    font-family: 'Oswald';
+    font-size: 9pt;
+    text-align: center;
+    line-height: 0.7;
+    color: #FFF;
+    display: inline-block;
+    margin: 0 !important;
+    padding: 3px 0 0px 0 !important;
+    /* border: 1px solid black; */
+}
+
+
+/* TAMAÑOS DE FUENTES SEGUN LA CLASE QUE LLEGA */
+.large-text-size {
+    font-size: 13pt !important;
+}
+
+.normal-text-size {
+    font-size: 12pt !important;
+}
+
+.etiqueta-super-maxi-content-container p.normal-text-size {
+    font-size: 17.25pt !important;
+}
+
+.etiqueta-super-mini-content-container p.normal-text-size {
+    font-size: 9pt !important;
+}
+
+.small-text-size {
+    font-size: 11pt !important;
+    line-height: 0.7 !important;
+}
+
+.etiqueta-maxi-content-container p.small-text-size {
+    font-size: 12pt !important;
+}
+
+.etiqueta-super-maxi-content-container p.small-text-size {
+    font-size: 15pt !important;
+}
+
+.etiqueta-super-mini-content-container p.small-text-size {
+    font-size: 9pt !important;
+}
+
+.extra-small-text-size {
+    font-size: 10pt !important;
+    line-height: 0.6 !important;
+}
+
+.etiqueta-maxi-content-container p.extra-small-text-size {
+    font-size: 11pt !important;
+    line-height: 0.7 !important;
+}
+
+.etiqueta-super-maxi-content-container p.extra-small-text-size {
+    font-size: 14pt !important;
+}
+
+.etiqueta-super-mini-content-container p.extra-small-text-size {
+    font-size: 8pt !important;
+    line-height: 0.7 !important;
+}
+
+.texto-negro {
+    color: #000 !important;
+}
+
+
+/* NUMERO DE PEDIDO VERTICAL ABAJO A LA IZQUIERDA DE LA PANTALLA */
+.numeroOrder {
+    position: absolute;
+    bottom: 0%;
+    left: 0%;
+    transform: translate(-70%, -30%)
+}
+
+.numeroOrder p {
+    transform: rotate(270deg);
+    font-family: 'Oswald';
+    font-size: large;
+}

@@ -1,0 +1,338 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Category;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
+use App\Traits\FindObject;
+use App\Traits\ApiResponse;
+use App\Traits\Auditable;
+
+class CategoryController extends Controller
+{
+    use FindObject, ApiResponse, Auditable;
+
+    public function index(Request $request)
+    {
+        $perPage = $request->query('quantity');
+        $page = $request->query('page', 1);
+        $search = $request->query('search');
+        $statusId = $request->query('statusId');
+        $categoryId = $request->query('categoryId');
+        $query = Category::with('parent'); 
+        if ($search) {
+            $query->where('name', 'like', "%{$search}%");
+        }
+
+        if ($statusId) {
+            $query->where('statusId', $statusId);
+        }
+
+        if ($categoryId) {
+            $query->where('cagetoryId', $categoryId);
+        }
+
+        $query->orderBy('name', 'asc');
+        if (!$perPage) {
+            $categories = $query->get();
+            $this->logAudit(Auth::user(), 'Get Categories List', $request->all(), $categories->first());
+            return $this->success($categories, 'Categorias obtenidas');
+        }
+
+        $categories = $query->paginate($perPage, ['*'], 'page', $page);
+        
+        $this->logAudit(Auth::user(), 'Get Categories List', $request->all(), $categories->first());
+        $metaData = [
+            'current_page' => $categories->currentPage(),
+            'last_page' => $categories->lastPage(),
+            'per_page' => $categories->perPage(),
+            'total' => $categories->total(),
+            'from' => $categories->firstItem(),
+            'to' => $categories->lastItem(),
+        ];
+        return $this->success($categories->items(), 'Categorias obtenidas', $metaData);
+    }
+
+    public function store(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'categoryId' => 'nullable',
+            'img' => 'nullable|max:2048',
+            'icon' => 'nullable|max:2048',
+            'color' => 'nullable|string|max:50',
+            'metaData' => 'nullable|json',
+            'description' => 'nullable|string',
+            'banner' => 'nullable|max:2048',
+            'statusId' => 'nullable|in:1,2',
+            'is_outstanding' => 'nullable|boolean',
+            'is_wholesale' => 'nullable|boolean',
+            'tagId' => 'nullable',
+        ]);
+        $fieldsToNormalize = ['tagId', 'categoryId', 'img', 'icon', 'banner'];
+        foreach ($fieldsToNormalize as $field) {
+            if ($request->has($field) && in_array($request->input($field), ['null', ''])) {
+                $request->merge([$field => null]);
+            }
+        }
+
+        if ($validator->fails()) {
+            $this->logAudit(Auth::user(), 'Store Category', $request->all(), $validator->errors());
+            return $this->validationError($validator->errors());
+        }
+
+        $imgPath = null;
+        if ($request->hasFile('img')) {
+            $imageFile = $request->file('img');
+            $imageName = 'images/categories/' . uniqid('img_') . '.' . $imageFile->getClientOriginalExtension();
+            Storage::disk('public_uploads')->put($imageName, file_get_contents($imageFile));
+            $imgPath = $imageName;
+        }
+
+        $iconPath = null;
+        if ($request->hasFile('icon')) {
+            $iconFile = $request->file('icon');
+            $iconName = 'icons/categories/' . uniqid('icon_') . '.' . $iconFile->getClientOriginalExtension();
+            Storage::disk('public_uploads')->put($iconName, file_get_contents($iconFile));
+            $iconPath = $iconName;
+        }
+
+        $bannerPath = null;
+        if ($request->hasFile('banner')) {
+            $bannerFile = $request->file('banner');
+            $bannerName = 'banners/categories/' . uniqid('banner_') . '.' . $bannerFile->getClientOriginalExtension();
+            Storage::disk('public_uploads')->put($bannerName, file_get_contents($bannerFile));
+            $bannerPath = $bannerName;
+        }
+
+        $category = Category::create([
+            'name' => $request->name,
+            'category_id' => $request->categoryId,
+            'img' => $imgPath,
+            'icon' => $iconPath,
+            'color' => $request->color,
+            'meta_data' => $request->metaData,
+            'description' => $request->description,
+            'banner' => $bannerPath,
+            'status_id' => $request->statusId ?? 1,
+            'is_outstanding' => $request->is_outstanding ?? true,
+            'is_wholesale' => $request->is_wholesale ?? false,
+            'tag_id' => $request->tagId,
+        ]);
+        $this->logAudit(Auth::user(), 'Store Category', $request->all(), $category);
+        if ($category->img) {
+            $category->img = asset($category->img);
+        }
+
+        if ($category->icon) {
+            $category->icon = asset($category->icon);
+        }
+
+        if ($category->banner) {
+            $category->banner = asset($category->banner);
+        }
+
+        return $this->success($category, 'Categoría creada');
+    }
+
+    public function update(Request $request, $id)
+    {
+        $category = $this->findObject(Category::class, $id);
+        $fieldsToNormalize = ['tagId', 'categoryId', 'img', 'icon', 'banner'];
+        foreach ($fieldsToNormalize as $field) {
+            if ($request->has($field) && in_array($request->input($field), ['null', ''])) {
+                $request->merge([$field => null]);
+            }
+        }
+
+        if ($request->has('description') && $request->input('description') === 'null') {
+            $request->merge(['description' => null]);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'name' => 'nullable|string|max:255',
+            'categoryId' => 'nullable|exists:categories,id',
+            'img' => 'nullable|max:2048',
+            'icon' => 'nullable|max:2048',
+            'color' => 'nullable|string|max:50',
+            'metaData' => 'nullable|json',
+            'description' => 'nullable|string',
+            'banner' => 'nullable|max:2048',
+            'statusId' => 'nullable|in:1,2',
+            'is_outstanding' => 'nullable|boolean',
+            'is_wholesale' => 'nullable|boolean',
+            'tagId' => 'nullable|exists:configuration_tags,id',
+        ]);
+        if ($validator->fails()) {
+            $this->logAudit(Auth::user(), 'Update Category', $request->all(), $validator->errors());
+            return $this->validationError($validator->errors());
+        }
+
+        if ($request->categoryId && $request->categoryId == $category->id) {
+            $error = ['categoryId' => ['La categoría no puede ser su propia categoría padre.']];
+            $this->logAudit(Auth::user(), 'Update Category', $request->all(), $error);
+            return $this->validationError($error);
+        }
+
+        $imgPath = $category->img;
+        if ($request->hasFile('img')) {
+            $imageFile = $request->file('img');
+            $imageName = 'images/categories/' . uniqid('img_') . '.' . $imageFile->getClientOriginalExtension();
+            if (Storage::disk('public_uploads')->put($imageName, file_get_contents($imageFile))) {
+                if ($category->img && Storage::disk('public_uploads')->exists($category->img)) {
+                    Storage::disk('public_uploads')->delete($category->img);
+                }
+                $imgPath = $imageName;
+            }
+        } elseif (is_null($request->input('img'))) {
+            if ($category->img && Storage::disk('public_uploads')->exists($category->img)) {
+                Storage::disk('public_uploads')->delete($category->img);
+            }
+            $imgPath = null;
+        }
+
+        $iconPath = $category->icon;
+        if ($request->hasFile('icon')) {
+            $iconFile = $request->file('icon');
+            $iconName = 'icons/categories/' . uniqid('icon_') . '.' . $iconFile->getClientOriginalExtension();
+            if (Storage::disk('public_uploads')->put($iconName, file_get_contents($iconFile))) {
+                if ($category->icon && Storage::disk('public_uploads')->exists($category->icon)) {
+                    Storage::disk('public_uploads')->delete($category->icon);
+                }
+                $iconPath = $iconName;
+            }
+        } elseif (is_null($request->input('icon'))) {
+            if ($category->icon && Storage::disk('public_uploads')->exists($category->icon)) {
+                Storage::disk('public_uploads')->delete($category->icon);
+            }
+            $iconPath = null;
+        }
+
+        $bannerPath = $category->banner;
+        if ($request->hasFile('banner')) {
+            $bannerFile = $request->file('banner');
+            $bannerName = 'banners/categories/' . uniqid('banner_') . '.' . $bannerFile->getClientOriginalExtension();
+            if (Storage::disk('public_uploads')->put($bannerName, file_get_contents($bannerFile))) {
+                if ($category->banner && Storage::disk('public_uploads')->exists($category->banner)) {
+                    Storage::disk('public_uploads')->delete($category->banner);
+                }
+                $bannerPath = $bannerName;
+            }
+        } elseif (is_null($request->input('banner'))) {
+            if ($category->banner && Storage::disk('public_uploads')->exists($category->banner)) {
+                Storage::disk('public_uploads')->delete($category->banner);
+            }
+            $bannerPath = null;
+        }
+
+        $category->name = $request->input('name', $category->name);
+        $category->category_id = $request->input('categoryId', $category->category_id);
+        $category->color = $request->input('color', $category->color);
+        $category->meta_data = $request->input('metaData', $category->meta_data);
+        $category->description = $request->input('description', $category->description);
+        $category->status_id = $request->input('statusId', $category->status_id);
+        $category->is_outstanding = $request->input('is_outstanding', $category->is_outstanding);
+        $category->is_wholesale = $request->input('is_wholesale', $category->is_wholesale);
+        $category->tag_id = $request->input('tagId', $category->tag_id);
+        if ($request->hasFile('img') || $request->has('img')) {
+            $category->img = $imgPath;
+        }
+
+        if ($request->hasFile('icon') || $request->has('icon')) {
+            $category->icon = $iconPath;
+        }
+
+        if ($request->hasFile('banner') || $request->has('banner')) {
+            $category->banner = $bannerPath;
+        }
+
+        $category->save();
+
+        if ($category->img) {
+            $category->img = $category->img;
+        }
+
+        if ($category->icon) {
+            $category->icon = $category->icon;
+        }
+
+        if ($category->banner) {
+            $category->banner = $category->banner;
+        }
+
+        $this->logAudit(Auth::user(), 'Update Category', $request->all(), $category);
+        return $this->success($category, 'Categoría actualizada');
+    }
+
+    public function delete($id)
+    {
+        $category = $this->findObject(Category::class, $id);
+        $category->delete();
+        $this->logAudit(Auth::user(), 'Delete Category', $id, $category);
+        return $this->success($category, 'Categoría eliminada');
+    }
+
+    protected function formatCategoryForPublicApi(Category $category)
+    {
+        $metaData = $category->meta_data;
+        if (is_string($metaData)) {
+            $decodedMetaData = json_decode($metaData);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $metaData = $decodedMetaData;
+            }
+        }
+
+        $formatted = [
+            'id' => $category->id,
+            'name' => $category->name,
+            'img' => $category->img ? asset($category->img) : null,
+            'icon' => $category->icon ? asset($category->icon) : null,
+            'color' => $category->color,
+            'meta_data' => $metaData,
+            'description' => $category->description,
+            'banner' => $category->banner ? asset($category->banner) : null,
+            'status_id' => $category->status_id,
+            'is_outstanding' => $category->is_outstanding,
+            'is_wholesale' => $category->is_wholesale,
+            'tag' => $category->tag ? ['id' => $category->tag->id, 'name' => $category->tag->name, 'color' => $category->tag->color] : null,
+        ];
+
+        if ($category->children->isNotEmpty()) {
+            $formatted['subcategories'] = $category->children->map(function ($subCategory) {
+                return $this->formatCategoryForPublicApi($subCategory);
+            })->toArray();
+        } else {
+            $formatted['subcategories'] = [];
+        }
+
+        return $formatted;
+    }
+
+    public function getPublicCategories()
+    {
+        $categories = Category::whereNull('category_id')
+            ->where('status_id', 1)
+            ->with('tag')
+            ->with([
+                'children' => function ($query) {
+                    $query->where('status_id', 1)
+                        ->orderBy('name', 'asc') // 👈 ordena hijos alfabéticamente
+                        ->with('children.tag');
+                }
+            ])
+            ->orderBy('name', 'asc') // 👈 ordena categorías principales alfabéticamente
+            ->get();
+
+        $formattedCategories = $categories->map(function ($category) {
+            return $this->formatCategoryForPublicApi($category);
+        });
+
+        $this->logAudit(null, 'Get Public Categories List V1', [], $formattedCategories);
+
+        return response()->json($formattedCategories, 200);
+    }
+}

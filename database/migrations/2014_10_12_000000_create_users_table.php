@@ -16,12 +16,14 @@ return new class extends Migration
             $table->string('name');
             $table->string('lastName');
             $table->string('email')->unique();
-            $table->string('photo');
+            $table->string('photo')->nullable()->default(null);
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->boolean('is_active')->default(true);
+            $table->foreignId('profile_id')->constrained('profiles'); 
             $table->rememberToken();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

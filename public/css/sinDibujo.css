@@ -1,0 +1,271 @@
+.primer-color {
+    width: 2.9cm;
+    height: 1.15cm;
+    margin-top: 2px;
+    margin-left: 1.5px;
+    margin-right: 1px;
+    margin-bottom: 2px;
+    display: inline-block;
+    color: white;
+    position: relative;
+}
+
+.segundo-color {
+    width: 2.9cm;
+    height: 1.15cm;
+    margin-top: 2px;
+    margin-left: 1.5px;
+    margin-right: 1px;
+    margin-bottom: 2px;
+    display: inline-block;
+    color: white;
+    position: relative;
+}
+
+.tercer-color {
+    width: 2.9cm;
+    height: 1.15cm;
+    margin-top: 2px;
+    margin-left: 1.5px;
+    margin-right: 1px;
+    margin-bottom: 2px;
+    display: inline-block;
+    color: white;
+    position: relative;
+}
+
+.icon-cuadro {
+    width: 4.4cm;
+    height: 2.4cm;
+    margin-top: 2px;
+    margin-left: 2px;
+    margin-right: 2px;
+    margin-bottom: 3px;
+    vertical-align: top;
+    display: inline-block;
+    position: relative;
+}
+
+.cuadro {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.cuadroD {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.imagen {
+    width: 2cm;
+    height: 100%;
+    position: relative;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.imagenT {
+    width: 2.5cm;
+    height: 100%;
+    position: relative;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.personaje {
+    width: 65%;
+    height: auto;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.supermini {
+    margin-top: -12px;
+}
+
+.segundoD {
+    width: 2.7cm;
+    height: 3.2cm;
+    margin-top: 5px;
+    margin-left: 2px;
+    margin-right: 9.1px;
+    margin-bottom: 3px;
+    color: white;
+    display: inline-block;
+    position: relative;
+}
+
+.imagenAbajo {
+    width: 100%;
+    height: 1.7cm;
+    position: relative;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+}
+
+.imagenArriba {
+    width: 100%;
+    height: 1.7cm;
+    position: relative;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.personaje2 {
+    width: auto;
+    height: 80%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.cuadroS {
+    width: 2.7cm;
+    height: 100%;
+    position: relative;
+    position: absolute;
+    top: 0;
+    left: 2cm;
+}
+
+.tercerD {
+    width: 6cm;
+    height: 3.6cm;
+    margin-top: 6px;
+    margin-left: 1px;
+    margin-right: 1px;
+    margin-bottom: 2.5px;
+    color: white;
+    display: inline-block;
+    position: relative;
+}
+
+.personaje3 {
+    width: 80%;
+    height: auto;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-35%, -50%);
+}
+
+.cuadroT {
+    width: 2.7cm;
+    height: 100%;
+    position: relative;
+    position: absolute;
+    top: 0;
+    left: 2cm;
+}
+
+.texto1 {
+    text-align: center;
+    line-height: 10px;
+    color: white;
+    margin: 0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-right: -50%;
+    transform: translate(-50%, -50%)
+}
+
+.texto2 {
+    text-align: center;
+    line-height: 12px;
+    color: white;
+    margin: 0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    /*transform: translateY(-50%);*/
+    width: 4cm;
+}
+
+.textoArriba {
+    text-align: center;
+    line-height: 12px;
+    color: white;
+    margin: 0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -98%)
+}
+
+.textoAbajo {
+    text-align: center;
+    line-height: 12px;
+    color: white;
+    margin: 0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -1%)
+}
+
+.textoCentradoVertical {
+    text-align: center;
+    line-height: 12px;
+    color: white;
+    margin: 0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%)
+}
+
+.texto4 {
+    text-align: center;
+    line-height: 17px;
+    color: white;
+    margin: 0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.texto3 {
+    transform: rotate(270deg);
+}
+
+.numeroOrder {
+    position: absolute;
+    bottom: 0%;
+    left: 0%;
+    transform: translate(-70%, -30%)
+}
+
+.texto-negro {
+    color: #000 !important;
+}
+
+.hoja {
+    padding-left: 5px;
+    width: 18.5cm;
+    height: 29cm;
+}
+
+@page {
+    margin-left: 1.0cm;
+    margin-right: 1.5cm;
+    margin-top: 0.4cm;
+    margin-bottom: 0.2cm;
+}

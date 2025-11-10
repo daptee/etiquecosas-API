@@ -1,0 +1,5 @@
+ALTER TABLE categories
+    ADD COLUMN is_outstanding BOOLEAN NOT NULL DEFAULT TRUE;
+
+ALTER TABLE categories
+    ADD COLUMN is_wholesale BOOLEAN NOT NULL DEFAULT FALSE;

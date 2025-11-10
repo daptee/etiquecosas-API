@@ -31,4 +31,10 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'mercadopago' => [
+        'token' => env('MERCADO_PAGO_ACCESS_TOKEN'),
+        'platform_id' => env('MP_PLATFORM_ID'),
+    ],
+
+    'front_url' => env('FRONT_URL', 'http://localhost:3000'),
 ];
