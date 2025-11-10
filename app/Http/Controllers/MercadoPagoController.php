@@ -36,6 +36,7 @@ class MercadoPagoController extends Controller
 
         // Preparar items
         $items = [];
+
         if ($sale) {
             foreach ($sale->products as $salesProduct) {
                 Log::info('Processing SaleProduct variant: ' . ($salesProduct->variant ? $salesProduct->variant->name : 'No variant'));
@@ -59,8 +60,21 @@ class MercadoPagoController extends Controller
                     'currency_id' => 'ARS'
                 ];
             }
+        };
+
+        // Aplicar descuento si llega discount_amount
+        $discountAmount = (float) ($sale->discount_amount ?? 0);
+
+        if ($discountAmount > 0) {
+            $items[] = [
+                'id' => 'discount',
+                'title' => 'Descuento',
+                'description' => 'Descuento aplicado a la compra',
+                'quantity' => 1,
+                'unit_price' => -$discountAmount, // valor negativo para restar
+                'currency_id' => 'ARS'
+            ];
         }
-        ;
 
         Log::info('services.mercadopago.token: ' . config('services.mercadopago.token'));
 
@@ -85,7 +99,7 @@ class MercadoPagoController extends Controller
                 "items" => $items,
                 "back_urls" => $backUrls,
                 "auto_return" => "approved",
-                "external_reference" => (string)$sale->id,
+                "external_reference" => (string) $sale->id,
             ]);
 
         $data = $response->json();
