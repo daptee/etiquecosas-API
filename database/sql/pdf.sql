@@ -969,4 +969,11 @@ VALUES (
     }'
 );
 
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    852,
+    '{"tematicas": [{"pdf": ["Etiquetas maxi"], "pdf-url": ["maxi/PERSONALIZABLE"], "name": "Personalizacion"}]}'
+);
+
+
 data: '{"tematicas": [{"id": 154, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini", "Etiquetas vinilo", "Etiquetas super-mini"], "name": "unicornio"}]}'
