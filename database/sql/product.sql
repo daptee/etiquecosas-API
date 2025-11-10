@@ -30,7 +30,7 @@ SET
 SET SQL_SAFE_UPDATES = 1;
 
 UPDATE products
-SET shipping_time_text = '<p data-start="89" data-end="270">⏳ <strong data-start="91" data-end="139">Este producto se hace especialmente para vos</strong>, por eso tiene un tiempo de producci&oacute;n estimado de <strong data-start="191" data-end="210">10 d&iacute;as h&aacute;biles</strong>.<br data-start="211" data-end="214">Siempre hacemos lo posible para que te llegue antes 💪</p>
+SET shipping_text = '<p data-start="89" data-end="270">⏳ <strong data-start="91" data-end="139">Este producto se hace especialmente para vos</strong>, por eso tiene un tiempo de producci&oacute;n estimado de <strong data-start="191" data-end="210">10 d&iacute;as h&aacute;biles</strong>.<br data-start="211" data-end="214">Siempre hacemos lo posible para que te llegue antes 💪</p>
  <p data-start="272" data-end="360">Si eleg&iacute;s env&iacute;o, ten&eacute; en cuenta que <strong data-start="308" data-end="357">el tiempo de entrega se suma al de producci&oacute;n</strong>.</p>
  <p data-start="362" data-end="494">👉 Los tiempos se cuentan <strong data-start="388" data-end="407">en d&iacute;as h&aacute;biles</strong>, a partir de la aprobaci&oacute;n del pago.<br data-start="444" data-end="447">(S&aacute;bados, domingos y feriados no se cuentan 😉)</p>'
 WHERE slug IN (
