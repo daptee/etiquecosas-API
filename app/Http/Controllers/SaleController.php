@@ -416,12 +416,12 @@ class SaleController extends Controller
             Mail::to($sale->client->email)->send(new OrderProductionsMail($sale));
         }
 
-        if ($sale->sale_status_id == 3 && $sale->payment_method_id != 1) { // estado "enviado"
-            Mail::to($sale->client->email)->send(new OrderSendMail($sale));
+        if ($sale->sale_status_id == 3 && $sale->payment_method_id != 1) { // retiro local estado "enviado"
+            Mail::to($sale->client->email)->send(new OrderWithdrawMail($sale));
         }
 
-        if ($sale->sale_status_id == 3 && $sale->payment_method_id == 1) { // estado "enviado"
-            Mail::to($sale->client->email)->send(new OrderWithdrawMail($sale));
+        if ($sale->sale_status_id == 3 && $sale->payment_method_id == 1) { // estado "Listo para retirar"
+            Mail::to($sale->client->email)->send(new OrderSendMail($sale));
         }
 
         if ($sale->sale_status_id == 4) { // estado "Retirado"
@@ -581,12 +581,12 @@ class SaleController extends Controller
             Mail::to($sale->client->email)->send(new OrderProductionsMail($sale));
         }
 
-        if ($sale->sale_status_id == 3 && $sale->payment_method_id != 1) { // estado "enviado"
-            Mail::to($sale->client->email)->send(new OrderSendMail($sale));
+        if ($sale->sale_status_id == 3 && $sale->payment_method_id != 1) { // retiro local estado "enviado"
+            Mail::to($sale->client->email)->send(new OrderWithdrawMail($sale));
         }
 
-        if ($sale->sale_status_id == 3 && $sale->payment_method_id == 1) { // estado "enviado"
-            Mail::to($sale->client->email)->send(new OrderWithdrawMail($sale));
+        if ($sale->sale_status_id == 3 && $sale->payment_method_id == 1) { // estado "Listo para retirar"
+            Mail::to($sale->client->email)->send(new OrderSendMail($sale));
         }
 
         if ($sale->sale_status_id == 4) { // estado "Retirado"

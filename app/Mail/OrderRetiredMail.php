@@ -22,7 +22,7 @@ class OrderRetiredMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: "Tu pedido esta listo para retirar - Pedido #{$this->sale->id}",
+            subject: "Pedido retirado - Pedido #{$this->sale->id}",
         );
     }
 
