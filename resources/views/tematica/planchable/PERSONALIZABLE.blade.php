@@ -7,6 +7,13 @@
     <link rel="stylesheet" type="text/css"
         href="https://fonts.googleapis.com/css?family=Lora:400,700,400italic|Oswald:400,700" media="screen">
     <style type="text/css">
+        @font-face {
+            font-family: 'Oswald';
+            font-style: normal;
+            font-weight: 400;
+            src: url('file://{{ public_path("fonts/Oswald-Regular.ttf") }}') format('truetype');
+        }
+        
         .icon-cuadro {
             border: solid 1px;
             width: 6cm;

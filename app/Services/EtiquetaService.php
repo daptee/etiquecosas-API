@@ -11,10 +11,10 @@ class EtiquetaService
     /**
      * 🗑️ Elimina todos los PDFs existentes de un pedido específico
      */
-    public static function limpiarPdfsDelPedido(int $ventaId): void
+    public static function limpiarPdfsDelPedido(int $ventaId, $fechaCompra = null): void
     {
-        $hoy = date('d-m-Y');
-        $dirPath = storage_path("app/pdf/planchas/{$hoy}");
+        $fechaCarpeta = $fechaCompra ? date('d-m-Y', strtotime($fechaCompra)) : date('d-m-Y');
+        $dirPath = storage_path("app/pdf/planchas/{$fechaCarpeta}");
 
         if (!is_dir($dirPath)) {
             return; // No hay carpeta, no hay nada que eliminar
@@ -32,12 +32,12 @@ class EtiquetaService
         }
     }
 
-    public static function generarEtiquetas(int $ventaId, $tematicaId, array $nombres, $productOrder, $tematicaCoincidente, $customColor, $customIcon): array
+    public static function generarEtiquetas(int $ventaId, $tematicaId, array $nombres, $productOrder, $tematicaCoincidente, $customColor, $customIcon, $fechaCompra = null): array
     {
         $logo = "https://api.etiquecosaslab.com.ar/icons/mail/etiquecosas_logo-rosa.png";
         $outputFiles = [];
-        $hoy = date('d-m-Y');
-        $dirPath = storage_path("app/pdf/planchas/{$hoy}");
+        $fechaCarpeta = $fechaCompra ? date('d-m-Y', strtotime($fechaCompra)) : date('d-m-Y');
+        $dirPath = storage_path("app/pdf/planchas/{$fechaCarpeta}");
         if (!is_dir($dirPath)) mkdir($dirPath, 0755, true);
 
         $pdf = $tematicaCoincidente['pdf'] ?? null;
