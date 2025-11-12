@@ -25,18 +25,19 @@
             vertical-align: top;
             display: inline-block;
             position: relative;
-            background: {{ $plantilla['colores'] }};
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            background: #FFFFFF;
         }
 
         .texto2 {
             width: 100%;
             text-align: center;
             line-height: 12px;
-            color: white;
+            color: {{ $plantilla['colores'] }};
             margin: 0;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             font-family: 'Oswald';
         }
 
@@ -78,7 +79,7 @@
         @for ($i = 0; $i < $plantilla['label']; $i++)
             <div class="icon-cuadro">
                 <p class="texto2" style="font-size: {{ $fontsize }};">
-                    {{ mb_strtoupper($product_order->name) }}</p>
+                    {!! formatName($product_order->name, 1) !!}</p>
             </div>
         @endfor
         <div class="numeroOrder">

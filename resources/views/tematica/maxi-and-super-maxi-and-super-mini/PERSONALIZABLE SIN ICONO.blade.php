@@ -71,6 +71,20 @@
             transform: translate(-50%, -55%)
         }
 
+        .cuadroRenglon {
+            border-bottom-width: 1px;
+            border-bottom-style: solid;
+            border-bottom-color: #000;
+            position: absolute;
+            display: inline-block;
+            position: relative;
+            position: absolute;
+            bottom: 10;
+            align-self: justify;
+            left: 0.5cm;
+            width: 4.5cm
+        }
+
         .icon-cuadroGrande {
             width: 5.5cm;
             height: 3cm;
@@ -82,19 +96,21 @@
             display: inline-block;
             position: relative;
             bottom: 2;
-            background: {{ $plantilla['colores'] }};
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            background: #FFFFFF;
         }
 
-        .texto2 {
+        .icon-cuadroGrande .texto2 {
             text-align: center;
-            line-height: 12px;
-            color: white;
+            line-height: 0.8;
+            color: {{ $plantilla['colores'] }};
             margin: 0;
             font-family: 'Oswald';
             font-size: 1.15em;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
         }
 
         .icon-cuadro {
@@ -108,14 +124,29 @@
             display: inline-block;
             position: relative;
             background: {{ $plantilla['colores'] }};
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        }
+
+        .icon-cuadro .texto2 {
+            text-align: center;
+            line-height: 0.8;
+            color: white;
+            margin: 0;
+            font-family: 'Oswald';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
         }
 
         .texto3 {
             transform: rotate(270deg);
         }
+
+        .texto1 {
+            line-height: 0.8;
+        }
+
 
         .numeroOrder {
             position: absolute;
@@ -142,25 +173,28 @@
     <div class="hoja">
         @for ($i = 0; $i < 2; $i++)
             <div class="icon-cuadroGrande">
-                <p class="texto2">{{mb_strtoupper($product_order->name)}}</p>
+                <p class="texto2">{!! formatName($product_order->name, 2) !!}</p>
+                <div class="cuadroRenglon"></div>
             </div>
             <div class="icon-cuadroGrande">
-                <p class="texto2">{{mb_strtoupper($product_order->name)}}</p>
+                <p class="texto2">{!! formatName($product_order->name, 2) !!}</p>
+                <div class="cuadroRenglon"></div>
             </div>
             <div class="icon-cuadroGrande">
-                <p class="texto2">{{mb_strtoupper($product_order->name)}}</p>
+                <p class="texto2">{!! formatName($product_order->name, 2) !!}</p>
+                <div class="cuadroRenglon"></div>
             </div>
         @endfor
 
         @for ($i = 0; $i < 3; $i++)
             <div class="icon-cuadro">
-                <p class="texto2" style="font-size: 1.05em;">{{mb_strtoupper($product_order->name)}}</p>
+                <p class="texto2" style="font-size: 1.05em;">{!! formatName($product_order->name, 2) !!}</p>
             </div>
             <div class="icon-cuadro">
-                <p class="texto2" style="font-size: 1.05em;">{{mb_strtoupper($product_order->name)}}</p>
+                <p class="texto2" style="font-size: 1.05em;">{!! formatName($product_order->name, 2) !!}</p>
             </div>
             <div class="icon-cuadro">
-                <p class="texto2" style="font-size: 1.05em;">{{mb_strtoupper($product_order->name)}}</p>
+                <p class="texto2" style="font-size: 1.05em;">{!! formatName($product_order->name, 2) !!}</p>
             </div>
         @endfor
 
@@ -168,22 +202,22 @@
 
         @for ($i = 0; $i < 10; $i++)
             <div class="primer-color">
-                <p class="texto1" style="font-family: 'Oswald';font-size: x-small;">{{mb_strtoupper($product_order->name)}}</p>
+                <p class="texto1" style="font-family: 'Oswald';font-size: x-small;">{!! formatName($product_order->name, 2) !!}</p>
             </div>
             <div class="segundo-color">
-                <p class="texto1" style="font-family: 'Oswald';font-size: x-small;">{{mb_strtoupper($product_order->name)}}</p>
+                <p class="texto1" style="font-family: 'Oswald';font-size: x-small;">{!! formatName($product_order->name, 2) !!}</p>
             </div>
             <div class="tercer-color">
-                <p class="texto1" style="font-family: 'Oswald';font-size: x-small;">{{mb_strtoupper($product_order->name)}}</p>
+                <p class="texto1" style="font-family: 'Oswald';font-size: x-small;">{!! formatName($product_order->name, 2) !!}</p>
             </div>
             <div class="primer-color">
-                <p class="texto1" style="font-family: 'Oswald';font-size: x-small;">{{mb_strtoupper($product_order->name)}}</p>
+                <p class="texto1" style="font-family: 'Oswald';font-size: x-small;">{!! formatName($product_order->name, 2) !!}</p>
             </div>
             <div class="segundo-color">
-                <p class="texto1" style="font-family: 'Oswald';font-size: x-small;">{{mb_strtoupper($product_order->name)}}</p>
+                <p class="texto1" style="font-family: 'Oswald';font-size: x-small;">{!! formatName($product_order->name, 2) !!}</p>
             </div>
             <div class="tercer-color">
-                <p class="texto1" style="font-family: 'Oswald';font-size: x-small;">{{mb_strtoupper($product_order->name)}}</p>
+                <p class="texto1" style="font-family: 'Oswald';font-size: x-small;">{!! formatName($product_order->name, 2) !!}</p>
             </div>
         @endfor
 

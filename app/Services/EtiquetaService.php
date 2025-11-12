@@ -125,7 +125,7 @@ class EtiquetaService
             foreach ($nombres as $nombre) {
                 $fontClass = mb_strlen($nombre, 'UTF-8') > 16 ? 'small-text-size' : 'normal-text-size';
                 $plantilla = [
-                    'colores' => $customColor,
+                    'colores' => $customColor[0],
                     'imagen' => $customIconPath,
                     'fontClass' => $fontClass,
                     'columna' => 2,
@@ -153,7 +153,7 @@ class EtiquetaService
                 $fontClass = mb_strlen($nombre, 'UTF-8') > 16 ? 'small-text-size' : 'normal-text-size';
                 
                 $plantilla = [
-                    'colores' => $customColor,
+                    'colores' => $customColor[0],
                     'fontClass' => $fontClass,
                     'columna' => 2,
                     'filas' => 19,
