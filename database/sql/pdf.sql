@@ -327,6 +327,17 @@ VALUES (
     ]'
 );
 
+INSERT INTO tematicas (name, colors)
+VALUES (
+    'Gamer',
+    '[
+        "0.94,0.59,0.40,0.32",
+        "0.06,0.01,0.71,0",
+        "0.50,0,0.08,0",
+        "0,0,0,0.60"
+    ]'
+);
+
 CREATE TABLE product_pdf (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     product_id BIGINT UNSIGNED NOT NULL,
@@ -343,97 +354,97 @@ CREATE TABLE product_pdf (
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     912,
-    '{"tematicas": [{"id": 154, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Unicornio", "pdf_url": ["principal/UNICORNIO.pdf"]}]}'
+    '{"tematicas": [{"id": 154, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Unicornio", "pdf-url": ["principal/UNICORNIO"]}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     920,
-    '{"tematicas": [{"id": 140, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Emojis", "pdf_url": ["principal/EMOJIS.pdf"]}]}'
+    '{"tematicas": [{"id": 140, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Emojis", "pdf-url": ["principal/EMOJIS"]}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     929,
-    '{"tematicas": [{"id": 139, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Dinosaurios", "pdf_url": ["principal/DINOSAURIOS.pdf"]}]}'
+    '{"tematicas": [{"id": 139, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Dinosaurios", "pdf-url": ["principal/DINOSAURIOS"]}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     939,
-    '{"tematicas": [{"id": 152, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Teen", "pdf_url": ["principal/TEEN.pdf"]}]}'
+    '{"tematicas": [{"id": 152, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Teen", "pdf-url": ["principal/TEEN"]}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     948,
-    '{"tematicas": [{"id": 143, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Futbol", "pdf_url": ["principal/FUTBOL.pdf"]}]}'
+    '{"tematicas": [{"id": 143, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Futbol", "pdf-url": ["principal/FUTBOL"]}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     956,
-    '{"tematicas": [{"id": 146, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Nautica", "pdf_url": ["principal/NAUTICA.pdf"]}]}'
+    '{"tematicas": [{"id": 146, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Nautica", "pdf-url": ["principal/NAUTICA"]}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     960,
-    '{"tematicas": [{"id": 138, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Bosque", "pdf_url": ["principal/BOSQUE.pdf"]}]}'
+    '{"tematicas": [{"id": 138, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Bosque", "pdf-url": ["principal/BOSQUE"]}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     3627,
-    '{"tematicas": [{"id": 145, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Llamas", "pdf_url": ["principal/LLAMAS.pdf"]}]}'
+    '{"tematicas": [{"id": 145, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Llamas", "pdf-url": ["principal/LLAMAS"]}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     11071,
-    '{"tematicas": [{"id": 134, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Granja", "pdf_url": ["principal/GRANJA.pdf"]}]}'
+    '{"tematicas": [{"id": 134, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Granja", "pdf-url": ["principal/GRANJA"]}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     11128,
-    '{"tematicas": [{"id": 153, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Transportes", "pdf_url": ["principal/TRANSPORTES.pdf"]}]}'
+    '{"tematicas": [{"id": 153, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Transportes", "pdf-url": ["principal/TRANSPORTES"]}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     11131,
-    '{"tematicas": [{"id": 137, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Basquet", "pdf_url": ["principal/BASQUET.pdf"]}]}'
+    '{"tematicas": [{"id": 137, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Basquet", "pdf-url": ["principal/BASQUET"]}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     11747,
-    '{"tematicas": [{"id": 142, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Estrellas pastel", "pdf_url": ["principal/ESTRELLAS PASTEL.pdf"]}]}'
+    '{"tematicas": [{"id": 142, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Estrellas pastel", "pdf-url": ["principal/ESTRELLAS PASTEL"]}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     31985,
-    '{"tematicas": [{"id": 28, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Sin dibujo", "pdf_url": ["principal/SIN DIBUJO.pdf"]}]}'
+    '{"tematicas": [{"id": 28, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Sin dibujo", "pdf-url": ["principal/SIN DIBUJO"]}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     32233,
-    '{"tematicas": [{"id": 155, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Skate", "pdf_url": ["principal/SKATE.pdf"]}]}'
+    '{"tematicas": [{"id": 155, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Skate", "pdf-url": ["principal/SKATE"]}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     55418,
-    '{"tematicas": [{"id": 136, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Aire", "pdf_url": ["principal/AIRE.pdf"]}]}'
+    '{"tematicas": [{"id": 136, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Aire", "pdf-url": ["principal/AIRE"]}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     90411,
-    '{"tematicas": [{"id": 156, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Positive", "pdf_url": ["principal/POSITIVE.pdf"]}]}'
+    '{"tematicas": [{"id": 156, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Positive", "pdf-url": ["principal/POSITIVE"]}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)

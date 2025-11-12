@@ -1116,7 +1116,7 @@ class SaleController extends Controller
                                     $customIcon
                                 );
 
-                                Log::info("PDF generado para {$nombreCompleto}, temática ID: {$tematicaId}");
+                                Log::info("PDF generado sin variante para {$nombreCompleto}, temática ID: {$tematicaId}");
                             } catch (\Throwable $e) {
                                 Log::error("Error generando PDF para {$nombreCompleto}, temática ID: {$tematicaId}", [
                                     'error' => $e->getMessage(),
