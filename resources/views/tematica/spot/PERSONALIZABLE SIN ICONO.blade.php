@@ -13,43 +13,6 @@
             src: url('file://{{ public_path("fonts/Oswald-Regular.ttf") }}') format('truetype');
         }
 
-        .circulo-personaje {
-            width: 3.4cm;
-            height: 3.4cm;
-            margin-right: 5px;
-            margin-bottom: 0.7cm;
-            vertical-align: top;
-            display: inline-block;
-            position: relative;
-            border-radius: 50%;
-            -webkit-border-radius: 50%;
-            background: {{ $plantilla['colores'] }};
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .circulo-texto {
-            width: 80%;
-            text-align: center;
-            margin: 0 auto;
-            line-height: 0.8;
-            font-family: 'Oswald';
-            font-size: small;
-            color: #FFF;
-        }
-
-        .texto3 {
-            transform: rotate(270deg);
-        }
-
-        .numeroOrder {
-            position: absolute;
-            bottom: 0%;
-            left: 0%;
-            transform: translate(-65%, -70%)
-        }
-
         .hoja {
             padding-left: 5px;
             width: 18.5cm;
@@ -62,6 +25,44 @@
             margin-top: 0.4cm;
             margin-bottom: 0.2cm;
         }
+
+        .numeroOrder {
+            position: absolute;
+            bottom: 0%;
+            left: 0%;
+            transform: translate(-70%, -30%)
+        }
+
+        .numeroOrder p {
+            transform: rotate(270deg);
+            font-family: 'Oswald';
+            font-size: large;
+        }
+
+
+        /* FILA SPOT */
+        .circulo-personaje {
+            width: 3.4cm;
+            height: 3.4cm;
+            margin-right: 5px;
+            margin-bottom: 0.7cm;
+            vertical-align: top;
+            display: inline-block;
+            position: relative;
+            border-radius: 50%;
+            background: #FFF;
+        }
+
+        .circulo-texto {
+            width: 80%;
+            text-align: center;
+            margin: 10px auto 0;
+            line-height: 0.8;
+            color: {{ $plantilla['colores'] }};
+            font-family: 'Oswald';
+            font-size: small;
+            padding-top: 0.8cm;
+        }
     </style>
 
 <body>
@@ -69,7 +70,7 @@
         @for ($i = 0; $i < 35; $i++)
             <div class="circulo-personaje">
                 <p class="circulo-texto">
-                    {{mb_strtoupper($product_order->name)}}
+                    {{ mb_strtoupper($product_order->name) }}
                 </p>
             </div>
         @endfor

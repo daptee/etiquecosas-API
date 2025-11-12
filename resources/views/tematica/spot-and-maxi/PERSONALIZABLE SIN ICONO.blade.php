@@ -65,26 +65,30 @@
             width: 5.2cm;
             height: 1.9cm;
             display: inline-block;
-            vertical-align: top;
             margin: 10px 10px !important;
             padding: 0;
             background: {{ $plantilla['colores'] }};
             text-align: center;
+            position: relative;
         }
 
         .etiqueta-maxi-text {
             font-family: 'Oswald';
             font-size: 14pt;
             text-align: center;
-            line-height: 1.9cm;
             color: #fff;
             margin: 0;
             padding: 0;
             width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .etiqueta-maxi-text p {
+            line-height: 0.8;
+            margin: 0;
         }
 
         .etiqueta-maxi-text p.normal-text-size {
@@ -119,19 +123,18 @@
             display: inline-block;
             position: relative;
             border-radius: 50%;
-            background: {{ $plantilla['colores'] }};
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            background: #FFF;
         }
 
         .circulo-texto {
             width: 80%;
             text-align: center;
+            margin: 10px auto 0;
             line-height: 0.8;
-            color: #FFF;
+            color: {{ $plantilla['colores'] }};
             font-family: 'Oswald';
             font-size: small;
+            padding-top: 0.8cm;
         }
     </style>
 </head>
@@ -156,7 +159,7 @@
                         <td class="etiqueta-maxi">
                             <div class="etiqueta-maxi-text">
                                 <p class="{{ $plantilla['fontClass'] }}" style="margin:0; color:#FFF;">
-                                    {!! formatName($product_order->name) !!}
+                                    {!! formatName($product_order->name, 2) !!}
                                 </p>
                             </div>
                         </td>
