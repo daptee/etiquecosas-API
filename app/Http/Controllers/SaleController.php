@@ -476,7 +476,8 @@ class SaleController extends Controller
                                     $productOrder,
                                     $tematicaCoincidente,
                                     $customColor,
-                                    $customIcon
+                                    $customIcon,
+                                    $sale->created_at
                                 );
 
                                 Log::info("PDF generado para {$nombreCompleto}, temática ID: {$tematicaId}");
@@ -502,7 +503,8 @@ class SaleController extends Controller
                                     $productOrder,
                                     $tematica,
                                     $customColor,
-                                    $customIcon
+                                    $customIcon,
+                                    $sale->created_at
                                 );
 
                                 Log::info("PDF generado para {$nombreCompleto}, temática ID: {$tematicaId}");
@@ -538,7 +540,8 @@ class SaleController extends Controller
                         $productOrder,
                         null,
                         null,
-                        null
+                        null,
+                        $sale->created_at
                     );
 
                     Log::info("PDF generado para {$nombreCompleto}, temática ID: {$tematicaId}");
@@ -598,7 +601,7 @@ class SaleController extends Controller
             StockService::discountStock($sale);
 
             // 🗑️ Eliminar todos los PDFs anteriores de este pedido antes de generar nuevos
-            EtiquetaService::limpiarPdfsDelPedido($sale->id);
+            EtiquetaService::limpiarPdfsDelPedido($sale->id, $sale->created_at);
 
             foreach ($sale->products as $productOrder) {
                 // === 1. Datos base ===
@@ -640,7 +643,8 @@ class SaleController extends Controller
                                     $productOrder,
                                     $tematicaCoincidente,
                                     $customColor,
-                                    $customIcon
+                                    $customIcon,
+                                    $sale->created_at
                                 );
 
                                 Log::info("PDF generado para {$nombreCompleto}, temática ID: {$tematicaId}");
@@ -666,7 +670,8 @@ class SaleController extends Controller
                                     $productOrder,
                                     $tematica,
                                     $customColor,
-                                    $customIcon
+                                    $customIcon,
+                                    $sale->created_at
                                 );
 
                                 Log::info("PDF generado para {$nombreCompleto}, temática ID: {$tematicaId}");
@@ -702,7 +707,8 @@ class SaleController extends Controller
                         $productOrder,
                         null,
                         null,
-                        null
+                        null,
+                        $sale->created_at
                     );
 
                     Log::info("PDF generado para {$nombreCompleto}, temática ID: {$tematicaId}");
@@ -1051,7 +1057,7 @@ class SaleController extends Controller
             $pdfPaths = [];
 
             // 🗑️ Eliminar todos los PDFs anteriores de este pedido antes de generar nuevos
-            EtiquetaService::limpiarPdfsDelPedido($sale->id);
+            EtiquetaService::limpiarPdfsDelPedido($sale->id, $sale->created_at);
 
             foreach ($sale->products as $productOrder) {
                 // === 1. Datos base ===
@@ -1093,7 +1099,8 @@ class SaleController extends Controller
                                     $productOrder,
                                     $tematicaCoincidente,
                                     $customColor,
-                                    $customIcon
+                                    $customIcon,
+                                    $sale->created_at
                                 );
 
                                 Log::info("PDF generado para {$nombreCompleto}, temática ID: {$tematicaId}");
@@ -1119,7 +1126,8 @@ class SaleController extends Controller
                                     $productOrder,
                                     $tematica,
                                     $customColor,
-                                    $customIcon
+                                    $customIcon,
+                                    $sale->created_at
                                 );
 
                                 Log::info("PDF generado sin variante para {$nombreCompleto}, temática ID: {$tematicaId}");
@@ -1155,7 +1163,8 @@ class SaleController extends Controller
                         $productOrder,
                         null,
                         null,
-                        null
+                        null,
+                        $sale->created_at
                     );
 
                     Log::info("PDF generado para {$nombreCompleto}, temática ID: {$tematicaId}");
