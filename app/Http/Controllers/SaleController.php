@@ -594,8 +594,11 @@ class SaleController extends Controller
         }
 
         if ($sale->sale_status_id == 1 && $saleStatusOld != 1) {
-            
+
             StockService::discountStock($sale);
+
+            // 🗑️ Eliminar todos los PDFs anteriores de este pedido antes de generar nuevos
+            EtiquetaService::limpiarPdfsDelPedido($sale->id);
 
             foreach ($sale->products as $productOrder) {
                 // === 1. Datos base ===
@@ -1046,6 +1049,9 @@ class SaleController extends Controller
             $sale = Sale::with('products.product', 'products.variant')->findOrFail($id);
 
             $pdfPaths = [];
+
+            // 🗑️ Eliminar todos los PDFs anteriores de este pedido antes de generar nuevos
+            EtiquetaService::limpiarPdfsDelPedido($sale->id);
 
             foreach ($sale->products as $productOrder) {
                 // === 1. Datos base ===

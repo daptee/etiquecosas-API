@@ -8,12 +8,36 @@ use Illuminate\Support\Facades\Log;
 
 class EtiquetaService
 {
+    /**
+     * 🗑️ Elimina todos los PDFs existentes de un pedido específico
+     */
+    public static function limpiarPdfsDelPedido(int $ventaId): void
+    {
+        $hoy = date('d-m-Y');
+        $dirPath = storage_path("app/pdf/planchas/{$hoy}");
+
+        if (!is_dir($dirPath)) {
+            return; // No hay carpeta, no hay nada que eliminar
+        }
+
+        $existingFiles = glob("{$dirPath}/{$ventaId}-*.pdf");
+        if (!empty($existingFiles)) {
+            foreach ($existingFiles as $file) {
+                if (file_exists($file)) {
+                    unlink($file);
+                    Log::info("🗑️ PDF anterior eliminado", ['path' => $file]);
+                }
+            }
+            Log::info("🔄 Eliminados " . count($existingFiles) . " PDFs anteriores del pedido {$ventaId}");
+        }
+    }
+
     public static function generarEtiquetas(int $ventaId, $tematicaId, array $nombres, $productOrder, $tematicaCoincidente, $customColor, $customIcon): array
     {
         $logo = "https://api.etiquecosaslab.com.ar/icons/mail/etiquecosas_logo-rosa.png";
         $outputFiles = [];
-        $hoy = date('Y-m-d');
-        $dirPath = storage_path("app/pdf/planchas/{$hoy}/{$ventaId}");
+        $hoy = date('d-m-Y');
+        $dirPath = storage_path("app/pdf/planchas/{$hoy}");
         if (!is_dir($dirPath)) mkdir($dirPath, 0755, true);
 
         $pdf = $tematicaCoincidente['pdf'] ?? null;
@@ -27,14 +51,21 @@ class EtiquetaService
         /**
          * 🔧 Helper para obtener vistas según tipo o URL personalizada
          */
-        $getViews = function ($pdf, string $prefix, $urlPdf = null) {
+        $getViews = function ($pdf, string $prefix, $urlPdf = null) use ($customIcon) {
             // 🟣 Si llegan URLs personalizadas desde la web
             if ($urlPdf) {
                 // Acepta una o varias rutas
                 $urls = is_array($urlPdf) ? $urlPdf : [$urlPdf];
                 // Asegura el prefijo "tematica/" si no lo tiene
-                return array_map(function ($u) {
-                    return str_starts_with($u, 'tematica/') ? $u : "tematica/{$u}";
+                return array_map(function ($u) use ($customIcon) {
+                    $path = str_starts_with($u, 'tematica/') ? $u : "tematica/{$u}";
+
+                    // 🔄 Si no hay icono y la ruta contiene "PERSONALIZABLE", cambiar a "PERSONALIZABLE SIN ICONO"
+                    if (!$customIcon && str_contains($path, '/PERSONALIZABLE')) {
+                        $path = str_replace('/PERSONALIZABLE', '/PERSONALIZABLE SIN ICONO', $path);
+                    }
+
+                    return $path;
                 }, $urls);
             }
 
@@ -84,10 +115,10 @@ class EtiquetaService
         };
 
         /**
-         * 🟣 CASO 1: PDF PERSONALIZABLE
+         * 🟣 CASO 1: PDF PERSONALIZABLE (CON ICONO)
          */
         if ($customIcon && $customColor) {
-            Log::info("🟣 Generando PDF PERSONALIZABLE");
+            Log::info("🟣 Generando PDF PERSONALIZABLE con icono");
             $views = $getViews($pdf, "PERSONALIZABLE", $urlPdf);
             $customIconPath = public_path($customIcon);
 
@@ -104,7 +135,34 @@ class EtiquetaService
                 $product_order = (object)['name' => $nombre, 'order' => (object)['id_external' => $ventaId]];
 
                 foreach ($views as $i => $view) {
-                    $filePath = "{$dirPath}/{$ventaId}-{$productOrder->product->name}-PERSONALIZABLE-" . ($i + 1) . ".pdf";
+                    $filePath = "{$dirPath}/{$ventaId}-{$productOrder->id}-{$productOrder->product->name}-PERSONALIZABLE-" . ($i + 1) . ".pdf";
+                    $renderPdf($view, $plantilla, $product_order, $filePath);
+                }
+            }
+            return $outputFiles;
+        }
+
+        /**
+         * 🟣 CASO 1B: PDF PERSONALIZABLE SIN ICONO (LISA)
+         */
+        if (!$customIcon && $customColor) {
+            Log::info("🟣 Generando PDF PERSONALIZABLE sin icono (lisa)");
+            $views = $getViews($pdf, "PERSONALIZABLE SIN ICONO", $urlPdf);
+
+            foreach ($nombres as $nombre) {
+                $fontClass = mb_strlen($nombre, 'UTF-8') > 16 ? 'small-text-size' : 'normal-text-size';
+                
+                $plantilla = [
+                    'colores' => $customColor,
+                    'fontClass' => $fontClass,
+                    'columna' => 2,
+                    'filas' => 19,
+                    'label' => $numberLabels ?? 24
+                ];
+                $product_order = (object)['name' => $nombre, 'order' => (object)['id_external' => $ventaId]];
+
+                foreach ($views as $i => $view) {
+                    $filePath = "{$dirPath}/{$ventaId}-{$productOrder->id}-{$productOrder->product->name}-PERSONALIZABLE_SIN_ICONO-" . ($i + 1) . ".pdf";
                     $renderPdf($view, $plantilla, $product_order, $filePath);
                 }
             }
@@ -139,7 +197,7 @@ class EtiquetaService
                 $product_order = (object)['name' => $nombre, 'order' => (object)['id_external' => $ventaId]];
 
                 foreach ($views as $i => $view) {
-                    $filePath = "{$dirPath}/{$ventaId}-{$productOrder->product->name}-COLOR_RANGE-" . ($i + 1) . ".pdf";
+                    $filePath = "{$dirPath}/{$ventaId}-{$productOrder->id}-{$productOrder->product->name}-COLOR_RANGE-" . ($i + 1) . ".pdf";
                     $renderPdf($view, $plantilla, $product_order, $filePath);
                 }
             }
@@ -166,8 +224,11 @@ class EtiquetaService
             }
         }
 
+        // 🧹 Limpiar temática: remover acentos y caracteres especiales para la ruta
+        $tematicaLimpia = self::limpiarNombreArchivo($tematica);
+
         // imágenes
-        $iconosPath = storage_path("app/pdf/Iconos/Tematicas/{$tematica}");
+        $iconosPath = storage_path("app/pdf/Iconos/Tematicas/{$tematicaLimpia}");
         $imagenes = [];
         if (is_dir($iconosPath)) {
             foreach (scandir($iconosPath) as $f) {
@@ -192,7 +253,7 @@ class EtiquetaService
             $product_order = (object)['name' => $nombre, 'order' => (object)['id_external' => $ventaId]];
 
             foreach ($views as $i => $view) {
-                $filePath = "{$dirPath}/{$ventaId}-{$productOrder->product->name}-{$tematica}-" . ($i + 1) . ".pdf";
+                $filePath = "{$dirPath}/{$ventaId}-{$productOrder->id}-{$productOrder->product->name}-{$tematica}-" . ($i + 1) . ".pdf";
                 $renderPdf($view, $plantilla, $product_order, $filePath);
             }
         }
@@ -210,17 +271,51 @@ class EtiquetaService
         if (strtoupper($typography) === 'BOLD') {
             $fontSize = '78px';
             if ($cantCharsName > 5) $fontSize = '70px';
-            if ($cantCharsName > 7) $fontSize = '46px';
+            if ($cantCharsName > 6) $fontSize = '46px';
             if ($cantCharsName > 9) $fontSize = '36px';
             if ($cantCharsName > 11) $fontSize = '32px';
         } else {
             $fontSize = '90px';
             if ($cantCharsName > 5) $fontSize = '82px';
-            if ($cantCharsName > 7) $fontSize = '68px';
+            if ($cantCharsName > 6) $fontSize = '68px';
             if ($cantCharsName > 9) $fontSize = '52px';
             if ($cantCharsName > 11) $fontSize = '46px';
         }
 
         return $fontSize;
+    }
+
+    /**
+     * 🧹 Limpia un nombre para uso en rutas de archivos.
+     * Remueve acentos, caracteres especiales y espacios múltiples.
+     */
+    private static function limpiarNombreArchivo(string $nombre): string
+    {
+        // Tabla de reemplazo de caracteres acentuados
+        $acentos = [
+            'Á' => 'A', 'É' => 'E', 'Í' => 'I', 'Ó' => 'O', 'Ú' => 'U',
+            'á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u',
+            'À' => 'A', 'È' => 'E', 'Ì' => 'I', 'Ò' => 'O', 'Ù' => 'U',
+            'à' => 'a', 'è' => 'e', 'ì' => 'i', 'ò' => 'o', 'ù' => 'u',
+            'Ä' => 'A', 'Ë' => 'E', 'Ï' => 'I', 'Ö' => 'O', 'Ü' => 'U',
+            'ä' => 'a', 'ë' => 'e', 'ï' => 'i', 'ö' => 'o', 'ü' => 'u',
+            'Â' => 'A', 'Ê' => 'E', 'Î' => 'I', 'Ô' => 'O', 'Û' => 'U',
+            'â' => 'a', 'ê' => 'e', 'î' => 'i', 'ô' => 'o', 'û' => 'u',
+            'Ñ' => 'N', 'ñ' => 'n', 'Ç' => 'C', 'ç' => 'c'
+        ];
+
+        // Reemplazar acentos
+        $limpio = strtr($nombre, $acentos);
+
+        // Remover caracteres especiales excepto letras, números, espacios y guiones
+        $limpio = preg_replace('/[^A-Za-z0-9\s\-]/', '', $limpio);
+
+        // Reemplazar espacios múltiples por uno solo
+        $limpio = preg_replace('/\s+/', ' ', $limpio);
+
+        // Trim espacios al inicio y final
+        $limpio = trim($limpio);
+
+        return $limpio;
     }
 }
