@@ -226,6 +226,7 @@ class EtiquetaService
 
         // 🧹 Limpiar temática: remover acentos y caracteres especiales para la ruta
         $tematicaLimpia = self::limpiarNombreArchivo($tematica);
+        $tematicaLimpia = strtoupper($tematicaLimpia);
 
         // imágenes
         $iconosPath = storage_path("app/pdf/Iconos/Tematicas/{$tematicaLimpia}");

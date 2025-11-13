@@ -887,7 +887,7 @@ VALUES (
             },
             { 
                 "id": 193, 
-                "name": "rojo, verde agua, verde lima , azul oscuro", 
+                "name": "rojo, verde agua, verde lima, azul oscuro", 
                 "pdf": ["Etiquetas transfer"],
                 "pdf-url": ["stars/TRANSFER MAYUSCULA"],
                 "typography": "Mayuscula",  

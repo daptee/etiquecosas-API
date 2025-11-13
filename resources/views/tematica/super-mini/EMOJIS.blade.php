@@ -6,6 +6,33 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Lora:400,700,400italic|Oswald:400,700" media="screen">
     <style type="text/css">
+        @font-face {
+            font-family: 'Lora';
+            font-style: normal;
+            font-weight: 400;
+            src: url('file://{{ public_path("fonts/Lora-Regular.ttf") }}') format('truetype');
+        }
+
+        @font-face {
+            font-family: 'Lora';
+            font-style: normal;
+            font-weight: 700;
+            src: url('file://{{ public_path("fonts/Lora-Bold.ttf") }}') format('truetype');
+        }
+
+        @font-face {
+            font-family: 'Oswald';
+            font-style: normal;
+            font-weight: 400;
+            src: url('file://{{ public_path("fonts/Oswald-Regular.ttf") }}') format('truetype');
+        }
+
+        @font-face {
+            font-family: 'Oswald';
+            font-style: normal;
+            font-weight: 700;
+            src: url('file://{{ public_path("fonts/Oswald-Bold.ttf") }}') format('truetype');
+        }
         .primer-color {
             width: 2.9cm;
             height: 1.15cm;
