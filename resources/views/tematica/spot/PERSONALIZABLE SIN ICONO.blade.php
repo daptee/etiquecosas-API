@@ -42,8 +42,8 @@
 
         /* FILA SPOT */
         .circulo-personaje {
-            width: 3.4cm;
-            height: 3.4cm;
+            width: 3cm;
+            height: 3cm;
             margin-right: 5px;
             margin-bottom: 0.7cm;
             vertical-align: top;
@@ -70,7 +70,7 @@
         @for ($i = 0; $i < 35; $i++)
             <div class="circulo-personaje">
                 <p class="circulo-texto">
-                    {{ mb_strtoupper($product_order->name) }}
+                    {{ formatNameExactLines($product_order->name, 2) }}
                 </p>
             </div>
         @endfor

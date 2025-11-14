@@ -87,10 +87,12 @@ class EtiquetaService
             } */
 
             // 🟠 Vistas por defecto si no hay coincidencias
+            $prefixLimpia = self::limpiarNombreArchivo($prefix);
+            $prefixLimpia = strtoupper($prefixLimpia);
             return [
-                "tematica/principal/$prefix",
-                "tematica/vinilo/$prefix",
-                "tematica/super-mini/$prefix",
+                "tematica/principal/$prefixLimpia",
+                "tematica/vinilo/$prefixLimpia",
+                "tematica/super-mini/$prefixLimpia",
             ];
         };
 
@@ -243,6 +245,7 @@ class EtiquetaService
 
         foreach ($nombres as $nombre) {
             $fontClass = mb_strlen($nombre, 'UTF-8') > 16 ? 'small-text-size' : 'normal-text-size';
+            Log::info($colores);
             $plantilla = [
                 'colores' => $colores,
                 'imagen' => $imagenes,

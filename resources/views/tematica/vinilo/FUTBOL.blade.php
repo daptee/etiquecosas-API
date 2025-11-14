@@ -197,7 +197,7 @@
                 </div>
                 <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][4] }})">
                     <div class="imagen">
-                        <img class="personajeMedioChico" src="{{ $plantilla['imagen'][8] }}" alt="">
+                        <img class="personajeChico" src="{{ $plantilla['imagen'][8] }}" alt="">
                     </div>
                     <div class="cuadro">
                         @php
@@ -349,7 +349,7 @@
                 </div>
                 <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][1] }})">
                     <div class="imagen">
-                        <img class="personajeMedioChico" src="{{ $plantilla['imagen'][8] }}" alt="">
+                        <img class="personajeChico" src="{{ $plantilla['imagen'][8] }}" alt="">
                     </div>
                     <div class="cuadro">
                         @php

@@ -6,9 +6,15 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Lora:400,700,400italic|Oswald:400,700" media="screen">
     <style type="text/css">
+        @font-face {
+            font-family: 'Oswald';
+            font-style: normal;
+            font-weight: 400;
+            src: url('file://{{ public_path("fonts/Oswald-Regular.ttf") }}') format('truetype');
+        }
         .circulo-personaje {
-            width: 3.4cm;
-            height: 3.4cm;
+            width: 3cm;
+            height: 3cm;
             margin-right: 5px;
             margin-bottom: 0.7cm;
             vertical-align: top;
@@ -79,7 +85,7 @@
                 <img class="personajeCirculo" src="{{ $plantilla['imagen'] }}" alt="">
             </div>
             <p class="circulo-texto" style="font-family: 'Oswald';font-size: small;color:{{$plantilla['colores']}}">
-                {{mb_strtoupper($product_order->name)}}
+                {!! formatNameExactLines($product_order->name, 2) !!}
             </p>
     </div>
     @endfor

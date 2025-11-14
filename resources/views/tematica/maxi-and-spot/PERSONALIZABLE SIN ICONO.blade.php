@@ -118,12 +118,20 @@
             width: 3cm;
             height: 3cm;
             margin-right: 5px;
-            margin-bottom: 0.7cm;
+            margin-bottom: 0.5cm;
             vertical-align: top;
             display: inline-block;
             position: relative;
             border-radius: 50%;
             background: #FFF;
+        }
+
+        .circulo-personaje p.normal-text-size {
+            font-size: 12pt !important;
+        }
+
+        .circulo-personaje p.small-text-size {
+            font-size: 10pt !important;
         }
 
         .circulo-texto {
@@ -143,17 +151,17 @@
     <div class="hoja">
 
         <!-- FILA SPOT AGREGADA -->
-        @for ($i = 0; $i < 10; $i++)
+        @for ($i = 0; $i < 20; $i++)
             <div class="circulo-personaje">
-                <p class="circulo-texto">
-                    {{ mb_strtoupper($product_order->name) }}
+                <p class="circulo-texto {{ $plantilla['fontClass'] }}" style="font-family: 'Oswald';color:{{$plantilla['colores']}}">
+                    {!! formatNameExactLines($product_order->name, 2) !!}
                 </p>
             </div>
         @endfor
 
         <!-- TABLA DE ETIQUETAS -->
         <table class="etiquetas-maxi-container">
-            @for ($row = 0; $row < 8; $row++)
+            @for ($row = 0; $row < 6; $row++)
                 <tr>
                     @for ($col = 0; $col < 3; $col++)
                         <td class="etiqueta-maxi">
