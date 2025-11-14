@@ -338,6 +338,15 @@ VALUES (
     ]'
 );
 
+INSERT INTO tematicas (name, colors)
+VALUES (
+    'Sin dibujo blanco y negro',
+    '[
+        "0,0,0,0",
+        "0,0,0,1"
+    ]'
+);
+
 CREATE TABLE product_pdf (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     product_id BIGINT UNSIGNED NOT NULL,
@@ -426,7 +435,46 @@ VALUES (
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     31985,
-    '{"tematicas": [{"id": 28, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Sin dibujo", "pdf-url": ["principal/SIN DIBUJO"]}]}'
+    '{
+        "tematicas": [
+            {
+                "id": 330,
+                "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"],
+                "pdf-url": ["principal/BLANCO Y NEGRO"],
+                "name": "Sin dibujo blanco y negro"
+            },
+            {
+                "id": 148,
+                "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"],
+                "pdf-url": ["principal/SIN DIBUJO MULTICOLOR"],
+                "name": "Sin dibujo multicolor"
+            },
+            {
+                "id": 151,
+                "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"],
+                "pdf-url": ["principal/SIN DIBUJO SPORTS"],
+                "name": "Sin dibujo sports"
+            },
+            {
+                "id": 150,
+                "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"],
+                "pdf-url": ["principal/SIN DIBUJO RAINBOW"],
+                "name": "Sin dibujo rainbow"
+            },
+            {
+                "id": 147,
+                "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"],
+                "pdf-url": ["principal/SIN DIBUJO BLUE"],
+                "name": "Sin dibujo blue"
+            },
+            {
+                "id": 149,
+                "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"],
+                "pdf-url": ["principal/SIN DIBUJO PASTEL"],
+                "name": "Sin dibujo pastel"
+            }
+        ]
+    }'
 );
 
 INSERT INTO product_pdf (product_id, data)
@@ -549,6 +597,12 @@ VALUES (
     '{
         "tematicas": [
             {
+                "id": 330,
+                "pdf": ["Etiquetas super-maxi"],
+                "pdf-url": ["super-maxi/BLANCO Y NEGRO"],
+                "name": "Sin dibujo blanco y negro"
+            },
+            {
                 "id": 148,
                 "pdf": ["Etiquetas super-maxi"],
                 "pdf-url": ["super-maxi/SIN DIBUJO MULTICOLOR"],
@@ -667,6 +721,12 @@ VALUES (
                 "pdf": ["Etiquetas super-maxi"],
                 "pdf-url": ["super-maxi/NAUTICA"],
                 "name": "Nautica"
+            },
+            {
+                "id": 156,
+                "pdf": ["Etiquetas super-maxi"],
+                "pdf-url": ["super-maxi/POSITIVE"],
+                "name": "Positive"
             }
         ]
     }'
@@ -984,6 +1044,18 @@ INSERT INTO product_pdf (product_id, data)
 VALUES (
     852,
     '{"tematicas": [{"pdf": ["Etiquetas maxi"], "pdf-url": ["maxi/PERSONALIZABLE"], "name": "Personalizacion"}]}'
+);
+
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    1239,
+    '{
+        "tematicas": [
+            {"id": 163, "name": "Maxi - Spot", "pdf": ["Etiquetas maxi and spot"], "pdf-url": ["maxi-and-spot/PERSONALIZABLE"], "name": "Personalizacion"},
+            {"id": 164, "name": "Maxi - supermini", "pdf": ["Etiquetas maxi and super-mini"], "pdf-url": ["maxi-and-super-mini/PERSONALIZABLE"], "name": "Personalizacion"},
+            {"id": 165, "name": "Spot - supermini", "pdf": ["Etiquetas spot and super-mini"], "pdf-url": ["spot-and-super-mini/PERSONALIZABLE"], "name": "Personalizacion"}
+        ]
+    }'
 );
 
 

@@ -126,8 +126,8 @@
 
         /* FILA SPOT */
         .circulo-personaje {
-            width: 3.4cm;
-            height: 3.4cm;
+            width: 3cm;
+            height: 3cm;
             margin-right: 5px;
             margin-bottom: 0.7cm;
             vertical-align: top;
@@ -169,7 +169,7 @@
                     <img class="personajeCirculo" src="{{ $plantilla['imagen'] }}" alt="">
                 </div>
                 <p class="circulo-texto" style="font-family: 'Oswald';font-size: small;color:{{$plantilla['colores']}}">
-                    {{ mb_strtoupper($product_order->name) }}
+                    {!! formatNameExactLines($product_order->name, 2) !!}
                 </p>
             </div>
         @endfor

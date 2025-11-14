@@ -5,7 +5,6 @@
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Lora:400,700,400italic|Oswald:400,700" media="screen">
-    
     <style>
         @font-face {
             font-family: 'Lora';
@@ -34,92 +33,25 @@
             font-weight: 700;
             src: url('file://{{ public_path("fonts/Oswald-Bold.ttf") }}') format('truetype');
         }
-        {!! file_get_contents(public_path('css/etiquetas.css')) !!}
+        {!! file_get_contents(public_path('css/sinDibujo.css')) !!}
     </style>
 </head>
 
 <body>
     <div class="hoja">
 
+    <div style="height: 28px; width: 100%;"></div>
+
     {{-- TERCER DISEÑO --}}
     <div>
-        <div class="tercerD" style="background: cmyk({{ $plantilla['colores'][0] }})">
-            <div class="cuadro">
-                <p class="texto4 texto-negro" style="font-family: 'Oswald';font-size: 1.45em;">{{mb_strtoupper($product_order->name)}}</p>
+        @for ($i = 1; $i < 22; $i++)
+            <div class="tercerD" style="background: white">
+                <div class="cuadro" style="border: solid 1px black">
+                    <p class="texto4" style="font-family: 'Oswald';font-size: 1.45em; color: cmyk({{ $plantilla['colores'][1] }})">{{mb_strtoupper($product_order->name)}}</p>
+                </div>
             </div>
-        </div>
-        <div class="tercerD" style="background: cmyk({{ $plantilla['colores'][0] }})">
-            <div class="cuadro">
-                <p class="texto4 texto-negro" style="font-family: 'Oswald';font-size: 1.45em;">{{mb_strtoupper($product_order->name)}}</p>
-            </div>
-        </div>
-        <div class="tercerD" style="background: cmyk({{ $plantilla['colores'][0] }})">
-            <div class="cuadro">
-                <p class="texto4 texto-negro" style="font-family: 'Oswald';font-size: 1.45em;">{{mb_strtoupper($product_order->name)}}</p>
-            </div>
-        </div>
-        <div class="tercerD" style="background: cmyk({{ $plantilla['colores'][0] }})">
-            <div class="cuadro">
-                <p class="texto4 texto-negro" style="font-family: 'Oswald';font-size: 1.45em;">{{mb_strtoupper($product_order->name)}}</p>
-            </div>
-        </div>
-        <div class="tercerD" style="background: cmyk({{ $plantilla['colores'][0] }})">
-            <div class="cuadro">
-                <p class="texto4 texto-negro" style="font-family: 'Oswald';font-size: 1.45em;">{{mb_strtoupper($product_order->name)}}</p>
-            </div>
-        </div>
-        <div class="tercerD" style="background: cmyk({{ $plantilla['colores'][0] }})">
-            <div class="cuadro">
-                <p class="texto4 texto-negro" style="font-family: 'Oswald';font-size: 1.45em;">{{mb_strtoupper($product_order->name)}}</p>
-            </div>
-        </div>
-        <div class="tercerD" style="background: cmyk({{ $plantilla['colores'][0] }})">
-            <div class="cuadro">
-                <p class="texto4 texto-negro" style="font-family: 'Oswald';font-size: 1.45em;">{{mb_strtoupper($product_order->name)}}</p>
-            </div>
-        </div>
-        <div class="tercerD" style="background: cmyk({{ $plantilla['colores'][0] }})">
-            <div class="cuadro">
-                <p class="texto4 texto-negro" style="font-family: 'Oswald';font-size: 1.45em;">{{mb_strtoupper($product_order->name)}}</p>
-            </div>
-        </div>
-        <div class="tercerD" style="background: cmyk({{ $plantilla['colores'][0] }})">
-            <div class="cuadro">
-                <p class="texto4 texto-negro" style="font-family: 'Oswald';font-size: 1.45em;">{{mb_strtoupper($product_order->name)}}</p>
-            </div>
-        </div>
-        <div class="tercerD" style="background: cmyk({{ $plantilla['colores'][0] }})">
-            <div class="cuadro">
-                <p class="texto4 texto-negro" style="font-family: 'Oswald';font-size: 1.45em;">{{mb_strtoupper($product_order->name)}}</p>
-            </div>
-        </div>
-        <div class="tercerD" style="background: cmyk({{ $plantilla['colores'][0] }})">
-            <div class="cuadro">
-                <p class="texto4 texto-negro" style="font-family: 'Oswald';font-size: 1.45em;">{{mb_strtoupper($product_order->name)}}</p>
-            </div>
-        </div>
-        <div class="tercerD" style="background: cmyk({{ $plantilla['colores'][0] }})">
-            <div class="cuadro">
-                <p class="texto4 texto-negro" style="font-family: 'Oswald';font-size: 1.45em;">{{mb_strtoupper($product_order->name)}}</p>
-            </div>
-        </div>
-        <div class="tercerD" style="background: cmyk({{ $plantilla['colores'][0] }})">
-            <div class="cuadro">
-                <p class="texto4 texto-negro" style="font-family: 'Oswald';font-size: 1.45em;">{{mb_strtoupper($product_order->name)}}</p>
-            </div>
-        </div>
-        <div class="tercerD" style="background: cmyk({{ $plantilla['colores'][0] }})">
-            <div class="cuadro">
-                <p class="texto4 texto-negro" style="font-family: 'Oswald';font-size: 1.45em;">{{mb_strtoupper($product_order->name)}}</p>
-            </div>
-        </div>
-        <div class="tercerD" style="background: cmyk({{ $plantilla['colores'][0] }})">
-            <div class="cuadro">
-                <p class="texto4 texto-negro" style="font-family: 'Oswald';font-size: 1.45em;">{{mb_strtoupper($product_order->name)}}</p>
-            </div>
-        </div>
+        @endfor
     </div>
-
     <div class="numeroOrder">
         <p class="texto3" style="font-family: 'Oswald';font-size: large;"> PEDIDO # {{$product_order->order->id_external}} </p>
     </div>

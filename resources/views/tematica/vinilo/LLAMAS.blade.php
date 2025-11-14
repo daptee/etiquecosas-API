@@ -83,7 +83,7 @@
                 </div>
                 <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][1] }})">
                     <div class="imagen">
-                        <img class="personajeAlto personaje-80-height" src="{{ $plantilla['imagen'][10] }}" alt="">
+                        <img class="personajeLlamasAlto personaje-80-height" src="{{ $plantilla['imagen'][10] }}" alt="">
                     </div>
                     <div class="cuadro">
                         @php
@@ -121,7 +121,7 @@
                 </div>
                 <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][2] }})">
                     <div class="imagen">
-                        <img class="personajeAlto personaje-80-height" src="{{ $plantilla['imagen'][8] }}" alt="">
+                        <img class="personajeLlamasAlto personaje-80-height" src="{{ $plantilla['imagen'][8] }}" alt="">
                     </div>
                     <div class="cuadro">
                         @php
@@ -197,7 +197,7 @@
                 </div>
                 <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][4] }})">
                     <div class="imagen">
-                        <img class="personajeAlto personaje-80-height" src="{{ $plantilla['imagen'][11] }}" alt="">
+                        <img class="personajeLlamasAlto personaje-80-height" src="{{ $plantilla['imagen'][11] }}" alt="">
                     </div>
                     <div class="cuadro">
                         @php
@@ -235,7 +235,7 @@
                 </div>
                 <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][5] }})">
                     <div class="imagen">
-                        <img class="personajeAlto" src="{{ $plantilla['imagen'][7] }}" alt="">
+                        <img class="personajeChico" src="{{ $plantilla['imagen'][7] }}" alt="">
                     </div>
                     <div class="cuadro">
                         @php
@@ -273,7 +273,7 @@
                 </div>
                 <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][6] }})">
                     <div class="imagen">
-                        <img class="personajeAlto personaje-80-height" src="{{ $plantilla['imagen'][2] }}" alt="">
+                        <img class="personajeChico personaje-80-height" src="{{ $plantilla['imagen'][2] }}" alt="">
                     </div>
                     <div class="cuadro">
                         @php
@@ -349,7 +349,7 @@
                 </div>
                 <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][0] }})">
                     <div class="imagen">
-                        <img class="personajeMedioChico" src="{{ $plantilla['imagen'][0] }}" alt="">
+                        <img class="personajeChico" src="{{ $plantilla['imagen'][0] }}" alt="">
                     </div>
                     <div class="cuadro">
                         @php
@@ -425,7 +425,7 @@
                 </div>
                 <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][3] }})">
                     <div class="imagen">
-                        <img class="personajeAlto personaje-80-height" src="{{ $plantilla['imagen'][8] }}" alt="">
+                        <img class="personajeLlamasAlto personaje-80-height" src="{{ $plantilla['imagen'][8] }}" alt="">
                     </div>
                     <div class="cuadro">
                         @php

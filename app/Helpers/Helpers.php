@@ -42,3 +42,44 @@ if (!function_exists('formatName')) {
         return implode('<br>', $lines);
     }
 }
+
+if (!function_exists('formatNameExactLines')) {
+    /**
+     * Divide un nombre en exactamente N líneas, forzando el texto a distribuirse.
+     * Si el nombre es muy corto, agrega líneas vacías.
+     * Si es muy largo, lo distribuye en las líneas disponibles.
+     */
+    function formatNameExactLines($name, $exactLines = 2)
+    {
+        $name = mb_strtoupper(trim($name));
+        $words = explode(' ', $name);
+        $totalWords = count($words);
+
+        // Si solo hay una palabra, la ponemos en la primera línea
+        if ($totalWords === 1) {
+            $lines = [$name];
+            // Rellenar con líneas vacías hasta completar exactLines
+            while (count($lines) < $exactLines) {
+                $lines[] = '&nbsp;';
+            }
+            return implode('<br>', $lines);
+        }
+
+        // Distribuir palabras en exactamente N líneas
+        $lines = [];
+        $wordsPerLine = ceil($totalWords / $exactLines);
+
+        for ($i = 0; $i < $exactLines; $i++) {
+            $start = $i * $wordsPerLine;
+            $lineWords = array_slice($words, $start, $wordsPerLine);
+
+            if (!empty($lineWords)) {
+                $lines[] = implode(' ', $lineWords);
+            } else {
+                $lines[] = '&nbsp;'; // Línea vacía
+            }
+        }
+
+        return implode('<br>', $lines);
+    }
+}

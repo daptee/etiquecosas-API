@@ -53,50 +53,28 @@
             margin: 0;
             padding: 0;
         }
-
-        .etiquetas-maxi-container {
-            width: 100%;
-            border-spacing: 0;
-            margin: 0;
-            padding: 0;
-        }
-
-        .etiqueta-maxi {
-            width: 5.2cm;
-            height: 1.9cm;
+        .super-mini {
+            width: 2.9cm;
+            height: 1.15cm;
+            margin-top: 7px;
+            margin-left: 1.5px;
+            margin-right: 1px;
+            margin-bottom: 5px;
             display: inline-block;
-            margin: 10px 10px !important;
-            padding: 0;
-            background: {{ $plantilla['colores'] }};
-            text-align: center;
+            color: white;
             position: relative;
         }
 
-        .etiqueta-maxi-text {
-            font-family: 'Oswald';
-            font-size: 14pt;
+        .texto1 {
             text-align: center;
-            color: #fff;
+            line-height: 0.8;
+            color: white;
             margin: 0;
-            padding: 0;
-            width: 100%;
             position: absolute;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%);
-        }
-
-        .etiqueta-maxi-text p {
-            line-height: 0.8;
-            margin: 0;
-        }
-
-        .etiqueta-maxi-text p.normal-text-size {
-            font-size: 14pt !important;
-        }
-
-        .etiqueta-maxi-text p.small-text-size {
-            font-size: 12pt !important;
+            margin-right: -50%;
+            transform: translate(-50%, -50%)
         }
 
         /* NUMERO DE PEDIDO VERTICAL ABAJO A LA IZQUIERDA DE LA PANTALLA */
@@ -118,12 +96,33 @@
             width: 3cm;
             height: 3cm;
             margin-right: 5px;
-            margin-bottom: 0.7cm;
+            margin-bottom: 0.5cm;
             vertical-align: top;
             display: inline-block;
             position: relative;
             border-radius: 50%;
-            background: #FFF;
+        }
+
+        .circulo-personaje p.normal-text-size {
+            font-size: 12pt !important;
+        }
+
+        .circulo-personaje p.small-text-size {
+            font-size: 10pt !important;
+        }
+
+        .circuloCuadro {
+            width: 100%;
+            height: 50%;
+            position: relative;
+        }
+
+        .personajeCirculo {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            height: 70%;
         }
 
         .circulo-texto {
@@ -131,10 +130,6 @@
             text-align: center;
             margin: 10px auto 0;
             line-height: 0.8;
-            color: {{ $plantilla['colores'] }};
-            font-family: 'Oswald';
-            font-size: small;
-            padding-top: 0.8cm;
         }
     </style>
 </head>
@@ -143,34 +138,28 @@
     <div class="hoja">
 
         <!-- FILA SPOT AGREGADA -->
-        @for ($i = 0; $i < 10; $i++)
+        @for ($i = 0; $i < 20; $i++)
             <div class="circulo-personaje">
-                <p class="circulo-texto">
-                    {{ mb_strtoupper($product_order->name) }}
+                <div class="circuloCuadro">
+                    <img class="personajeCirculo" src="{{ $plantilla['imagen'] }}" alt="">
+                </div>
+                <p class="circulo-texto {{ $plantilla['fontClass'] }}" style="font-family: 'Oswald';color:{{$plantilla['colores']}}">
+                    {!! formatNameExactLines($product_order->name, 2) !!}
                 </p>
             </div>
         @endfor
 
-        <!-- TABLA DE ETIQUETAS -->
-        <table class="etiquetas-maxi-container">
-            @for ($row = 0; $row < 8; $row++)
-                <tr>
-                    @for ($col = 0; $col < 3; $col++)
-                        <td class="etiqueta-maxi">
-                            <div class="etiqueta-maxi-text">
-                                <p class="{{ $plantilla['fontClass'] }}" style="margin:0; color:#FFF;">
-                                    {!! formatNameExactLines($product_order->name, 2) !!}
-                                </p>
-                            </div>
-                        </td>
-                    @endfor
-                </tr>
-            @endfor
-        </table>
+        <!-- SUPER MINI -->
+        @for ($i = 0; $i < 60; $i++)
+            <div class="super-mini" style="background: {{$plantilla['colores']}})">
+                <p class="texto1" style="font-family: 'Oswald';font-size: x-small;">
+                    {{mb_strtoupper($product_order->name)}}</p>
+            </div>
+        @endfor
 
         <!-- NUMERO DE PEDIDO -->
         <div class="numeroOrder">
-            <p>PEDIDO # {{$product_order->order->id_external}}</p>
+            <p>PEDIDOs # {{$product_order->order->id_external}}</p>
         </div>
     </div>
 </body>

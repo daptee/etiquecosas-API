@@ -63,6 +63,15 @@
     transform: translate(-20%, -50%);
 }
 
+.personajeLlamasAlto {
+    width: 30%;
+    height: auto;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-20%, -50%);
+}
+
 .texto2 {
     text-align: center;
     line-height: 12px;

@@ -169,7 +169,7 @@
           <div class="star star4"><img class="star-img" src="{{ $plantilla['images'][3] }}" alt=""></div>
         </div>
         <p class="transfer-nro-pedido"><span class="transfer-name">Nombre Transfer - </span><span class="nro-pedido">PEDIDO #{{$product_order->order->id_external}}</span></p>
-        <img class="logo" src="{{ public_path('icons/mail/etiquecosas_logo-rosa.png') }}" alt="Logo Etiquecosas">
+        <img class="logo" src="{{ public_path('icons/etiquecosas.svg') }}" alt="Logo Etiquecosas">
       </div>
       <div class="tranfer-names-container">
         <div class="transfer-name-container">

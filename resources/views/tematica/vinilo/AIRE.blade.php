@@ -45,7 +45,7 @@
                 <div class="columna">
                     <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][0] }})">
                         <div class="imagen">
-                            <img class="personajeAlto" src="{{ $plantilla['imagen'][1] }}" alt="">
+                            <img class="personajeAlto" src="{{ $plantilla['imagen'][0] }}" alt="">
                         </div>
                         <div class="cuadro">
                             @php
@@ -82,120 +82,6 @@
                         </div>
                     </div>
                     <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][1] }})">
-                        <div class="imagen">
-                            <img class="personajeAlto" src="{{ $plantilla['imagen'][4] }}" alt="">
-                        </div>
-                        <div class="cuadro">
-                            @php
-                            $name = explode(' ', $product_order->name);
-                            $cant = count($name);
-                            @endphp
-                            @switch($cant)
-                            @case(3)
-                            <div style="transform: translate(0%, -25%);">
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[0]) }}
-                                </p>
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[1] . ' ' . $name[2]) }}
-                                </p>
-                            </div>
-                            @break
-                            @case(4)
-                            <div style="transform: translate(0%, -25%);">
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[0] . ' ' . $name[1]) }}
-                                </p>
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[2] . ' ' . $name[3]) }}
-                                </p>
-                            </div>
-                            @break
-
-                            @default
-                            <p class="texto2" style="font-family: 'Oswald';font-size: 1.05em;">
-                                {{ mb_strtoupper($product_order->name) }}
-                            </p>
-                            @endswitch
-                        </div>
-                    </div>
-                    <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][2] }})">
-                        <div class="imagen">
-                            <img class="personajeAlto" src="{{ $plantilla['imagen'][2] }}" alt="">
-                        </div>
-                        <div class="cuadro">
-                            @php
-                            $name = explode(' ', $product_order->name);
-                            $cant = count($name);
-                            @endphp
-                            @switch($cant)
-                            @case(3)
-                            <div style="transform: translate(0%, -25%);">
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[0]) }}
-                                </p>
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[1] . ' ' . $name[2]) }}
-                                </p>
-                            </div>
-                            @break
-                            @case(4)
-                            <div style="transform: translate(0%, -25%);">
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[0] . ' ' . $name[1]) }}
-                                </p>
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[2] . ' ' . $name[3]) }}
-                                </p>
-                            </div>
-                            @break
-
-                            @default
-                            <p class="texto2" style="font-family: 'Oswald';font-size: 1.05em;">
-                                {{ mb_strtoupper($product_order->name) }}
-                            </p>
-                            @endswitch
-                        </div>
-                    </div>
-                    <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][3] }})">
-                        <div class="imagen">
-                            <img class="personajeAlto" src="{{ $plantilla['imagen'][11] }}" alt="">
-                        </div>
-                        <div class="cuadro">
-                            @php
-                            $name = explode(' ', $product_order->name);
-                            $cant = count($name);
-                            @endphp
-                            @switch($cant)
-                            @case(3)
-                            <div style="transform: translate(0%, -25%);">
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[0]) }}
-                                </p>
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[1] . ' ' . $name[2]) }}
-                                </p>
-                            </div>
-                            @break
-                            @case(4)
-                            <div style="transform: translate(0%, -25%);">
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[0] . ' ' . $name[1]) }}
-                                </p>
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[2] . ' ' . $name[3]) }}
-                                </p>
-                            </div>
-                            @break
-
-                            @default
-                            <p class="texto2" style="font-family: 'Oswald';font-size: 1.05em;">
-                                {{ mb_strtoupper($product_order->name) }}
-                            </p>
-                            @endswitch
-                        </div>
-                    </div>
-                    <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][4] }})">
                         <div class="imagen">
                             <img class="personajeAlto" src="{{ $plantilla['imagen'][6] }}" alt="">
                         </div>
@@ -233,159 +119,45 @@
                             @endswitch
                         </div>
                     </div>
-                    <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][5] }})">
-                        <div class="imagen">
-                            <img class="personajeAlto" src="{{ $plantilla['imagen'][10] }}" alt="">
-                        </div>
-                        <div class="cuadro">
-                            @php
-                            $name = explode(' ', $product_order->name);
-                            $cant = count($name);
-                            @endphp
-                            @switch($cant)
-                            @case(3)
-                            <div style="transform: translate(0%, -25%);">
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[0]) }}
-                                </p>
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[1] . ' ' . $name[2]) }}
-                                </p>
-                            </div>
-                            @break
-                            @case(4)
-                            <div style="transform: translate(0%, -25%);">
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[0] . ' ' . $name[1]) }}
-                                </p>
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[2] . ' ' . $name[3]) }}
-                                </p>
-                            </div>
-                            @break
-
-                            @default
-                            <p class="texto2" style="font-family: 'Oswald';font-size: 1.05em;">
-                                {{ mb_strtoupper($product_order->name) }}
-                            </p>
-                            @endswitch
-                        </div>
-                    </div>
-                    <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][6] }})">
-                        <div class="imagen">
-                            <img class="personajeAlto" src="{{ $plantilla['imagen'][11] }}" alt=""> /* Edited */
-                        </div>
-                        <div class="cuadro">
-                            @php
-                            $name = explode(' ', $product_order->name);
-                            $cant = count($name);
-                            @endphp
-                            @switch($cant)
-                            @case(3)
-                            <div style="transform: translate(0%, -25%);">
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[0]) }}
-                                </p>
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[1] . ' ' . $name[2]) }}
-                                </p>
-                            </div>
-                            @break
-                            @case(4)
-                            <div style="transform: translate(0%, -25%);">
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[0] . ' ' . $name[1]) }}
-                                </p>
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[2] . ' ' . $name[3]) }}
-                                </p>
-                            </div>
-                            @break
-
-                            @default
-                            <p class="texto2" style="font-family: 'Oswald';font-size: 1.05em;">
-                                {{ mb_strtoupper($product_order->name) }}
-                            </p>
-                            @endswitch
-                        </div>
-                    </div>
-                    <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][7] }})">
-                        <div class="imagen">
-                            <img class="personajeAlto" src="{{ $plantilla['imagen'][7] }}" alt="">
-                        </div>
-                        <div class="cuadro">
-                            @php
-                            $name = explode(' ', $product_order->name);
-                            $cant = count($name);
-                            @endphp
-                            @switch($cant)
-                            @case(3)
-                            <div style="transform: translate(0%, -25%);">
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[0]) }}
-                                </p>
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[1] . ' ' . $name[2]) }}
-                                </p>
-                            </div>
-                            @break
-                            @case(4)
-                            <div style="transform: translate(0%, -25%);">
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[0] . ' ' . $name[1]) }}
-                                </p>
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[2] . ' ' . $name[3]) }}
-                                </p>
-                            </div>
-                            @break
-
-                            @default
-                            <p class="texto2" style="font-family: 'Oswald';font-size: 1.05em;">
-                                {{ mb_strtoupper($product_order->name) }}
-                            </p>
-                            @endswitch
-                        </div>
-                    </div>
-                    <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][1] }})">
-                        <div class="imagen">
-                            <img class="personajeAlto" src="{{ $plantilla['imagen'][3] }}" alt="">
-                        </div>
-                        <div class="cuadro">
-                            @php
-                            $name = explode(' ', $product_order->name);
-                            $cant = count($name);
-                            @endphp
-                            @switch($cant)
-                            @case(3)
-                            <div style="transform: translate(0%, -25%);">
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[0]) }}
-                                </p>
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[1] . ' ' . $name[2]) }}
-                                </p>
-                            </div>
-                            @break
-                            @case(4)
-                            <div style="transform: translate(0%, -25%);">
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[0] . ' ' . $name[1]) }}
-                                </p>
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[2] . ' ' . $name[3]) }}
-                                </p>
-                            </div>
-                            @break
-
-                            @default
-                            <p class="texto2" style="font-family: 'Oswald';font-size: 1.05em;">
-                                {{ mb_strtoupper($product_order->name) }}
-                            </p>
-                            @endswitch
-                        </div>
-                    </div>
                     <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][2] }})">
+                        <div class="imagen">
+                            <img class="personajeAlto" src="{{ $plantilla['imagen'][1] }}" alt="">
+                        </div>
+                        <div class="cuadro">
+                            @php
+                            $name = explode(' ', $product_order->name);
+                            $cant = count($name);
+                            @endphp
+                            @switch($cant)
+                            @case(3)
+                            <div style="transform: translate(0%, -25%);">
+                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                    {{ mb_strtoupper($name[0]) }}
+                                </p>
+                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                    {{ mb_strtoupper($name[1] . ' ' . $name[2]) }}
+                                </p>
+                            </div>
+                            @break
+                            @case(4)
+                            <div style="transform: translate(0%, -25%);">
+                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                    {{ mb_strtoupper($name[0] . ' ' . $name[1]) }}
+                                </p>
+                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                    {{ mb_strtoupper($name[2] . ' ' . $name[3]) }}
+                                </p>
+                            </div>
+                            @break
+
+                            @default
+                            <p class="texto2" style="font-family: 'Oswald';font-size: 1.05em;">
+                                {{ mb_strtoupper($product_order->name) }}
+                            </p>
+                            @endswitch
+                        </div>
+                    </div>
+                    <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][3] }})">
                         <div class="imagen">
                             <img class="personajeAlto" src="{{ $plantilla['imagen'][9] }}" alt="">
                         </div>
@@ -423,9 +195,237 @@
                             @endswitch
                         </div>
                     </div>
+                    <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][4] }})">
+                        <div class="imagen">
+                            <img class="personajeAlto" src="{{ $plantilla['imagen'][10] }}" alt="">
+                        </div>
+                        <div class="cuadro">
+                            @php
+                            $name = explode(' ', $product_order->name);
+                            $cant = count($name);
+                            @endphp
+                            @switch($cant)
+                            @case(3)
+                            <div style="transform: translate(0%, -25%);">
+                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                    {{ mb_strtoupper($name[0]) }}
+                                </p>
+                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                    {{ mb_strtoupper($name[1] . ' ' . $name[2]) }}
+                                </p>
+                            </div>
+                            @break
+                            @case(4)
+                            <div style="transform: translate(0%, -25%);">
+                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                    {{ mb_strtoupper($name[0] . ' ' . $name[1]) }}
+                                </p>
+                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                    {{ mb_strtoupper($name[2] . ' ' . $name[3]) }}
+                                </p>
+                            </div>
+                            @break
+
+                            @default
+                            <p class="texto2" style="font-family: 'Oswald';font-size: 1.05em;">
+                                {{ mb_strtoupper($product_order->name) }}
+                            </p>
+                            @endswitch
+                        </div>
+                    </div>
+                    <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][5] }})">
+                        <div class="imagen">
+                            <img class="personajeAlto" src="{{ $plantilla['imagen'][2] }}" alt="">
+                        </div>
+                        <div class="cuadro">
+                            @php
+                            $name = explode(' ', $product_order->name);
+                            $cant = count($name);
+                            @endphp
+                            @switch($cant)
+                            @case(3)
+                            <div style="transform: translate(0%, -25%);">
+                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                    {{ mb_strtoupper($name[0]) }}
+                                </p>
+                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                    {{ mb_strtoupper($name[1] . ' ' . $name[2]) }}
+                                </p>
+                            </div>
+                            @break
+                            @case(4)
+                            <div style="transform: translate(0%, -25%);">
+                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                    {{ mb_strtoupper($name[0] . ' ' . $name[1]) }}
+                                </p>
+                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                    {{ mb_strtoupper($name[2] . ' ' . $name[3]) }}
+                                </p>
+                            </div>
+                            @break
+
+                            @default
+                            <p class="texto2" style="font-family: 'Oswald';font-size: 1.05em;">
+                                {{ mb_strtoupper($product_order->name) }}
+                            </p>
+                            @endswitch
+                        </div>
+                    </div>
                     <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][6] }})">
                         <div class="imagen">
-                            <img class="personajeAlto" src="{{ $plantilla['imagen'][0] }}" alt="">
+                            <img class="personajeAlto" src="{{ $plantilla['imagen'][4] }}" alt="">
+                        </div>
+                        <div class="cuadro">
+                            @php
+                            $name = explode(' ', $product_order->name);
+                            $cant = count($name);
+                            @endphp
+                            @switch($cant)
+                            @case(3)
+                            <div style="transform: translate(0%, -25%);">
+                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                    {{ mb_strtoupper($name[0]) }}
+                                </p>
+                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                    {{ mb_strtoupper($name[1] . ' ' . $name[2]) }}
+                                </p>
+                            </div>
+                            @break
+                            @case(4)
+                            <div style="transform: translate(0%, -25%);">
+                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                    {{ mb_strtoupper($name[0] . ' ' . $name[1]) }}
+                                </p>
+                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                    {{ mb_strtoupper($name[2] . ' ' . $name[3]) }}
+                                </p>
+                            </div>
+                            @break
+
+                            @default
+                            <p class="texto2" style="font-family: 'Oswald';font-size: 1.05em;">
+                                {{ mb_strtoupper($product_order->name) }}
+                            </p>
+                            @endswitch
+                        </div>
+                    </div>
+                    <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][7] }})">
+                        <div class="imagen">
+                            <img class="personajeAlto" src="{{ $plantilla['imagen'][3] }}" alt="">
+                        </div>
+                        <div class="cuadro">
+                            @php
+                            $name = explode(' ', $product_order->name);
+                            $cant = count($name);
+                            @endphp
+                            @switch($cant)
+                            @case(3)
+                            <div style="transform: translate(0%, -25%);">
+                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                    {{ mb_strtoupper($name[0]) }}
+                                </p>
+                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                    {{ mb_strtoupper($name[1] . ' ' . $name[2]) }}
+                                </p>
+                            </div>
+                            @break
+                            @case(4)
+                            <div style="transform: translate(0%, -25%);">
+                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                    {{ mb_strtoupper($name[0] . ' ' . $name[1]) }}
+                                </p>
+                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                    {{ mb_strtoupper($name[2] . ' ' . $name[3]) }}
+                                </p>
+                            </div>
+                            @break
+
+                            @default
+                            <p class="texto2" style="font-family: 'Oswald';font-size: 1.05em;">
+                                {{ mb_strtoupper($product_order->name) }}
+                            </p>
+                            @endswitch
+                        </div>
+                    </div>
+                    <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][3] }})">
+                        <div class="imagen">
+                            <img class="personajeAlto" src="{{ $plantilla['imagen'][6] }}" alt="">
+                        </div>
+                        <div class="cuadro">
+                            @php
+                            $name = explode(' ', $product_order->name);
+                            $cant = count($name);
+                            @endphp
+                            @switch($cant)
+                            @case(3)
+                            <div style="transform: translate(0%, -25%);">
+                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                    {{ mb_strtoupper($name[0]) }}
+                                </p>
+                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                    {{ mb_strtoupper($name[1] . ' ' . $name[2]) }}
+                                </p>
+                            </div>
+                            @break
+                            @case(4)
+                            <div style="transform: translate(0%, -25%);">
+                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                    {{ mb_strtoupper($name[0] . ' ' . $name[1]) }}
+                                </p>
+                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                    {{ mb_strtoupper($name[2] . ' ' . $name[3]) }}
+                                </p>
+                            </div>
+                            @break
+
+                            @default
+                            <p class="texto2" style="font-family: 'Oswald';font-size: 1.05em;">
+                                {{ mb_strtoupper($product_order->name) }}
+                            </p>
+                            @endswitch
+                        </div>
+                    </div>
+                    <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][6] }})">
+                        <div class="imagen">
+                            <img class="personajeAlto" src="{{ $plantilla['imagen'][8] }}" alt="">
+                        </div>
+                        <div class="cuadro">
+                            @php
+                            $name = explode(' ', $product_order->name);
+                            $cant = count($name);
+                            @endphp
+                            @switch($cant)
+                            @case(3)
+                            <div style="transform: translate(0%, -25%);">
+                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                    {{ mb_strtoupper($name[0]) }}
+                                </p>
+                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                    {{ mb_strtoupper($name[1] . ' ' . $name[2]) }}
+                                </p>
+                            </div>
+                            @break
+                            @case(4)
+                            <div style="transform: translate(0%, -25%);">
+                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                    {{ mb_strtoupper($name[0] . ' ' . $name[1]) }}
+                                </p>
+                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                    {{ mb_strtoupper($name[2] . ' ' . $name[3]) }}
+                                </p>
+                            </div>
+                            @break
+
+                            @default
+                            <p class="texto2" style="font-family: 'Oswald';font-size: 1.05em;">
+                                {{ mb_strtoupper($product_order->name) }}
+                            </p>
+                            @endswitch
+                        </div>
+                    </div>
+                    <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][4] }})">
+                        <div class="imagen">
+                            <img class="personajeAlto" src="{{ $plantilla['imagen'][1] }}" alt="">
                         </div>
                         <div class="cuadro">
                             @php
