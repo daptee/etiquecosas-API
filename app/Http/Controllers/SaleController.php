@@ -533,39 +533,9 @@ class SaleController extends Controller
                     }
                 }
 
-                // === 3. Si no hay ProductPdf, se sigue con la lógica base ===
-                if (!$variant) {
-                    Log::warning("No se encontró variante para {$nombreCompleto}, product_order ID: {$productOrder->id}");
-                    continue;
-                }
+                Log::info(message: "Sin informacion del pdf en el producto con id: $productOrder->product_id");
 
-                $tematicaId = $variant['attributesvalues'][0]['id'] ?? null;
-
-                if (!$tematicaId) {
-                    Log::warning("No se encontró temática para {$nombreCompleto}, product_order ID: {$productOrder->id}");
-                    continue;
-                }
-
-                // === 4. Generar PDF básico (sin PDF preconfigurado) ===
-                try {
-                    $pdfPaths[] = EtiquetaService::generarEtiquetas(
-                        $sale->id,
-                        $tematicaId,
-                        [$nombreCompleto],
-                        $productOrder,
-                        null,
-                        null,
-                        null,
-                        $sale->created_at
-                    );
-
-                    Log::info("PDF generado para {$nombreCompleto}, temática ID: {$tematicaId}");
-                } catch (\Throwable $e) {
-                    Log::error("Error generando PDF para {$nombreCompleto}, temática ID: {$tematicaId}", [
-                        'error' => $e->getMessage(),
-                        'product_order_id' => $productOrder->id,
-                    ]);
-                }
+                        continue;
             }
         }
 
@@ -700,39 +670,9 @@ class SaleController extends Controller
                     }
                 }
 
-                // === 3. Si no hay ProductPdf, se sigue con la lógica base ===
-                if (!$variant) {
-                    Log::warning("No se encontró variante para {$nombreCompleto}, product_order ID: {$productOrder->id}");
-                    continue;
-                }
+                Log::info(message: "Sin informacion del pdf en el producto con id: $productOrder->product_id");
 
-                $tematicaId = $variant['attributesvalues'][0]['id'] ?? null;
-
-                if (!$tematicaId) {
-                    Log::warning("No se encontró temática para {$nombreCompleto}, product_order ID: {$productOrder->id}");
-                    continue;
-                }
-
-                // === 4. Generar PDF básico (sin PDF preconfigurado) ===
-                try {
-                    $pdfPaths[] = EtiquetaService::generarEtiquetas(
-                        $sale->id,
-                        $tematicaId,
-                        [$nombreCompleto],
-                        $productOrder,
-                        null,
-                        null,
-                        null,
-                        $sale->created_at
-                    );
-
-                    Log::info("PDF generado para {$nombreCompleto}, temática ID: {$tematicaId}");
-                } catch (\Throwable $e) {
-                    Log::error("Error generando PDF para {$nombreCompleto}, temática ID: {$tematicaId}", [
-                        'error' => $e->getMessage(),
-                        'product_order_id' => $productOrder->id,
-                    ]);
-                }
+                continue;
             }
         }
 
@@ -1156,39 +1096,9 @@ class SaleController extends Controller
                     }
                 }
 
-                // === 3. Si no hay ProductPdf, se sigue con la lógica base ===
-                if (!$variant) {
-                    Log::warning("No se encontró variante para {$nombreCompleto}, product_order ID: {$productOrder->id}");
-                    continue;
-                }
+                Log::info(message: "Sin informacion del pdf en el producto con id: $productOrder->product_id");
 
-                $tematicaId = $variant['attributesvalues'][0]['id'] ?? null;
-
-                if (!$tematicaId) {
-                    Log::warning("No se encontró temática para {$nombreCompleto}, product_order ID: {$productOrder->id}");
-                    continue;
-                }
-
-                // === 4. Generar PDF básico (sin PDF preconfigurado) ===
-                try {
-                    $pdfPaths[] = EtiquetaService::generarEtiquetas(
-                        $sale->id,
-                        $tematicaId,
-                        [$nombreCompleto],
-                        $productOrder,
-                        null,
-                        null,
-                        null,
-                        $sale->created_at
-                    );
-
-                    Log::info("PDF generado para {$nombreCompleto}, temática ID: {$tematicaId}");
-                } catch (\Throwable $e) {
-                    Log::error("Error generando PDF para {$nombreCompleto}, temática ID: {$tematicaId}", [
-                        'error' => $e->getMessage(),
-                        'product_order_id' => $productOrder->id,
-                    ]);
-                }
+                continue;
             }
 
             return $this->success(
@@ -1220,9 +1130,9 @@ class SaleController extends Controller
             $fromDate = Carbon::parse($request->from_date)->startOfDay();
             $toDate = Carbon::parse($request->to_date)->endOfDay();
 
-            // Buscar ventas aprobadas (sale_status_id = 1) en el rango de fechas
+            // Buscar ventas aprobadas (sale_status_id = 1) y en producción (sale_status_id = 2) en el rango de fechas
             $sales = Sale::with('products.product', 'products.variant')
-                ->where('sale_status_id', 1)
+                ->whereIn('sale_status_id', [1, 2])
                 ->whereBetween('created_at', [$fromDate, $toDate])
                 ->get();
 
@@ -1326,40 +1236,9 @@ class SaleController extends Controller
                             }
                         }
 
-                        // === 3. Si no hay ProductPdf, se sigue con la lógica base ===
-                        if (!$variant) {
-                            Log::warning("No se encontró variante para {$nombreCompleto}, product_order ID: {$productOrder->id}");
-                            continue;
-                        }
+                        Log::info(message: "Sin informacion del pdf en el producto con id: $productOrder->product_id");
 
-                        $tematicaId = $variant['attributesvalues'][0]['id'] ?? null;
-
-                        if (!$tematicaId) {
-                            Log::warning("No se encontró temática para {$nombreCompleto}, product_order ID: {$productOrder->id}");
-                            continue;
-                        }
-
-                        // === 4. Generar PDF básico (sin PDF preconfigurado) ===
-                        try {
-                            $pdfPath = EtiquetaService::generarEtiquetas(
-                                $sale->id,
-                                $tematicaId,
-                                [$nombreCompleto],
-                                $productOrder,
-                                null,
-                                null,
-                                null,
-                                $sale->created_at
-                            );
-
-                            $salePdfPaths[] = $pdfPath;
-                            Log::info("PDF generado para venta {$sale->id}, {$nombreCompleto}, temática ID: {$tematicaId}");
-                        } catch (\Throwable $e) {
-                            Log::error("Error generando PDF para {$nombreCompleto}, temática ID: {$tematicaId}", [
-                                'error' => $e->getMessage(),
-                                'product_order_id' => $productOrder->id,
-                            ]);
-                        }
+                        continue;
                     }
 
                     $totalPdfsGenerated += count($salePdfPaths);
