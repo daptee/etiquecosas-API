@@ -62,10 +62,21 @@ class SaleController extends Controller
             $search = $request->query('search');
             $query->where(function ($q) use ($search) {
                 if (is_numeric($search)) {
+                    // Buscar por ID de venta
                     $q->where('id', $search);
                 } else {
-                    $q->whereHas('products.product', function ($q2) use ($search) {
-                        $q2->where('name', 'like', "%{$search}%");
+                    $q->where(function ($q2) use ($search) {
+                        // Buscar por nombre de producto
+                        $q2->whereHas('products.product', function ($q3) use ($search) {
+                            $q3->where('name', 'like', "%{$search}%");
+                        })
+                        // Buscar por nombre/apellido en personalización
+                        ->orWhereHas('products', function ($q3) use ($search) {
+                            $q3->where(function ($q4) use ($search) {
+                                $q4->whereRaw("JSON_EXTRACT(customization_data, '$.form.name') LIKE ?", ["%{$search}%"])
+                                   ->orWhereRaw("JSON_EXTRACT(customization_data, '$.form.lastName') LIKE ?", ["%{$search}%"]);
+                            });
+                        });
                     });
                 }
             });
@@ -99,10 +110,12 @@ class SaleController extends Controller
 
         // 🔹 Rango de fechas
         if ($request->has('from_date')) {
-            $query->whereDate('created_at', '>=', $request->query('from_date'));
+            $fromDate = Carbon::parse($request->query('from_date'))->startOfDay();
+            $query->where('created_at', '>=', $fromDate);
         }
         if ($request->has('to_date')) {
-            $query->whereDate('created_at', '<=', $request->query('to_date'));
+            $toDate = Carbon::parse($request->query('to_date'))->endOfDay();
+            $query->where('created_at', '<=', $toDate);
         }
 
         // 🔹 Filtro por estado de pago: 'paid' (cobradas) o 'unpaid' (no cobradas)
