@@ -861,7 +861,7 @@ class SaleController extends Controller
 
         foreach ($request->products as $productInput) {
             $product = Product::findOrFail($productInput['product_id']);
-            $unitPrice = $product->price; // 📌 asumo que `products` tiene un campo `price`
+            $unitPrice = $productInput['unit_price']; // 📌 asumo que `products` tiene un campo `price`
             $quantity = $productInput['quantity'];
             $lineTotal = $unitPrice * $quantity;
 
@@ -965,7 +965,7 @@ class SaleController extends Controller
 
             foreach ($request->products as $productInput) {
                 $product = Product::findOrFail($productInput['product_id']);
-                $unitPrice = $product->price;
+                $unitPrice = $productInput['unit_price'];
                 $quantity = $productInput['quantity'];
                 $lineTotal = $unitPrice * $quantity;
 
