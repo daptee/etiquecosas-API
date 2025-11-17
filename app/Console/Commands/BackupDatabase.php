@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Process;
 
 class BackupDatabase extends Command
 {
@@ -58,28 +59,36 @@ class BackupDatabase extends Command
             $filepath = $backupPath . '/' . $filename;
 
             // Construir el comando mysqldump
-            // Nota: En Windows, asegúrate de que mysqldump esté en el PATH o usa la ruta completa
             $command = sprintf(
-                'mysqldump --host=%s --port=%s --user=%s --password=%s --single-transaction --routines --triggers %s > %s 2>&1',
-                escapeshellarg($dbHost),
-                escapeshellarg($dbPort),
-                escapeshellarg($dbUser),
-                escapeshellarg($dbPassword),
-                escapeshellarg($dbName),
-                escapeshellarg($filepath)
+                'mysqldump --host=%s --port=%s --user=%s --password=%s --single-transaction --routines --triggers %s',
+                $dbHost,
+                $dbPort,
+                $dbUser,
+                $dbPassword,
+                $dbName
             );
 
-            // Ejecutar el comando
+            // Ejecutar el comando usando Process de Laravel
             $this->info('Ejecutando mysqldump...');
-            \exec($command, $output, $returnCode);
+
+            $result = Process::run($command);
 
             // Verificar el resultado
-            if ($returnCode !== 0 || !file_exists($filepath) || filesize($filepath) === 0) {
-                $errorMessage = implode("\n", $output);
+            if (!$result->successful()) {
+                $errorMessage = $result->errorOutput() ?: $result->output();
                 $this->error("Error al crear el backup: {$errorMessage}");
                 Log::error("Backup DB: Error al ejecutar mysqldump - {$errorMessage}");
+                return Command::FAILURE;
+            }
 
-                // Limpiar archivo vacío si existe
+            // Guardar el output en el archivo
+            file_put_contents($filepath, $result->output());
+
+            // Verificar que el archivo se creó correctamente
+            if (!file_exists($filepath) || filesize($filepath) === 0) {
+                $this->error("Error: El archivo de backup está vacío o no se pudo crear");
+                Log::error("Backup DB: El archivo de backup está vacío o no se pudo crear");
+
                 if (file_exists($filepath)) {
                     unlink($filepath);
                 }
