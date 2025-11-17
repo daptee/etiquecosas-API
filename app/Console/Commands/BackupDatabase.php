@@ -71,7 +71,7 @@ class BackupDatabase extends Command
 
             // Ejecutar el comando
             $this->info('Ejecutando mysqldump...');
-            exec($command, $output, $returnCode);
+            \exec($command, $output, $returnCode);
 
             // Verificar el resultado
             if ($returnCode !== 0 || !file_exists($filepath) || filesize($filepath) === 0) {
