@@ -312,26 +312,41 @@ class CategoryController extends Controller
         return $formatted;
     }
 
-    public function getPublicCategories()
+    public function getPublicCategories(Request $request)
     {
-        $categories = Category::whereNull('category_id')
+        $isWholesale = $request->query('isWholesale');
+
+        $query = Category::whereNull('category_id')
             ->where('status_id', 1)
-            ->with('tag')
-            ->with([
-                'children' => function ($query) {
-                    $query->where('status_id', 1)
-                        ->orderBy('name', 'asc') // 👈 ordena hijos alfabéticamente
-                        ->with('children.tag');
+            ->with('tag');
+
+        // Filtrar por is_wholesale si el parámetro está presente
+        if ($isWholesale !== null) {
+            $query->where('is_wholesale', filter_var($isWholesale, FILTER_VALIDATE_BOOLEAN));
+        }
+
+        $query->with([
+            'children' => function ($childQuery) use ($isWholesale) {
+                $childQuery->where('status_id', 1)
+                    ->orderBy('name', 'asc');
+
+                // Aplicar el mismo filtro a las subcategorías
+                if ($isWholesale !== null) {
+                    $childQuery->where('is_wholesale', filter_var($isWholesale, FILTER_VALIDATE_BOOLEAN));
                 }
-            ])
-            ->orderBy('name', 'asc') // 👈 ordena categorías principales alfabéticamente
-            ->get();
+
+                $childQuery->with('children.tag');
+            }
+        ])
+        ->orderBy('name', 'asc');
+
+        $categories = $query->get();
 
         $formattedCategories = $categories->map(function ($category) {
             return $this->formatCategoryForPublicApi($category);
         });
 
-        $this->logAudit(null, 'Get Public Categories List V1', [], $formattedCategories);
+        $this->logAudit(null, 'Get Public Categories List V1', $request->all(), $formattedCategories);
 
         return response()->json($formattedCategories, 200);
     }
