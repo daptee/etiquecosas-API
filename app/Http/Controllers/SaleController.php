@@ -70,13 +70,13 @@ class SaleController extends Controller
                         $q2->whereHas('products.product', function ($q3) use ($search) {
                             $q3->where('name', 'like', "%{$search}%");
                         })
-                        // Buscar por nombre/apellido en personalización
+                        // Buscar por nombre/apellido en personalización (case-insensitive)
                         ->orWhereHas('products', function ($q3) use ($search) {
                             // Buscar específicamente en los campos name y lastName dentro de form
-                            // Usamos el patrón %form%name% y %form%lastName% para ser específicos
                             $q3->where(function ($q4) use ($search) {
-                                $q4->where('customization_data', 'like', "%form%name%{$search}%")
-                                   ->orWhere('customization_data', 'like', "%form%lastName%{$search}%");
+                                $searchLower = strtolower($search);
+                                $q4->whereRaw('LOWER(customization_data) like ?', ["%form%name%{$searchLower}%"])
+                                   ->orWhereRaw('LOWER(customization_data) like ?', ["%form%lastName%{$searchLower}%"]);
                             });
                         });
                     });
@@ -110,13 +110,19 @@ class SaleController extends Controller
             $query->where('shipping_method_id', $request->query('shipping_method_id'));
         }
 
-        // 🔹 Rango de fechas
+        // 🔹 Rango de fechas (convertir desde zona horaria Argentina a UTC para comparar)
         if ($request->has('from_date')) {
-            $fromDate = Carbon::parse($request->query('from_date'))->startOfDay();
+            // Parsear la fecha en zona horaria Argentina y convertir a UTC
+            $fromDate = Carbon::parse($request->query('from_date'), 'America/Argentina/Buenos_Aires')
+                ->startOfDay()
+                ->setTimezone('UTC');
             $query->where('created_at', '>=', $fromDate);
         }
         if ($request->has('to_date')) {
-            $toDate = Carbon::parse($request->query('to_date'))->endOfDay();
+            // Parsear la fecha en zona horaria Argentina y convertir a UTC
+            $toDate = Carbon::parse($request->query('to_date'), 'America/Argentina/Buenos_Aires')
+                ->endOfDay()
+                ->setTimezone('UTC');
             $query->where('created_at', '<=', $toDate);
         }
 
