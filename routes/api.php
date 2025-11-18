@@ -266,6 +266,9 @@ Route::middleware('jwt.auth')->prefix('shipping-config')->group(function () {
     Route::put('/{id}', [ShippingConfigController::class, 'update']);
 });
 
+// Webhook de Mercado Pago (sin autenticación, MP envía notificaciones POST)
+Route::post('/mercadopago/webhook', [MercadoPagoController::class, 'webhook'])->name('mercadopago.webhook');
+
 Route::get('/mercadopago/success', [MercadoPagoController::class, 'success'])->name('mercadopago.success');
 Route::get('/mercadopago/failure', [MercadoPagoController::class, 'failure'])->name('mercadopago.failure');
 Route::get('/mercadopago/pending', [MercadoPagoController::class, 'pending'])->name('mercadopago.pending');
