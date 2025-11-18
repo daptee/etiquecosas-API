@@ -116,13 +116,13 @@
                 <div class="tercer-color" style="background: {{ $plantilla['colores'][2] }}">
                     <p class="texto1" style="font-family: 'Oswald';font-size: x-small;">{{mb_strtoupper($product_order->name)}}</p>
                 </div>
-                <div class="primer-color" style="background: {{ $plantilla['colores'][0] }}">
+                <div class="primer-color" style="background: {{ $plantilla['colores'][3] }}">
                     <p class="texto1" style="font-family: 'Oswald';font-size: x-small;">{{mb_strtoupper($product_order->name)}}</p>
                 </div>
-                <div class="segundo-color" style="background: {{ $plantilla['colores'][1] }}">
+                <div class="segundo-color" style="background: {{ $plantilla['colores'][4] }}">
                     <p class="texto1" style="font-family: 'Oswald';font-size: x-small;">{{mb_strtoupper($product_order->name)}}</p>
                 </div>
-                <div class="tercer-color" style="background: {{ $plantilla['colores'][2] }}">
+                <div class="tercer-color" style="background: {{ $plantilla['colores'][5] }}">
                     <p class="texto1" style="font-family: 'Oswald';font-size: x-small;">{{mb_strtoupper($product_order->name)}}</p>
                 </div>
             @endfor

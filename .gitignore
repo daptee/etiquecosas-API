@@ -5,6 +5,7 @@
 /public/storage
 /public/images
 /public/products
+/public/icons
 /storage/*.key
 /vendor
 .env

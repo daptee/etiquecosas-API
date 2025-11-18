@@ -47,6 +47,14 @@ class EtiquetaService
         $urlPdf = $tematicaCoincidente['pdf-url'] ?? null;
         $typography = $tematicaCoincidente['typography'] ?? null;
         $numberLabels = $tematicaCoincidente['number-labels'] ?? null;
+        $numberColumn = $tematicaCoincidente['number-columns'] ?? null;
+
+
+        Log::info("columnaaaaaa");
+        Log::info($numberColumn);
+
+        Log::info("nombreeee");
+        Log::info($nombres);
 
         /**
          * 🔧 Helper para obtener vistas según tipo o URL personalizada
@@ -130,7 +138,7 @@ class EtiquetaService
                     'colores' => $customColor[0],
                     'imagen' => $customIconPath,
                     'fontClass' => $fontClass,
-                    'columna' => 2,
+                    'columna' => $numberColumn ?? 2,
                     'filas' => 19,
                     'label' => $numberLabels ?? 24
                 ];
@@ -157,7 +165,7 @@ class EtiquetaService
                 $plantilla = [
                     'colores' => $customColor[0],
                     'fontClass' => $fontClass,
-                    'columna' => 2,
+                    'columna' => $numberColumn ?? 2,
                     'filas' => 19,
                     'label' => $numberLabels ?? 24
                 ];
@@ -218,7 +226,7 @@ class EtiquetaService
         $colores = !empty($tematicaDb->colors) ? json_decode($tematicaDb->colors, true) ?: [] : [];
 
         // columnas
-        $columna = 2;
+        $columna = $numberColumn ?? 2;
         foreach (['columna', 'columns', 'cols'] as $f) {
             if (isset($tematicaDb->$f) && is_numeric($tematicaDb->$f)) {
                 $columna = (int) $tematicaDb->$f;

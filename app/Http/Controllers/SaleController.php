@@ -467,6 +467,10 @@ class SaleController extends Controller
                 $customColor = $customData['color']['color_code'] ?? null;
                 $customIcon = $customData['icon']['icon'] ?? null;
 
+                if ($customIcon && $customData['icon']['name'] == 'Sin dibujo') {
+                    $customIcon = null;
+                }
+
                 $variant = $productOrder->variant?->variant;
                 $productPdf = ProductPdf::where('product_id', $productOrder->product_id)->first();
 
@@ -603,6 +607,10 @@ class SaleController extends Controller
 
                 $customColor = $customData['color']['color_code'] ?? null;
                 $customIcon = $customData['icon']['icon'] ?? null;
+
+                if ($customIcon && $customData['icon']['name'] == 'Sin dibujo') {
+                    $customIcon = null;
+                }
 
                 $variant = $productOrder->variant?->variant;
                 $productPdf = ProductPdf::where('product_id', $productOrder->product_id)->first();
@@ -1030,6 +1038,10 @@ class SaleController extends Controller
                 $customColor = $customData['color']['color_code'] ?? null;
                 $customIcon = $customData['icon']['icon'] ?? null;
 
+                if ($customIcon && $customData['icon']['name'] == 'Sin dibujo') {
+                    $customIcon = null;
+                }
+
                 $variant = $productOrder->variant?->variant;
                 $productPdf = ProductPdf::where('product_id', $productOrder->product_id)->first();
 
@@ -1170,6 +1182,10 @@ class SaleController extends Controller
 
                         $customColor = $customData['color']['color_code'] ?? null;
                         $customIcon = $customData['icon']['icon'] ?? null;
+
+                        if ($customIcon && $customData['icon']['name'] == 'Sin dibujo') {
+                            $customIcon = null;
+                        }
 
                         $variant = $productOrder->variant?->variant;
                         $productPdf = ProductPdf::where('product_id', $productOrder->product_id)->first();
