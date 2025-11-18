@@ -34,7 +34,7 @@
             font-weight: 700;
             src: url('file://{{ public_path("fonts/Oswald-Bold.ttf") }}') format('truetype');
         }
-        {!! file_get_contents(public_path('css/vinilo.css')) !!}
+        {!! file_get_contents(public_path('css/viniloSinDibujo.css')) !!}
     </style>
 </head>
 
@@ -43,7 +43,7 @@
         <div style="margin-left: 20px;">
             @for ($i = 0; $i < $plantilla['columna']; $i++)
                 <div class="columna">
-                <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][0] }})">
+                <div class="icon-cuadro">
                     <div class="cuadro">
                         @php
                         $name = explode(' ', $product_order->name);
@@ -72,13 +72,13 @@
                         @break
 
                         @default
-                        <p class="texto2 texto-negro texto-negro" style="font-family: 'Oswald';font-size: 1.05em;">
+                        <p class="texto-negro" style="font-family: 'Oswald';font-size: 1.05em;">
                             {{ mb_strtoupper($product_order->name) }}
                         </p>
                         @endswitch
                     </div>
                 </div>
-                <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][0] }})">
+                <div class="icon-cuadro">
                     <div class="cuadro">
                         @php
                         $name = explode(' ', $product_order->name);
@@ -107,13 +107,13 @@
                         @break
 
                         @default
-                        <p class="texto2 texto-negro" style="font-family: 'Oswald';font-size: 1.05em;">
+                        <p class="texto-negro" style="font-family: 'Oswald';font-size: 1.05em;">
                             {{ mb_strtoupper($product_order->name) }}
                         </p>
                         @endswitch
                     </div>
                 </div>
-                <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][0] }})">
+                <div class="icon-cuadro">
                     <div class="cuadro">
                         @php
                         $name = explode(' ', $product_order->name);
@@ -142,13 +142,13 @@
                         @break
 
                         @default
-                        <p class="texto2 texto-negro" style="font-family: 'Oswald';font-size: 1.05em;">
+                        <p class="texto-negro" style="font-family: 'Oswald';font-size: 1.05em;">
                             {{ mb_strtoupper($product_order->name) }}
                         </p>
                         @endswitch
                     </div>
                 </div>
-                <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][0] }})">
+                <div class="icon-cuadro">
                     <div class="cuadro">
                         @php
                         $name = explode(' ', $product_order->name);
@@ -177,13 +177,13 @@
                         @break
 
                         @default
-                        <p class="texto2 texto-negro" style="font-family: 'Oswald';font-size: 1.05em;">
+                        <p class="texto-negro" style="font-family: 'Oswald';font-size: 1.05em;">
                             {{ mb_strtoupper($product_order->name) }}
                         </p>
                         @endswitch
                     </div>
                 </div>
-                <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][0] }})">
+                <div class="icon-cuadro">
                     <div class="cuadro">
                         @php
                         $name = explode(' ', $product_order->name);
@@ -212,13 +212,13 @@
                         @break
 
                         @default
-                        <p class="texto2 texto-negro" style="font-family: 'Oswald';font-size: 1.05em;">
+                        <p class="texto-negro" style="font-family: 'Oswald';font-size: 1.05em;">
                             {{ mb_strtoupper($product_order->name) }}
                         </p>
                         @endswitch
                     </div>
                 </div>
-                <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][0] }})">
+                <div class="icon-cuadro">
                     <div class="cuadro">
                         @php
                         $name = explode(' ', $product_order->name);
@@ -247,13 +247,13 @@
                         @break
 
                         @default
-                        <p class="texto2 texto-negro" style="font-family: 'Oswald';font-size: 1.05em;">
+                        <p class="texto-negro" style="font-family: 'Oswald';font-size: 1.05em;">
                             {{ mb_strtoupper($product_order->name) }}
                         </p>
                         @endswitch
                     </div>
                 </div>
-                <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][0] }})">
+                <div class="icon-cuadro">
                     <div class="cuadro">
                         @php
                         $name = explode(' ', $product_order->name);
@@ -282,13 +282,13 @@
                         @break
 
                         @default
-                        <p class="texto2 texto-negro" style="font-family: 'Oswald';font-size: 1.05em;">
+                        <p class="texto-negro" style="font-family: 'Oswald';font-size: 1.05em;">
                             {{ mb_strtoupper($product_order->name) }}
                         </p>
                         @endswitch
                     </div>
                 </div>
-                <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][0] }})">
+                <div class="icon-cuadro">
                     <div class="cuadro">
                         @php
                         $name = explode(' ', $product_order->name);
@@ -317,13 +317,13 @@
                         @break
 
                         @default
-                        <p class="texto2 texto-negro" style="font-family: 'Oswald';font-size: 1.05em;">
+                        <p class="texto-negro" style="font-family: 'Oswald';font-size: 1.05em;">
                             {{ mb_strtoupper($product_order->name) }}
                         </p>
                         @endswitch
                     </div>
                 </div>
-                <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][0] }})">
+                <div class="icon-cuadro">
                     <div class="cuadro">
                         @php
                         $name = explode(' ', $product_order->name);
@@ -352,13 +352,13 @@
                         @break
 
                         @default
-                        <p class="texto2 texto-negro" style="font-family: 'Oswald';font-size: 1.05em;">
+                        <p class="texto-negro" style="font-family: 'Oswald';font-size: 1.05em;">
                             {{ mb_strtoupper($product_order->name) }}
                         </p>
                         @endswitch
                     </div>
                 </div>
-                <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][0] }})">
+                <div class="icon-cuadro">
                     <div class="cuadro">
                         @php
                         $name = explode(' ', $product_order->name);
@@ -387,13 +387,13 @@
                         @break
 
                         @default
-                        <p class="texto2 texto-negro" style="font-family: 'Oswald';font-size: 1.05em;">
+                        <p class="texto-negro" style="font-family: 'Oswald';font-size: 1.05em;">
                             {{ mb_strtoupper($product_order->name) }}
                         </p>
                         @endswitch
                     </div>
                 </div>
-                <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][0] }})">
+                <div class="icon-cuadro">
                     <div class="cuadro">
                         @php
                         $name = explode(' ', $product_order->name);
@@ -422,7 +422,7 @@
                         @break
 
                         @default
-                        <p class="texto2 texto-negro" style="font-family: 'Oswald';font-size: 1.05em;">
+                        <p class="texto-negro" style="font-family: 'Oswald';font-size: 1.05em;">
                             {{ mb_strtoupper($product_order->name) }}
                         </p>
                         @endswitch

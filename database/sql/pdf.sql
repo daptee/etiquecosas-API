@@ -434,6 +434,12 @@ VALUES (
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
+    33879,
+    '{"tematicas": [{"id": 327, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Gamer", "pdf-url": ["principal/GAMER"]}]}'
+);
+
+INSERT INTO product_pdf (product_id, data)
+VALUES (
     31985,
     '{
         "tematicas": [
@@ -785,14 +791,14 @@ VALUES (
     965,
     '{
         "tematicas": [
-            { "id": 323, "pdf": ["Etiquetas super-mini"], "pdf-url": ["super-mini/COLOR RANGE"], "name": "Blanco y Negro", "color-range": ["#FFFFFF", "#000000", "#0000FF"] },
-            { "id": 319, "pdf": ["Etiquetas super-mini"], "pdf-url": ["super-mini/COLOR RANGE"], "name": "Maíz, celeste, azul marino", "color-range": ["#FAAB51", "#65B6BF", "#006B77"] },
-            { "id": 318, "pdf": ["Etiquetas super-mini"], "pdf-url": ["super-mini/COLOR RANGE"], "name": "Tierra, rosa, aqua", "color-range": ["#E7C6B5", "#ECA199", "#A4BBB1"] },
-            { "id": 317, "pdf": ["Etiquetas super-mini"], "pdf-url": ["super-mini/COLOR RANGE"], "name": "Violeta, fucsia, rosa", "color-range": ["#A25CBF", "#F5426C", "#FEA3BB"] },
-            { "id": 316, "pdf": ["Etiquetas super-mini"], "pdf-url": ["super-mini/COLOR RANGE"], "name": "turquesa, salmón, naranja", "color-range": ["#3FD5AE", "#FF8671", "#FFA400"] },
+            { "id": 323, "pdf": ["Etiquetas super-mini"], "pdf-url": ["super-mini/COLOR RANGE"], "name": "Blanco y Negro", "color-range": ["#FFFFFF", "#000000", "#0000FF", "#FFFFFF", "#000000", "#0000FF"] },
+            { "id": 319, "pdf": ["Etiquetas super-mini"], "pdf-url": ["super-mini/COLOR RANGE"], "name": "Maíz, celeste, azul marino", "color-range": ["#FAAB51", "#65B6BF", "#006B77", "#FAAB51", "#65B6BF", "#006B77"] },
+            { "id": 318, "pdf": ["Etiquetas super-mini"], "pdf-url": ["super-mini/COLOR RANGE"], "name": "Tierra, rosa, aqua", "color-range": ["#E7C6B5", "#ECA199", "#A4BBB1", "#E7C6B5", "#ECA199", "#A4BBB1"] },
+            { "id": 317, "pdf": ["Etiquetas super-mini"], "pdf-url": ["super-mini/COLOR RANGE"], "name": "Violeta, fucsia, rosa", "color-range": ["#A25CBF", "#F5426C", "#FEA3BB", "#A25CBF", "#F5426C", "#FEA3BB"] },
+            { "id": 316, "pdf": ["Etiquetas super-mini"], "pdf-url": ["super-mini/COLOR RANGE"], "name": "turquesa, salmón, naranja", "color-range": ["#3FD5AE", "#FF8671", "#FFA400", "#3FD5AE", "#FF8671", "#FFA400"] },
             { "id": 315, "pdf": ["Etiquetas super-mini"], "pdf-url": ["super-mini/COLOR RANGE"], "name": "Multicolor", "color-range": ["#BA99C4", "#E45C71", "#F09D81", "#D7D769", "#8ACACB", "#E880B1"] },
-            { "id": 314, "pdf": ["Etiquetas super-mini"], "pdf-url": ["super-mini/COLOR RANGE"], "name": "Rojo, verde oscuro, verde claro", "color-range": ["#ED1C24", "#007549", "#3FAE2A"] },
-            { "id": 313, "pdf": ["Etiquetas super-mini"], "pdf-url": ["super-mini/COLOR RANGE"], "name": "Rojo, azul, celeste", "color-range": ["#E13131", "#00628A", "#00B0C1"] }
+            { "id": 314, "pdf": ["Etiquetas super-mini"], "pdf-url": ["super-mini/COLOR RANGE"], "name": "Rojo, verde oscuro, verde claro", "color-range": ["#ED1C24", "#007549", "#3FAE2A", "#ED1C24", "#007549", "#3FAE2A"] },
+            { "id": 313, "pdf": ["Etiquetas super-mini"], "pdf-url": ["super-mini/COLOR RANGE"], "name": "Rojo, azul, celeste", "color-range": ["#E13131", "#00628A", "#00B0C1", "#E13131", "#00628A", "#00B0C1"] }
         ]
     }'
 );
@@ -802,14 +808,14 @@ VALUES (
     11194,
     '{
         "tematicas": [
-            { "id": 323, "pdf": ["Etiquetas super-mini"], "pdf-url": ["super-mini/COLOR RANGE"], "name": "Blanco y Negro", "color-range": ["#FFFFFF", "#000000", "#0000FF"] },
-            { "id": 319, "pdf": ["Etiquetas super-mini"], "pdf-url": ["super-mini/COLOR RANGE"], "name": "Maíz, celeste, azul marino", "color-range": ["#FAAB51", "#65B6BF", "#006B77"] },
-            { "id": 318, "pdf": ["Etiquetas super-mini"], "pdf-url": ["super-mini/COLOR RANGE"], "name": "Tierra, rosa, aqua", "color-range": ["#E7C6B5", "#ECA199", "#A4BBB1"] },
-            { "id": 317, "pdf": ["Etiquetas super-mini"], "pdf-url": ["super-mini/COLOR RANGE"], "name": "Violeta, fucsia, rosa", "color-range": ["#A25CBF", "#F5426C", "#FEA3BB"] },
-            { "id": 316, "pdf": ["Etiquetas super-mini"], "pdf-url": ["super-mini/COLOR RANGE"], "name": "turquesa, salmón, naranja", "color-range": ["#3FD5AE", "#FF8671", "#FFA400"] },
+            { "id": 323, "pdf": ["Etiquetas super-mini"], "pdf-url": ["super-mini/COLOR RANGE"], "name": "Blanco y Negro", "color-range": ["#FFFFFF", "#000000", "#0000FF", "#FFFFFF", "#000000", "#0000FF"] },
+            { "id": 319, "pdf": ["Etiquetas super-mini"], "pdf-url": ["super-mini/COLOR RANGE"], "name": "Maíz, celeste, azul marino", "color-range": ["#FAAB51", "#65B6BF", "#006B77", "#FAAB51", "#65B6BF", "#006B77"] },
+            { "id": 318, "pdf": ["Etiquetas super-mini"], "pdf-url": ["super-mini/COLOR RANGE"], "name": "Tierra, rosa, aqua", "color-range": ["#E7C6B5", "#ECA199", "#A4BBB1", "#E7C6B5", "#ECA199", "#A4BBB1"] },
+            { "id": 317, "pdf": ["Etiquetas super-mini"], "pdf-url": ["super-mini/COLOR RANGE"], "name": "Violeta, fucsia, rosa", "color-range": ["#A25CBF", "#F5426C", "#FEA3BB", "#A25CBF", "#F5426C", "#FEA3BB"] },
+            { "id": 316, "pdf": ["Etiquetas super-mini"], "pdf-url": ["super-mini/COLOR RANGE"], "name": "turquesa, salmón, naranja", "color-range": ["#3FD5AE", "#FF8671", "#FFA400", "#3FD5AE", "#FF8671", "#FFA400"] },
             { "id": 315, "pdf": ["Etiquetas super-mini"], "pdf-url": ["super-mini/COLOR RANGE"], "name": "Multicolor", "color-range": ["#BA99C4", "#E45C71", "#F09D81", "#D7D769", "#8ACACB", "#E880B1"] },
-            { "id": 314, "pdf": ["Etiquetas super-mini"], "pdf-url": ["super-mini/COLOR RANGE"], "name": "Rojo, verde oscuro, verde claro", "color-range": ["#ED1C24", "#007549", "#3FAE2A"] },
-            { "id": 313, "pdf": ["Etiquetas super-mini"], "pdf-url": ["super-mini/COLOR RANGE"], "name": "Rojo, azul, celeste", "color-range": ["#E13131", "#00628A", "#00B0C1"] }
+            { "id": 314, "pdf": ["Etiquetas super-mini"], "pdf-url": ["super-mini/COLOR RANGE"], "name": "Rojo, verde oscuro, verde claro", "color-range": ["#ED1C24", "#007549", "#3FAE2A", "#ED1C24", "#007549", "#3FAE2A"] },
+            { "id": 313, "pdf": ["Etiquetas super-mini"], "pdf-url": ["super-mini/COLOR RANGE"], "name": "Rojo, azul, celeste", "color-range": ["#E13131", "#00628A", "#00B0C1", "#E13131", "#00628A", "#00B0C1"] }
         ]
     }'
 );
@@ -1096,29 +1102,93 @@ VALUES (
     92903,
     '{
         "tematicas": [
-            { "id": 330, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/BLANCO Y NEGRO"], "name": "Sin dibujo blanco y negro" },
-            { "id": 327, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/GAMER"], "name": "Gamer" },
-            { "id": 156, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/POSITIVE"], "name": "Positive" },
-            { "id": 155, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/SKATE"], "name": "Skate" },
-            { "id": 154, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/UNICORNIO"], "name": "Unicornio" },
-            { "id": 153, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/TRANSPORTES"], "name": "Transportes" },
-            { "id": 152, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/TEEN"], "name": "Teen" },
-            { "id": 151, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/SIN DIBUJO SPORTS"], "name": "Sin dibujo sports" },
-            { "id": 150, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/SIN DIBUJO RAINBOW"], "name": "Sin dibujo rainbow" },
-            { "id": 149, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/SIN DIBUJO PASTEL"], "name": "Sin dibujo pastel" },
-            { "id": 148, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/SIN DIBUJO MULTICOLOR"], "name": "Sin dibujo multicolor" },
-            { "id": 147, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/SIN DIBUJO BLUE"], "name": "Sin dibujo blue" },
-            { "id": 146, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/NAUTICA"], "name": "Nautica" },
-            { "id": 145, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/LLAMAS"], "name": "Llamas" },
-            { "id": 144, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/GRANJA"], "name": "Granja" },
-            { "id": 143, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/FUTBOL"], "name": "Futbol" },
-            { "id": 142, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/ESTRELLAS PASTEL"], "name": "Estrellas pastel" },
-            { "id": 141, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/ESTRELLAS BLUE"], "name": "Estrellas blue" },
-            { "id": 140, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/EMOJIS"], "name": "Emojis" },
-            { "id": 139, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/DINOSAURIOS"], "name": "Dinosaurios" },
-            { "id": 138, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/BOSQUE"], "name": "Bosque" },
-            { "id": 137, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/BASQUET"], "name": "Basquet" },
-            { "id": 136, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/AIRE"], "name": "Aire" }
+            { "id": 330, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/BLANCO Y NEGRO"], "name": "Sin dibujo blanco y negro", "number-labels": 33, "number-columns": 3},
+            { "id": 327, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/GAMER"], "name": "Gamer", "number-labels": 33, "number-columns": 3},
+            { "id": 156, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/POSITIVE"], "name": "Positive", "number-labels": 33, "number-columns": 3},
+            { "id": 155, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/SKATE"], "name": "Skate", "number-labels": 33, "number-columns": 3},
+            { "id": 154, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/UNICORNIO"], "name": "Unicornio", "number-labels": 33, "number-columns": 3},
+            { "id": 153, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/TRANSPORTES"], "name": "Transportes", "number-labels": 33, "number-columns": 3},
+            { "id": 152, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/TEEN"], "name": "Teen", "number-labels": 33, "number-columns": 3},
+            { "id": 151, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/SIN DIBUJO SPORTS"], "name": "Sin dibujo sports", "number-labels": 33, "number-columns": 3},
+            { "id": 150, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/SIN DIBUJO RAINBOW"], "name": "Sin dibujo rainbow", "number-labels": 33, "number-columns": 3},
+            { "id": 149, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/SIN DIBUJO PASTEL"], "name": "Sin dibujo pastel", "number-labels": 33, "number-columns": 3},
+            { "id": 148, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/SIN DIBUJO MULTICOLOR"], "name": "Sin dibujo multicolor", "number-labels": 33, "number-columns": 3},
+            { "id": 147, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/SIN DIBUJO BLUE"], "name": "Sin dibujo blue", "number-labels": 33, "number-columns": 3},
+            { "id": 146, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/NAUTICA"], "name": "Nautica", "number-labels": 33, "number-columns": 3},
+            { "id": 145, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/LLAMAS"], "name": "Llamas", "number-labels": 33, "number-columns": 3},
+            { "id": 144, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/GRANJA"], "name": "Granja", "number-labels": 33, "number-columns": 3},
+            { "id": 143, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/FUTBOL"], "name": "Futbol", "number-labels": 33, "number-columns": 3},
+            { "id": 142, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/ESTRELLAS PASTEL"], "name": "Estrellas pastel", "number-labels": 33, "number-columns": 3},
+            { "id": 141, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/ESTRELLAS BLUE"], "name": "Estrellas blue", "number-labels": 33, "number-columns": 3},
+            { "id": 140, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/EMOJIS"], "name": "Emojis", "number-labels": 33, "number-columns": 3},
+            { "id": 139, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/DINOSAURIOS"], "name": "Dinosaurios", "number-labels": 33, "number-columns": 3},
+            { "id": 138, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/BOSQUE"], "name": "Bosque", "number-labels": 33, "number-columns": 3},
+            { "id": 137, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/BASQUET"], "name": "Basquet", "number-labels": 33, "number-columns": 3},
+            { "id": 136, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/AIRE"], "name": "Aire", "number-labels": 33, "number-columns": 3}
+        ]
+    }'
+);
+
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    92901,
+    '{
+        "tematicas": [
+            { "id": 330, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/BLANCO Y NEGRO"], "name": "Sin dibujo blanco y negro", "number-labels": 11, "number-columns": 1},
+            { "id": 327, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/GAMER"], "name": "Gamer", "number-labels": 11, "number-columns": 1},
+            { "id": 156, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/POSITIVE"], "name": "Positive", "number-labels": 11, "number-columns": 1},
+            { "id": 155, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/SKATE"], "name": "Skate", "number-labels": 11, "number-columns": 1},
+            { "id": 154, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/UNICORNIO"], "name": "Unicornio", "number-labels": 11, "number-columns": 1},
+            { "id": 153, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/TRANSPORTES"], "name": "Transportes", "number-labels": 11, "number-columns": 1},
+            { "id": 152, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/TEEN"], "name": "Teen", "number-labels": 11, "number-columns": 1},
+            { "id": 151, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/SIN DIBUJO SPORTS"], "name": "Sin dibujo sports", "number-labels": 11, "number-columns": 1},
+            { "id": 150, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/SIN DIBUJO RAINBOW"], "name": "Sin dibujo rainbow", "number-labels": 11, "number-columns": 1},
+            { "id": 149, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/SIN DIBUJO PASTEL"], "name": "Sin dibujo pastel", "number-labels": 11, "number-columns": 1},
+            { "id": 148, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/SIN DIBUJO MULTICOLOR"], "name": "Sin dibujo multicolor", "number-labels": 11, "number-columns": 1},
+            { "id": 147, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/SIN DIBUJO BLUE"], "name": "Sin dibujo blue", "number-labels": 11, "number-columns": 1},
+            { "id": 146, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/NAUTICA"], "name": "Nautica", "number-labels": 11, "number-columns": 1},
+            { "id": 145, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/LLAMAS"], "name": "Llamas", "number-labels": 11, "number-columns": 1},
+            { "id": 144, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/GRANJA"], "name": "Granja", "number-labels": 11, "number-columns": 1},
+            { "id": 143, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/FUTBOL"], "name": "Futbol", "number-labels": 11, "number-columns": 1},
+            { "id": 142, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/ESTRELLAS PASTEL"], "name": "Estrellas pastel", "number-labels": 11, "number-columns": 1},
+            { "id": 141, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/ESTRELLAS BLUE"], "name": "Estrellas blue", "number-labels": 11, "number-columns": 1},
+            { "id": 140, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/EMOJIS"], "name": "Emojis", "number-labels": 11, "number-columns": 1},
+            { "id": 139, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/DINOSAURIOS"], "name": "Dinosaurios", "number-labels": 11, "number-columns": 1},
+            { "id": 138, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/BOSQUE"], "name": "Bosque", "number-labels": 11, "number-columns": 1},
+            { "id": 137, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/BASQUET"], "name": "Basquet", "number-labels": 11, "number-columns": 1},
+            { "id": 136, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/AIRE"], "name": "Aire", "number-labels": 11, "number-columns": 1}
+        ]
+    }'
+);
+
+INSERT INTO product_pdf (product_id, data)
+VALUES (
+    92902,
+    '{
+        "tematicas": [
+            { "id": 330, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/BLANCO Y NEGRO"], "name": "Sin dibujo blanco y negro", "number-labels": 22, "number-columns": 2},
+            { "id": 327, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/GAMER"], "name": "Gamer", "number-labels": 22, "number-columns": 2},
+            { "id": 156, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/POSITIVE"], "name": "Positive", "number-labels": 22, "number-columns": 2},
+            { "id": 155, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/SKATE"], "name": "Skate", "number-labels": 22, "number-columns": 2},
+            { "id": 154, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/UNICORNIO"], "name": "Unicornio", "number-labels": 22, "number-columns": 2},
+            { "id": 153, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/TRANSPORTES"], "name": "Transportes", "number-labels": 22, "number-columns": 2},
+            { "id": 152, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/TEEN"], "name": "Teen", "number-labels": 22, "number-columns": 2},
+            { "id": 151, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/SIN DIBUJO SPORTS"], "name": "Sin dibujo sports", "number-labels": 22, "number-columns": 2},
+            { "id": 150, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/SIN DIBUJO RAINBOW"], "name": "Sin dibujo rainbow", "number-labels": 22, "number-columns": 2},
+            { "id": 149, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/SIN DIBUJO PASTEL"], "name": "Sin dibujo pastel", "number-labels": 22, "number-columns": 2},
+            { "id": 148, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/SIN DIBUJO MULTICOLOR"], "name": "Sin dibujo multicolor", "number-labels": 22, "number-columns": 2},
+            { "id": 147, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/SIN DIBUJO BLUE"], "name": "Sin dibujo blue", "number-labels": 22, "number-columns": 2},
+            { "id": 146, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/NAUTICA"], "name": "Nautica", "number-labels": 22, "number-columns": 2},
+            { "id": 145, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/LLAMAS"], "name": "Llamas", "number-labels": 22, "number-columns": 2},
+            { "id": 144, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/GRANJA"], "name": "Granja", "number-labels": 22, "number-columns": 2},
+            { "id": 143, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/FUTBOL"], "name": "Futbol", "number-labels": 22, "number-columns": 2},
+            { "id": 142, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/ESTRELLAS PASTEL"], "name": "Estrellas pastel", "number-labels": 22, "number-columns": 2},
+            { "id": 141, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/ESTRELLAS BLUE"], "name": "Estrellas blue", "number-labels": 22, "number-columns": 2},
+            { "id": 140, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/EMOJIS"], "name": "Emojis", "number-labels": 22, "number-columns": 2},
+            { "id": 139, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/DINOSAURIOS"], "name": "Dinosaurios", "number-labels": 22, "number-columns": 2},
+            { "id": 138, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/BOSQUE"], "name": "Bosque", "number-labels": 22, "number-columns": 2},
+            { "id": 137, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/BASQUET"], "name": "Basquet", "number-labels": 22, "number-columns": 2},
+            { "id": 136, "pdf": ["Etiquetas vinilo"], "pdf-url": ["vinilo/AIRE"], "name": "Aire", "number-labels": 22, "number-columns": 2}
         ]
     }'
 );

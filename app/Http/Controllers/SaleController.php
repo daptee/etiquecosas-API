@@ -467,6 +467,10 @@ class SaleController extends Controller
                 $customColor = $customData['color']['color_code'] ?? null;
                 $customIcon = $customData['icon']['icon'] ?? null;
 
+                if ($customIcon && $customData['icon']['name'] == 'Sin dibujo') {
+                    $customIcon = null;
+                }
+
                 $variant = $productOrder->variant?->variant;
                 $productPdf = ProductPdf::where('product_id', $productOrder->product_id)->first();
 
@@ -603,6 +607,10 @@ class SaleController extends Controller
 
                 $customColor = $customData['color']['color_code'] ?? null;
                 $customIcon = $customData['icon']['icon'] ?? null;
+
+                if ($customIcon && $customData['icon']['name'] == 'Sin dibujo') {
+                    $customIcon = null;
+                }
 
                 $variant = $productOrder->variant?->variant;
                 $productPdf = ProductPdf::where('product_id', $productOrder->product_id)->first();
@@ -861,7 +869,7 @@ class SaleController extends Controller
 
         foreach ($request->products as $productInput) {
             $product = Product::findOrFail($productInput['product_id']);
-            $unitPrice = $product->price; // 📌 asumo que `products` tiene un campo `price`
+            $unitPrice = $productInput['unit_price']; // 📌 asumo que `products` tiene un campo `price`
             $quantity = $productInput['quantity'];
             $lineTotal = $unitPrice * $quantity;
 
@@ -965,7 +973,7 @@ class SaleController extends Controller
 
             foreach ($request->products as $productInput) {
                 $product = Product::findOrFail($productInput['product_id']);
-                $unitPrice = $product->price;
+                $unitPrice = $productInput['unit_price'];
                 $quantity = $productInput['quantity'];
                 $lineTotal = $unitPrice * $quantity;
 
@@ -1029,6 +1037,10 @@ class SaleController extends Controller
 
                 $customColor = $customData['color']['color_code'] ?? null;
                 $customIcon = $customData['icon']['icon'] ?? null;
+
+                if ($customIcon && $customData['icon']['name'] == 'Sin dibujo') {
+                    $customIcon = null;
+                }
 
                 $variant = $productOrder->variant?->variant;
                 $productPdf = ProductPdf::where('product_id', $productOrder->product_id)->first();
@@ -1170,6 +1182,10 @@ class SaleController extends Controller
 
                         $customColor = $customData['color']['color_code'] ?? null;
                         $customIcon = $customData['icon']['icon'] ?? null;
+
+                        if ($customIcon && $customData['icon']['name'] == 'Sin dibujo') {
+                            $customIcon = null;
+                        }
 
                         $variant = $productOrder->variant?->variant;
                         $productPdf = ProductPdf::where('product_id', $productOrder->product_id)->first();
