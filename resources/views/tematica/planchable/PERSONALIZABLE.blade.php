@@ -24,50 +24,46 @@
             margin-bottom: 5px;
             vertical-align: top;
             display: inline-block;
-            position: relative;
+            white-space: nowrap;
+            line-height: 1cm;
+            text-align: center;
         }
 
         .cuadro {
-            width: 4cm;
-            height: 100%;
-            position: relative;
-            top: 0;
-            left: 2cm;
-            background: #FFFFFF;
+            display: inline-block;
+            vertical-align: middle;
+            line-height: 1cm;
             /*border: 1px solid blue;*/
         }
         .imagen {
-            width: 2cm;
-            height: 100%;
+            display: inline-block;
+            vertical-align: middle;
+            line-height: 1cm;
+            text-align: center;
             /*border: 1px solid green;*/
-            position: relative;
-            position: absolute;
-            top: 0;
-            left: 0;
         }
         .personaje {
-            max-height: 80%;
-            max-width: 50%;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            max-height: 0.8cm;
+            margin-top: 7px;
+            margin-right: 7px;
+            vertical-align: middle;
             /*left: 63%;*/
             /*transform: translate(-440%, -50%);*/
             /*border: 1px solid red;*/
         }
 
         .texto2 {
-            width: 4cm;
             text-align: center;
             line-height: 12px;
             color: white;
             margin: 0;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-60%, -45%);
+            padding: 0;
+            display: inline-block;
+            vertical-align: middle;
             font-family: 'Oswald';
+            max-width: 4.5cm;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
 
         .texto3 {
@@ -100,9 +96,13 @@
 <body>
     <div class="hoja">
         @php
-            $fontsize = '1.1em';
-            if (Str::length($product_order->name) > 16) {
+            $nameLength = Str::length($product_order->name);
+            if ($nameLength <= 16) {
+                $fontsize = '1.1em';
+            } elseif ($nameLength <= 25) {
                 $fontsize = '0.9em';
+            } else {
+                $fontsize = '0.7em';
             }
         @endphp
         @for ($i = 0; $i < $plantilla['label']; $i++)
