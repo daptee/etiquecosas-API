@@ -5,41 +5,24 @@ namespace App\Console\Commands;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Process;
 
 class BackupDatabase extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
     protected $signature = 'db:backup';
-
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
     protected $description = 'Realiza un backup completo de la base de datos';
 
-    /**
-     * Execute the console command.
-     */
     public function handle()
     {
         $this->info('Iniciando backup de la base de datos...');
 
         try {
-            // Obtener configuración de la base de datos
             $dbHost = env('DB_HOST');
             $dbPort = env('DB_PORT', 3306);
             $dbName = env('DB_DATABASE');
             $dbUser = env('DB_USERNAME');
             $dbPassword = env('DB_PASSWORD');
+            $mysqldumpPath = env('MYSQLDUMP_PATH', 'mysqldump');
 
-            // Validar que existan las credenciales
             if (!$dbHost || !$dbName || !$dbUser) {
                 $this->error('Error: Faltan credenciales de la base de datos en el archivo .env');
                 Log::error('Backup DB: Faltan credenciales de base de datos');
@@ -58,31 +41,47 @@ class BackupDatabase extends Command
             $filename = "backup_{$dbName}_{$timestamp}.sql";
             $filepath = $backupPath . '/' . $filename;
 
-            // Construir el comando mysqldump
+            // Construir el comando mysqldump con redirección directa al archivo
+            $errorFile = $backupPath . '/error_' . $timestamp . '.txt';
             $command = sprintf(
-                'mysqldump --host=%s --port=%s --user=%s --password=%s --single-transaction --routines --triggers %s',
+                '"%s" --host=%s --port=%s --user=%s --password=%s --single-transaction --routines --triggers %s > "%s" 2>"%s"',
+                $mysqldumpPath,
                 $dbHost,
                 $dbPort,
                 $dbUser,
                 $dbPassword,
-                $dbName
+                $dbName,
+                $filepath,
+                $errorFile
             );
 
-            // Ejecutar el comando usando Process de Laravel
             $this->info('Ejecutando mysqldump...');
 
-            $result = Process::run($command);
+            // Ejecutar el comando
+            $output = [];
+            $returnVar = 0;
+            exec($command, $output, $returnVar);
 
-            // Verificar el resultado
-            if (!$result->successful()) {
-                $errorMessage = $result->errorOutput() ?: $result->output();
-                $this->error("Error al crear el backup: {$errorMessage}");
-                Log::error("Backup DB: Error al ejecutar mysqldump - {$errorMessage}");
-                return Command::FAILURE;
+            // Leer errores si existen
+            $errorMessage = '';
+            if (file_exists($errorFile)) {
+                $errorContent = file_get_contents($errorFile);
+                // Limpiar caracteres no UTF-8 y warnings de password
+                $errorMessage = mb_convert_encoding($errorContent, 'UTF-8', 'UTF-8');
+                $errorMessage = preg_replace('/\[Warning\].*password.*\n?/i', '', $errorMessage);
+                $errorMessage = trim($errorMessage);
+                unlink($errorFile);
             }
 
-            // Guardar el output en el archivo
-            file_put_contents($filepath, $result->output());
+            // Verificar el resultado - ignorar si solo hay warnings menores
+            if ($returnVar !== 0) {
+                $this->error("Error al crear el backup: {$errorMessage}");
+                Log::error("Backup DB: Error al ejecutar mysqldump - {$errorMessage}");
+                if (file_exists($filepath)) {
+                    unlink($filepath);
+                }
+                return Command::FAILURE;
+            }
 
             // Verificar que el archivo se creó correctamente
             if (!file_exists($filepath) || filesize($filepath) === 0) {

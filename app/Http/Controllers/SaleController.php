@@ -80,6 +80,10 @@ class SaleController extends Controller
                                 $q4->whereRaw('LOWER(customization_data) like ?', ["%form%name%{$searchLower}%"])
                                    ->orWhereRaw('LOWER(customization_data) like ?', ["%form%lastName%{$searchLower}%"]);
                             });
+                        })
+                        // Buscar por email del cliente
+                        ->orWhereHas('client', function ($q3) use ($search) {
+                            $q3->where('email', 'like', "%{$search}%");
                         });
                     });
                 }
@@ -402,7 +406,7 @@ class SaleController extends Controller
         $data['total'] = $total;
         $sale->update($data);
 
-        $sale->load('products.variant');
+        $sale->load(['products.variant', 'statusHistory']);
 
         $this->logAudit(Auth::user() ?? null, 'Update Sale', $request->all(), $sale);
         return $this->success($sale, 'Venta actualizada correctamente');
@@ -593,6 +597,9 @@ class SaleController extends Controller
             }
         }
 
+        $sale->load(['products.variant', 'statusHistory']);
+
+
         $this->logAudit(Auth::user() ?? null, 'Update Status Sale', $request->all(), $sale);
         return $this->success($sale, 'Estado de venta actualizada correctamente');
     }
@@ -636,6 +643,10 @@ class SaleController extends Controller
         }
 
         if ($sale->sale_status_id == 1 && $saleStatusOld != 1) {
+            $notifyEmail = env('MAIL_NOTIFICATION_TO');
+
+            Mail::to($sale->client->email)->send(new OrderSummaryMail($sale));
+            Mail::to($notifyEmail)->send(new OrderSummaryMailTo($sale));
 
             StockService::discountStock($sale);
 
@@ -775,6 +786,8 @@ class SaleController extends Controller
                 continue;
             }
         }
+
+        $sale->load(['products.variant', 'statusHistory']);
 
         $this->logAudit(Auth::user() ?? null, 'Update Status Sale', $request->all(), $sale);
         return $this->success($sale, 'Estado de venta actualizada correctamente');
