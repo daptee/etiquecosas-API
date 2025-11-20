@@ -80,6 +80,10 @@ class SaleController extends Controller
                                 $q4->whereRaw('LOWER(customization_data) like ?', ["%form%name%{$searchLower}%"])
                                    ->orWhereRaw('LOWER(customization_data) like ?', ["%form%lastName%{$searchLower}%"]);
                             });
+                        })
+                        // Buscar por email del cliente
+                        ->orWhereHas('client', function ($q3) use ($search) {
+                            $q3->where('email', 'like', "%{$search}%");
                         });
                     });
                 }
