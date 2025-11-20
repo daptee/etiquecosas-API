@@ -402,7 +402,7 @@ class SaleController extends Controller
         $data['total'] = $total;
         $sale->update($data);
 
-        $sale->load('products.variant');
+        $sale->load(['products.variant', 'statusHistory']);
 
         $this->logAudit(Auth::user() ?? null, 'Update Sale', $request->all(), $sale);
         return $this->success($sale, 'Venta actualizada correctamente');
