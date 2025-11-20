@@ -593,6 +593,9 @@ class SaleController extends Controller
             }
         }
 
+        $sale->load(['products.variant', 'statusHistory']);
+
+
         $this->logAudit(Auth::user() ?? null, 'Update Status Sale', $request->all(), $sale);
         return $this->success($sale, 'Estado de venta actualizada correctamente');
     }
@@ -775,6 +778,8 @@ class SaleController extends Controller
                 continue;
             }
         }
+
+        $sale->load(['products.variant', 'statusHistory']);
 
         $this->logAudit(Auth::user() ?? null, 'Update Status Sale', $request->all(), $sale);
         return $this->success($sale, 'Estado de venta actualizada correctamente');
