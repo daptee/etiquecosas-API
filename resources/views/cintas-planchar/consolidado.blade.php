@@ -64,7 +64,6 @@
 
         .texto2 {
             text-align: center;
-            line-height: 12px;
             color: white;
             margin: 0;
             padding: 0;
@@ -74,6 +73,15 @@
             max-width: 4.5cm;
             word-wrap: break-word;
             overflow-wrap: break-word;
+        }
+
+        .texto2.con-icono {
+            line-height: 12px;
+        }
+
+        .texto2.sin-icono {
+            padding-top: 5px;
+            line-height: 12px;
         }
 
         .cantidad-label {
@@ -129,14 +137,12 @@
                                 </div>
                             @endif
                             <div class="cuadro">
-                                <p class="texto2" style="color:{{ $color }};font-size: {{ $fontsize }};">
+                                <p class="texto2 {{ $icono ? 'con-icono' : 'sin-icono' }}" style="color:{{ $color }};font-size: {{ $fontsize }};">
                                     {{ mb_strtoupper($nombre) }}
                                 </p>
                             </div>
                         </div>
-                        @if ($cantidad > 1)
-                            <span class="cantidad-label">x{{ $cantidad }}</span>
-                        @endif
+                        <span class="cantidad-label">{{ $cantidad > 1 ? 'x' . $cantidad : '' }}</span>
                     </div>
                 @endforeach
             </div>
