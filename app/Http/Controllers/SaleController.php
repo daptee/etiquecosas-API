@@ -639,6 +639,10 @@ class SaleController extends Controller
         }
 
         if ($sale->sale_status_id == 1 && $saleStatusOld != 1) {
+            $notifyEmail = env('MAIL_NOTIFICATION_TO');
+
+            Mail::to($sale->client->email)->send(new OrderSummaryMail($sale));
+            Mail::to($notifyEmail)->send(new OrderSummaryMailTo($sale));
 
             StockService::discountStock($sale);
 
