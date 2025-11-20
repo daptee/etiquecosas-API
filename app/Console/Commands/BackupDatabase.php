@@ -57,10 +57,36 @@ class BackupDatabase extends Command
 
             $this->info('Ejecutando mysqldump...');
 
-            // Ejecutar el comando
-            $output = [];
+            // Ejecutar el comando usando shell_exec o proc_open como alternativa a exec
             $returnVar = 0;
-            exec($command, $output, $returnVar);
+
+            if (function_exists('exec')) {
+                $output = [];
+                exec($command, $output, $returnVar);
+            } elseif (function_exists('shell_exec')) {
+                shell_exec($command);
+                // Verificar si el archivo se creó para determinar éxito
+                $returnVar = (file_exists($filepath) && filesize($filepath) > 0) ? 0 : 1;
+            } elseif (function_exists('proc_open')) {
+                $process = proc_open($command, [
+                    0 => ['pipe', 'r'],
+                    1 => ['pipe', 'w'],
+                    2 => ['pipe', 'w']
+                ], $pipes);
+
+                if (is_resource($process)) {
+                    fclose($pipes[0]);
+                    fclose($pipes[1]);
+                    fclose($pipes[2]);
+                    $returnVar = proc_close($process);
+                } else {
+                    $returnVar = 1;
+                }
+            } else {
+                $this->error("Error: No hay funciones de ejecución disponibles (exec, shell_exec, proc_open)");
+                Log::error("Backup DB: No hay funciones de ejecución disponibles");
+                return Command::FAILURE;
+            }
 
             // Leer errores si existen
             $errorMessage = '';
