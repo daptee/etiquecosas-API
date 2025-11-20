@@ -36,6 +36,7 @@ use App\Http\Controllers\BackupController;
 Route::get('/clear-cache', [CacheController::class, 'clearCache'])->name('clearCache');
 Route::post('/run', [BackupController::class, 'createBackup']);
 Route::post('/clean', [BackupController::class, 'cleanOldBackups']);
+Route::post('/notify-production', [BackupController::class, 'notifyProductionOrders']);
 
 // Auth
 Route::post('login', [LoginController::class, 'login']);
