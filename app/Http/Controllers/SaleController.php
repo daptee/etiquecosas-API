@@ -21,6 +21,8 @@ use App\Models\Sale;
 use App\Models\SaleProduct;
 use App\Models\SaleStatus;
 use App\Models\SaleStatusHistory;
+use App\Services\CintaCoserService;
+use App\Services\CintaPlancharService;
 use App\Services\EtiquetaService;
 use App\Services\StockService;
 use App\Traits\ApiResponse;
@@ -456,6 +458,8 @@ class SaleController extends Controller
             Mail::to($notifyEmail)->send(new OrderSummaryMailTo($sale));
 
             StockService::discountStock($sale);
+            CintaCoserService::limpiarEtiquetasDeVenta($sale->id, $sale->created_at);
+            CintaPlancharService::limpiarEtiquetasDeVenta($sale->id, $sale->created_at);
 
             foreach ($sale->products as $productOrder) {
                 // === 1. Datos base ===
@@ -469,6 +473,46 @@ class SaleController extends Controller
 
                 if ($customIcon && $customData['icon']['name'] == 'Sin dibujo') {
                     $customIcon = null;
+                }
+
+                // === CINTAS PARA COSER (Producto 1291) ===
+                if (CintaCoserService::esProductoCoser($productOrder->product_id)) {
+                    try {
+                        CintaCoserService::agregarEtiquetaAlPdf(
+                            $sale->id,
+                            $productOrder,
+                            $nombreCompleto,
+                            $customColor,
+                            $customIcon,
+                            $sale->created_at
+                        );
+                        Log::info("Etiqueta de cinta para coser agregada para {$nombreCompleto}");
+                    } catch (\Throwable $e) {
+                        Log::error("Error agregando etiqueta de cinta para coser", [
+                            'error' => $e->getMessage(),
+                            'product_order_id' => $productOrder->id,
+                        ]);
+                    }
+                }
+
+                // === CINTAS PARA PLANCHAR (Producto 1247) ===
+                if (CintaPlancharService::esProductoPlanchar($productOrder->product_id)) {
+                    try {
+                        CintaPlancharService::agregarEtiquetaAlPdf(
+                            $sale->id,
+                            $productOrder,
+                            $nombreCompleto,
+                            $customColor,
+                            $customIcon,
+                            $sale->created_at
+                        );
+                        Log::info("Etiqueta de cinta para planchar agregada para {$nombreCompleto}");
+                    } catch (\Throwable $e) {
+                        Log::error("Error agregando etiqueta de cinta para planchar", [
+                            'error' => $e->getMessage(),
+                            'product_order_id' => $productOrder->id,
+                        ]);
+                    }
                 }
 
                 $variant = $productOrder->variant?->variant;
@@ -597,6 +641,8 @@ class SaleController extends Controller
 
             // 🗑️ Eliminar todos los PDFs anteriores de este pedido antes de generar nuevos
             EtiquetaService::limpiarPdfsDelPedido($sale->id, $sale->created_at);
+            CintaCoserService::limpiarEtiquetasDeVenta($sale->id, $sale->created_at);
+            CintaPlancharService::limpiarEtiquetasDeVenta($sale->id, $sale->created_at);
 
             foreach ($sale->products as $productOrder) {
                 // === 1. Datos base ===
@@ -610,6 +656,46 @@ class SaleController extends Controller
 
                 if ($customIcon && $customData['icon']['name'] == 'Sin dibujo') {
                     $customIcon = null;
+                }
+
+                // === CINTAS PARA COSER (Producto 1291) ===
+                if (CintaCoserService::esProductoCoser($productOrder->product_id)) {
+                    try {
+                        CintaCoserService::agregarEtiquetaAlPdf(
+                            $sale->id,
+                            $productOrder,
+                            $nombreCompleto,
+                            $customColor,
+                            $customIcon,
+                            $sale->created_at
+                        );
+                        Log::info("Etiqueta de cinta para coser agregada para {$nombreCompleto}");
+                    } catch (\Throwable $e) {
+                        Log::error("Error agregando etiqueta de cinta para coser", [
+                            'error' => $e->getMessage(),
+                            'product_order_id' => $productOrder->id,
+                        ]);
+                    }
+                }
+
+                // === CINTAS PARA PLANCHAR (Producto 1247) ===
+                if (CintaPlancharService::esProductoPlanchar($productOrder->product_id)) {
+                    try {
+                        CintaPlancharService::agregarEtiquetaAlPdf(
+                            $sale->id,
+                            $productOrder,
+                            $nombreCompleto,
+                            $customColor,
+                            $customIcon,
+                            $sale->created_at
+                        );
+                        Log::info("Etiqueta de cinta para planchar agregada para {$nombreCompleto}");
+                    } catch (\Throwable $e) {
+                        Log::error("Error agregando etiqueta de cinta para planchar", [
+                            'error' => $e->getMessage(),
+                            'product_order_id' => $productOrder->id,
+                        ]);
+                    }
                 }
 
                 $variant = $productOrder->variant?->variant;
@@ -1027,6 +1113,8 @@ class SaleController extends Controller
 
             // 🗑️ Eliminar todos los PDFs anteriores de este pedido antes de generar nuevos
             EtiquetaService::limpiarPdfsDelPedido($sale->id, $sale->created_at);
+            CintaCoserService::limpiarEtiquetasDeVenta($sale->id, $sale->created_at);
+            CintaPlancharService::limpiarEtiquetasDeVenta($sale->id, $sale->created_at);
 
             foreach ($sale->products as $productOrder) {
                 // === 1. Datos base ===
@@ -1042,9 +1130,49 @@ class SaleController extends Controller
                     $customIcon = null;
                 }
 
+                // === CINTAS PARA COSER (Producto 1291) ===
+                if (CintaCoserService::esProductoCoser($productOrder->product_id)) {
+                    try {
+                        CintaCoserService::agregarEtiquetaAlPdf(
+                            $sale->id,
+                            $productOrder,
+                            $nombreCompleto,
+                            $customColor,
+                            $customIcon,
+                            $sale->created_at
+                        );
+                        Log::info("Etiqueta de cinta para coser agregada para {$nombreCompleto}");
+                    } catch (\Throwable $e) {
+                        Log::error("Error agregando etiqueta de cinta para coser", [
+                            'error' => $e->getMessage(),
+                            'product_order_id' => $productOrder->id,
+                        ]);
+                    }
+                }
+
+                // === CINTAS PARA PLANCHAR (Producto 1247) ===
+                if (CintaPlancharService::esProductoPlanchar($productOrder->product_id)) {
+                    try {
+                        CintaPlancharService::agregarEtiquetaAlPdf(
+                            $sale->id,
+                            $productOrder,
+                            $nombreCompleto,
+                            $customColor,
+                            $customIcon,
+                            $sale->created_at
+                        );
+                        Log::info("Etiqueta de cinta para planchar agregada para {$nombreCompleto}");
+                    } catch (\Throwable $e) {
+                        Log::error("Error agregando etiqueta de cinta para planchar", [
+                            'error' => $e->getMessage(),
+                            'product_order_id' => $productOrder->id,
+                        ]);
+                    }
+                }
+
                 $variant = $productOrder->variant?->variant;
                 $productPdf = ProductPdf::where('product_id', $productOrder->product_id)->first();
-
+                Log::info("aquiiiiiiiiiiiiiiiiii");
                 // === 2. Si hay un ProductPdf configurado ===
                 if ($productPdf) {
                     Log::info($productPdf);
