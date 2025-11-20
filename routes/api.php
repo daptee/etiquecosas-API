@@ -30,9 +30,12 @@ use App\Http\Controllers\ProductStatusController;
 use App\Http\Controllers\ProductStockStatusController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CouponController;
+use App\Http\Controllers\BackupController;
 
 // cache
 Route::get('/clear-cache', [CacheController::class, 'clearCache'])->name('clearCache');
+Route::post('/run', [BackupController::class, 'createBackup']);
+Route::post('/clean', [BackupController::class, 'cleanOldBackups']);
 
 // Auth
 Route::post('login', [LoginController::class, 'login']);
@@ -265,6 +268,7 @@ Route::middleware('jwt.auth')->prefix('shipping-zones')->group(function () {
 Route::middleware('jwt.auth')->prefix('shipping-config')->group(function () {
     Route::put('/{id}', [ShippingConfigController::class, 'update']);
 });
+
 
 // Webhook de Mercado Pago (sin autenticación, MP envía notificaciones POST)
 Route::match(['GET', 'POST'], '/mercadopago/webhook', [MercadoPagoController::class, 'webhook'])
