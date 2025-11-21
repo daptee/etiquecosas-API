@@ -67,7 +67,9 @@
             display: inline-block;
             margin: 10px 10px !important;
             padding: 0;
-            background: {{ $plantilla['colores'] }};
+            background:
+                {{ $plantilla['colores'] }}
+            ;
             text-align: center;
             position: relative;
         }
@@ -114,11 +116,17 @@
         }
 
         /* FILA SPOT */
+        .circulo-principal {
+            width: 100%;
+            height: auto;
+            margin-left: 8px;
+        }
+
         .circulo-personaje {
             width: 3cm;
             height: 3cm;
-            margin-right: 5px;
-            margin-bottom: 0.7cm;
+            margin-right: 4.85mm;
+            margin-bottom: 4.63mm;
             vertical-align: top;
             display: inline-block;
             position: relative;
@@ -131,7 +139,9 @@
             text-align: center;
             margin: 10px auto 0;
             line-height: 0.8;
-            color: {{ $plantilla['colores'] }};
+            color:
+                {{ $plantilla['colores'] }}
+            ;
             font-family: 'Oswald';
             font-size: small;
             padding-top: 0.8cm;
@@ -143,13 +153,15 @@
     <div class="hoja">
 
         <!-- FILA SPOT AGREGADA -->
-        @for ($i = 0; $i < 10; $i++)
-            <div class="circulo-personaje">
-                <p class="circulo-texto">
-                    {{ mb_strtoupper($product_order->name) }}
-                </p>
-            </div>
-        @endfor
+        <div class="circulo-principal">
+            @for ($i = 0; $i < 10; $i++)
+                <div class="circulo-personaje">
+                    <p class="circulo-texto">
+                        {{ mb_strtoupper($product_order->name) }}
+                    </p>
+                </div>
+            @endfor
+        </div>
 
         <!-- TABLA DE ETIQUETAS -->
         <table class="etiquetas-maxi-container">

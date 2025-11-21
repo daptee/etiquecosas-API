@@ -4,7 +4,8 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Lora:400,700,400italic|Oswald:400,700" media="screen">
+    <link rel="stylesheet" type="text/css"
+        href="https://fonts.googleapis.com/css?family=Lora:400,700,400italic|Oswald:400,700" media="screen">
     <style type="text/css">
         @font-face {
             font-family: 'Oswald';
@@ -12,11 +13,18 @@
             font-weight: 400;
             src: url('file://{{ public_path("fonts/Oswald-Regular.ttf") }}') format('truetype');
         }
+
+        .circulo-principal {
+            width: 100%;
+            height: auto;
+            margin-left: 8px;
+        }
+
         .circulo-personaje {
             width: 3cm;
             height: 3cm;
-            margin-right: 5px;
-            margin-bottom: 0.7cm;
+            margin-right: 4.85mm;
+            margin-bottom: 4.63mm;
             vertical-align: top;
             display: inline-block;
             position: relative;
@@ -79,19 +87,23 @@
 
 <body>
     <div class="hoja">
-        @for ($i = 0; $i < 35; $i++)
-            <div class="circulo-personaje">
-            <div class="circuloCuadro">
-                <img class="personajeCirculo" src="{{ $plantilla['imagen'] }}" alt="">
-            </div>
-            <p class="circulo-texto" style="font-family: 'Oswald';font-size: small;color:{{$plantilla['colores']}}">
-                {!! formatNameExactLines($product_order->name, 2) !!}
-            </p>
-    </div>
-    @endfor
-    <div class="numeroOrder">
-        <p class="texto3" style="font-family: 'Oswald';font-size: large;"> PEDIDO # {{$product_order->order->id_external}} </p>
-    </div>
+        <!-- FILA SPOT AGREGADA -->
+        <div class="circulo-principal">
+            @for ($i = 0; $i < 35; $i++)
+                <div class="circulo-personaje">
+                    <div class="circuloCuadro">
+                        <img class="personajeCirculo" src="{{ $plantilla['imagen'] }}" alt="">
+                    </div>
+                    <p class="circulo-texto" style="font-family: 'Oswald';font-size: small;color:{{$plantilla['colores']}}">
+                        {!! formatNameExactLines($product_order->name, 2) !!}
+                    </p>
+                </div>
+            @endfor
+        </div>
+        <div class="numeroOrder">
+            <p class="texto3" style="font-family: 'Oswald';font-size: large;"> PEDIDO #
+                {{$product_order->order->id_external}} </p>
+        </div>
     </div>
 </body>
 

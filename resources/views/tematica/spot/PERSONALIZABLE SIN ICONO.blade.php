@@ -4,7 +4,8 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Lora:400,700,400italic|Oswald:400,700" media="screen">
+    <link rel="stylesheet" type="text/css"
+        href="https://fonts.googleapis.com/css?family=Lora:400,700,400italic|Oswald:400,700" media="screen">
     <style type="text/css">
         @font-face {
             font-family: 'Oswald';
@@ -41,11 +42,17 @@
 
 
         /* FILA SPOT */
+        .circulo-principal {
+            width: 100%;
+            height: auto;
+            margin-left: 8px;
+        }
+
         .circulo-personaje {
             width: 3cm;
             height: 3cm;
-            margin-right: 5px;
-            margin-bottom: 0.7cm;
+            margin-right: 4.85mm;
+            margin-bottom: 4.63mm;
             vertical-align: top;
             display: inline-block;
             position: relative;
@@ -58,7 +65,9 @@
             text-align: center;
             margin: 10px auto 0;
             line-height: 0.8;
-            color: {{ $plantilla['colores'] }};
+            color:
+                {{ $plantilla['colores'] }}
+            ;
             font-family: 'Oswald';
             font-size: small;
             padding-top: 0.8cm;
@@ -67,15 +76,19 @@
 
 <body>
     <div class="hoja">
-        @for ($i = 0; $i < 35; $i++)
-            <div class="circulo-personaje">
-                <p class="circulo-texto">
-                    {{ formatNameExactLines($product_order->name, 2) }}
-                </p>
-            </div>
-        @endfor
+        <!-- FILA SPOT AGREGADA -->
+        <div class="circulo-principal">
+            @for ($i = 0; $i < 35; $i++)
+                <div class="circulo-personaje">
+                    <p class="circulo-texto">
+                        {{ formatNameExactLines($product_order->name, 2) }}
+                    </p>
+                </div>
+            @endfor
+        </div>
         <div class="numeroOrder">
-            <p class="texto3" style="font-family: 'Oswald';font-size: large;"> PEDIDO # {{$product_order->order->id_external}} </p>
+            <p class="texto3" style="font-family: 'Oswald';font-size: large;"> PEDIDO #
+                {{$product_order->order->id_external}} </p>
         </div>
     </div>
 </body>
