@@ -430,32 +430,56 @@ class SaleController extends Controller
         $sale->sale_status_id = $request->sale_status_id;
         $sale->save();
 
-        // Guardar historial
-        SaleStatusHistory::create([
-            'sale_id' => $sale->id,
-            'sale_status_id' => $request->sale_status_id,
-            'date' => Carbon::now(),
-        ]);
-
         $sale->load(['client', 'products.product', 'products.variant', 'shippingMethod', 'locality']);
 
         if ($sale->sale_status_id == 2) { // estado "en producción"
             Mail::to($sale->client->email)->send(new OrderProductionsMail($sale));
+            // Guardar historial
+            SaleStatusHistory::create([
+                'sale_id' => $sale->id,
+                'sale_status_id' => $request->sale_status_id,
+                'date' => Carbon::now(),
+            ]);
         }
 
         if ($sale->sale_status_id == 3 && $sale->payment_method_id != 1) { // retiro local estado "enviado"
             Mail::to($sale->client->email)->send(new OrderWithdrawMail($sale));
+            // Guardar historial
+            SaleStatusHistory::create([
+                'sale_id' => $sale->id,
+                'sale_status_id' => $request->sale_status_id,
+                'date' => Carbon::now(),
+            ]);
         }
 
         if ($sale->sale_status_id == 3 && $sale->payment_method_id == 1) { // estado "Listo para retirar"
             Mail::to($sale->client->email)->send(new OrderSendMail($sale));
+            // Guardar historial
+            SaleStatusHistory::create([
+                'sale_id' => $sale->id,
+                'sale_status_id' => $request->sale_status_id,
+                'date' => Carbon::now(),
+            ]);
         }
 
         if ($sale->sale_status_id == 4) { // estado "Retirado"
             Mail::to($sale->client->email)->send(new OrderRetiredMail($sale));
+            // Guardar historial
+            SaleStatusHistory::create([
+                'sale_id' => $sale->id,
+                'sale_status_id' => $request->sale_status_id,
+                'date' => Carbon::now(),
+            ]);
         }
 
         if ($sale->sale_status_id == 1 && $saleStatusOld != 1) {
+            // Guardar historial
+            SaleStatusHistory::create([
+                'sale_id' => $sale->id,
+                'sale_status_id' => $request->sale_status_id,
+                'date' => Carbon::now(),
+            ]);
+            
             $notifyEmail = env('MAIL_NOTIFICATION_TO');
 
             Mail::to($sale->client->email)->send(new OrderSummaryMail($sale));
