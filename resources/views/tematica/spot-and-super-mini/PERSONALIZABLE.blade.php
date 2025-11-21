@@ -92,11 +92,16 @@
         }
 
         /* FILA SPOT */
+        .circulo-principal {
+            width: 100%;
+            height: auto;
+            margin-left: 8px;
+        }
         .circulo-personaje {
             width: 3cm;
             height: 3cm;
-            margin-right: 5px;
-            margin-bottom: 0.5cm;
+            margin-right: 4.85mm;
+            margin-bottom: 4.63mm;
             vertical-align: top;
             display: inline-block;
             position: relative;
@@ -138,16 +143,18 @@
     <div class="hoja">
 
         <!-- FILA SPOT AGREGADA -->
-        @for ($i = 0; $i < 20; $i++)
-            <div class="circulo-personaje">
-                <div class="circuloCuadro">
-                    <img class="personajeCirculo" src="{{ $plantilla['imagen'] }}" alt="">
+        <div class="circulo-principal">
+            @for ($i = 0; $i < 20; $i++)
+                <div class="circulo-personaje">
+                    <div class="circuloCuadro">
+                        <img class="personajeCirculo" src="{{ $plantilla['imagen'] }}" alt="">
+                    </div>
+                    <p class="circulo-texto {{ $plantilla['fontClass'] }}" style="font-family: 'Oswald';color:{{$plantilla['colores']}}">
+                        {!! formatNameExactLines($product_order->name, 2) !!}
+                    </p>
                 </div>
-                <p class="circulo-texto {{ $plantilla['fontClass'] }}" style="font-family: 'Oswald';color:{{$plantilla['colores']}}">
-                    {!! formatNameExactLines($product_order->name, 2) !!}
-                </p>
-            </div>
-        @endfor
+            @endfor
+        </div>
 
         <!-- SUPER MINI -->
         @for ($i = 0; $i < 60; $i++)
