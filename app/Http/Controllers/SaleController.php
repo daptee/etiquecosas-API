@@ -116,25 +116,10 @@ class SaleController extends Controller
             $query->where('shipping_method_id', $request->query('shipping_method_id'));
         }
 
-        // 🔹 Rango de fechas (convertir desde zona horaria Argentina a UTC para comparar)
-        if ($request->has('from_date')) {
-            // Parsear la fecha en zona horaria Argentina y convertir a UTC
-            $fromDate = Carbon::parse($request->query('from_date'), 'America/Argentina/Buenos_Aires')
-                ->startOfDay()
-                ->setTimezone('UTC');
-            $query->where('created_at', '>=', $fromDate);
-        }
-        if ($request->has('to_date')) {
-            // Parsear la fecha en zona horaria Argentina y convertir a UTC
-            $toDate = Carbon::parse($request->query('to_date'), 'America/Argentina/Buenos_Aires')
-                ->endOfDay()
-                ->setTimezone('UTC');
-            $query->where('created_at', '<=', $toDate);
-        }
-
         // 🔹 Filtro por estado de pago: 'paid' (cobradas) o 'unpaid' (no cobradas)
+        // Este filtro debe aplicarse ANTES del filtro de fechas para determinar qué fecha usar
+        $paymentStatus = $request->query('payment_status');
         if ($request->has('payment_status')) {
-            $paymentStatus = $request->query('payment_status');
             if ($paymentStatus === 'unpaid') {
                 // Solo ventas NO cobradas: Pendiente de pago (8) o Pago rechazado (9)
                 $query->whereIn('sale_status_id', [8, 9]);
@@ -146,6 +131,52 @@ class SaleController extends Controller
         } else {
             // Comportamiento por defecto: solo ventas cobradas
             $query->whereNotIn('sale_status_id', [8, 9]);
+            $paymentStatus = 'paid'; // Establecer explícitamente para el filtro de fechas
+        }
+
+        // 🔹 Rango de fechas (convertir desde zona horaria Argentina a UTC para comparar)
+        // Para ventas pagadas: filtrar por fecha de aprobación (estado_id = 1 en sales_status_history)
+        // Para ventas no pagadas: filtrar por fecha de creación (created_at)
+        if ($request->has('from_date') || $request->has('to_date')) {
+            if ($paymentStatus === 'paid') {
+                // Ventas pagadas: filtrar por fecha de aprobación
+                if ($request->has('from_date')) {
+                    $fromDate = Carbon::parse($request->query('from_date'), 'America/Argentina/Buenos_Aires')
+                        ->startOfDay()
+                        ->setTimezone('UTC');
+
+                    $query->whereHas('statusHistory', function ($q) use ($fromDate) {
+                        $q->where('sale_status_id', 1) // Estado "Aprobado"
+                          ->where('date', '>=', $fromDate);
+                    });
+                }
+
+                if ($request->has('to_date')) {
+                    $toDate = Carbon::parse($request->query('to_date'), 'America/Argentina/Buenos_Aires')
+                        ->endOfDay()
+                        ->setTimezone('UTC');
+
+                    $query->whereHas('statusHistory', function ($q) use ($toDate) {
+                        $q->where('sale_status_id', 1) // Estado "Aprobado"
+                          ->where('date', '<=', $toDate);
+                    });
+                }
+            } else {
+                // Ventas no pagadas: filtrar por fecha de creación
+                if ($request->has('from_date')) {
+                    $fromDate = Carbon::parse($request->query('from_date'), 'America/Argentina/Buenos_Aires')
+                        ->startOfDay()
+                        ->setTimezone('UTC');
+                    $query->where('created_at', '>=', $fromDate);
+                }
+
+                if ($request->has('to_date')) {
+                    $toDate = Carbon::parse($request->query('to_date'), 'America/Argentina/Buenos_Aires')
+                        ->endOfDay()
+                        ->setTimezone('UTC');
+                    $query->where('created_at', '<=', $toDate);
+                }
+            }
         }
 
         // 🔹 Si no hay perPage, traer todo
