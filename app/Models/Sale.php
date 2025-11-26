@@ -53,6 +53,11 @@ class Sale extends Model
         return $this->belongsTo(ShippingMethod::class, 'shipping_method_id');
     }
 
+    public function paymentMethod()
+    {
+        return $this->belongsTo(PaymentMethod::class, 'payment_method_id');
+    }
+
     public function status()
     {
         return $this->belongsTo(SaleStatus::class, 'sale_status_id');

@@ -229,6 +229,7 @@ Route::middleware('jwt.auth')->prefix('coupons')->group(function () {
 // Sales
 Route::middleware('jwt.auth')->prefix('sales')->group(function () {
     Route::get('/', [SaleController::class, 'index']);
+    Route::get('/dashboard-stats', [SaleController::class, 'getDashboardStats']);
     Route::get('/export', [SaleController::class, 'exportExcel']);
     Route::get('/{id}', [SaleController::class, 'show']);
     Route::put('/assign-user-sale-multiple', [SaleController::class, 'assignUserToMultipleSales']);
