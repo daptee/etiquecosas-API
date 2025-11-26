@@ -1553,4 +1553,208 @@ class SaleController extends Controller
         // Luego, si querés devolverlo para descargar:
         return Excel::download($salesExport, $fileName);
     }
+
+    /**
+     * Obtener estadísticas para el dashboard
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     *
+     * Parámetros:
+     * - from_date: Fecha desde (requerido)
+     * - to_date: Fecha hasta (requerido)
+     * - channel_id: ID del canal de venta (opcional, si no se envía o es 'all' trae todos los canales)
+     */
+    public function getDashboardStats(Request $request)
+    {
+        try {
+            // Validar parámetros requeridos
+            if (!$request->has('from_date') || !$request->has('to_date')) {
+                return $this->error('Los parámetros from_date y to_date son requeridos', 400);
+            }
+
+            // Parsear fechas desde zona horaria Argentina a UTC
+            $fromDate = Carbon::parse($request->query('from_date'), 'America/Argentina/Buenos_Aires')
+                ->startOfDay()
+                ->setTimezone('UTC');
+
+            $toDate = Carbon::parse($request->query('to_date'), 'America/Argentina/Buenos_Aires')
+                ->endOfDay()
+                ->setTimezone('UTC');
+
+            // Construir query base: ventas pagadas (no incluir estados 8 y 9) filtradas por fecha de aprobación
+            $query = Sale::with([
+                'products.product',
+                'products.variant',
+                'client',
+                'paymentMethod',
+                'channel'
+            ])
+            ->whereNotIn('sale_status_id', [8, 9]); // Solo ventas pagadas
+
+            // Filtrar por fecha de aprobación (estado_id = 1 en sales_status_history)
+            $query->whereHas('statusHistory', function ($q) use ($fromDate, $toDate) {
+                $q->where('sale_status_id', 1)
+                  ->whereBetween('date', [$fromDate, $toDate]);
+            });
+
+            // Filtrar por canal si se especifica y no es 'all'
+            $channelId = $request->query('channel_id');
+            if ($channelId && $channelId !== 'all') {
+                $query->where('channel_id', $channelId);
+            }
+
+            // Obtener todas las ventas
+            $sales = $query->get();
+
+            // 🔹 INDICADORES
+            $totalSales = $sales->sum('total');
+            $totalDiscounts = $sales->sum('discount_amount');
+            $netSales = $totalSales - $totalDiscounts;
+            $ordersCount = $sales->count();
+
+            // Contar total de productos vendidos
+            $totalProducts = 0;
+            foreach ($sales as $sale) {
+                foreach ($sale->products as $product) {
+                    $totalProducts += $product->quantity;
+                }
+            }
+
+            // 🔹 PRODUCTOS VENDIDOS (agrupados con estadísticas)
+            $productsStats = [];
+            foreach ($sales as $sale) {
+                foreach ($sale->products as $saleProduct) {
+                    // Verificar que el producto existe
+                    if (!$saleProduct->product) {
+                        continue;
+                    }
+
+                    // Obtener el nombre del producto de forma segura
+                    $productName = is_string($saleProduct->product->name)
+                        ? $saleProduct->product->name
+                        : 'Producto desconocido';
+
+                    // Agregar variante al nombre si existe
+                    if ($saleProduct->variant && isset($saleProduct->variant->variant)) {
+                        $variantName = is_string($saleProduct->variant->variant)
+                            ? $saleProduct->variant->variant
+                            : '';
+                        if ($variantName) {
+                            $productName .= ' - ' . $variantName;
+                        }
+                    }
+
+                    if (!isset($productsStats[$productName])) {
+                        $productsStats[$productName] = [
+                            'product' => $productName,
+                            'product_sales_cant' => 0,
+                            'net_sales' => 0.0,
+                            'quantity' => 0
+                        ];
+                    }
+
+                    $lineTotal = floatval($saleProduct->quantity) * floatval($saleProduct->unit_price);
+
+                    // Calcular el descuento proporcional para este producto
+                    $saleTotal = floatval($sale->total);
+                    $saleDiscount = floatval($sale->discount_amount ?? 0);
+                    $discountProportion = $saleTotal > 0 ? ($saleDiscount / $saleTotal) : 0;
+                    $lineDiscount = $lineTotal * $discountProportion;
+                    $lineNetSales = $lineTotal - $lineDiscount;
+
+                    $productsStats[$productName]['product_sales_cant'] += intval($saleProduct->quantity);
+                    $productsStats[$productName]['net_sales'] += $lineNetSales;
+                    $productsStats[$productName]['quantity'] += intval($saleProduct->quantity);
+                }
+            }
+
+            // Convertir a array y ordenar por ventas netas (mayor a menor)
+            $productsSold = array_values($productsStats);
+            usort($productsSold, function($a, $b) {
+                return $b['net_sales'] <=> $a['net_sales'];
+            });
+
+            // Eliminar el campo 'quantity' y asegurar que los valores sean numéricos
+            $productsSold = array_map(function($item) {
+                return [
+                    'product' => $item['product'],
+                    'product_sales_cant' => (int) $item['product_sales_cant'],
+                    'net_sales' => round((float) $item['net_sales'], 2)
+                ];
+            }, $productsSold);
+
+            // Producto más vendido
+            $bestSellingProduct = 'N/A';
+            $bestSellingProductTotal = 0;
+            if (count($productsSold) > 0) {
+                $bestSellingProduct = $productsSold[0]['product'];
+                $bestSellingProductTotal = $productsSold[0]['net_sales'];
+            }
+
+            // 🔹 LISTADO DE VENTAS
+            $salesList = [];
+            foreach ($sales as $sale) {
+                // Obtener la fecha de aprobación desde el historial
+                $approvalDate = $sale->statusHistory()
+                    ->where('sale_status_id', 1)
+                    ->orderBy('date', 'asc')
+                    ->first();
+
+                $salesList[] = [
+                    'id' => $sale->id,
+                    'date' => $approvalDate ? Carbon::parse($approvalDate->date)
+                        ->setTimezone('America/Argentina/Buenos_Aires')
+                        ->format('Y-m-d H:i:s') : $sale->created_at->format('Y-m-d H:i:s'),
+                    'email' => $sale->client ? ($sale->client->email ?? 'N/A') : 'N/A',
+                    'total' => round(floatval($sale->total), 2),
+                    'payment_method' => [
+                        'id' => $sale->paymentMethod ? ($sale->paymentMethod->id ?? null) : null,
+                        'name' => $sale->paymentMethod ? ($sale->paymentMethod->name ?? 'N/A') : 'N/A'
+                    ]
+                ];
+            }
+
+            // 🔹 CONSTRUIR RESPUESTA
+            $response = [
+                'indicators' => [
+                    [
+                        'name' => 'total_sales',
+                        'value' => round($totalSales, 2)
+                    ],
+                    [
+                        'name' => 'net_sales',
+                        'value' => round($netSales, 2)
+                    ],
+                    [
+                        'name' => 'orders',
+                        'value' => $ordersCount
+                    ],
+                    [
+                        'name' => 'cant_products',
+                        'value' => $totalProducts
+                    ],
+                    [
+                        'name' => 'best_selling_product',
+                        'value' => $bestSellingProduct
+                    ],
+                    [
+                        'name' => 'best_selling_product_total',
+                        'value' => round($bestSellingProductTotal, 2)
+                    ]
+                ],
+                'products_sold' => $productsSold,
+                'sales' => $salesList
+            ];
+
+            $this->logAudit(Auth::user(), 'Get Dashboard Stats', $request->all(), $response);
+
+            return $this->success($response, 'Estadísticas obtenidas correctamente');
+
+        } catch (\Throwable $th) {
+            Log::error('Error al obtener estadísticas del dashboard: ' . $th->getMessage());
+            $this->logAudit(Auth::user(), 'Dashboard Stats Error', $request->all(), $th->getMessage());
+            return $this->error('Error al obtener estadísticas: ' . $th->getMessage(), 500);
+        }
+    }
 }
