@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
 class CintaCoserService
@@ -51,7 +52,9 @@ class CintaCoserService
             $customColor = $customColor[0] ?? '#000000';
         }
         $customColor = $customColor ?? '#000000';
-        $fechaCarpeta = $fechaCompra ? date('d-m-Y', strtotime($fechaCompra)) : date('d-m-Y');
+        $fechaCarpeta = $fechaCompra
+            ? Carbon::parse($fechaCompra)->setTimezone('America/Argentina/Buenos_Aires')->format('d-m-Y')
+            : Carbon::now('America/Argentina/Buenos_Aires')->format('d-m-Y');
         $dirPath = storage_path("app/pdf/Cintas - Coser");
 
         if (!is_dir($dirPath)) {
@@ -139,7 +142,9 @@ class CintaCoserService
      */
     public static function limpiarEtiquetasDeVenta(int $ventaId, $fechaCompra = null): void
     {
-        $fechaCarpeta = $fechaCompra ? date('d-m-Y', strtotime($fechaCompra)) : date('d-m-Y');
+        $fechaCarpeta = $fechaCompra
+            ? Carbon::parse($fechaCompra)->setTimezone('America/Argentina/Buenos_Aires')->format('d-m-Y')
+            : Carbon::now('America/Argentina/Buenos_Aires')->format('d-m-Y');
         $dirPath = storage_path("app/pdf/Cintas - Coser");
 
         foreach (['x24', 'x48'] as $tipo) {

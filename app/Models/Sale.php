@@ -68,6 +68,11 @@ class Sale extends Model
         return $this->belongsTo(Sale::class, 'sale_id');
     }
 
+    public function childSales()
+    {
+        return $this->hasMany(Sale::class, 'sale_id');
+    }
+
     public function products()
     {
         return $this->hasMany(SaleProduct::class, 'sale_id');

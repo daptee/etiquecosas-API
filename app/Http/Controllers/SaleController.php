@@ -55,7 +55,8 @@ class SaleController extends Controller
                 'statusHistory',
                 'shippingMethod',
                 'coupon',
-                'user'
+                'user',
+                'childSales'
             ])
             ->orderBy('created_at', 'desc');
 
@@ -211,7 +212,7 @@ class SaleController extends Controller
         if (!$sale) {
             return $this->error('Producto no encontrado', 404);
         }
-        $sale->load(['client', 'channel', 'products.product', 'products.variant', 'status', 'statusHistory', 'shippingMethod', 'coupon', 'user'])
+        $sale->load(['client', 'channel', 'products.product', 'products.variant', 'status', 'statusHistory', 'shippingMethod', 'coupon', 'user', 'childSales'])
             ->findOrFail($id);
 
         $this->logAudit(Auth::user(), 'Get Sale Detail', ['id' => $id], $sale);
