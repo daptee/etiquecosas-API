@@ -23,6 +23,7 @@ class OrderSummaryMail extends Mailable
     {
         return new Envelope(
             subject: "Resumen de tu compra - Pedido #{$this->sale->id}",
+            replyTo: ['info@etiquecosas.com.ar'],
         );
     }
 

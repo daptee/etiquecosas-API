@@ -23,6 +23,7 @@ class OrderSummaryMailTo extends Mailable
     {
         return new Envelope(
             subject: "Nueva venta - Pedido #{$this->sale->id}",
+            replyTo: ['info@etiquecosas.com.ar'],
         );
     }
 
