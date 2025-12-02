@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -13,7 +14,9 @@ class EtiquetaService
      */
     public static function limpiarPdfsDelPedido(int $ventaId, $fechaCompra = null): void
     {
-        $fechaCarpeta = $fechaCompra ? date('d-m-Y', strtotime($fechaCompra)) : date('d-m-Y');
+        $fechaCarpeta = $fechaCompra
+            ? Carbon::parse($fechaCompra)->setTimezone('America/Argentina/Buenos_Aires')->format('d-m-Y')
+            : Carbon::now('America/Argentina/Buenos_Aires')->format('d-m-Y');
         $dirPath = storage_path("app/pdf/planchas/{$fechaCarpeta}");
 
         if (!is_dir($dirPath)) {
@@ -36,7 +39,9 @@ class EtiquetaService
     {
         $logo = "https://api.etiquecosaslab.com.ar/icons/mail/etiquecosas_logo-rosa.png";
         $outputFiles = [];
-        $fechaCarpeta = $fechaCompra ? date('d-m-Y', strtotime($fechaCompra)) : date('d-m-Y');
+        $fechaCarpeta = $fechaCompra
+            ? Carbon::parse($fechaCompra)->setTimezone('America/Argentina/Buenos_Aires')->format('d-m-Y')
+            : Carbon::now('America/Argentina/Buenos_Aires')->format('d-m-Y');
         $dirPath = storage_path("app/pdf/planchas/{$fechaCarpeta}");
         if (!is_dir($dirPath)) mkdir($dirPath, 0755, true);
 
