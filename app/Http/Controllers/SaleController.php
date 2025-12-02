@@ -843,7 +843,7 @@ class SaleController extends Controller
             }
         }
 
-        $sale->load(['products.variant', 'statusHistory']);
+        $sale->load(['client', 'channel', 'products.product', 'products.variant', 'status', 'statusHistory', 'shippingMethod', 'coupon', 'user', 'childSales']);
 
         $this->logAudit(Auth::user() ?? null, 'Update Status Sale', $request->all(), $sale);
         return $this->success($sale, 'Estado de venta actualizada correctamente');
