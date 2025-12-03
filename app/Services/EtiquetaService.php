@@ -259,6 +259,7 @@ class EtiquetaService
         foreach ($nombres as $nombre) {
             $fontClass = mb_strlen($nombre, 'UTF-8') > 16 ? 'small-text-size' : 'normal-text-size';
             Log::info($colores);
+            Log::info($imagenes);
             $plantilla = [
                 'colores' => $colores,
                 'imagen' => $imagenes,
