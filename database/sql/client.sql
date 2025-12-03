@@ -1,5 +1,6 @@
 ALTER TABLE client_wholesales
-    ADD COLUMN postal_code VARCHAR(20) NULL
+    ADD COLUMN postal_code VARCHAR(20) NULL,
+    ADD COLUMN business_name VARCHAR(255) NULL
 
 ALTER TABLE client_addresses
     ADD COLUMN postal_code VARCHAR(20) NULL,

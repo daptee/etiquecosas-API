@@ -16,7 +16,8 @@ class ClientWholesale extends Model
         'name',
         'locality_id',
         'address',
-        'postal_code'
+        'postal_code',
+        'business_name',
     ];
 
     public function client()

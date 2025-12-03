@@ -100,6 +100,7 @@ class ClientController extends Controller
             'wholesale_data.*.name' => 'required|string|max:255',
             'wholesale_data.*.localityId' => 'required|exists:localities,id',
             'wholesale_data.*.address' => 'required|string|max:255',
+            'wholesale_data.*.businessName' => 'nullable|string|max:255',
             'wholesale_data.*.postalCode' => 'required|string',
             'address_data' => 'nullable|array',
             'address_data.*.name' => 'required|string',
@@ -130,6 +131,7 @@ class ClientController extends Controller
                     'name' => $wholesaleItem['name'],
                     'locality_id' => $wholesaleItem['localityId'],
                     'address' => $wholesaleItem['address'],
+                    'business_name' => $wholesaleItem['businessName'] ?? null,
                     'postal_code' => $wholesaleItem['postalCode'],
                 ]);
             }
@@ -175,6 +177,7 @@ class ClientController extends Controller
             'wholesale_data.*.name' => 'required|string|max:255',
             'wholesale_data.*.localityId' => 'required|exists:localities,id',
             'wholesale_data.*.address' => 'required|string|max:255',
+            'wholesale_data.*.businessName' => 'nullable|string|max:255',
             'wholesale_data.*.postalCode' => 'required|string',
             'address_data' => 'nullable|array',
             'address_data.*.id' => 'nullable|exists:client_addresses,id',
@@ -241,6 +244,7 @@ class ClientController extends Controller
                         'name' => $wholesaleItem['name'],
                         'locality_id' => $wholesaleItem['localityId'],
                         'address' => $wholesaleItem['address'],
+                        'business_name' => $wholesaleItem['businessName'] ?? null,
                         'postal_code' => $wholesaleItem['postalCode'],
                     ]);
                 } else {
@@ -248,6 +252,7 @@ class ClientController extends Controller
                         'name' => $wholesaleItem['name'],
                         'locality_id' => $wholesaleItem['localityId'],
                         'address' => $wholesaleItem['address'],
+                        'business_name' => $wholesaleItem['businessName'] ?? null,
                         'postal_code' => $wholesaleItem['postalCode'],
                     ]);
                 }
