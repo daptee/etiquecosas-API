@@ -65,7 +65,6 @@ class ClientWholesaleController extends Controller
             'name' => 'required|string|max:255',
             'localityId' => 'required|exists:localities,id',
             'address' => 'required|string|max:255',
-            'businessName' => 'required|string|max:255',
             'postalCode' => 'required|string',
         ]);
 
@@ -80,7 +79,6 @@ class ClientWholesaleController extends Controller
             'name' => $request->name,
             'locality_id' => $request->localityId,
             'address' => $request->address,
-            'business_name' => $request->businessName,
             'postal_code' => $request->postalCode,
         ]);
 
@@ -99,7 +97,6 @@ class ClientWholesaleController extends Controller
             'name' => 'required|string|max:255',
             'localityId' => 'required|exists:localities,id',
             'address' => 'required|string|max:255',
-            'businessName' => 'required|string|max:255',
             'postalCode' => 'required|string',
         ]);
 
@@ -121,7 +118,6 @@ class ClientWholesaleController extends Controller
             'name' => $request->name,
             'locality_id' => $request->localityId,
             'address' => $request->address,
-            'business_name' => $request->businessName,
             'postal_code' => $request->postalCode,
         ]);
 

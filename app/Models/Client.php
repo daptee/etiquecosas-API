@@ -25,6 +25,7 @@ class Client extends Authenticatable implements JWTSubject
         'phone',
         'status_id',
         'cuit',
+        'business_name',
     ];
 
     protected $hidden = [
