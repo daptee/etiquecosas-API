@@ -28,7 +28,7 @@ class ClientController extends Controller
         $statusId = $request->query('status_id'); // 👈 nuevo parámetro para filtrar por estado
 
         $query = Client::query()
-            ->select('id', 'client_type_id', 'name', 'lastName', 'email', 'phone', 'status_id', 'cuit')
+            ->select('id', 'client_type_id', 'name', 'lastName', 'email', 'phone', 'status_id', 'cuit', 'business_name')
             ->with(['wholesales', 'addresses', 'clientType', 'generalStatus']);
 
         // 🔍 Buscador: por nombre, apellido, email o cuit
@@ -96,11 +96,11 @@ class ClientController extends Controller
             'phone' => 'nullable|string|max:20',
             'cuit' => 'nullable|string|max:20|unique:clients,cuit',
             'statusId' => 'nullable|exists:general_statuses,id',
+            'businessName' => 'nullable|string|max:255',
             'wholesale_data' => 'nullable|array',
             'wholesale_data.*.name' => 'required|string|max:255',
             'wholesale_data.*.localityId' => 'required|exists:localities,id',
             'wholesale_data.*.address' => 'required|string|max:255',
-            'wholesale_data.*.businessName' => 'nullable|string|max:255',
             'wholesale_data.*.postalCode' => 'required|string',
             'address_data' => 'nullable|array',
             'address_data.*.name' => 'required|string',
@@ -123,6 +123,7 @@ class ClientController extends Controller
             'phone' => $request->phone,
             'cuit' => $request->cuit,
             'status_id' => $request->statusId,
+            'business_name' => $request->businessName ?? null,
         ]);
 
         if ($request->has('wholesale_data') && is_array($request->wholesale_data)) {
@@ -131,7 +132,6 @@ class ClientController extends Controller
                     'name' => $wholesaleItem['name'],
                     'locality_id' => $wholesaleItem['localityId'],
                     'address' => $wholesaleItem['address'],
-                    'business_name' => $wholesaleItem['businessName'] ?? null,
                     'postal_code' => $wholesaleItem['postalCode'],
                 ]);
             }
@@ -172,12 +172,12 @@ class ClientController extends Controller
             'phone' => 'nullable|string|max:20',
             'cuit' => Rule::unique('clients', 'cuit')->ignore($client->id),
             'statusId' => 'nullable|exists:general_statuses,id',
+            'businessName' => 'nullable|string|max:255',
             'wholesale_data' => 'nullable|array',
             'wholesale_data.*.id' => 'nullable|integer|exists:client_wholesales,id',
             'wholesale_data.*.name' => 'required|string|max:255',
             'wholesale_data.*.localityId' => 'required|exists:localities,id',
             'wholesale_data.*.address' => 'required|string|max:255',
-            'wholesale_data.*.businessName' => 'nullable|string|max:255',
             'wholesale_data.*.postalCode' => 'required|string',
             'address_data' => 'nullable|array',
             'address_data.*.id' => 'nullable|exists:client_addresses,id',
@@ -200,6 +200,7 @@ class ClientController extends Controller
             'phone' => $request->phone,
             'cuit' => $request->cuit,
             'status_id' => $request->statusId,
+            'business_name' => $request->businessName ?? null,
         ]);
 
         if ($request->password) {
@@ -244,7 +245,6 @@ class ClientController extends Controller
                         'name' => $wholesaleItem['name'],
                         'locality_id' => $wholesaleItem['localityId'],
                         'address' => $wholesaleItem['address'],
-                        'business_name' => $wholesaleItem['businessName'] ?? null,
                         'postal_code' => $wholesaleItem['postalCode'],
                     ]);
                 } else {
@@ -252,7 +252,6 @@ class ClientController extends Controller
                         'name' => $wholesaleItem['name'],
                         'locality_id' => $wholesaleItem['localityId'],
                         'address' => $wholesaleItem['address'],
-                        'business_name' => $wholesaleItem['businessName'] ?? null,
                         'postal_code' => $wholesaleItem['postalCode'],
                     ]);
                 }
