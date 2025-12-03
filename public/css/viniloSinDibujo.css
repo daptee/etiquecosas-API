@@ -68,8 +68,10 @@
 .numeroOrder {
     position: absolute;
     top: 70%;
-    left: -1.5cm; /* Lo empuja al costado izquierdo */
-    transform: translateY(-50%); /* Lo centra verticalmente */
+    left: -1.5cm;
+    /* Lo empuja al costado izquierdo */
+    transform: translateY(-50%);
+    /* Lo centra verticalmente */
 }
 
 .texto3 {
@@ -107,4 +109,8 @@
     margin-right: 1.5cm;
     margin-top: 0.4cm;
     margin-bottom: 0.2cm;
+}
+
+.texto-azul {
+    color: #0A4768 !important;
 }

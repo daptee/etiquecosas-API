@@ -429,7 +429,7 @@ VALUES (
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     11747,
-    '{"tematicas": [{"id": 142, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Estrellas pastel", "pdf-url": ["principal/ESTRELLAS PASTEL"]}]}'
+    '{"tematicas": [{"id": 141, "pdf": ["Etiquetas maxi, verticales, super-maxi, super-mini"], "name": "Estrellas pastel", "pdf-url": ["principal/ESTRELLAS PASTEL"]}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
@@ -733,6 +733,12 @@ VALUES (
                 "pdf": ["Etiquetas super-maxi"],
                 "pdf-url": ["super-maxi/POSITIVE"],
                 "name": "Positive"
+            },
+            {
+                "id": 327,
+                "pdf": ["Etiquetas super-maxi"],
+                "pdf-url": ["super-maxi/GAMER"],
+                "name": "Gamer"
             }
         ]
     }'
