@@ -129,13 +129,14 @@
             width: 100%;
             height: auto;
             margin-left: 8px;
+            margin-bottom: 20px;
         }
 
         .circulo-personaje {
             width: 3cm;
             height: 3cm;
             margin-right: 4.85mm;
-            margin-bottom: 4.63mm;
+            margin-bottom: 11mm;
             vertical-align: top;
             display: inline-block;
             position: relative;

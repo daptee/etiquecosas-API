@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Lora:400,700,400italic|Oswald:400,700" media="screen">
-    
+
     <style>
         @font-face {
             font-family: 'Lora';
@@ -41,137 +41,582 @@
 <body>
     <div class="hoja">
         {{-- MAXI --}}
-        <div>
-            @for ($i = 0; $i < 2; $i++)
-                <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][0] }})">
-                <div class="cuadro">
-                    <p class="texto2 texto-negro" style="font-family: 'Oswald';font-size: 1.05em;">{{mb_strtoupper($product_order->name)}}</p>
-                </div>
-        </div>
-        <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][0] }})">
-            <div class="cuadro">
-                <p class="texto2 texto-negro" style="font-family: 'Oswald';font-size: 1.05em;">{{mb_strtoupper($product_order->name)}}</p>
-            </div>
-        </div>
-        <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][0] }})">
-            <div class="cuadro">
-                <p class="texto2 texto-negro" style="font-family: 'Oswald';font-size: 1.05em;">{{mb_strtoupper($product_order->name)}}</p>
-            </div>
-        </div>
-        <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][0] }})">
-            <div class="cuadro">
-                <p class="texto2 texto-negro" style="font-family: 'Oswald';font-size: 1.05em;">{{mb_strtoupper($product_order->name)}}</p>
-            </div>
-        </div>
-        <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][0] }})">
-            <div class="cuadro">
-                <p class="texto2 texto-negro" style="font-family: 'Oswald';font-size: 1.05em;">{{mb_strtoupper($product_order->name)}}</p>
-            </div>
-        </div>
-        <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][0] }})">
-            <div class="cuadro">
-                <p class="texto2 texto-negro" style="font-family: 'Oswald';font-size: 1.05em;">{{mb_strtoupper($product_order->name)}}</p>
-            </div>
-        </div>
-        <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][0] }})">
-            <div class="cuadro">
-                <p class="texto2 texto-negro" style="font-family: 'Oswald';font-size: 1.05em;">{{mb_strtoupper($product_order->name)}}</p>
-            </div>
-        </div>
-        <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][0] }})">
-            <div class="cuadro">
-                <p class="texto2 texto-negro" style="font-family: 'Oswald';font-size: 1.05em;">{{mb_strtoupper($product_order->name)}}</p>
-            </div>
-        </div>
-        @endfor
-    </div>
+        <table class="etiquetas-maxi-container">
+            <tr>
+                <td class="etiqueta-maxi" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-maxi-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 6px;"></td>
+                <td class="etiqueta-maxi" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-maxi-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 6px;"></td>
+                <td class="etiqueta-maxi" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-maxi-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 6px;"></td>
+                <td class="etiqueta-maxi" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-maxi-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="7" style="height: 4px;"></td>
+            </tr>
+            <tr>
+                <td class="etiqueta-maxi" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-maxi-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 6px;"></td>
+                <td class="etiqueta-maxi" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-maxi-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 6px;"></td>
+                <td class="etiqueta-maxi" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-maxi-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 6px;"></td>
+                <td class="etiqueta-maxi" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-maxi-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="7" style="height: 4px;"></td>
+            </tr>
+            <tr>
+                <td class="etiqueta-maxi" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-maxi-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 6px;"></td>
+                <td class="etiqueta-maxi" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-maxi-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 6px;"></td>
+                <td class="etiqueta-maxi" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-maxi-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 6px;"></td>
+                <td class="etiqueta-maxi" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-maxi-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="7" style="height: 4px;"></td>
+            </tr>
+            <tr>
+                <td class="etiqueta-maxi" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-maxi-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 6px;"></td>
+                <td class="etiqueta-maxi" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-maxi-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 6px;"></td>
+                <td class="etiqueta-maxi" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-maxi-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 6px;"></td>
+                <td class="etiqueta-maxi" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-maxi-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
 
-    <div style="height: 28px; width: 100%;"></div>
+        <div style="height: 10px; width: 100%;"></div>
 
-    {{-- SEGUNDO DISEÑO --}}
-    <div class="diseñoD">
-        @for ($i = 0; $i < 2; $i++)
-            <div class="segundoD" style="background: cmyk({{ $plantilla['colores'][0] }})">
-            <p class="textoCentradoVertical texto-negro" style="font-family: 'Oswald';font-size: 1.05em;">{{mb_strtoupper($product_order->name)}}</p>
-    </div>
-    <div class="segundoD" style="background: cmyk({{ $plantilla['colores'][0] }})">
-        <p class="textoCentradoVertical texto-negro" style="font-family: 'Oswald';font-size: 1.05em;">{{mb_strtoupper($product_order->name)}}</p>
-    </div>
-    <div class="segundoD" style="background: cmyk({{ $plantilla['colores'][0] }})">
-        <p class="textoCentradoVertical texto-negro" style="font-family: 'Oswald';font-size: 1.05em;">{{mb_strtoupper($product_order->name)}}</p>
-    </div>
-    <div class="segundoD" style="background: cmyk({{ $plantilla['colores'][0] }})">
-        <p class="textoCentradoVertical texto-negro" style="font-family: 'Oswald';font-size: 1.05em;">{{mb_strtoupper($product_order->name)}}</p>
-    </div>
-    <div class="segundoD" style="background: cmyk({{ $plantilla['colores'][0] }})">
-        <p class="textoCentradoVertical texto-negro" style="font-family: 'Oswald';font-size: 1.05em;">{{mb_strtoupper($product_order->name)}}</p>
-    </div>
-    <div class="segundoD" style="background: cmyk({{ $plantilla['colores'][0] }})">
-        <p class="textoCentradoVertical texto-negro" style="font-family: 'Oswald';font-size: 1.05em;">{{mb_strtoupper($product_order->name)}}</p>
-    </div>
-    @endfor
-    </div>
+        {{-- ETIQUETAS VERTICALES --}}
+        <table class="etiquetas-verticales-container">
+            <tr>
+                <td class="etiqueta-vertical" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-vertical-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 10px;"></td>
+                <td class="etiqueta-vertical" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-vertical-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 10px;"></td>
+                <td class="etiqueta-vertical" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-vertical-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 10px;"></td>
+                <td class="etiqueta-vertical" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-vertical-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 10px;"></td>
+                <td class="etiqueta-vertical" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-vertical-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 10px;"></td>
+                <td class="etiqueta-vertical" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-vertical-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="11" style="height: 6px;"></td>
+            </tr>
+            <tr>
+                <td class="etiqueta-vertical" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-vertical-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 10px;"></td>
+                <td class="etiqueta-vertical" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-vertical-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 10px;"></td>
+                <td class="etiqueta-vertical" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-vertical-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 10px;"></td>
+                <td class="etiqueta-vertical" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-vertical-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 10px;"></td>
+                <td class="etiqueta-vertical" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-vertical-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 10px;"></td>
+                <td class="etiqueta-vertical" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-vertical-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
 
-    {{-- TERCER DISEÑO --}}
-    <div>
-        <div class="tercerD" style="background: cmyk({{ $plantilla['colores'][0] }})">
-            <div class="cuadro">
-                <p class="texto4 texto-negro" style="font-family: 'Oswald';font-size: 1.45em;">{{mb_strtoupper($product_order->name)}}</p>
-            </div>
-        </div>
-        <div class="tercerD" style="background: cmyk({{ $plantilla['colores'][0] }})">
-            <div class="cuadro">
-                <p class="texto4 texto-negro" style="font-family: 'Oswald';font-size: 1.45em;">{{mb_strtoupper($product_order->name)}}</p>
-            </div>
-        </div>
-        <div class="tercerD" style="background: cmyk({{ $plantilla['colores'][0] }})">
-            <div class="cuadro">
-                <p class="texto4 texto-negro" style="font-family: 'Oswald';font-size: 1.45em;">{{mb_strtoupper($product_order->name)}}</p>
-            </div>
-        </div>
-        <div class="tercerD" style="background: cmyk({{ $plantilla['colores'][0] }})">
-            <div class="cuadro">
-                <p class="texto4 texto-negro" style="font-family: 'Oswald';font-size: 1.45em;">{{mb_strtoupper($product_order->name)}}</p>
-            </div>
-        </div>
-        <div class="tercerD" style="background: cmyk({{ $plantilla['colores'][0] }})">
-            <div class="cuadro">
-                <p class="texto4 texto-negro" style="font-family: 'Oswald';font-size: 1.45em;">{{mb_strtoupper($product_order->name)}}</p>
-            </div>
-        </div>
-        <div class="tercerD" style="background: cmyk({{ $plantilla['colores'][0] }})">
-            <div class="cuadro">
-                <p class="texto4 texto-negro" style="font-family: 'Oswald';font-size: 1.45em;">{{mb_strtoupper($product_order->name)}}</p>
-            </div>
-        </div>
-    </div>
+        <div style="height: 10px; width: 100%;"></div>
 
-    {{-- SUPER MINI --}}
-    <div class="supermini">
-        @for ($i = 0; $i < 3; $i++)
-            <div class="primer-color" style="background: cmyk({{ $plantilla['colores'][0] }})">
-            <p class="texto1 texto-negro" style="font-family: 'Oswald';font-size: x-small;">{{mb_strtoupper($product_order->name)}}</p>
-    </div>
-    <div class="segundo-color" style="background: cmyk({{ $plantilla['colores'][0] }})">
-        <p class="texto1 texto-negro" style="font-family: 'Oswald';font-size: x-small;">{{mb_strtoupper($product_order->name)}}</p>
-    </div>
-    <div class="tercer-color" style="background: cmyk({{ $plantilla['colores'][0] }})">
-        <p class="texto1 texto-negro" style="font-family: 'Oswald';font-size: x-small;">{{mb_strtoupper($product_order->name)}}</p>
-    </div>
-    <div class="primer-color" style="background: cmyk({{ $plantilla['colores'][0] }})">
-        <p class="texto1 texto-negro" style="font-family: 'Oswald';font-size: x-small;">{{mb_strtoupper($product_order->name)}}</p>
-    </div>
-    <div class="segundo-color" style="background: cmyk({{ $plantilla['colores'][0] }})">
-        <p class="texto1 texto-negro" style="font-family: 'Oswald';font-size: x-small;">{{mb_strtoupper($product_order->name)}}</p>
-    </div>
-    <div class="tercer-color" style="background: cmyk({{ $plantilla['colores'][0] }})">
-        <p class="texto1 texto-negro" style="font-family: 'Oswald';font-size: x-small;">{{mb_strtoupper($product_order->name)}}</p>
-    </div>
-    @endfor
-    </div>
-    <div class="numeroOrder">
-        <p class="texto3" style="font-family: 'Oswald';font-size: large;"> PEDIDO # {{$product_order->order->id_external}} </p>
-    </div>
+        {{-- SUPER MAXI --}}
+        <table class="etiquetas-super-maxi-container">
+            <tr>
+                <td class="etiqueta-super-maxi" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-super-maxi-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 4px;"></td>
+                <td class="etiqueta-super-maxi" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-super-maxi-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 4px;"></td>
+                <td class="etiqueta-super-maxi" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-super-maxi-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="5" style="height: 8px;"></td>
+            </tr>
+            <tr>
+                <td class="etiqueta-super-maxi" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-super-maxi-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 4px;"></td>
+                <td class="etiqueta-super-maxi" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-super-maxi-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 4px;"></td>
+                <td class="etiqueta-super-maxi" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-super-maxi-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+
+        <div style="height: 10px; width: 100%;"></div>
+
+        {{-- SUPER MINI --}}
+        <table class="etiquetas-super-mini-container">
+            <tr>
+                <td class="etiqueta-super-mini" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-super-mini-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{{mb_strtoupper($product_order->name)}}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 6px;"></td>
+                <td class="etiqueta-super-mini" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-super-mini-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{{mb_strtoupper($product_order->name)}}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 6px;"></td>
+                <td class="etiqueta-super-mini" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-super-mini-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{{mb_strtoupper($product_order->name)}}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 6px;"></td>
+                <td class="etiqueta-super-mini" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-super-mini-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{{mb_strtoupper($product_order->name)}}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 6px;"></td>
+                <td class="etiqueta-super-mini" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-super-mini-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{{mb_strtoupper($product_order->name)}}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 6px;"></td>
+                <td class="etiqueta-super-mini" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-super-mini-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{{mb_strtoupper($product_order->name)}}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="11" style="height: 10px;"></td>
+            </tr>
+            <tr>
+                <td class="etiqueta-super-mini" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-super-mini-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{{mb_strtoupper($product_order->name)}}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 6px;"></td>
+                <td class="etiqueta-super-mini" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-super-mini-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{{mb_strtoupper($product_order->name)}}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 6px;"></td>
+                <td class="etiqueta-super-mini" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-super-mini-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{{mb_strtoupper($product_order->name)}}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 6px;"></td>
+                <td class="etiqueta-super-mini" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-super-mini-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{{mb_strtoupper($product_order->name)}}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 6px;"></td>
+                <td class="etiqueta-super-mini" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-super-mini-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{{mb_strtoupper($product_order->name)}}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 6px;"></td>
+                <td class="etiqueta-super-mini" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-super-mini-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{{mb_strtoupper($product_order->name)}}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="11" style="height: 10px;"></td>
+            </tr>
+            <tr>
+                <td class="etiqueta-super-mini" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-super-mini-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{{mb_strtoupper($product_order->name)}}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 6px;"></td>
+                <td class="etiqueta-super-mini" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-super-mini-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{{mb_strtoupper($product_order->name)}}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 6px;"></td>
+                <td class="etiqueta-super-mini" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-super-mini-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{{mb_strtoupper($product_order->name)}}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 6px;"></td>
+                <td class="etiqueta-super-mini" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-super-mini-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{{mb_strtoupper($product_order->name)}}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 6px;"></td>
+                <td class="etiqueta-super-mini" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-super-mini-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{{mb_strtoupper($product_order->name)}}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 6px;"></td>
+                <td class="etiqueta-super-mini" style="background: #fff; color: #000000;">
+                    <table class="etiqueta-super-mini-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{{mb_strtoupper($product_order->name)}}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+
+        <div class="numeroOrder">
+            <p> PEDIDO # {{$product_order->order->id_external}} </p>
+        </div>
     </div>
 </body>
 
