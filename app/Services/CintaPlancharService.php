@@ -33,10 +33,15 @@ class CintaPlancharService
     }
 
     /**
-     * Obtiene el tipo de PDF (x24 o x48) según la variante
+     * Obtiene el tipo de PDF (x24 o x48) según la variante o producto
      */
-    public static function getTipoPorVariante($variantId): ?string
+    public static function getTipoPorVariante($variantId, $productId = null): ?string
     {
+        // Los productos Combo (primaria/maternal) siempre son x24
+        if ($productId && in_array($productId, [self::PRODUCTO_COMBO_PRIMARIA_ID, self::PRODUCTO_COMBO_MATERNAL_ID])) {
+            return 'x24';
+        }
+
         if ($variantId == self::VARIANTE_24) {
             return 'x24';
         } elseif ($variantId == self::VARIANTE_48) {
@@ -71,10 +76,11 @@ class CintaPlancharService
             mkdir($dirPath, 0755, true);
         }
 
-        // Obtener variante ID del producto (usar el variant_id directo, no el de attributesvalues)
+        // Obtener variante ID y product ID del producto
         $variantId = $productOrder->variant_id;
+        $productId = $productOrder->product_id ?? null;
 
-        $tipo = self::getTipoPorVariante($variantId);
+        $tipo = self::getTipoPorVariante($variantId, $productId);
 
         if (!$tipo) {
             Log::warning("No se pudo determinar el tipo (x24/x48) para el producto planchar", [
