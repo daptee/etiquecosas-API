@@ -134,7 +134,7 @@
             width: 80%;
             text-align: center;
             margin: 10px auto 0;
-            line-height: 0.8;
+            line-height: 0.7;
         }
     </style>
 </head>
