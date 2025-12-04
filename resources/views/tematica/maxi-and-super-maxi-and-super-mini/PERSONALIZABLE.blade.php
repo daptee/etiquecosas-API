@@ -106,8 +106,7 @@
         }
 
         .imagenGrande {
-            width: 2.1cm;
-            height: 50%;
+            height: 1.2cm;
             position: relative;
             position: absolute;
             top: 10;

@@ -51,18 +51,18 @@
 }
 
 .etiqueta-maxi-content-container img {
-    height: 1.4cm;
+    height: 1.2cm;
     width: auto;
     margin: 0 auto !important;
 }
 
 .etiqueta-maxi-content-container img.iconoGrande {
-    height: 1.1cm;
+    height: 1.2cm;
     width: auto;
 }
 
 .etiqueta-maxi-content-container img.iconoMediano {
-    height: 1.3cm;
+    height: 1.2cm;
     width: auto;
 }
 

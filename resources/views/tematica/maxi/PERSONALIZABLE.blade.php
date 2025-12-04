@@ -80,7 +80,7 @@
         }
 
         .etiqueta-maxi img {
-            max-height: 100%;
+            height: 1.2cm;
             width: auto;
             display: block;
             margin: 0 auto;
