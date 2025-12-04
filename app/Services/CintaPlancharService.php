@@ -11,16 +11,25 @@ class CintaPlancharService
     // Producto ID para "Etiquetas de tela PARA PLANCHAR"
     const PRODUCTO_PLANCHAR_ID = 1247;
 
+    // Productos Combo que también generan PDFs planchables
+    const PRODUCTO_COMBO_PRIMARIA_ID = 79;
+    const PRODUCTO_COMBO_MATERNAL_ID = 141;
+
     // Variantes: 801 = 24 etiquetas, 802 = 48 etiquetas
     const VARIANTE_24 = 801;
     const VARIANTE_48 = 802;
 
     /**
      * Verifica si un producto es de tipo "Etiquetas de tela PARA PLANCHAR"
+     * o si es un Combo (primaria/maternal) que también genera planchables
      */
     public static function esProductoPlanchar(int $productId): bool
     {
-        return $productId === self::PRODUCTO_PLANCHAR_ID;
+        return in_array($productId, [
+            self::PRODUCTO_PLANCHAR_ID,
+            self::PRODUCTO_COMBO_PRIMARIA_ID,
+            self::PRODUCTO_COMBO_MATERNAL_ID
+        ]);
     }
 
     /**
@@ -118,7 +127,7 @@ class CintaPlancharService
     private static function generarPdfConsolidado(string $fecha, string $tipo, array $etiquetas): void
     {
         $dirPath = storage_path("app/pdf/Cintas - Planchar");
-        $pdfFile = "{$dirPath}/{$fecha}-{$tipo}.pdf";
+        $pdfFile = "{$dirPath}/{$fecha}-planchar-{$tipo}.pdf";
 
         $pdf = Pdf::loadView('cintas-planchar.consolidado', [
             'etiquetas' => $etiquetas,
@@ -167,7 +176,7 @@ class CintaPlancharService
                 } else {
                     // Si no quedan etiquetas, eliminar archivos
                     unlink($jsonFile);
-                    $pdfFile = "{$dirPath}/{$fechaCarpeta}-{$tipo}.pdf";
+                    $pdfFile = "{$dirPath}/{$fechaCarpeta}-planchar-{$tipo}.pdf";
                     if (file_exists($pdfFile)) {
                         unlink($pdfFile);
                     }

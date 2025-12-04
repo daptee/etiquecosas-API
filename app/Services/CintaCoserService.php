@@ -117,7 +117,7 @@ class CintaCoserService
     private static function generarPdfConsolidado(string $fecha, string $tipo, array $etiquetas): void
     {
         $dirPath = storage_path("app/pdf/Cintas - Coser");
-        $pdfFile = "{$dirPath}/{$fecha}-{$tipo}.pdf";
+        $pdfFile = "{$dirPath}/{$fecha}-coser-{$tipo}.pdf";
 
         $pdf = Pdf::loadView('cintas-coser.consolidado', [
             'etiquetas' => $etiquetas,
@@ -166,7 +166,7 @@ class CintaCoserService
                 } else {
                     // Si no quedan etiquetas, eliminar archivos
                     unlink($jsonFile);
-                    $pdfFile = "{$dirPath}/{$fechaCarpeta}-{$tipo}.pdf";
+                    $pdfFile = "{$dirPath}/{$fechaCarpeta}-coser-{$tipo}.pdf";
                     if (file_exists($pdfFile)) {
                         unlink($pdfFile);
                     }
