@@ -79,7 +79,7 @@
         }
 
         .etiqueta-maxi img {
-            max-height: 100%;
+            height: 1.2cm;
             width: auto;
             display: block;
             margin: 0 auto;
@@ -89,13 +89,13 @@
             font-family: 'Oswald';
             font-size: 12pt;
             text-align: center;
-            line-height: 0.75;
             color: #fff;
             margin: 0;
             padding: 0;
         }
 
         .etiqueta-maxi-text p.normal-text-size {
+            line-height: 0.8 !important;
             font-size: 12pt !important;
         }
 
@@ -168,7 +168,7 @@
             width: 80%;
             text-align: center;
             margin: 10px auto 0;
-            line-height: 0.8;
+            line-height: 0.7;
         }
     </style>
 </head>
@@ -209,7 +209,7 @@
                                     <td class="etiqueta-maxi-text"
                                         style="width:62%; height:100%; background: {{ $plantilla['colores'] }}; text-align:center; vertical-align:middle;">
                                         <p class="{{ $plantilla['fontClass'] }}" style="margin:0; line-height:1; color:#FFF;">
-                                            {!! formatName($product_order->name) !!}
+                                            {!! formatName($product_order->name, 2) !!}
                                         </p>
                                     </td>
                                 </tr>

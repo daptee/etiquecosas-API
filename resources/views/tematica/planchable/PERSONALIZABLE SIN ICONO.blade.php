@@ -34,10 +34,12 @@
             line-height: 12px;
             color: {{ $plantilla['colores'] }};
             margin: 0;
+            padding: 0;
             position: absolute;
             top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            left: 0;
+            right: 0;
+            transform: translateY(-50%);
             font-family: 'Oswald';
         }
 

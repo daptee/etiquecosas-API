@@ -80,7 +80,7 @@
         }
 
         .etiqueta-maxi img {
-            max-height: 100%;
+            height: 1.2cm;
             width: auto;
             display: block;
             margin: 0 auto;
@@ -90,7 +90,6 @@
             font-family: 'Oswald';
             font-size: 12pt;
             text-align: center;
-            line-height: 0.75;
             color: #fff;
             margin: 0;
             padding: 0;
@@ -98,11 +97,12 @@
 
         .etiqueta-maxi-text p.normal-text-size {
             font-size: 12pt !important;
+            line-height: 0.8 !important;
         }
 
         .etiqueta-maxi-text p.small-text-size {
             font-size: 11pt !important;
-            line-height: 0.7 !important;
+            line-height: 0.8 !important;
         }
 
         /* NUMERO DE PEDIDO VERTICAL ABAJO A LA IZQUIERDA DE LA PANTALLA */
@@ -147,7 +147,7 @@
                                     <td class="etiqueta-maxi-text"
                                         style="width:62%; height:100%; background: {{ $plantilla['colores'] }}; text-align:center; vertical-align:middle;">
                                         <p class="{{ $plantilla['fontClass'] }}" style="margin:0; line-height:1; color:#FFF;">
-                                            {!! formatName($product_order->name) !!}
+                                            {!! formatName($product_order->name, 2) !!}
                                         </p>
                                     </td>
                                 </tr>

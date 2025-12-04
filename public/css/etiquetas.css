@@ -51,18 +51,18 @@
 }
 
 .etiqueta-maxi-content-container img {
-    height: 1.4cm;
+    height: 1.2cm;
     width: auto;
     margin: 0 auto !important;
 }
 
 .etiqueta-maxi-content-container img.iconoGrande {
-    height: 1.1cm;
+    height: 1.2cm;
     width: auto;
 }
 
 .etiqueta-maxi-content-container img.iconoMediano {
-    height: 1.3cm;
+    height: 1.2cm;
     width: auto;
 }
 
@@ -287,10 +287,16 @@
 .etiqueta-maxi-content-container p.extra-small-text-size {
     font-size: 11pt !important;
     line-height: 0.7 !important;
+    padding-bottom: 12px !important;
 }
 
 .etiqueta-super-maxi-content-container p.extra-small-text-size {
     font-size: 14pt !important;
+    padding-bottom: 12px !important;
+}
+
+.etiqueta-vertical-content-container p.extra-small-text-size  {
+    padding-bottom: 12px !important;
 }
 
 .etiqueta-super-mini-content-container p.extra-small-text-size {

@@ -54,14 +54,14 @@
                             @endphp
                             @switch($cant)
                             @case(3)
-                            <div style="transform: translate(0%, -25%);">
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[0]) }}
-                                </p>
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[1] . ' ' . $name[2]) }}
-                                </p>
-                            </div>
+                        <div style="transform: translate(0%, -25%);">
+                            <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                {{ mb_strtoupper($name[0] . ' ' . $name[1]) }}
+                            </p>
+                            <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                {{ mb_strtoupper($name[2]) }}
+                            </p>
+                        </div>
                             @break
                             @case(4)
                             <div style="transform: translate(0%, -25%);">
@@ -92,14 +92,14 @@
                             @endphp
                             @switch($cant)
                             @case(3)
-                            <div style="transform: translate(0%, -25%);">
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[0]) }}
-                                </p>
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[1] . ' ' . $name[2]) }}
-                                </p>
-                            </div>
+                        <div style="transform: translate(0%, -25%);">
+                            <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                {{ mb_strtoupper($name[0] . ' ' . $name[1]) }}
+                            </p>
+                            <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                {{ mb_strtoupper($name[2]) }}
+                            </p>
+                        </div>
                             @break
                             @case(4)
                             <div style="transform: translate(0%, -25%);">
@@ -130,14 +130,14 @@
                             @endphp
                             @switch($cant)
                             @case(3)
-                            <div style="transform: translate(0%, -25%);">
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[0]) }}
-                                </p>
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[1] . ' ' . $name[2]) }}
-                                </p>
-                            </div>
+                        <div style="transform: translate(0%, -25%);">
+                            <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                {{ mb_strtoupper($name[0] . ' ' . $name[1]) }}
+                            </p>
+                            <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                {{ mb_strtoupper($name[2]) }}
+                            </p>
+                        </div>
                             @break
                             @case(4)
                             <div style="transform: translate(0%, -25%);">
@@ -168,14 +168,14 @@
                             @endphp
                             @switch($cant)
                             @case(3)
-                            <div style="transform: translate(0%, -25%);">
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[0]) }}
-                                </p>
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[1] . ' ' . $name[2]) }}
-                                </p>
-                            </div>
+                        <div style="transform: translate(0%, -25%);">
+                            <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                {{ mb_strtoupper($name[0] . ' ' . $name[1]) }}
+                            </p>
+                            <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                {{ mb_strtoupper($name[2]) }}
+                            </p>
+                        </div>
                             @break
                             @case(4)
                             <div style="transform: translate(0%, -25%);">
@@ -206,14 +206,14 @@
                             @endphp
                             @switch($cant)
                             @case(3)
-                            <div style="transform: translate(0%, -25%);">
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[0]) }}
-                                </p>
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[1] . ' ' . $name[2]) }}
-                                </p>
-                            </div>
+                        <div style="transform: translate(0%, -25%);">
+                            <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                {{ mb_strtoupper($name[0] . ' ' . $name[1]) }}
+                            </p>
+                            <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                {{ mb_strtoupper($name[2]) }}
+                            </p>
+                        </div>
                             @break
                             @case(4)
                             <div style="transform: translate(0%, -25%);">
@@ -244,14 +244,14 @@
                             @endphp
                             @switch($cant)
                             @case(3)
-                            <div style="transform: translate(0%, -25%);">
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[0]) }}
-                                </p>
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[1] . ' ' . $name[2]) }}
-                                </p>
-                            </div>
+                        <div style="transform: translate(0%, -25%);">
+                            <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                {{ mb_strtoupper($name[0] . ' ' . $name[1]) }}
+                            </p>
+                            <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                {{ mb_strtoupper($name[2]) }}
+                            </p>
+                        </div>
                             @break
                             @case(4)
                             <div style="transform: translate(0%, -25%);">
@@ -282,14 +282,14 @@
                             @endphp
                             @switch($cant)
                             @case(3)
-                            <div style="transform: translate(0%, -25%);">
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[0]) }}
-                                </p>
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[1] . ' ' . $name[2]) }}
-                                </p>
-                            </div>
+                        <div style="transform: translate(0%, -25%);">
+                            <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                {{ mb_strtoupper($name[0] . ' ' . $name[1]) }}
+                            </p>
+                            <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                {{ mb_strtoupper($name[2]) }}
+                            </p>
+                        </div>
                             @break
                             @case(4)
                             <div style="transform: translate(0%, -25%);">
@@ -320,14 +320,14 @@
                             @endphp
                             @switch($cant)
                             @case(3)
-                            <div style="transform: translate(0%, -25%);">
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[0]) }}
-                                </p>
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[1] . ' ' . $name[2]) }}
-                                </p>
-                            </div>
+                        <div style="transform: translate(0%, -25%);">
+                            <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                {{ mb_strtoupper($name[0] . ' ' . $name[1]) }}
+                            </p>
+                            <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                {{ mb_strtoupper($name[2]) }}
+                            </p>
+                        </div>
                             @break
                             @case(4)
                             <div style="transform: translate(0%, -25%);">
@@ -358,14 +358,14 @@
                             @endphp
                             @switch($cant)
                             @case(3)
-                            <div style="transform: translate(0%, -25%);">
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[0]) }}
-                                </p>
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[1] . ' ' . $name[2]) }}
-                                </p>
-                            </div>
+                        <div style="transform: translate(0%, -25%);">
+                            <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                {{ mb_strtoupper($name[0] . ' ' . $name[1]) }}
+                            </p>
+                            <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                {{ mb_strtoupper($name[2]) }}
+                            </p>
+                        </div>
                             @break
                             @case(4)
                             <div style="transform: translate(0%, -25%);">
@@ -396,14 +396,14 @@
                             @endphp
                             @switch($cant)
                             @case(3)
-                            <div style="transform: translate(0%, -25%);">
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[0]) }}
-                                </p>
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[1] . ' ' . $name[2]) }}
-                                </p>
-                            </div>
+                        <div style="transform: translate(0%, -25%);">
+                            <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                {{ mb_strtoupper($name[0] . ' ' . $name[1]) }}
+                            </p>
+                            <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                {{ mb_strtoupper($name[2]) }}
+                            </p>
+                        </div>
                             @break
                             @case(4)
                             <div style="transform: translate(0%, -25%);">
@@ -434,14 +434,14 @@
                             @endphp
                             @switch($cant)
                             @case(3)
-                            <div style="transform: translate(0%, -25%);">
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[0]) }}
-                                </p>
-                                <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
-                                    {{ mb_strtoupper($name[1] . ' ' . $name[2]) }}
-                                </p>
-                            </div>
+                        <div style="transform: translate(0%, -25%);">
+                            <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                {{ mb_strtoupper($name[0] . ' ' . $name[1]) }}
+                            </p>
+                            <p class="textoAplanado" style="font-family: 'Oswald';font-size: 0.9em;">
+                                {{ mb_strtoupper($name[2]) }}
+                            </p>
+                        </div>
                             @break
                             @case(4)
                             <div style="transform: translate(0%, -25%);">
