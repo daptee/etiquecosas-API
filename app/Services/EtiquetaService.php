@@ -138,7 +138,8 @@ class EtiquetaService
             $customIconPath = public_path($customIcon);
 
             foreach ($nombres as $nombre) {
-                $fontClass = mb_strlen($nombre, 'UTF-8') > 16 ? 'small-text-size' : 'normal-text-size';
+                $nombreLength = mb_strlen($nombre, 'UTF-8');
+                $fontClass = $nombreLength > 20 ? 'extra-small-text-size' : ($nombreLength > 16 ? 'small-text-size' : 'normal-text-size');
                 $plantilla = [
                     'colores' => $customColor[0],
                     'imagen' => $customIconPath,
@@ -165,8 +166,9 @@ class EtiquetaService
             $views = $getViews($pdf, "PERSONALIZABLE SIN ICONO", $urlPdf);
 
             foreach ($nombres as $nombre) {
-                $fontClass = mb_strlen($nombre, 'UTF-8') > 16 ? 'small-text-size' : 'normal-text-size';
-                
+                $nombreLength = mb_strlen($nombre, 'UTF-8');
+                $fontClass = $nombreLength > 20 ? 'extra-small-text-size' : ($nombreLength > 16 ? 'small-text-size' : 'normal-text-size');
+
                 $plantilla = [
                     'colores' => $customColor[0],
                     'fontClass' => $fontClass,
@@ -194,7 +196,8 @@ class EtiquetaService
             foreach ($nombres as $nombre) {
                 $isWhiteAndBlack = $tematicaName === 'Blanco y Negro';
                 $isWhite = $tematicaName === 'Blanco' || $tematicaName === 'Blanco y Negro' ? true : null;
-                $fontClass = mb_strlen($nombre, 'UTF-8') > 16 ? 'small-text-size' : 'normal-text-size';
+                $nombreLength = mb_strlen($nombre, 'UTF-8');
+                $fontClass = $nombreLength > 20 ? 'extra-small-text-size' : ($nombreLength > 16 ? 'small-text-size' : 'normal-text-size');
 
                 $plantilla = [
                     'colores' => $isWhiteAndBlack ? ["#FFF", "#FFF", "#FFF", "#FFF", "#FFF", "#FFF"] : $colorRange,
@@ -257,7 +260,8 @@ class EtiquetaService
         $views = $getViews($pdf, $tematica, $urlPdf);
 
         foreach ($nombres as $nombre) {
-            $fontClass = mb_strlen($nombre, 'UTF-8') > 16 ? 'small-text-size' : 'normal-text-size';
+            $nombreLength = mb_strlen($nombre, 'UTF-8');
+            $fontClass = $nombreLength > 20 ? 'extra-small-text-size' : ($nombreLength > 16 ? 'small-text-size' : 'normal-text-size');
             Log::info($colores);
             Log::info($imagenes);
             $plantilla = [

@@ -98,6 +98,7 @@
 
         .cuadroGrande {
             width: 3.2cm;
+            line-height: 0.8 !important;
             height: 40%;
             position: relative;
             position: absolute;
@@ -186,6 +187,56 @@
             height: 29cm;
         }
 
+        .etiquetas-maxi-container {
+            width: 100%;
+            border-spacing: 0;
+            margin: 0;
+            padding: 0;
+        }
+
+        .etiqueta-maxi {
+            width: 5.2cm;
+            height: 1.9cm;
+            display: inline-block;
+            vertical-align: top;
+            margin: 10px 10px !important;
+            padding: 0;
+        }
+
+        .etiqueta-maxi table {
+            width: 100%;
+            height: 100%;
+            border-spacing: 0;
+            margin: 0;
+            padding: 0;
+        }
+
+        .etiqueta-maxi img {
+            height: 1.2cm;
+            width: auto;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .etiqueta-maxi-text {
+            font-family: 'Oswald';
+            font-size: 12pt;
+            text-align: center;
+            color: #fff;
+            margin: 0;
+            padding: 0;
+        }
+
+        .etiqueta-maxi-text p.normal-text-size {
+            line-height: 0.8 !important;
+            font-size: 12pt !important;
+        }
+
+        .etiqueta-maxi-text p.small-text-size {
+            font-size: 11pt !important;
+            line-height: 0.7 !important;
+        }
+
         @page {
             margin-left: 1.0cm;
             margin-right: 1.5cm;
@@ -195,8 +246,7 @@
     </style>
 
 <body>
-    <div class="hoja">
-        @for ($i = 0; $i < 2; $i++)
+    <div class="hoja">@for ($i = 0; $i < 2; $i++)
             <div class="icon-cuadroGrande">
             <div>
                 <div class="imagenGrande">
@@ -234,32 +284,33 @@
         </div>
     </div>
     @endfor
-    @for ($i = 0; $i < 3; $i++)
-        <div class="icon-cuadro">
-        <div class="imagen">
-            <img class="personaje" src="{{ $plantilla['imagen'] }}" alt="">
-        </div>
-        <div class="cuadro" style="background:{{$plantilla['colores']}};">
-            <p class="texto2" style="font-family: 'Oswald';font-size: 1.05em;">{{mb_strtoupper($product_order->name)}}</p>
-        </div>
-        </div>
-        <div class="icon-cuadro">
-            <div class="imagen">
-                <img class="personaje" src="{{ $plantilla['imagen'] }}" alt="">
-            </div>
-            <div class="cuadro" style="background:{{$plantilla['colores']}};">
-                <p class="texto2" style="font-family: 'Oswald';font-size: 1.05em;">{{mb_strtoupper($product_order->name)}}</p>
-            </div>
-        </div>
-        <div class="icon-cuadro">
-            <div class="imagen">
-                <img class="personaje" src="{{ $plantilla['imagen'] }}" alt="">
-            </div>
-            <div class="cuadro" style="background:{{$plantilla['colores']}};">
-                <p class="texto2" style="font-family: 'Oswald';font-size: 1.05em;">{{mb_strtoupper($product_order->name)}}</p>
-            </div>
-        </div>
-        @endfor
+        <table class="etiquetas-maxi-container">
+            @for ($row = 0; $row < 3; $row++)
+                <tr>
+                    @for ($col = 0; $col < 3; $col++)
+                        <td class="etiqueta-maxi">
+                            <table>
+                                <tr>
+                                    {{-- Mitad izquierda: imagen con fondo blanco --}}
+                                    <td
+                                        style="width:38%; height:100%; background:white; text-align:center; vertical-align:middle;">
+                                        <img src="{{ $plantilla['imagen'] }}" alt="">
+                                    </td>
+
+                                    {{-- Mitad derecha: texto con fondo del color que llega --}}
+                                    <td class="etiqueta-maxi-text"
+                                        style="width:62%; height:100%; background: {{ $plantilla['colores'] }}; text-align:center; vertical-align:middle;">
+                                        <p class="{{ $plantilla['fontClass'] }}" style="margin:0; line-height:1; color:#FFF;">
+                                            {!! formatName($product_order->name, 2) !!}
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    @endfor
+                </tr>
+            @endfor
+        </table>
 
         <div style="height: 12px;"></div>
 
