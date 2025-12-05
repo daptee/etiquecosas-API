@@ -53,6 +53,13 @@ class ProductCustomization extends Model
             'is_text_active' => $this->customization['is_text_active'] ?? 0,
             'is_list_active' => $this->customization['is_list_active'] ?? 0,
             'text' => $this->customization['text'] ?? null,
+            'name_max_characters' => $this->customization['name_max_characters'] ?? null,
+            'is_name_mandatory' => $this->customization['is_name_mandatory'] ?? 0,
+            'last_name_max_characters' => $this->customization['last_name_max_characters'] ?? null,
+            'is_last_name_mandatory' => $this->customization['is_last_name_mandatory'] ?? 0,
+            'text_max_characters' => $this->customization['text_max_characters'] ?? null,
+            'is_text_mandatory' => $this->customization['is_text_mandatory'] ?? 0,
+            'is_list_mandatory' => $this->customization['is_list_mandatory'] ?? 0,
             'colors' => $this->colors, // 👈 trae objetos PersonalizationColor
             'icons' => $this->icons,  // 👈 trae objetos PersonalizationIcon
         ];
