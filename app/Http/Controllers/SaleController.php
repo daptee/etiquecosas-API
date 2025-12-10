@@ -504,7 +504,17 @@ class SaleController extends Controller
             ]);
         }
 
-        if ($sale->sale_status_id == 4) { // estado "Retirado"
+        if ($sale->sale_status_id == 4) { // estado "Entregado"
+            Mail::to($sale->client->email)->send(new OrderRetiredMail($sale));
+            // Guardar historial
+            SaleStatusHistory::create([
+                'sale_id' => $sale->id,
+                'sale_status_id' => $request->sale_status_id,
+                'date' => Carbon::now(),
+            ]);
+        }
+
+        if ($sale->sale_status_id == 7) { // estado "Retirado"
             Mail::to($sale->client->email)->send(new OrderRetiredMail($sale));
             // Guardar historial
             SaleStatusHistory::create([
@@ -712,6 +722,10 @@ class SaleController extends Controller
         }
 
         if ($sale->sale_status_id == 4) { // estado "Retirado"
+            Mail::to($sale->client->email)->send(new OrderRetiredMail($sale));
+        }
+
+        if ($sale->sale_status_id == 7) { // estado "Retirado"
             Mail::to($sale->client->email)->send(new OrderRetiredMail($sale));
         }
 
@@ -1582,6 +1596,7 @@ class SaleController extends Controller
      * - from_date: Fecha desde (requerido)
      * - to_date: Fecha hasta (requerido)
      * - channel_id: ID del canal de venta (opcional, si no se envía o es 'all' trae todos los canales)
+     * - product_id: ID del producto (opcional, filtra ventas que contengan este producto)
      */
     public function getDashboardStats(Request $request)
     {
@@ -1620,6 +1635,14 @@ class SaleController extends Controller
             $channelId = $request->query('channel_id');
             if ($channelId && $channelId !== 'all') {
                 $query->where('channel_id', $channelId);
+            }
+
+            // Filtrar por producto si se especifica
+            $productId = $request->query('product_id');
+            if ($productId) {
+                $query->whereHas('products', function ($q) use ($productId) {
+                    $q->where('product_id', $productId);
+                });
             }
 
             // Obtener todas las ventas
