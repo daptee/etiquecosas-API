@@ -92,4 +92,16 @@ class Sale extends Model
     {
         return $this->belongsTo(Locality::class, 'locality_id');
     }
+
+    /**
+     * Verifica si la venta ya fue aprobada (status 1) alguna vez en su historial
+     *
+     * @return bool
+     */
+    public function hasBeenApproved()
+    {
+        return $this->statusHistory()
+            ->where('sale_status_id', 1)
+            ->exists();
+    }
 }

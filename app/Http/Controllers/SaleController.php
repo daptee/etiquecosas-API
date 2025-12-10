@@ -459,6 +459,16 @@ class SaleController extends Controller
     {
         $sale = Sale::findOrFail($id);
         $saleStatusOld = $sale->sale_status_id;
+
+        // 🔒 IMPORTANTE: Verificar que el status 1 (aprobado) solo se asigne UNA VEZ
+        if ($request->sale_status_id == 1 && $sale->hasBeenApproved()) {
+            $this->logAudit(Auth::user() ?? null, 'Sale Status Change Ignored', $request->all(), 'La venta ya fue aprobada anteriormente. Se ignora el cambio de status.');
+
+            // Continuar sin actualizar el status, pero cargar la venta con sus relaciones
+            $sale->load(['client', 'products.product', 'products.variant', 'shippingMethod', 'locality', 'products.variant', 'statusHistory']);
+            return $this->success($sale, 'La venta ya fue aprobada anteriormente');
+        }
+
         $sale->sale_status_id = $request->sale_status_id;
         $sale->save();
 
@@ -665,13 +675,20 @@ class SaleController extends Controller
         $user = Auth::user();
         $sale = Sale::findOrFail($id);
         $saleStatusOld = $sale->sale_status_id;
-        $sale->sale_status_id = $request->sale_status_id;
-        $sale->save();
 
         if (!$user->profile_id) {
             $this->logAudit(Auth::user(), 'Sale Validation Fail (Update Status)', $request->all(), 'No tienes los permisos necesarios');
             return $this->error('No tienes los permisos necesarios', 401);
         }
+
+        // 🔒 IMPORTANTE: Verificar que el status 1 (aprobado) solo se asigne UNA VEZ
+        if ($request->sale_status_id == 1 && $sale->hasBeenApproved()) {
+            $this->logAudit(Auth::user(), 'Sale Validation Fail (Change Status Admin)', $request->all(), 'La venta ya fue aprobada anteriormente. No se puede volver a aprobar.');
+            return $this->error('La venta ya fue aprobada anteriormente. No se puede volver a aprobar.', 400);
+        }
+
+        $sale->sale_status_id = $request->sale_status_id;
+        $sale->save();
 
         // Guardar historial
         SaleStatusHistory::create([
