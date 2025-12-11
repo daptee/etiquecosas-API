@@ -1649,16 +1649,45 @@ class SaleController extends Controller
             $sales = $query->get();
 
             // 🔹 INDICADORES
-            $totalSales = $sales->sum('total');
-            $totalDiscounts = $sales->sum('discount_amount');
-            $netSales = $totalSales - $totalDiscounts;
-            $ordersCount = $sales->count();
+            // Si hay filtro de producto, calcular indicadores solo para ese producto
+            if ($productId) {
+                $totalSales = 0;
+                $totalDiscounts = 0;
+                $totalProducts = 0;
 
-            // Contar total de productos vendidos
-            $totalProducts = 0;
-            foreach ($sales as $sale) {
-                foreach ($sale->products as $product) {
-                    $totalProducts += $product->quantity;
+                foreach ($sales as $sale) {
+                    foreach ($sale->products as $saleProduct) {
+                        if ($saleProduct->product_id == $productId) {
+                            $lineTotal = floatval($saleProduct->quantity) * floatval($saleProduct->unit_price);
+
+                            // Calcular el descuento proporcional para este producto
+                            $saleTotal = floatval($sale->total);
+                            $saleDiscount = floatval($sale->discount_amount ?? 0);
+                            $discountProportion = $saleTotal > 0 ? ($saleDiscount / $saleTotal) : 0;
+                            $lineDiscount = $lineTotal * $discountProportion;
+
+                            $totalSales += $lineTotal;
+                            $totalDiscounts += $lineDiscount;
+                            $totalProducts += $saleProduct->quantity;
+                        }
+                    }
+                }
+
+                $netSales = $totalSales - $totalDiscounts;
+                $ordersCount = $sales->count();
+            } else {
+                // Sin filtro de producto, calcular totales generales
+                $totalSales = $sales->sum('total');
+                $totalDiscounts = $sales->sum('discount_amount');
+                $netSales = $totalSales - $totalDiscounts;
+                $ordersCount = $sales->count();
+
+                // Contar total de productos vendidos
+                $totalProducts = 0;
+                foreach ($sales as $sale) {
+                    foreach ($sale->products as $product) {
+                        $totalProducts += $product->quantity;
+                    }
                 }
             }
 
@@ -1666,6 +1695,11 @@ class SaleController extends Controller
             $productsStats = [];
             foreach ($sales as $sale) {
                 foreach ($sale->products as $saleProduct) {
+                    // Si hay filtro de producto, solo incluir ese producto
+                    if ($productId && $saleProduct->product_id != $productId) {
+                        continue;
+                    }
+
                     // Verificar que el producto existe
                     if (!$saleProduct->product) {
                         continue;
