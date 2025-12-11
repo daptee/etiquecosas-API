@@ -104,9 +104,9 @@ class MercadoPagoController extends Controller
 
         // Crear preferencia vía HTTP
         $response = Http::withToken(config('services.mercadopago.token'))
-            /* ->withHeaders([
+            ->withHeaders([
                 'X-Platform-Id' => $platformId
-            ]) */
+            ])
             ->post('https://api.mercadopago.com/checkout/preferences', [
                 "items" => $items,
                 "back_urls" => $backUrls,
