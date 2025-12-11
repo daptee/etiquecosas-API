@@ -77,6 +77,9 @@ class ProductController extends Controller
 
         if ($request->has('status_id')) {
             $query->where('product_status_id', $request->query('status_id'));
+        } else {
+            // Por defecto, solo mostrar productos publicados (status_id = 2)
+            $query->where('product_status_id', 2);
         }
 
         if ($request->has('category_id')) {
@@ -192,6 +195,9 @@ class ProductController extends Controller
 
         if ($request->has('status_id')) {
             $query->where('product_status_id', $request->query('status_id'));
+        } else {
+            // Por defecto, solo mostrar productos publicados (status_id = 2)
+            $query->where('product_status_id', 2);
         }
 
         if ($request->has('category_id')) {
@@ -247,6 +253,12 @@ class ProductController extends Controller
         if (!$product) {
             return $this->error('Producto no encontrado', 404);
         }
+
+        // Si es una petición pública (sin autenticación), validar que esté publicado
+        if (!$request->user() && $product->product_status_id != 2) {
+            return $this->error('Producto no encontrado', 404);
+        }
+
         $product->load([
             'type:id,name',
             'status:id,name',
@@ -275,7 +287,9 @@ class ProductController extends Controller
 
     public function slug(Request $request, string $slug)
     {
-        $product = Product::where('slug', $slug)->first();
+        $product = Product::where('slug', $slug)
+            ->where('product_status_id', 2) // Solo productos publicados
+            ->first();
 
         // Si no se encuentra el producto, retornar error 404
         if (!$product) {

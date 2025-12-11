@@ -459,6 +459,16 @@ class SaleController extends Controller
     {
         $sale = Sale::findOrFail($id);
         $saleStatusOld = $sale->sale_status_id;
+
+        // 🔒 IMPORTANTE: Verificar que el status 1 (aprobado) solo se asigne UNA VEZ
+        if ($request->sale_status_id == 1 && $sale->hasBeenApproved()) {
+            $this->logAudit(Auth::user() ?? null, 'Sale Status Change Ignored', $request->all(), 'La venta ya fue aprobada anteriormente. Se ignora el cambio de status.');
+
+            // Continuar sin actualizar el status, pero cargar la venta con sus relaciones
+            $sale->load(['client', 'products.product', 'products.variant', 'shippingMethod', 'locality', 'products.variant', 'statusHistory']);
+            return $this->success($sale, 'La venta ya fue aprobada anteriormente');
+        }
+
         $sale->sale_status_id = $request->sale_status_id;
         $sale->save();
 
@@ -494,7 +504,17 @@ class SaleController extends Controller
             ]);
         }
 
-        if ($sale->sale_status_id == 4) { // estado "Retirado"
+        if ($sale->sale_status_id == 4) { // estado "Entregado"
+            Mail::to($sale->client->email)->send(new OrderRetiredMail($sale));
+            // Guardar historial
+            SaleStatusHistory::create([
+                'sale_id' => $sale->id,
+                'sale_status_id' => $request->sale_status_id,
+                'date' => Carbon::now(),
+            ]);
+        }
+
+        if ($sale->sale_status_id == 7) { // estado "Retirado"
             Mail::to($sale->client->email)->send(new OrderRetiredMail($sale));
             // Guardar historial
             SaleStatusHistory::create([
@@ -665,13 +685,20 @@ class SaleController extends Controller
         $user = Auth::user();
         $sale = Sale::findOrFail($id);
         $saleStatusOld = $sale->sale_status_id;
-        $sale->sale_status_id = $request->sale_status_id;
-        $sale->save();
 
         if (!$user->profile_id) {
             $this->logAudit(Auth::user(), 'Sale Validation Fail (Update Status)', $request->all(), 'No tienes los permisos necesarios');
             return $this->error('No tienes los permisos necesarios', 401);
         }
+
+        // 🔒 IMPORTANTE: Verificar que el status 1 (aprobado) solo se asigne UNA VEZ
+        if ($request->sale_status_id == 1 && $sale->hasBeenApproved()) {
+            $this->logAudit(Auth::user(), 'Sale Validation Fail (Change Status Admin)', $request->all(), 'La venta ya fue aprobada anteriormente. No se puede volver a aprobar.');
+            return $this->error('La venta ya fue aprobada anteriormente. No se puede volver a aprobar.', 400);
+        }
+
+        $sale->sale_status_id = $request->sale_status_id;
+        $sale->save();
 
         // Guardar historial
         SaleStatusHistory::create([
@@ -695,6 +722,10 @@ class SaleController extends Controller
         }
 
         if ($sale->sale_status_id == 4) { // estado "Retirado"
+            Mail::to($sale->client->email)->send(new OrderRetiredMail($sale));
+        }
+
+        if ($sale->sale_status_id == 7) { // estado "Retirado"
             Mail::to($sale->client->email)->send(new OrderRetiredMail($sale));
         }
 
@@ -1565,6 +1596,7 @@ class SaleController extends Controller
      * - from_date: Fecha desde (requerido)
      * - to_date: Fecha hasta (requerido)
      * - channel_id: ID del canal de venta (opcional, si no se envía o es 'all' trae todos los canales)
+     * - product_id: ID del producto (opcional, filtra ventas que contengan este producto)
      */
     public function getDashboardStats(Request $request)
     {
@@ -1605,20 +1637,57 @@ class SaleController extends Controller
                 $query->where('channel_id', $channelId);
             }
 
+            // Filtrar por producto si se especifica
+            $productId = $request->query('product_id');
+            if ($productId) {
+                $query->whereHas('products', function ($q) use ($productId) {
+                    $q->where('product_id', $productId);
+                });
+            }
+
             // Obtener todas las ventas
             $sales = $query->get();
 
             // 🔹 INDICADORES
-            $totalSales = $sales->sum('total');
-            $totalDiscounts = $sales->sum('discount_amount');
-            $netSales = $totalSales - $totalDiscounts;
-            $ordersCount = $sales->count();
+            // Si hay filtro de producto, calcular indicadores solo para ese producto
+            if ($productId) {
+                $totalSales = 0;
+                $totalDiscounts = 0;
+                $totalProducts = 0;
 
-            // Contar total de productos vendidos
-            $totalProducts = 0;
-            foreach ($sales as $sale) {
-                foreach ($sale->products as $product) {
-                    $totalProducts += $product->quantity;
+                foreach ($sales as $sale) {
+                    foreach ($sale->products as $saleProduct) {
+                        if ($saleProduct->product_id == $productId) {
+                            $lineTotal = floatval($saleProduct->quantity) * floatval($saleProduct->unit_price);
+
+                            // Calcular el descuento proporcional para este producto
+                            $saleTotal = floatval($sale->total);
+                            $saleDiscount = floatval($sale->discount_amount ?? 0);
+                            $discountProportion = $saleTotal > 0 ? ($saleDiscount / $saleTotal) : 0;
+                            $lineDiscount = $lineTotal * $discountProportion;
+
+                            $totalSales += $lineTotal;
+                            $totalDiscounts += $lineDiscount;
+                            $totalProducts += $saleProduct->quantity;
+                        }
+                    }
+                }
+
+                $netSales = $totalSales - $totalDiscounts;
+                $ordersCount = $sales->count();
+            } else {
+                // Sin filtro de producto, calcular totales generales
+                $totalSales = $sales->sum('total');
+                $totalDiscounts = $sales->sum('discount_amount');
+                $netSales = $totalSales - $totalDiscounts;
+                $ordersCount = $sales->count();
+
+                // Contar total de productos vendidos
+                $totalProducts = 0;
+                foreach ($sales as $sale) {
+                    foreach ($sale->products as $product) {
+                        $totalProducts += $product->quantity;
+                    }
                 }
             }
 
@@ -1626,6 +1695,11 @@ class SaleController extends Controller
             $productsStats = [];
             foreach ($sales as $sale) {
                 foreach ($sale->products as $saleProduct) {
+                    // Si hay filtro de producto, solo incluir ese producto
+                    if ($productId && $saleProduct->product_id != $productId) {
+                        continue;
+                    }
+
                     // Verificar que el producto existe
                     if (!$saleProduct->product) {
                         continue;

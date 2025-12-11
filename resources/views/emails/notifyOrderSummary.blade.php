@@ -153,6 +153,35 @@
                             <td style="font-size: 14px;">
                               <span class="td-label">Detalle:</span>
                               <strong>{{ $item->product->name ?? ('ID producto: ' . ($item->product_id ?? '-')) }}</strong>
+                              @if($item->variant && $item->variant->variant)
+                                @php
+                                  $variantData = is_string($item->variant->variant)
+                                    ? json_decode($item->variant->variant, true)
+                                    : (array) $item->variant->variant;
+                                  $variantName = $variantData['name'] ?? null;
+                                  $variantAttrs = $variantData['attributesvalues'] ?? [];
+                                @endphp
+                                @if($variantName)
+                                  <div style="color: #666; font-size: 13px; margin-top: 4px;">
+                                    <strong>Variante:</strong> {{ $variantName }}
+                                  </div>
+                                @endif
+                                @if(is_array($variantAttrs) && count($variantAttrs) > 0)
+                                  <div style="color: #666; font-size: 12px; margin-top: 2px;">
+                                    @foreach($variantAttrs as $attr)
+                                      @if(isset($attr['attribute']['name']) && isset($attr['value']))
+                                        <span>{{ $attr['attribute']['name'] }}: {{ $attr['value'] }}</span>
+                                        @if(!$loop->last) | @endif
+                                      @endif
+                                    @endforeach
+                                  </div>
+                                @endif
+                              @endif
+                              @if($item->comment)
+                                <div style="color: #666; font-size: 12px; margin-top: 4px; font-style: italic;">
+                                  <strong>Nota:</strong> {{ $item->comment }}
+                                </div>
+                              @endif
                             </td>
                             <td style="font-size: 14px;">
                               <span class="td-label">Personalización:</span>
@@ -177,6 +206,8 @@
                                           <div><strong>{{ $ft }}:</strong> {{ $v[$fk] }}</div>
                                         @endif
                                       @endforeach
+                                    @elseif(!in_array($k, ['color', 'icon', 'form']) && is_scalar($v))
+                                      <div><strong>{{ $label }}:</strong> {{ $v }}</div>
                                     @endif
                                   @endforeach
                                 @else

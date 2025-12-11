@@ -43,11 +43,11 @@
                       <p style="font-family:'Montserrat', sans-serif; margin-bottom:0; font-size:20px; font-weight:600;">Hola</p>
                       <p style="font-family:'Montserrat', sans-serif; margin-top:0; font-size:24px; font-weight:700; color:#EBA4AB;">{{ $sale->client->name }} {{ $sale->client->lastname }}</p>
 
-                      <p style="margin-top:16px; font-size:18px; font-weight:600;">¡Tu pedido <span style="color:#EBA4AB;">#{{ $sale->id }}</span> fue despachado! 🎉</p>
+                      <p style="margin-top:16px; font-size:18px; font-weight:600;">¡Tu pedido <span style="color:#EBA4AB;">#{{ $sale->id }}</span> esta listo para despachar! 🎉</p>
 
                       <div style="margin:16px 0; padding:15px; background:#f9f9f9; border-left:4px solid #EBA4AB;">
                         <p style="margin:0; font-size:14px; color:#555;">📦 Si tu envío tiene número de seguimiento, te lo vamos a compartir para que puedas consultarlo.</p>
-                        <p style="margin:8px 0 0 0; font-size:14px; color:#555;">🚲 Si tu pedido va por cadetería (CABA), no podemos precisar el horario exacto porque depende del ruteo del cadete.</p>
+                        <p style="margin:8px 0 0 0; font-size:14px; color:#555;">🚲 Si tu pedido va por cadetería (CABA), no podemos precisar el día y horario exacto porque depende del ruteo del cadete. Pero ¡tranqui!</p>
                         <p style="margin:0; font-size:14px; color:#555;">👉 Si no estás en tu domicilio, el cadete te va a llamar al celular que dejaste al hacer la compra para coordinar sin costo un nuevo envío.</p>
                       </div>
 

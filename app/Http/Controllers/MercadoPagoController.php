@@ -104,9 +104,9 @@ class MercadoPagoController extends Controller
 
         // Crear preferencia vía HTTP
         $response = Http::withToken(config('services.mercadopago.token'))
-            /* ->withHeaders([
+            ->withHeaders([
                 'X-Platform-Id' => $platformId
-            ]) */
+            ])
             ->post('https://api.mercadopago.com/checkout/preferences', [
                 "items" => $items,
                 "back_urls" => $backUrls,
@@ -230,6 +230,23 @@ class MercadoPagoController extends Controller
 
             // Procesar según el estado del pago
             if ($paymentStatus === 'approved') {
+                // 🔒 IMPORTANTE: Verificar que la venta NO haya sido aprobada anteriormente
+                if ($sale->hasBeenApproved()) {
+                    Log::info('Webhook recibido para venta ya aprobada, se ignora', [
+                        'sale_id' => $sale->id,
+                        'payment_id' => $paymentId
+                    ]);
+
+                    // Continuar sin procesar, pero responder exitosamente para evitar reintentos del webhook
+                    $this->logAudit(null, 'Webhook MercadoPago - Already Approved', $request->all(), $sale);
+
+                    return response()->json([
+                        'status' => 'success',
+                        'message' => 'Sale already approved previously',
+                        'sale_id' => $sale->id
+                    ], 200);
+                }
+
                 Log::info('Pago aprobado, cambiando estado de venta', ['sale_id' => $sale->id]);
 
                 // Cambiar estado a "Aprobado" (1)
