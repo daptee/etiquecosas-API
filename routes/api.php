@@ -31,6 +31,7 @@ use App\Http\Controllers\ProductStockStatusController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CouponController;
 use App\Http\Controllers\BackupController;
+use App\Http\Controllers\PdfDirectoryController;
 
 // cache
 Route::get('/clear-cache', [CacheController::class, 'clearCache'])->name('clearCache');
@@ -271,6 +272,13 @@ Route::middleware('jwt.auth')->prefix('shipping-config')->group(function () {
     Route::put('/{id}', [ShippingConfigController::class, 'update']);
 });
 
+// PDF Directories - Admin de directorios de PDF
+Route::middleware('jwt.auth')->prefix('pdf-directories')->group(function () {
+    Route::get('/', [PdfDirectoryController::class, 'index']);                          // GET ALL - Listado de carpetas
+    Route::get('/{fecha}', [PdfDirectoryController::class, 'getPdfsByDate']);           // GET ALL PDF de una fecha
+    Route::get('/{fecha}/download-zip', [PdfDirectoryController::class, 'downloadCarpetaZip']); // Descargar carpeta en ZIP
+    Route::get('/{fecha}/download/{nombrePdf}', [PdfDirectoryController::class, 'downloadPdf']); // Descargar PDF individual
+});
 
 // Webhook de Mercado Pago (sin autenticación, MP envía notificaciones POST)
 Route::match(['GET', 'POST'], '/mercadopago/webhook', [MercadoPagoController::class, 'webhook'])
