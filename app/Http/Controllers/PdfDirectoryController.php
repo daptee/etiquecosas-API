@@ -55,9 +55,19 @@ class PdfDirectoryController extends Controller
                 $perPage
             );
 
+            $metaData = [
+                'current_page' => $resultado['current_page'],
+                'last_page' => $resultado['last_page'],
+                'per_page' => $resultado['per_page'],
+                'total' => $resultado['total'],
+                'from' => $resultado['total'] > 0 ? (($resultado['current_page'] - 1) * $resultado['per_page']) + 1 : null,
+                'to' => $resultado['total'] > 0 ? min($resultado['current_page'] * $resultado['per_page'], $resultado['total']) : null,
+            ];
+
             return $this->success(
-                $resultado,
-                'Carpetas de PDF obtenidas exitosamente'
+                $resultado['data'],
+                'Carpetas de PDF obtenidas exitosamente',
+                $metaData
             );
         } catch (\Exception $e) {
             return $this->error(
