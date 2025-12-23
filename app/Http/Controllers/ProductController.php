@@ -223,6 +223,9 @@ class ProductController extends Controller
         if ($request->has('channel_id')) {
             $channelId = $request->query('channel_id');
             $query->whereJsonContains('stock_channels', ['channel' => (int)$channelId]);
+        } else {
+            // Por defecto, solo mostrar productos del canal web (channel_id = 1)
+            $query->whereJsonContains('stock_channels', ['channel' => 1]);
         }
 
         // cambiado el orden para los productos más vendidos
@@ -271,7 +274,7 @@ class ProductController extends Controller
             'costs:id,name,price',
             'customization',
             'wholesales:id,product_id,amount,discount',
-            'relatedProducts:id,name,sku,slug,price,discounted_price,discounted_start,discounted_end,product_type_id,product_status_id,product_stock_status_id,stock_quantity,stock_channels',
+            'relatedProducts:id,name,sku,slug,price,discounted_price,discounted_start,discounted_end,product_type_id,product_status_id,product_stock_status_id,stock_quantity,stock_channels,is_sale',
             'relatedProducts.images:id,product_id,img,is_main',
             'relatedProducts.tag:id,name',
             'relatedProducts.stockStatus:id,name',
@@ -307,7 +310,7 @@ class ProductController extends Controller
             'costs:id,name',
             'customization',
             'wholesales:id,product_id,amount,discount',
-            'relatedProducts:id,name,sku,slug,price,discounted_price,discounted_start,discounted_end,product_type_id,product_status_id,product_stock_status_id,stock_quantity,stock_channels',
+            'relatedProducts:id,name,sku,slug,price,discounted_price,discounted_start,discounted_end,product_type_id,product_status_id,product_stock_status_id,stock_quantity,stock_channels,is_sale',
             'relatedProducts.images:id,product_id,img,is_main',
             'relatedProducts.tag:id,name',
             'relatedProducts.stockStatus:id,name',
