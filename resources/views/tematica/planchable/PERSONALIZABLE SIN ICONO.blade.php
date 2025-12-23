@@ -79,7 +79,7 @@
             </div>
         @endfor
         <div class="numeroOrder">
-            <p class="texto3"> PEDIDOs #
+            <p class="texto3"> PEDIDO #
                 {{ $product_order->order->id_external }} </p>
         </div>
     </div>
