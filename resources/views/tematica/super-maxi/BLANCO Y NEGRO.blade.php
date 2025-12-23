@@ -47,7 +47,7 @@
         @for ($i = 1; $i < 22; $i++)
             <div class="tercerD" style="background: white">
                 <div class="cuadro">
-                    <p class="texto4" style="font-family: 'Oswald';font-size: 1.45em; color: cmyk({{ $plantilla['colores'][1] }})">{{mb_strtoupper($product_order->name)}}</p>
+                    <p class="textoBlack4" style="font-family: 'Oswald';font-size: 1.45em;">{{mb_strtoupper($product_order->name)}}</p>
                 </div>
             </div>
         @endfor

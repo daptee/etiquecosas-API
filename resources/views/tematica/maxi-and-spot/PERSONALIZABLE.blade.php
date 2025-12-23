@@ -222,7 +222,7 @@
 
         <!-- NUMERO DE PEDIDO -->
         <div class="numeroOrder">
-            <p>PEDIDOs # {{$product_order->order->id_external}}</p>
+            <p>PEDIDO # {{$product_order->order->id_external}}</p>
         </div>
     </div>
 </body>

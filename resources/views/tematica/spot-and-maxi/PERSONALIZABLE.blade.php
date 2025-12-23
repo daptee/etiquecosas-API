@@ -87,7 +87,7 @@
 
         .etiqueta-maxi-text {
             font-family: 'Oswald';
-            font-size: 22pt;
+            font-size: 12pt;
             text-align: center;
             color: #fff;
             margin: 0;
@@ -96,11 +96,16 @@
 
         .etiqueta-maxi-text p.normal-text-size {
             font-size: 12pt !important;
-            line-height: 0.8 !important;
+            line-height: 0.9 !important;
         }
 
         .etiqueta-maxi-text p.small-text-size {
             font-size: 11pt !important;
+            line-height: 0.85 !important;
+        }
+
+        .etiqueta-maxi-text p.extra-small-text-size {
+            font-size: 10pt !important;
             line-height: 0.8 !important;
         }
 
@@ -214,7 +219,7 @@
 
         <!-- NUMERO DE PEDIDO -->
         <div class="numeroOrder">
-            <p>PEDIDOs # {{$product_order->order->id_external}}</p>
+            <p>PEDIDO # {{$product_order->order->id_external}}</p>
         </div>
     </div>
 </body>
