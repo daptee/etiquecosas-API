@@ -7,6 +7,7 @@
     <link rel="stylesheet" type="text/css"
         href="https://fonts.googleapis.com/css?family=Lora:400,700,400italic|Oswald:400,700" media="screen">
     <style type="text/css">
+
         @font-face {
             font-family: 'Oswald';
             font-style: normal;
@@ -23,24 +24,17 @@
             margin-right: 0;
             margin-bottom: 5px;
             vertical-align: top;
-            display: inline-block;
-            position: relative;
+            display: inline-table;
             background: #FFFFFF;
         }
 
         .texto2 {
-            width: 100%;
+            display: table-cell;
+            vertical-align: middle;
             text-align: center;
-            line-height: 12px;
             color: {{ $plantilla['colores'] }};
-            margin: 0;
-            padding: 0;
-            position: absolute;
-            top: 50%;
-            left: 0;
-            right: 0;
-            transform: translateY(-50%);
             font-family: 'Oswald';
+            padding: 0 5px;
         }
 
         .texto3 {
@@ -80,12 +74,12 @@
         @endphp
         @for ($i = 0; $i < $plantilla['label']; $i++)
             <div class="icon-cuadro">
-                <p class="texto2" style="font-size: {{ $fontsize }};">
-                    {!! formatName($product_order->name, 1) !!}</p>
+                <div class="texto2" style="font-size: {{ $fontsize }};">
+                    {!! formatName($product_order->name, 1) !!}</div>
             </div>
         @endfor
         <div class="numeroOrder">
-            <p class="texto3"> PEDIDO #
+            <p class="texto3"> PEDIDOs #
                 {{ $product_order->order->id_external }} </p>
         </div>
     </div>
