@@ -81,7 +81,7 @@ class PdfDirectoryController extends Controller
      * GET ALL PDF - Obtiene todos los PDFs de una fecha específica
      * Incluye PDFs de pedidos y de cintas (coser/planchar x24/x48)
      */
-    public function getPdfsByDate($fecha)
+    public function getPdfsByDate(Request $request, $fecha)
     {
         try {
             $user = Auth::user();
@@ -95,13 +95,23 @@ class PdfDirectoryController extends Controller
                 );
             }
 
+            // Filtro por user_id (solo para admin)
+            $filterUserId = $request->input('user_id');
+
             $userId = null;
-            if ($profileId == 2) {
+            $profileIdFiltro = null;
+
+            if ($profileId == 1 && $filterUserId) {
+                // Admin filtrando por usuario específico
+                $userId = $filterUserId;
+                $profileIdFiltro = 2; // Filtrar como diseñador
+            } elseif ($profileId == 2) {
                 // Si es diseñador, solo ver sus PDFs
                 $userId = $user->id;
+                $profileIdFiltro = 2;
             }
 
-            $resultado = PdfDirectoryService::getPdfsDeUnaFecha($fecha, $userId, $profileId);
+            $resultado = PdfDirectoryService::getPdfsDeUnaFecha($fecha, $userId, $profileIdFiltro);
 
             return $this->success(
                 $resultado,
