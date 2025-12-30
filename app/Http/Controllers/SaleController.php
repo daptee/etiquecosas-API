@@ -546,6 +546,9 @@ class SaleController extends Controller
             Mail::to($notifyEmail)->send(new OrderSummaryMailTo($sale));
 
             StockService::discountStock($sale);
+
+            // 🗑️ Eliminar todos los PDFs anteriores de este pedido antes de generar nuevos
+            EtiquetaService::limpiarPdfsDelPedido($sale->id, $sale->created_at);
             CintaCoserService::limpiarEtiquetasDeVenta($sale->id, $sale->created_at);
             CintaPlancharService::limpiarEtiquetasDeVenta($sale->id, $sale->created_at);
 
@@ -664,7 +667,7 @@ class SaleController extends Controller
                                     $sale->created_at
                                 );
 
-                                Log::info("PDF generado para {$nombreCompleto}, temática ID: {$tematicaId}");
+                                Log::info("PDF generado sin variante para {$nombreCompleto}, temática ID: {$tematicaId}");
                             } catch (\Throwable $e) {
                                 Log::error("Error generando PDF para {$nombreCompleto}, temática ID: {$tematicaId}", [
                                     'error' => $e->getMessage(),
@@ -865,7 +868,7 @@ class SaleController extends Controller
                                     $sale->created_at
                                 );
 
-                                Log::info("PDF generado para {$nombreCompleto}, temática ID: {$tematicaId}");
+                                Log::info("PDF generado sin variante para {$nombreCompleto}, temática ID: {$tematicaId}");
                             } catch (\Throwable $e) {
                                 Log::error("Error generando PDF para {$nombreCompleto}, temática ID: {$tematicaId}", [
                                     'error' => $e->getMessage(),
@@ -1348,11 +1351,9 @@ class SaleController extends Controller
                             }
                         }
                     }
+                } else {
+                    Log::info(message: "Sin informacion del pdf en el producto con id: $productOrder->product_id");
                 }
-
-                Log::info(message: "Sin informacion del pdf en el producto con id: $productOrder->product_id");
-
-                continue;
             }
 
             return $this->success(
