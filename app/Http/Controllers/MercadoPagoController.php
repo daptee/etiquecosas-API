@@ -348,16 +348,26 @@ class MercadoPagoController extends Controller
                         $variant = $productOrder->variant?->variant;
                         $productPdf = ProductPdf::where('product_id', $productOrder->product_id)->first();
 
+                        // === 2. Si hay un ProductPdf configurado ===
                         if ($productPdf) {
+                            Log::info($productPdf);
+
                             $tematicasGuardadas = $productPdf['data']['tematicas'] ?? [];
+                            Log::info("Temáticas guardadas en ProductPdf: " . count($tematicasGuardadas));
 
                             if ($variant) {
                                 $tematicaId = $variant['attributesvalues'][0]['id'] ?? null;
 
-                                if ($tematicaId) {
-                                    $tematicaCoincidente = collect($tematicasGuardadas)->firstWhere('id', $tematicaId);
+                                if (!$tematicaId) {
+                                    Log::warning("No se encontró temática para {$nombreCompleto}, product_order ID: {$productOrder->id}");
+                                    continue;
+                                }
 
-                                    if ($tematicaCoincidente) {
+                                // Buscar la temática correspondiente
+                                $tematicaCoincidente = collect($tematicasGuardadas)->firstWhere('id', $tematicaId);
+
+                                if ($tematicaCoincidente) {
+                                    try {
                                         EtiquetaService::generarEtiquetas(
                                             $sale->id,
                                             $tematicaId,
@@ -368,7 +378,15 @@ class MercadoPagoController extends Controller
                                             $customIcon,
                                             $sale->created_at
                                         );
-                                        Log::info("PDF generado para venta {$sale->id}");
+
+                                        Log::info("PDF generado para {$nombreCompleto}, temática ID: {$tematicaId}");
+                                        continue;
+                                    } catch (\Throwable $e) {
+                                        Log::error("Error generando PDF para {$nombreCompleto}, temática ID: {$tematicaId}", [
+                                            'error' => $e->getMessage(),
+                                            'product_order_id' => $productOrder->id,
+                                        ]);
+                                        continue;
                                     }
                                 }
                             } else {
@@ -376,7 +394,7 @@ class MercadoPagoController extends Controller
                                 foreach ($tematicasGuardadas as $tematica) {
                                     $tematicaId = $tematica['id'] ?? null;
 
-                                    if ($tematicaId) {
+                                    try {
                                         EtiquetaService::generarEtiquetas(
                                             $sale->id,
                                             $tematicaId,
@@ -387,10 +405,21 @@ class MercadoPagoController extends Controller
                                             $customIcon,
                                             $sale->created_at
                                         );
+
+                                        Log::info("PDF generado sin variante para {$nombreCompleto}, temática ID: {$tematicaId}");
+                                    } catch (\Throwable $e) {
+                                        Log::error("Error generando PDF para {$nombreCompleto}, temática ID: {$tematicaId}", [
+                                            'error' => $e->getMessage(),
+                                            'product_order_id' => $productOrder->id,
+                                        ]);
                                     }
                                 }
                             }
                         }
+
+                        Log::info(message: "Sin informacion del pdf en el producto con id: $productOrder->product_id");
+
+                        continue;
                     }
 
                     Log::info('PDFs generados exitosamente', ['sale_id' => $sale->id]);
