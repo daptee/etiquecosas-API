@@ -45,6 +45,8 @@ class SaleController extends Controller
         $perPage = $request->query('quantity');
         $page = $request->query('page', 1);
 
+        $user = Auth::user();
+
         $query = Sale::query()
             ->with([
                 'client',
@@ -60,6 +62,11 @@ class SaleController extends Controller
                 'parentSale'
             ])
             ->orderBy('created_at', 'desc');
+
+        // Si es diseñador (profile_id = 2), solo mostrar ventas asignadas a él
+        if ($user && $user->profile_id === 2) {
+            $query->where('user_id', $user->id);
+        }
 
         // 🔹 Buscador
         if ($request->has('search')) {
@@ -505,7 +512,7 @@ class SaleController extends Controller
             ]);
         }
 
-        if ($sale->sale_status_id == 4) { // estado "Entregado"
+        if ($sale->sale_status_id == 4 && $sale->shipping_method_id != 1) { // estado "Entregado"
             Mail::to($sale->client->email)->send(new OrderRetiredMail($sale));
             // Guardar historial
             SaleStatusHistory::create([
@@ -515,7 +522,7 @@ class SaleController extends Controller
             ]);
         }
 
-        if ($sale->sale_status_id == 7) { // estado "Retirado"
+        if ($sale->sale_status_id == 7 && $sale->shipping_method_id == 1) { // estado "Retirado"
             Mail::to($sale->client->email)->send(new OrderRetiredMail($sale));
             // Guardar historial
             SaleStatusHistory::create([
@@ -722,11 +729,11 @@ class SaleController extends Controller
             Mail::to($sale->client->email)->send(new OrderWithdrawMail($sale));
         }
 
-        if ($sale->sale_status_id == 4) { // estado "Retirado"
+        if ($sale->sale_status_id == 4 && $sale->shipping_method_id != 1) { // estado "Entregado"
             Mail::to($sale->client->email)->send(new OrderRetiredMail($sale));
         }
 
-        if ($sale->sale_status_id == 7) { // estado "Retirado"
+        if ($sale->sale_status_id == 7 && $sale->shipping_method_id == 1) { // estado "Retirado"
             Mail::to($sale->client->email)->send(new OrderRetiredMail($sale));
         }
 

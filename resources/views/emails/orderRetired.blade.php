@@ -43,7 +43,11 @@
                       <p style="font-family:'Montserrat', sans-serif; margin-bottom:0; font-size:20px; font-weight:600;">Hola</p>
                       <p style="font-family:'Montserrat', sans-serif; margin-top:0; font-size:24px; font-weight:700; color:#EBA4AB;">{{ $sale->client->name }} {{ $sale->client->lastname }}</p>
 
-                      <p style="margin-top:16px; font-size:18px; font-weight:600;">¡Tu pedido <span style="color:#EBA4AB;">#{{ $sale->id }}</span> ya fue retirado en nuestro local! 🎉</p>
+                      @if($sale->shipping_method_id == 1)
+                        <p style="margin-top:16px; font-size:18px; font-weight:600;">¡Tu pedido <span style="color:#EBA4AB;">#{{ $sale->id }}</span> ya fue retirado en nuestro local! 🎉</p>
+                      @else
+                        <p style="margin-top:16px; font-size:18px; font-weight:600;">¡Tu pedido <span style="color:#EBA4AB;">#{{ $sale->id }}</span> ya fue entregado! 🎉</p>
+                      @endif
 
                       <p style="margin-top:16px; font-size:14px; color:#444;">Esperamos que lo disfrutes mucho 💛</p>
 
