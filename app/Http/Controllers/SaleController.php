@@ -9,6 +9,7 @@ use App\Mail\OrderProductionsMail;
 use App\Mail\OrderSendMail;
 use App\Mail\OrderRetiredMail;
 use App\Mail\OrderWithdrawMail;
+use App\Mail\OrderAlmostReadyMail;
 use App\Mail\WelcomeMail;
 use App\Models\Channel;
 use App\Models\Client;
@@ -512,6 +513,16 @@ class SaleController extends Controller
             ]);
         }
 
+        if ($sale->sale_status_id == 6) { // estado "Pedido casi listo"
+            Mail::to($sale->client->email)->send(new OrderAlmostReadyMail($sale));
+            // Guardar historial
+            SaleStatusHistory::create([
+                'sale_id' => $sale->id,
+                'sale_status_id' => $request->sale_status_id,
+                'date' => Carbon::now(),
+            ]);
+        }
+
         if ($sale->sale_status_id == 4 && $sale->shipping_method_id != 1) { // estado "Entregado"
             Mail::to($sale->client->email)->send(new OrderRetiredMail($sale));
             // Guardar historial
@@ -730,6 +741,10 @@ class SaleController extends Controller
 
         if ($sale->sale_status_id == 3 && $sale->shipping_method_id == 1) { // retiro por local estado "Listo para retirar"
             Mail::to($sale->client->email)->send(new OrderWithdrawMail($sale));
+        }
+
+        if ($sale->sale_status_id == 6) { // estado "Pedido casi listo"
+            Mail::to($sale->client->email)->send(new OrderAlmostReadyMail($sale));
         }
 
         if ($sale->sale_status_id == 4 && $sale->shipping_method_id != 1) { // estado "Entregado"
