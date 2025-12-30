@@ -286,15 +286,17 @@ class CategoryController extends Controller
             }
         }
 
+        $assetUrl = config('app.asset_url');
+
         $formatted = [
             'id' => $category->id,
             'name' => $category->name,
-            'img' => $category->img ? asset($category->img) : null,
-            'icon' => $category->icon ? asset($category->icon) : null,
+            'img' => $category->img ? $assetUrl . '/' . $category->img : null,
+            'icon' => $category->icon ? $assetUrl . '/' . $category->icon : null,
             'color' => $category->color,
             'meta_data' => $metaData,
             'description' => $category->description,
-            'banner' => $category->banner ? asset($category->banner) : null,
+            'banner' => $category->banner ? $assetUrl . '/' . $category->banner : null,
             'status_id' => $category->status_id,
             'is_outstanding' => $category->is_outstanding,
             'is_wholesale' => $category->is_wholesale,

@@ -22,7 +22,7 @@ class OrderSendMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: "Tu pedido fue despachado - Pedido #{$this->sale->id}",
+            subject: "Tu pedido esta listo para ser enviado - Pedido #{$this->sale->id}",
         );
     }
 
