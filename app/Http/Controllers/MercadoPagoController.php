@@ -196,12 +196,16 @@ class MercadoPagoController extends Controller
             Log::info('Datos del pago obtenidos', [
                 'payment_id' => $paymentId,
                 'status' => $paymentData['status'] ?? null,
-                'external_reference' => $paymentData['external_reference'] ?? null
+                'external_reference' => $paymentData['external_reference'] ?? null,
+                'payment_type_id' => $paymentData['payment_type_id'] ?? null,
+                'payment_method_id' => $paymentData['payment_method_id'] ?? null
             ]);
 
             // Obtener el external_reference (ID de nuestra venta)
             $saleId = $paymentData['external_reference'] ?? null;
             $paymentStatus = $paymentData['status'] ?? null;
+            $paymentTypeId = $paymentData['payment_type_id'] ?? null;
+            $paymentMethodId = $paymentData['payment_method_id'] ?? null;
 
             if (!$saleId) {
                 Log::warning('Webhook sin external_reference (sale_id)');
@@ -226,6 +230,25 @@ class MercadoPagoController extends Controller
                     'status' => 'ignored',
                     'message' => 'Sale is not in pending payment status'
                 ], 200);
+            }
+
+            // ⚡ REGLA ESPECIAL: Aprobación automática para ventas mayoristas con pago en efectivo
+            // Si es venta mayorista (channel_id = 4) y el pago es en efectivo (rapipago o pagofacil)
+            // se aprueba automáticamente sin esperar confirmación del pago
+            $isWholesale = $sale->channel_id == 4;
+            $isCashPayment = $paymentTypeId === 'ticket' &&
+                            in_array($paymentMethodId, ['rapipago', 'pagofacil']);
+
+            if ($isWholesale && $isCashPayment && $paymentStatus === 'pending') {
+                Log::info('Auto-aprobando venta mayorista con pago en efectivo', [
+                    'sale_id' => $sale->id,
+                    'channel_id' => $sale->channel_id,
+                    'payment_method' => $paymentMethodId,
+                    'payment_type' => $paymentTypeId
+                ]);
+
+                // Forzar el estado a 'approved' para procesamiento automático
+                $paymentStatus = 'approved';
             }
 
             // Procesar según el estado del pago
