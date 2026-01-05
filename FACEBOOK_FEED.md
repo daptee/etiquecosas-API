@@ -9,7 +9,7 @@ Este script genera automáticamente un feed XML con todos los productos de la ti
 El feed XML está disponible públicamente en:
 
 ```
-https://etiquecosas.ar/api/feed-facebook.xml
+https://etiquecosas.ar/api/meta-catalog
 ```
 
 ## Configuración
@@ -148,14 +148,14 @@ protected function schedule(Schedule $schedule)
 2. Seleccionar tu catálogo o crear uno nuevo
 3. Ir a **Fuentes de datos** → **Agregar fuente de datos**
 4. Seleccionar **Feed de datos**
-5. Ingresar la URL: `https://etiquecosas.ar/api/feed-facebook.xml`
+5. Ingresar la URL: `https://etiquecosas.ar/api/meta-catalog`
 6. Configurar frecuencia de actualización (recomendado: cada 6-24 horas)
 
 ## Validación del Feed
 
 Para validar que el feed está funcionando correctamente:
 
-1. **Acceder manualmente**: Abrir `https://etiquecosas.ar/api/feed-facebook.xml` en el navegador
+1. **Acceder manualmente**: Abrir `https://etiquecosas.ar/api/meta-catalog` en el navegador
 2. **Verificar estructura XML**: Debe mostrar el XML correctamente formateado
 3. **Facebook Debugger**: Usar [Facebook Business Debug Tool](https://business.facebook.com/Commerce/diagnostics)
 
