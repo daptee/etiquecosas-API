@@ -50,7 +50,7 @@ Route::post('forgot-password', [LoginController::class, 'forgotPassword']);
 Route::post('create-admin-user', [UserController::class, 'store']);
 
 // Facebook/Meta Catalog Feed - Public route (outside v1 prefix for clean URL)
-Route::get('/feed-facebook.xml', [FacebookFeedController::class, 'generateFeed'])->name('facebook.feed');
+Route::get('/meta-catalog', [FacebookFeedController::class, 'generateFeed'])->name('meta.catalog');
 
 // Publica
 Route::prefix('v1')->group(function () {
