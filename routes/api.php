@@ -34,6 +34,8 @@ use App\Http\Controllers\BackupController;
 use App\Http\Controllers\PdfDirectoryController;
 use App\Http\Controllers\HomeContentController;
 use App\Http\Controllers\GeneralContentController;
+use App\Http\Controllers\InstructiveController;
+use App\Http\Controllers\CustomerServiceController;
 
 // cache
 Route::get('/clear-cache', [CacheController::class, 'clearCache'])->name('clearCache');
@@ -96,6 +98,12 @@ Route::prefix('v1')->group(function () {
 
     // General Content
     Route::get('general-content', [GeneralContentController::class, 'show']);
+
+    // Instructives (Web - only active)
+    Route::get('instructives', [InstructiveController::class, 'getActive']);
+
+    // Customer Services (Web - only active)
+    Route::get('customer-services', [CustomerServiceController::class, 'getActive']);
 });
 
 // User
@@ -297,9 +305,27 @@ Route::middleware('jwt.auth')->prefix('home-content')->group(function () {
 
 // General Content - Gestión de contenido general
 Route::middleware('jwt.auth')->prefix('general-content')->group(function () {
-    Route::get('/', [GeneralContentController::class, 'show']); 
+    Route::get('/', [GeneralContentController::class, 'show']);
     Route::post('/', [GeneralContentController::class, 'store']);     // Crear contenido (solo una vez)
     Route::put('/', [GeneralContentController::class, 'update']);     // Actualizar contenido
+});
+
+// Instructives - Gestión de instructivos (Admin)
+Route::middleware('jwt.auth')->prefix('instructives')->group(function () {
+    Route::get('/', [InstructiveController::class, 'index']);                  // GET ALL con filtros y paginación
+    Route::post('/', [InstructiveController::class, 'store']);                 // Crear instructive
+    Route::put('/{id}', [InstructiveController::class, 'update']);             // Actualizar instructive
+    Route::put('/{id}/change-status', [InstructiveController::class, 'changeStatus']);  // Cambiar estado
+    Route::delete('/{id}', [InstructiveController::class, 'delete']);          // Eliminar (soft delete)
+});
+
+// Customer Services (Admin)
+Route::middleware('jwt.auth')->prefix('customer-services')->group(function () {
+    Route::get('/', [CustomerServiceController::class, 'index']);                  // GET ALL con filtros y paginación
+    Route::post('/', [CustomerServiceController::class, 'store']);                 // Crear customer service
+    Route::post('/{id}', [CustomerServiceController::class, 'update']);            // Actualizar customer service (POST para files)
+    Route::put('/{id}/change-status', [CustomerServiceController::class, 'changeStatus']);  // Cambiar estado
+    Route::delete('/{id}', [CustomerServiceController::class, 'delete']);          // Eliminar (soft delete)
 });
 
 // Webhook de Mercado Pago (sin autenticación, MP envía notificaciones POST)
