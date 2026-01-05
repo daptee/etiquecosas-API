@@ -26,9 +26,12 @@ class InstructiveController extends Controller
 
         $query = Instructive::with('status');
 
-        // Filter by search (name)
+        // Filter by search (name or description)
         if ($search) {
-            $query->where('name', 'like', "%{$search}%");
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
         }
 
         // Filter by status_id
@@ -36,8 +39,8 @@ class InstructiveController extends Controller
             $query->where('status_id', $status);
         }
 
-        // Order by created_at desc
-        $query->orderBy('created_at', 'desc');
+        // Order by position asc, then created_at desc
+        $query->orderBy('position', 'asc')->orderBy('created_at', 'desc');
 
         // Without pagination
         if (!$perPage) {
@@ -70,7 +73,7 @@ class InstructiveController extends Controller
         $perPage = $request->query('quantity', 10);
         $page = $request->query('page', 1);
 
-        $query = Instructive::with('status')->active()->orderBy('created_at', 'desc');
+        $query = Instructive::with('status')->active()->orderBy('position', 'asc')->orderBy('created_at', 'desc');
 
         // Without pagination
         if (!$perPage) {
@@ -100,6 +103,7 @@ class InstructiveController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
             'link' => 'required|string',
             'status_id' => 'required|integer|exists:general_statuses,id',
         ]);
@@ -109,9 +113,15 @@ class InstructiveController extends Controller
             return $this->validationError($validator->errors());
         }
 
+        // Get next position
+        $maxPosition = Instructive::max('position');
+        $nextPosition = $maxPosition !== null ? $maxPosition + 1 : 0;
+
         $instructive = Instructive::create([
             'name' => $request->name,
+            'description' => $request->description,
             'link' => $request->link,
+            'position' => $nextPosition,
             'status_id' => $request->status_id,
         ]);
 
@@ -134,6 +144,7 @@ class InstructiveController extends Controller
 
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
             'link' => 'required|string',
             'status_id' => 'required|integer|exists:general_statuses,id',
         ]);
@@ -144,6 +155,7 @@ class InstructiveController extends Controller
         }
 
         $instructive->name = $request->name;
+        $instructive->description = $request->description;
         $instructive->link = $request->link;
         $instructive->status_id = $request->status_id;
         $instructive->save();
@@ -184,6 +196,33 @@ class InstructiveController extends Controller
             'success' => true,
             'message' => 'Estado del instructive actualizado',
             'data' => $instructive
+        ]);
+    }
+
+    /**
+     * Update positions for drag and drop
+     */
+    public function updatePositions(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'positions' => 'required|array|min:1',
+            'positions.*.id' => 'required|integer|exists:instructives,id',
+            'positions.*.position' => 'required|integer|min:0',
+        ]);
+
+        if ($validator->fails()) {
+            $this->logAudit(Auth::user(), 'Update Instructive Positions', $request->all(), $validator->errors());
+            return $this->validationError($validator->errors());
+        }
+
+        foreach ($request->positions as $item) {
+            Instructive::where('id', $item['id'])->update(['position' => $item['position']]);
+        }
+
+        $this->logAudit(Auth::user(), 'Update Instructive Positions', $request->all(), 'Success');
+        return response()->json([
+            'success' => true,
+            'message' => 'Posiciones actualizadas correctamente'
         ]);
     }
 

@@ -316,6 +316,7 @@ Route::middleware('jwt.auth')->prefix('instructives')->group(function () {
     Route::post('/', [InstructiveController::class, 'store']);                 // Crear instructive
     Route::put('/{id}', [InstructiveController::class, 'update']);             // Actualizar instructive
     Route::put('/{id}/change-status', [InstructiveController::class, 'changeStatus']);  // Cambiar estado
+    Route::put('/update-positions', [InstructiveController::class, 'updatePositions']); // Actualizar posiciones (drag & drop)
     Route::delete('/{id}', [InstructiveController::class, 'delete']);          // Eliminar (soft delete)
 });
 

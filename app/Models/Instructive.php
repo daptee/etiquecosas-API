@@ -14,11 +14,14 @@ class Instructive extends Model
 
     protected $fillable = [
         'name',
+        'description',
         'link',
+        'position',
         'status_id',
     ];
 
     protected $casts = [
+        'position' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
