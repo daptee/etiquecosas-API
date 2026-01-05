@@ -32,6 +32,11 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CouponController;
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\PdfDirectoryController;
+use App\Http\Controllers\HomeContentController;
+use App\Http\Controllers\GeneralContentController;
+use App\Http\Controllers\InstructiveController;
+use App\Http\Controllers\CustomerServiceController;
+use App\Http\Controllers\FacebookFeedController;
 
 // cache
 Route::get('/clear-cache', [CacheController::class, 'clearCache'])->name('clearCache');
@@ -43,6 +48,9 @@ Route::get('/notify-production', [BackupController::class, 'notifyProductionOrde
 Route::post('login', [LoginController::class, 'login']);
 Route::post('forgot-password', [LoginController::class, 'forgotPassword']);
 Route::post('create-admin-user', [UserController::class, 'store']);
+
+// Facebook/Meta Catalog Feed - Public route (outside v1 prefix for clean URL)
+Route::get('/feed-facebook.xml', [FacebookFeedController::class, 'generateFeed'])->name('facebook.feed');
 
 // Publica
 Route::prefix('v1')->group(function () {
@@ -88,6 +96,18 @@ Route::prefix('v1')->group(function () {
     // Shipping config
     Route::get('shipping-config', [ShippingConfigController::class, 'index']);
     Route::get('shipping-config/{id}', [ShippingConfigController::class, 'show']);
+
+    // Home Content
+    Route::get('home-content', [HomeContentController::class, 'show']);
+
+    // General Content
+    Route::get('general-content', [GeneralContentController::class, 'show']);
+
+    // Instructives (Web - only active)
+    Route::get('instructives', [InstructiveController::class, 'getActive']);
+
+    // Customer Services (Web - only active)
+    Route::get('customer-services', [CustomerServiceController::class, 'getActive']);
 });
 
 // User
@@ -278,6 +298,39 @@ Route::middleware('jwt.auth')->prefix('pdf-directories')->group(function () {
     Route::get('/{fecha}', [PdfDirectoryController::class, 'getPdfsByDate']);           // GET ALL PDF de una fecha
     Route::get('/{fecha}/download-zip', [PdfDirectoryController::class, 'downloadCarpetaZip']); // Descargar carpeta en ZIP
     Route::get('/{fecha}/download/{nombrePdf}', [PdfDirectoryController::class, 'downloadPdf']); // Descargar PDF individual
+});
+
+// Home Content - Gestión de contenido de la home
+Route::middleware('jwt.auth')->prefix('home-content')->group(function () {
+    Route::get('/', [HomeContentController::class, 'show']);       // Ver contenido
+    Route::post('/', [HomeContentController::class, 'store']);     // Crear contenido (solo una vez)
+    Route::post('/update', [HomeContentController::class, 'update']); // Actualizar contenido (POST porque procesa archivos)
+});
+
+// General Content - Gestión de contenido general
+Route::middleware('jwt.auth')->prefix('general-content')->group(function () {
+    Route::get('/', [GeneralContentController::class, 'show']);
+    Route::post('/', [GeneralContentController::class, 'store']);     // Crear contenido (solo una vez)
+    Route::put('/', [GeneralContentController::class, 'update']);     // Actualizar contenido
+});
+
+// Instructives - Gestión de instructivos (Admin)
+Route::middleware('jwt.auth')->prefix('instructives')->group(function () {
+    Route::get('/', [InstructiveController::class, 'index']);                  // GET ALL con filtros y paginación
+    Route::post('/', [InstructiveController::class, 'store']);                 // Crear instructive
+    Route::put('/update-positions', [InstructiveController::class, 'updatePositions']); // Actualizar posiciones (drag & drop)
+    Route::put('/{id}', [InstructiveController::class, 'update']);             // Actualizar instructive
+    Route::put('/{id}/change-status', [InstructiveController::class, 'changeStatus']);  // Cambiar estado
+    Route::delete('/{id}', [InstructiveController::class, 'delete']);          // Eliminar (soft delete)
+});
+
+// Customer Services (Admin)
+Route::middleware('jwt.auth')->prefix('customer-services')->group(function () {
+    Route::get('/', [CustomerServiceController::class, 'index']);                  // GET ALL con filtros y paginación
+    Route::post('/', [CustomerServiceController::class, 'store']);                 // Crear customer service
+    Route::post('/{id}', [CustomerServiceController::class, 'update']);            // Actualizar customer service (POST para files)
+    Route::put('/{id}/change-status', [CustomerServiceController::class, 'changeStatus']);  // Cambiar estado
+    Route::delete('/{id}', [CustomerServiceController::class, 'delete']);          // Eliminar (soft delete)
 });
 
 // Webhook de Mercado Pago (sin autenticación, MP envía notificaciones POST)
