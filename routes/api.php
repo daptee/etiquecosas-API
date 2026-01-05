@@ -36,6 +36,7 @@ use App\Http\Controllers\HomeContentController;
 use App\Http\Controllers\GeneralContentController;
 use App\Http\Controllers\InstructiveController;
 use App\Http\Controllers\CustomerServiceController;
+use App\Http\Controllers\FacebookFeedController;
 
 // cache
 Route::get('/clear-cache', [CacheController::class, 'clearCache'])->name('clearCache');
@@ -47,6 +48,9 @@ Route::get('/notify-production', [BackupController::class, 'notifyProductionOrde
 Route::post('login', [LoginController::class, 'login']);
 Route::post('forgot-password', [LoginController::class, 'forgotPassword']);
 Route::post('create-admin-user', [UserController::class, 'store']);
+
+// Facebook/Meta Catalog Feed - Public route (outside v1 prefix for clean URL)
+Route::get('/feed-facebook.xml', [FacebookFeedController::class, 'generateFeed'])->name('facebook.feed');
 
 // Publica
 Route::prefix('v1')->group(function () {
