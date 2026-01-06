@@ -240,7 +240,7 @@
     color: #FFF;
     display: inline-block;
     margin: 0 !important;
-    padding: 3px 0 0px 0 !important;
+    padding: 0 !important;
     white-space: nowrap;
     /* border: 1px solid black; */
 }
