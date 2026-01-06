@@ -58,14 +58,15 @@
 
         .texto1 {
             text-align: center;
-            line-height: 13px;
+            line-height: 1;
             color: white;
             margin: 0;
             position: absolute;
             top: 50%;
             left: 50%;
             margin-right: -50%;
-            transform: translate(-50%, -55%)
+            transform: translate(-50%, -55%);
+            white-space: nowrap;
         }
 
         .cuadroRenglon {

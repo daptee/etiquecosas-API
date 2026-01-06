@@ -69,14 +69,15 @@
 
         .texto1 {
             text-align: center;
-            line-height: 0.8;
+            line-height: 1;
             color: white;
             margin: 0;
             position: absolute;
             top: 50%;
             left: 50%;
             margin-right: -50%;
-            transform: translate(-50%, -50%)
+            transform: translate(-50%, -50%);
+            white-space: nowrap;
         }
 
         /* NUMERO DE PEDIDO VERTICAL ABAJO A LA IZQUIERDA DE LA PANTALLA */
