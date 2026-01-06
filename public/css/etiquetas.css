@@ -72,7 +72,7 @@
     line-height: 0.75;
     color: #FFF;
     margin: 0 auto !important;
-    padding: 0 !important;
+    padding: 3px 0 0 0 !important;
 }
 
 /* ETIQUETAS VERTICALES */
@@ -121,7 +121,7 @@
     text-align: center;
     line-height: 0.8;
     margin: 0 !important;
-    padding: 0 !important;
+    padding: 3px 0 0 0 !important;
 }
 
 
@@ -186,7 +186,7 @@
     /* line-height: 20pt; */
     color: #FFF;
     margin: 0 auto !important;
-    padding: 0 !important;
+    padding: 3px 0 0 0 !important;
 }
 
 /* ETIQUETAS SUPER MINI */
