@@ -236,11 +236,12 @@
     font-family: 'Oswald';
     font-size: 9pt;
     text-align: center;
-    line-height: 0.7;
+    line-height: 1;
     color: #FFF;
     display: inline-block;
     margin: 0 !important;
     padding: 3px 0 0px 0 !important;
+    white-space: nowrap;
     /* border: 1px solid black; */
 }
 
@@ -277,6 +278,7 @@
 
 .etiqueta-super-mini-content-container p.small-text-size {
     font-size: 9pt !important;
+    line-height: 1 !important;
 }
 
 .extra-small-text-size {
@@ -301,7 +303,7 @@
 
 .etiqueta-super-mini-content-container p.extra-small-text-size {
     font-size: 8pt !important;
-    line-height: 0.7 !important;
+    line-height: 1 !important;
 }
 
 .texto-negro {
