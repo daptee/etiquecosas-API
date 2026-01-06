@@ -36,7 +36,6 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    height: 1.2cm;
     width: auto;
     margin: 0 !important;
     padding: 0 !important;
@@ -73,12 +72,7 @@
     line-height: 0.75;
     color: #FFF;
     margin: 0 auto !important;
-    padding: 2px 0 0px 0 !important;
-}
-
-.etiqueta-maxi-content-container p.small-text-size,
-.etiqueta-maxi-content-container p.extra-small-text-size {
-    padding: 13px 0 10px 0 !important;
+    padding: 0 !important;
 }
 
 /* ETIQUETAS VERTICALES */
@@ -127,12 +121,7 @@
     text-align: center;
     line-height: 0.8;
     margin: 0 !important;
-    padding: 2px 0 0px 0 !important;
-}
-
-.etiqueta-vertical-content-container p.small-text-size,
-.etiqueta-vertical-content-container p.extra-small-text-size {
-    padding: 13px 0 10px 0 !important;
+    padding: 0 !important;
 }
 
 
@@ -160,7 +149,6 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    height: 1.8cm;
     width: auto;
     margin: 0 !important;
     padding: 0 !important;
@@ -198,12 +186,7 @@
     /* line-height: 20pt; */
     color: #FFF;
     margin: 0 auto !important;
-    padding: 2px 0 0px 0 !important;
-}
-
-.etiqueta-super-maxi-content-container p.small-text-size,
-.etiqueta-super-maxi-content-container p.extra-small-text-size {
-    padding: 15px 0 12px 0 !important;
+    padding: 0 !important;
 }
 
 /* ETIQUETAS SUPER MINI */
@@ -304,16 +287,10 @@
 .etiqueta-maxi-content-container p.extra-small-text-size {
     font-size: 11pt !important;
     line-height: 0.7 !important;
-    padding-bottom: 12px !important;
 }
 
 .etiqueta-super-maxi-content-container p.extra-small-text-size {
     font-size: 14pt !important;
-    padding-bottom: 12px !important;
-}
-
-.etiqueta-vertical-content-container p.extra-small-text-size  {
-    padding-bottom: 12px !important;
 }
 
 .etiqueta-super-mini-content-container p.extra-small-text-size {
