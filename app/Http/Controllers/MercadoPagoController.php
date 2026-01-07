@@ -5,10 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\Sale;
 use App\Models\SaleProduct;
 use App\Models\SaleStatusHistory;
+use App\Models\ProductPdf;
+use App\Services\CintaCoserService;
+use App\Services\CintaPlancharService;
+use App\Services\EtiquetaService;
 use App\Services\StockService;
 use App\Mail\OrderSummaryMail;
 use App\Mail\OrderSummaryMailTo;
-use App\Jobs\GenerateSalePdfsJob;
 use App\Traits\ApiResponse;
 use App\Traits\Auditable;
 use App\Traits\FindObject;
@@ -327,15 +330,23 @@ class MercadoPagoController extends Controller
                     ]);
                 }
 
-                // Generar PDFs de etiquetas de forma asíncrona (no bloquea el webhook)
-                try {
-                    GenerateSalePdfsJob::dispatch($sale->id);
-                    Log::info('Job de generación de PDFs encolado', ['sale_id' => $sale->id]);
-                } catch (\Exception $e) {
-                    Log::error('Error encolando job de PDFs', [
-                        'sale_id' => $sale->id,
-                        'error' => $e->getMessage()
-                    ]);
+                // Generar PDFs en segundo plano usando fastcgi_finish_request
+                // Esto permite responder inmediatamente a MercadoPago y luego generar los PDFs
+                if (function_exists('fastcgi_finish_request')) {
+                    // Registrar el callback para ejecutar después de enviar la respuesta
+                    register_shutdown_function(function() use ($sale) {
+                        $this->generateSalePdfs($sale);
+                    });
+                } else {
+                    // Fallback: ejecutar en background con exec (Linux/Unix)
+                    $basePath = base_path();
+                    $command = sprintf(
+                        'cd %s && php artisan tinker --execute="App\Jobs\GenerateSalePdfsJob::dispatchSync(%d);" > /dev/null 2>&1 &',
+                        escapeshellarg($basePath),
+                        $sale->id
+                    );
+                    exec($command);
+                    Log::info('PDFs programados para generarse en background', ['sale_id' => $sale->id]);
                 }
 
                 $this->logAudit(null, 'Webhook MercadoPago - Payment Approved', $request->all(), $sale);
@@ -392,6 +403,152 @@ class MercadoPagoController extends Controller
                 'error' => 'Internal server error',
                 'message' => $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * Genera los PDFs de una venta de forma síncrona
+     * Este método se ejecuta después de que el webhook responda a MercadoPago
+     */
+    private function generateSalePdfs(Sale $sale)
+    {
+        try {
+            Log::info('Iniciando generación de PDFs', ['sale_id' => $sale->id]);
+
+            $sale->load(['products.product', 'products.variant']);
+
+            // Limpiar PDFs previos
+            EtiquetaService::limpiarPdfsDelPedido($sale->id, $sale->created_at);
+            CintaCoserService::limpiarEtiquetasDeVenta($sale->id, $sale->created_at);
+            CintaPlancharService::limpiarEtiquetasDeVenta($sale->id, $sale->created_at);
+
+            foreach ($sale->products as $productOrder) {
+                $customData = json_decode($productOrder->customization_data, true);
+
+                $form = $customData['form'] ?? [];
+                $nombreCompleto = trim(($form['name'] ?? '') . ' ' . ($form['lastName'] ?? ''));
+
+                $customColor = $customData['color']['color_code'] ?? null;
+                $customIcon = $customData['icon']['icon'] ?? null;
+
+                if ($customIcon && $customData['icon']['name'] == 'Sin dibujo') {
+                    $customIcon = null;
+                }
+
+                // === CINTAS PARA COSER (Producto 1291) ===
+                if (CintaCoserService::esProductoCoser($productOrder->product_id)) {
+                    try {
+                        CintaCoserService::agregarEtiquetaAlPdf(
+                            $sale->id,
+                            $productOrder,
+                            $nombreCompleto,
+                            $customColor,
+                            $customIcon,
+                            $sale->created_at
+                        );
+                        Log::info("Etiqueta de cinta para coser agregada para {$nombreCompleto}");
+                    } catch (\Throwable $e) {
+                        Log::error("Error agregando etiqueta de cinta para coser", [
+                            'error' => $e->getMessage(),
+                            'product_order_id' => $productOrder->id,
+                        ]);
+                    }
+                }
+
+                // === CINTAS PARA PLANCHAR (Producto 1247) ===
+                if (CintaPlancharService::esProductoPlanchar($productOrder->product_id)) {
+                    try {
+                        CintaPlancharService::agregarEtiquetaAlPdf(
+                            $sale->id,
+                            $productOrder,
+                            $nombreCompleto,
+                            $customColor,
+                            $customIcon,
+                            $sale->created_at
+                        );
+                        Log::info("Etiqueta de cinta para planchar agregada para {$nombreCompleto}");
+                    } catch (\Throwable $e) {
+                        Log::error("Error agregando etiqueta de cinta para planchar", [
+                            'error' => $e->getMessage(),
+                            'product_order_id' => $productOrder->id,
+                        ]);
+                    }
+                }
+
+                $variant = $productOrder->variant?->variant;
+                $productPdf = ProductPdf::where('product_id', $productOrder->product_id)->first();
+
+                // === Si hay un ProductPdf configurado ===
+                if ($productPdf) {
+                    $tematicasGuardadas = $productPdf['data']['tematicas'] ?? [];
+
+                    if ($variant) {
+                        $tematicaId = $variant['attributesvalues'][0]['id'] ?? null;
+
+                        if (!$tematicaId) {
+                            Log::warning("No se encontró temática para {$nombreCompleto}, product_order ID: {$productOrder->id}");
+                            continue;
+                        }
+
+                        $tematicaCoincidente = collect($tematicasGuardadas)->firstWhere('id', $tematicaId);
+
+                        if ($tematicaCoincidente) {
+                            try {
+                                EtiquetaService::generarEtiquetas(
+                                    $sale->id,
+                                    $tematicaId,
+                                    [$nombreCompleto],
+                                    $productOrder,
+                                    $tematicaCoincidente,
+                                    $customColor,
+                                    $customIcon,
+                                    $sale->created_at
+                                );
+
+                                Log::info("PDF generado para {$nombreCompleto}, temática ID: {$tematicaId}");
+                            } catch (\Throwable $e) {
+                                Log::error("Error generando PDF para {$nombreCompleto}, temática ID: {$tematicaId}", [
+                                    'error' => $e->getMessage(),
+                                    'product_order_id' => $productOrder->id,
+                                ]);
+                            }
+                        }
+                    } else {
+                        // Sin variant: generar PDF por cada temática guardada
+                        foreach ($tematicasGuardadas as $tematica) {
+                            $tematicaId = $tematica['id'] ?? null;
+
+                            try {
+                                EtiquetaService::generarEtiquetas(
+                                    $sale->id,
+                                    $tematicaId,
+                                    [$nombreCompleto],
+                                    $productOrder,
+                                    $tematica,
+                                    $customColor,
+                                    $customIcon,
+                                    $sale->created_at
+                                );
+
+                                Log::info("PDF generado sin variante para {$nombreCompleto}, temática ID: {$tematicaId}");
+                            } catch (\Throwable $e) {
+                                Log::error("Error generando PDF para {$nombreCompleto}, temática ID: {$tematicaId}", [
+                                    'error' => $e->getMessage(),
+                                    'product_order_id' => $productOrder->id,
+                                ]);
+                            }
+                        }
+                    }
+                }
+            }
+
+            Log::info('PDFs generados exitosamente', ['sale_id' => $sale->id]);
+        } catch (\Exception $e) {
+            Log::error('Error generando PDFs', [
+                'sale_id' => $sale->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
         }
     }
 }
