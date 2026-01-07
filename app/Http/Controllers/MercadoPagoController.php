@@ -5,13 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Sale;
 use App\Models\SaleProduct;
 use App\Models\SaleStatusHistory;
-use App\Models\ProductPdf;
-use App\Services\CintaCoserService;
-use App\Services\CintaPlancharService;
-use App\Services\EtiquetaService;
 use App\Services\StockService;
 use App\Mail\OrderSummaryMail;
 use App\Mail\OrderSummaryMailTo;
+use App\Jobs\GenerateSalePdfsJob;
 use App\Traits\ApiResponse;
 use App\Traits\Auditable;
 use App\Traits\FindObject;
@@ -220,22 +217,42 @@ class MercadoPagoController extends Controller
                 return response()->json(['error' => 'Sale not found'], 404);
             }
 
-            // IMPORTANTE: Solo procesar si la venta está en estado "Pendiente de pago" (8)
-            if ($sale->sale_status_id != 8) {
-                Log::info('Venta ignorada: no está en estado Pendiente de pago', [
+            // IMPORTANTE: Validar que el estado de la venta permita procesar el webhook
+            // Estados válidos:
+            // - 8: Pendiente de pago (permite procesar approved y rejected)
+            // - 9: Pago rechazado (permite procesar approved para reintentos exitosos)
+            $validStatuses = [8, 9]; // Pendiente de pago, Pago rechazado
+
+            if (!in_array($sale->sale_status_id, $validStatuses)) {
+                Log::info('Venta ignorada: no está en estado válido para procesar webhook', [
                     'sale_id' => $sale->id,
-                    'current_status' => $sale->sale_status_id
+                    'current_status' => $sale->sale_status_id,
+                    'payment_status' => $paymentStatus
                 ]);
                 return response()->json([
                     'status' => 'ignored',
-                    'message' => 'Sale is not in pending payment status'
+                    'message' => 'Sale is not in a valid status for payment processing'
+                ], 200);
+            }
+
+            // Si la venta está en "Pago rechazado" (9), solo procesar si el nuevo estado es "approved"
+            // Esto evita cambiar de "Pago rechazado" a "Pago rechazado" en reintentos fallidos
+            if ($sale->sale_status_id == 9 && $paymentStatus !== 'approved') {
+                Log::info('Venta en estado rechazado: solo se procesan pagos aprobados', [
+                    'sale_id' => $sale->id,
+                    'current_status' => $sale->sale_status_id,
+                    'payment_status' => $paymentStatus
+                ]);
+                return response()->json([
+                    'status' => 'ignored',
+                    'message' => 'Sale already rejected, only approved payments are processed'
                 ], 200);
             }
 
             // ⚡ REGLA ESPECIAL: Aprobación automática para ventas mayoristas con pago en efectivo
             // Si es venta mayorista (channel_id = 4) y el pago es en efectivo (rapipago o pagofacil)
             // se aprueba automáticamente sin esperar confirmación del pago
-            $isWholesale = $sale->channel_id == 4;
+            $isWholesale = $sale->channel_id === 4;
             $isCashPayment = $paymentTypeId === 'ticket' &&
                             in_array($paymentMethodId, ['rapipago', 'pagofacil']);
 
@@ -310,144 +327,12 @@ class MercadoPagoController extends Controller
                     ]);
                 }
 
-                // Generar PDFs de etiquetas
+                // Generar PDFs de etiquetas de forma asíncrona (no bloquea el webhook)
                 try {
-                    EtiquetaService::limpiarPdfsDelPedido($sale->id, $sale->created_at);
-                    CintaCoserService::limpiarEtiquetasDeVenta($sale->id, $sale->created_at);
-                    CintaPlancharService::limpiarEtiquetasDeVenta($sale->id, $sale->created_at);
-                    foreach ($sale->products as $productOrder) {
-                        $customData = json_decode($productOrder->customization_data, true);
-
-                        $form = $customData['form'] ?? [];
-                        $nombreCompleto = trim(($form['name'] ?? '') . ' ' . ($form['lastName'] ?? ''));
-
-                        $customColor = $customData['color']['color_code'] ?? null;
-                        $customIcon = $customData['icon']['icon'] ?? null;
-
-                        if ($customIcon && $customData['icon']['name'] == 'Sin dibujo') {
-                            $customIcon = null;
-                        }
-
-                        // === CINTAS PARA COSER (Producto 1291) ===
-                        if (CintaCoserService::esProductoCoser($productOrder->product_id)) {
-                            try {
-                                CintaCoserService::agregarEtiquetaAlPdf(
-                                    $sale->id,
-                                    $productOrder,
-                                    $nombreCompleto,
-                                    $customColor,
-                                    $customIcon,
-                                    $sale->created_at
-                                );
-                                Log::info("Etiqueta de cinta para coser agregada para {$nombreCompleto}");
-                            } catch (\Throwable $e) {
-                                Log::error("Error agregando etiqueta de cinta para coser", [
-                                    'error' => $e->getMessage(),
-                                    'product_order_id' => $productOrder->id,
-                                ]);
-                            }
-                        }
-
-                        // === CINTAS PARA PLANCHAR (Producto 1247) ===
-                        if (CintaPlancharService::esProductoPlanchar($productOrder->product_id)) {
-                            try {
-                                CintaPlancharService::agregarEtiquetaAlPdf(
-                                    $sale->id,
-                                    $productOrder,
-                                    $nombreCompleto,
-                                    $customColor,
-                                    $customIcon,
-                                    $sale->created_at
-                                );
-                                Log::info("Etiqueta de cinta para planchar agregada para {$nombreCompleto}");
-                            } catch (\Throwable $e) {
-                                Log::error("Error agregando etiqueta de cinta para planchar", [
-                                    'error' => $e->getMessage(),
-                                    'product_order_id' => $productOrder->id,
-                                ]);
-                            }
-                        }
-
-                        $variant = $productOrder->variant?->variant;
-                        $productPdf = ProductPdf::where('product_id', $productOrder->product_id)->first();
-
-                        // === 2. Si hay un ProductPdf configurado ===
-                        if ($productPdf) {
-                            Log::info($productPdf);
-
-                            $tematicasGuardadas = $productPdf['data']['tematicas'] ?? [];
-                            Log::info("Temáticas guardadas en ProductPdf: " . count($tematicasGuardadas));
-
-                            if ($variant) {
-                                $tematicaId = $variant['attributesvalues'][0]['id'] ?? null;
-
-                                if (!$tematicaId) {
-                                    Log::warning("No se encontró temática para {$nombreCompleto}, product_order ID: {$productOrder->id}");
-                                    continue;
-                                }
-
-                                // Buscar la temática correspondiente
-                                $tematicaCoincidente = collect($tematicasGuardadas)->firstWhere('id', $tematicaId);
-
-                                if ($tematicaCoincidente) {
-                                    try {
-                                        EtiquetaService::generarEtiquetas(
-                                            $sale->id,
-                                            $tematicaId,
-                                            [$nombreCompleto],
-                                            $productOrder,
-                                            $tematicaCoincidente,
-                                            $customColor,
-                                            $customIcon,
-                                            $sale->created_at
-                                        );
-
-                                        Log::info("PDF generado para {$nombreCompleto}, temática ID: {$tematicaId}");
-                                        continue;
-                                    } catch (\Throwable $e) {
-                                        Log::error("Error generando PDF para {$nombreCompleto}, temática ID: {$tematicaId}", [
-                                            'error' => $e->getMessage(),
-                                            'product_order_id' => $productOrder->id,
-                                        ]);
-                                        continue;
-                                    }
-                                }
-                            } else {
-                                // Sin variant: generar PDF por cada temática guardada
-                                foreach ($tematicasGuardadas as $tematica) {
-                                    $tematicaId = $tematica['id'] ?? null;
-
-                                    try {
-                                        EtiquetaService::generarEtiquetas(
-                                            $sale->id,
-                                            $tematicaId,
-                                            [$nombreCompleto],
-                                            $productOrder,
-                                            $tematica,
-                                            $customColor,
-                                            $customIcon,
-                                            $sale->created_at
-                                        );
-
-                                        Log::info("PDF generado sin variante para {$nombreCompleto}, temática ID: {$tematicaId}");
-                                    } catch (\Throwable $e) {
-                                        Log::error("Error generando PDF para {$nombreCompleto}, temática ID: {$tematicaId}", [
-                                            'error' => $e->getMessage(),
-                                            'product_order_id' => $productOrder->id,
-                                        ]);
-                                    }
-                                }
-                            }
-                        }
-
-                        Log::info(message: "Sin informacion del pdf en el producto con id: $productOrder->product_id");
-
-                        continue;
-                    }
-
-                    Log::info('PDFs generados exitosamente', ['sale_id' => $sale->id]);
+                    GenerateSalePdfsJob::dispatch($sale->id);
+                    Log::info('Job de generación de PDFs encolado', ['sale_id' => $sale->id]);
                 } catch (\Exception $e) {
-                    Log::error('Error generando PDFs', [
+                    Log::error('Error encolando job de PDFs', [
                         'sale_id' => $sale->id,
                         'error' => $e->getMessage()
                     ]);
