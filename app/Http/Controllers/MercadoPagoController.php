@@ -360,24 +360,28 @@ class MercadoPagoController extends Controller
                     ]);
                 }
 
-                // Generar PDFs en segundo plano usando fastcgi_finish_request
-                // Esto permite responder inmediatamente a MercadoPago y luego generar los PDFs
-                if (function_exists('fastcgi_finish_request')) {
-                    // Registrar el callback para ejecutar después de enviar la respuesta
-                    register_shutdown_function(function() use ($sale) {
+                // Generar PDFs después de responder al webhook
+                // Usamos register_shutdown_function que se ejecuta después de enviar la respuesta
+                register_shutdown_function(function() use ($sale) {
+                    try {
+                        Log::info('Shutdown function: iniciando generación de PDFs', ['sale_id' => $sale->id]);
+
+                        // Si fastcgi_finish_request existe, enviar respuesta inmediatamente
+                        if (function_exists('fastcgi_finish_request')) {
+                            fastcgi_finish_request();
+                            Log::info('Respuesta enviada con fastcgi_finish_request', ['sale_id' => $sale->id]);
+                        }
+
+                        // Generar los PDFs
                         $this->generateSalePdfs($sale);
-                    });
-                } else {
-                    // Fallback: ejecutar en background con exec (Linux/Unix)
-                    $basePath = base_path();
-                    $command = sprintf(
-                        'cd %s && php artisan tinker --execute="App\Jobs\GenerateSalePdfsJob::dispatchSync(%d);" > /dev/null 2>&1 &',
-                        escapeshellarg($basePath),
-                        $sale->id
-                    );
-                    exec($command);
-                    Log::info('PDFs programados para generarse en background', ['sale_id' => $sale->id]);
-                }
+                    } catch (\Exception $e) {
+                        Log::error('Error en shutdown function', [
+                            'sale_id' => $sale->id,
+                            'error' => $e->getMessage(),
+                            'trace' => $e->getTraceAsString()
+                        ]);
+                    }
+                });
 
                 $this->logAudit(null, 'Webhook MercadoPago - Payment Approved', $request->all(), $sale);
 
