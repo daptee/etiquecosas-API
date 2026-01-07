@@ -309,13 +309,43 @@ class MercadoPagoController extends Controller
                 // Enviar emails de confirmación
                 try {
                     $notifyEmail = env('MAIL_NOTIFICATION_TO');
-                    Mail::to($sale->client->email)->send(new OrderSummaryMail($sale));
-                    Mail::to($notifyEmail)->send(new OrderSummaryMailTo($sale));
-                    Log::info('Emails de confirmación enviados', ['sale_id' => $sale->id]);
+                    $clientEmail = $sale->client->email ?? null;
+
+                    Log::info('Preparando envío de emails', [
+                        'sale_id' => $sale->id,
+                        'client_email' => $clientEmail,
+                        'notify_email' => $notifyEmail
+                    ]);
+
+                    if (!$clientEmail) {
+                        Log::warning('Cliente sin email, no se puede enviar OrderSummaryMail', [
+                            'sale_id' => $sale->id,
+                            'client_id' => $sale->client_id
+                        ]);
+                    } else {
+                        Mail::to($clientEmail)->send(new OrderSummaryMail($sale));
+                        Log::info('Email OrderSummaryMail enviado al cliente', [
+                            'sale_id' => $sale->id,
+                            'email' => $clientEmail
+                        ]);
+                    }
+
+                    if (!$notifyEmail) {
+                        Log::warning('MAIL_NOTIFICATION_TO no configurado en .env', ['sale_id' => $sale->id]);
+                    } else {
+                        Mail::to($notifyEmail)->send(new OrderSummaryMailTo($sale));
+                        Log::info('Email OrderSummaryMailTo enviado a administrador', [
+                            'sale_id' => $sale->id,
+                            'email' => $notifyEmail
+                        ]);
+                    }
+
+                    Log::info('Proceso de envío de emails completado', ['sale_id' => $sale->id]);
                 } catch (\Exception $e) {
                     Log::error('Error enviando emails', [
                         'sale_id' => $sale->id,
-                        'error' => $e->getMessage()
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString()
                     ]);
                 }
 
