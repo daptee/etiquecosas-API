@@ -258,6 +258,7 @@
 
 .etiqueta-super-mini-content-container p.normal-text-size {
     font-size: 9pt !important;
+    line-height: 1 !important;
 }
 
 .small-text-size {
