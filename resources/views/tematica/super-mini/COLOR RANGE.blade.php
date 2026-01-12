@@ -42,8 +42,8 @@
     <div class="hoja">
 
         {{-- SUPER MINI --}}
-        <div style="height: 8px; width: 100%; padding-left: 0.11cm;"></div>
-        <table class="etiquetas-super-mini-container">
+        <div style="height: 8px; width: 100%"></div>
+        <table class="etiquetas-super-mini-container" style="margin-left: 0.11cm !important;">
             @for ($i = 0; $i < $plantilla['filas']; $i++)
                 <tr>
                     <td class="etiqueta-super-mini" style="background: {{ $plantilla['colores'][0] }}">
