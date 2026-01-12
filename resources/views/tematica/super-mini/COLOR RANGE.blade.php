@@ -42,7 +42,7 @@
     <div class="hoja">
 
         {{-- SUPER MINI --}}
-        <div style="height: 8px; width: 100%;"></div>
+        <div style="height: 8px; width: 100%; padding-left: 0.11cm;"></div>
         <table class="etiquetas-super-mini-container">
             @for ($i = 0; $i < $plantilla['filas']; $i++)
                 <tr>
