@@ -50,7 +50,7 @@
                         <table class="etiqueta-super-mini-content-container">
                             <tr>
                                 <td>
-                                    <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                                    <p class="{{ $plantilla['fontClass'] }}" style="color: {{ $plantilla['colorText'] }} !important;" >{{mb_strtoupper($product_order->name)}}</p>
                                 </td>
                             </tr>
                         </table>
@@ -60,7 +60,7 @@
                         <table class="etiqueta-super-mini-content-container">
                             <tr>
                                 <td>
-                                    <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                                    <p class="{{ $plantilla['fontClass'] }}" style="color: {{ $plantilla['colorText'] }} !important;" >{{mb_strtoupper($product_order->name)}}</p>
                                 </td>
                             </tr>
                         </table>
@@ -70,7 +70,7 @@
                         <table class="etiqueta-super-mini-content-container">
                             <tr>
                                 <td>
-                                    <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                                    <p class="{{ $plantilla['fontClass'] }}" style="color: {{ $plantilla['colorText'] }} !important;" >{{mb_strtoupper($product_order->name)}}</p>
                                 </td>
                             </tr>
                         </table>
@@ -80,7 +80,7 @@
                         <table class="etiqueta-super-mini-content-container">
                             <tr>
                                 <td>
-                                    <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                                    <p class="{{ $plantilla['fontClass'] }}" style="color: {{ $plantilla['colorText'] }} !important;" >{{mb_strtoupper($product_order->name)}}</p>
                                 </td>
                             </tr>
                         </table>
@@ -90,7 +90,7 @@
                         <table class="etiqueta-super-mini-content-container">
                             <tr>
                                 <td>
-                                    <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                                    <p class="{{ $plantilla['fontClass'] }}" style="color: {{ $plantilla['colorText'] }} !important;" >{{mb_strtoupper($product_order->name)}}</p>
                                 </td>
                             </tr>
                         </table>
@@ -100,7 +100,7 @@
                         <table class="etiqueta-super-mini-content-container">
                             <tr>
                                 <td>
-                                    <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                                    <p class="{{ $plantilla['fontClass'] }}" style="color: {{ $plantilla['colorText'] }} !important;" >{{mb_strtoupper($product_order->name)}}</p>
                                 </td>
                             </tr>
                         </table>
