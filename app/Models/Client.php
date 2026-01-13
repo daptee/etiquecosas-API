@@ -33,6 +33,14 @@ class Client extends Authenticatable implements JWTSubject
         'remember_token', // si lo usás
     ];
 
+    /**
+     * Accessor: convierte el contenido de lastname a formato capitalizado (Primera letra mayúscula)
+     */
+    public function getLastnameAttribute($value)
+    {
+        return ucwords(strtolower($value));
+    }
+
     public function clientType()
     {
         return $this->belongsTo(ClientType::class, 'client_type_id');

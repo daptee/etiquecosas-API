@@ -35,3 +35,7 @@ CREATE INDEX idx_created_at ON customer_services(created_at);
 CREATE INDEX idx_customer_service_id ON customer_service_steps(customer_service_id);
 CREATE INDEX idx_step_number ON customer_service_steps(step_number);
 CREATE INDEX idx_deleted_at_steps ON customer_service_steps(deleted_at);
+
+-- Agregar columna icon a la tabla customer_services
+ALTER TABLE customer_services 
+ADD COLUMN icon VARCHAR(255) NULL COMMENT 'Icon file path for the service' AFTER name;
