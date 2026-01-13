@@ -33,44 +33,12 @@ class Client extends Authenticatable implements JWTSubject
         'remember_token', // si lo usás
     ];
 
-    protected $appends = [];
-
-    protected $casts = [
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
-        'deleted_at' => 'datetime',
-    ];
-
     /**
-     * Prepare a date for array / JSON serialization.
+     * Accessor: convierte el contenido de lastname a formato capitalizado (Primera letra mayúscula)
      */
-    public function serializeDate(\DateTimeInterface $date): string
+    public function getLastnameAttribute($value)
     {
-        return $date->format('Y-m-d H:i:s');
-    }
-
-    /**
-     * Accessor para lastName en formato camelCase
-     */
-    public function getLastNameAttribute($value)
-    {
-        return $value;
-    }
-
-    /**
-     * Override toArray para asegurar que lastName se serialice en camelCase
-     */
-    public function toArray()
-    {
-        $array = parent::toArray();
-
-        // Si existe 'last_name' (snake_case), renombrarlo a 'lastName' (camelCase)
-        if (isset($array['last_name']) && !isset($array['lastName'])) {
-            $array['lastName'] = $array['last_name'];
-            unset($array['last_name']);
-        }
-
-        return $array;
+        return ucwords(strtolower($value));
     }
 
     public function clientType()
