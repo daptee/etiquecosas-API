@@ -133,10 +133,21 @@ class CustomerServiceController extends Controller
         }
 
         // Create customer service
-        $customerService = CustomerService::create([
+        $customerServiceData = [
             'name' => $request->name,
             'status_id' => $request->status_id,
-        ]);
+        ];
+
+        // Process service icon file
+        if ($request->hasFile('icon')) {
+            $file = $request->file('icon');
+            $fileName = 'customer_services/icons/' . uniqid('service_icon_') . '.' . $file->getClientOriginalExtension();
+            if (Storage::disk('public_uploads')->put($fileName, file_get_contents($file))) {
+                $customerServiceData['icon'] = $fileName;
+            }
+        }
+
+        $customerService = CustomerService::create($customerServiceData);
 
         foreach ($stepsData as $index => $stepData) {
             $step = [
@@ -231,6 +242,27 @@ class CustomerServiceController extends Controller
         // Update customer service
         $customerService->name = $request->name;
         $customerService->status_id = $request->status_id;
+
+        // Process service icon file
+        if ($request->hasFile('icon')) {
+            // Delete old icon if exists
+            if ($customerService->icon && Storage::disk('public_uploads')->exists($customerService->icon)) {
+                Storage::disk('public_uploads')->delete($customerService->icon);
+            }
+            // Upload new icon
+            $file = $request->file('icon');
+            $fileName = 'customer_services/icons/' . uniqid('service_icon_') . '.' . $file->getClientOriginalExtension();
+            if (Storage::disk('public_uploads')->put($fileName, file_get_contents($file))) {
+                $customerService->icon = $fileName;
+            }
+        } elseif ($request->has('remove_icon') && $request->remove_icon == true) {
+            // Remove icon if explicitly requested
+            if ($customerService->icon && Storage::disk('public_uploads')->exists($customerService->icon)) {
+                Storage::disk('public_uploads')->delete($customerService->icon);
+            }
+            $customerService->icon = null;
+        }
+
         $customerService->save();
 
         // Delete all old steps (cascade will handle deletion later)
@@ -349,7 +381,12 @@ class CustomerServiceController extends Controller
         $customerService = $this->findObject(CustomerService::class, $id);
         $customerService->load(['status', 'steps']);
 
-        // Delete files
+        // Delete service icon file
+        if ($customerService->icon && Storage::disk('public_uploads')->exists($customerService->icon)) {
+            Storage::disk('public_uploads')->delete($customerService->icon);
+        }
+
+        // Delete step files
         foreach ($customerService->steps as $step) {
             if ($step->icon && Storage::disk('public_uploads')->exists($step->icon)) {
                 Storage::disk('public_uploads')->delete($step->icon);

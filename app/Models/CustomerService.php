@@ -14,6 +14,7 @@ class CustomerService extends Model
 
     protected $fillable = [
         'name',
+        'icon',
         'status_id',
     ];
 
