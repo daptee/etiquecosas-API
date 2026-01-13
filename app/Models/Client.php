@@ -31,14 +31,18 @@ class Client extends Authenticatable implements JWTSubject
     protected $hidden = [
         'password',
         'remember_token', // si lo usás
+        'lastname', // Ocultar lastname
     ];
 
+    protected $appends = ['lastName']; // Agregar lastName a la respuesta
+
     /**
-     * Accessor: convierte el contenido de lastname a formato capitalizado (Primera letra mayúscula)
+     * Accessor: expone lastname como lastName en camelCase con formato capitalizado
      */
-    public function getLastnameAttribute($value)
+    public function getLastNameAttribute()
     {
-        return ucwords(strtolower($value));
+        $value = $this->attributes['lastname'] ?? null;
+        return $value ? ucwords(strtolower($value)) : null;
     }
 
     public function clientType()
