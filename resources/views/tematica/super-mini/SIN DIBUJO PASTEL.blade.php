@@ -43,7 +43,7 @@
     {{-- SUPER MINI --}}
     <div style="height: 8px; width: 100%;"></div>
     <div class="supermini">
-        @for ($i = 0; $i < 11; $i++)
+        @for ($i = 0; $i < $plantilla['filas']; $i++)
             <div class="primer-color" style="background: cmyk({{ $plantilla['colores'][2] }})">
             <p class="texto1" style="font-family: 'Oswald';font-size: x-small;">{{mb_strtoupper($product_order->name)}}</p>
     </div>
