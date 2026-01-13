@@ -259,6 +259,8 @@ Route::middleware('jwt.auth')->prefix('sales')->group(function () {
     Route::put('/internal_comments/{id}', [SaleController::class, 'updateInternalComment']);
     Route::put('/client-data/{id}', [SaleController::class, 'updateClientData']);
     Route::put('/assign-user/{id}', [SaleController::class, 'assignUser']);
+    Route::put('/associate/{id}', [SaleController::class, 'associateSale']);
+    Route::put('/remove-association/{id}', [SaleController::class, 'removeAssociation']);
     Route::post('/local', [SaleController::class, 'storeLocalSale']);
     Route::put('/local/{id}', [SaleController::class, 'updateLocalSale']);
     Route::get('/generate-pdf/{id}', [SaleController::class, 'generarPdfSale']);

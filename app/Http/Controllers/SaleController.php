@@ -1622,6 +1622,100 @@ class SaleController extends Controller
      * - channel_id: ID del canal de venta (opcional, si no se envía o es 'all' trae todos los canales)
      * - product_id: ID del producto (opcional, filtra ventas que contengan este producto)
      */
+    /**
+     * Asociar una venta a otra manualmente desde el admin
+     *
+     * @param Request $request
+     * @param int $id ID de la venta que se quiere asociar
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function associateSale(Request $request, $id)
+    {
+        $user = Auth::user();
+
+        if (!$user->profile_id) {
+            $this->logAudit(Auth::user(), 'Sale Validation Fail (Associate Sale)', $request->all(), 'No tienes los permisos necesarios');
+            return $this->error('No tienes los permisos necesarios', 401);
+        }
+
+        $rules = [
+            'parent_sale_id' => 'required|integer|exists:sales,id',
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails()) {
+            $this->logAudit(Auth::user(), 'Sale Validation Fail (Associate Sale)', $request->all(), $validator->errors());
+            return $this->validationError($validator->errors());
+        }
+
+        $sale = Sale::findOrFail($id);
+        $parentSaleId = $request->parent_sale_id;
+
+        // Validar que no esté intentando asociar una venta consigo misma
+        if ($sale->id == $parentSaleId) {
+            $this->logAudit(Auth::user(), 'Sale Validation Fail (Associate Sale)', $request->all(), 'No puedes asociar una venta consigo misma');
+            return $this->error('No puedes asociar una venta consigo misma', 400);
+        }
+
+        // Validar que la venta padre exista
+        $parentSale = Sale::find($parentSaleId);
+        if (!$parentSale) {
+            $this->logAudit(Auth::user(), 'Sale Validation Fail (Associate Sale)', $request->all(), 'La venta padre no existe');
+            return $this->error('El número de pedido especificado no existe', 404);
+        }
+
+        // Validar que no se cree una asociación circular
+        // (verificar que la venta padre no sea hija de la venta actual)
+        if ($parentSale->sale_id == $sale->id) {
+            $this->logAudit(Auth::user(), 'Sale Validation Fail (Associate Sale)', $request->all(), 'No se puede crear una asociación circular');
+            return $this->error('No se puede asociar: esto crearía una asociación circular', 400);
+        }
+
+        $sale->sale_id = $parentSaleId;
+        $sale->save();
+
+        $sale->load(['client', 'channel', 'products.product', 'products.variant', 'status', 'statusHistory', 'shippingMethod', 'coupon', 'user', 'childSales', 'parentSale']);
+
+        $this->logAudit(Auth::user(), 'Associate Sale', ['sale_id' => $id, 'parent_sale_id' => $parentSaleId], $sale);
+
+        return $this->success($sale, 'Venta asociada correctamente');
+    }
+
+    /**
+     * Remover la asociación de una venta
+     *
+     * @param Request $request
+     * @param int $id ID de la venta cuya asociación se quiere remover
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function removeAssociation(Request $request, $id)
+    {
+        $user = Auth::user();
+
+        if (!$user->profile_id) {
+            $this->logAudit(Auth::user(), 'Sale Validation Fail (Remove Association)', $request->all(), 'No tienes los permisos necesarios');
+            return $this->error('No tienes los permisos necesarios', 401);
+        }
+
+        $sale = Sale::findOrFail($id);
+
+        // Validar que la venta tenga una asociación
+        if (!$sale->sale_id) {
+            $this->logAudit(Auth::user(), 'Sale Validation Fail (Remove Association)', ['sale_id' => $id], 'Esta venta no tiene una asociación');
+            return $this->error('Esta venta no tiene una asociación para remover', 400);
+        }
+
+        $oldParentSaleId = $sale->sale_id;
+        $sale->sale_id = null;
+        $sale->save();
+
+        $sale->load(['client', 'channel', 'products.product', 'products.variant', 'status', 'statusHistory', 'shippingMethod', 'coupon', 'user', 'childSales', 'parentSale']);
+
+        $this->logAudit(Auth::user(), 'Remove Sale Association', ['sale_id' => $id, 'old_parent_sale_id' => $oldParentSaleId], $sale);
+
+        return $this->success($sale, 'Asociación removida correctamente');
+    }
+
     public function getDashboardStats(Request $request)
     {
         try {
