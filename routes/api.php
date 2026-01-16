@@ -257,6 +257,7 @@ Route::middleware('jwt.auth')->prefix('sales')->group(function () {
     Route::put('/{id}', [SaleController::class, 'update']);
     Route::put('/change-status-admin/{id}', [SaleController::class, 'changeStatusAdmin']);
     Route::put('/internal_comments/{id}', [SaleController::class, 'updateInternalComment']);
+    Route::put('/customer_notes/{id}', [SaleController::class, 'updateCustomerNotes']);
     Route::put('/client-data/{id}', [SaleController::class, 'updateClientData']);
     Route::put('/assign-user/{id}', [SaleController::class, 'assignUser']);
     Route::put('/associate/{id}', [SaleController::class, 'associateSale']);

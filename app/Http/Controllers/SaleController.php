@@ -101,7 +101,12 @@ class SaleController extends Controller
         }
 
         if ($request->has('channel_id')) {
-            $query->where('channel_id', $request->query('channel_id'));
+            $channelIds = $request->query('channel_id');
+            if (is_array($channelIds)) {
+                $query->whereIn('channel_id', $channelIds);
+            } else {
+                $query->where('channel_id', $channelIds);
+            }
         }
 
         // 🔹 Filtros
@@ -932,6 +937,41 @@ class SaleController extends Controller
         $this->logAudit(Auth::user(), 'Update Internal Comment', ['id' => $id], $sale);
 
         return $this->success($sale, 'Comentario interno actualizado correctamente');
+    }
+
+    /**
+     * Actualizar los comentarios adicionales del cliente en una venta.
+     *
+     * @param Request $request
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function updateCustomerNotes(Request $request, $id)
+    {
+        $user = Auth::user();
+
+        if (!$user->profile_id) {
+            $this->logAudit(Auth::user(), 'Sale Validation Fail (Update Customer Notes)', $request->all(), 'No tienes los permisos necesarios');
+            return $this->error('No tienes los permisos necesarios', 401);
+        }
+
+        $rules = [
+            'customer_notes' => 'required|string',
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails()) {
+            $this->logAudit(Auth::user(), 'Sale Validation Fail (Update Customer Notes)', $request->all(), $validator->errors());
+            return $this->validationError($validator->errors());
+        }
+
+        $sale = Sale::findOrFail($id);
+        $sale->customer_notes = $request->customer_notes;
+        $sale->save();
+
+        $this->logAudit(Auth::user(), 'Update Customer Notes', ['id' => $id], $sale);
+
+        return $this->success($sale, 'Comentarios del cliente actualizados correctamente');
     }
 
     public function updateClientData(Request $request, $id)
