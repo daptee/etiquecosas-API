@@ -101,7 +101,12 @@ class SaleController extends Controller
         }
 
         if ($request->has('channel_id')) {
-            $query->where('channel_id', $request->query('channel_id'));
+            $channelIds = $request->query('channel_id');
+            if (is_array($channelIds)) {
+                $query->whereIn('channel_id', $channelIds);
+            } else {
+                $query->where('channel_id', $channelIds);
+            }
         }
 
         // 🔹 Filtros
