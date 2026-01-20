@@ -37,6 +37,7 @@ use App\Http\Controllers\GeneralContentController;
 use App\Http\Controllers\InstructiveController;
 use App\Http\Controllers\CustomerServiceController;
 use App\Http\Controllers\FacebookFeedController;
+use App\Http\Controllers\ContactController;
 
 // cache
 Route::get('/clear-cache', [CacheController::class, 'clearCache'])->name('clearCache');
@@ -108,6 +109,9 @@ Route::prefix('v1')->group(function () {
 
     // Customer Services (Web - only active)
     Route::get('customer-services', [CustomerServiceController::class, 'getActive']);
+
+    // Contact Form
+    Route::post('contact', [ContactController::class, 'sendContactForm']);
 });
 
 // User
