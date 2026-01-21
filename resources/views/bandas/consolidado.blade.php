@@ -99,7 +99,7 @@
         }
 
         /* Tamanios de fuente dinamicos segun longitud */
-        .font-xxl { font-size: 32pt; }
+        .font-xxl { font-size: 29pt; }
         .font-xl { font-size: 24pt; }
         .font-lg { font-size: 20pt; }
         .font-md { font-size: 18pt; }
