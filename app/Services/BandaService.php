@@ -290,11 +290,14 @@ class BandaService
         $pdf = Pdf::loadView('bandas.consolidado', [
             'bandasPorColor' => $bandasPorColor,
             'fecha' => $fecha
-        ])->setPaper('a4', 'portrait');
-
-        $dompdf = $pdf->getDomPDF();
-        $dompdf->getOptions()->setFontDir(public_path('fonts'));
-        $dompdf->getOptions()->setFontCache(storage_path('fonts_cache'));
+        ])
+        ->setPaper('a4', 'portrait')
+        ->setOption('isRemoteEnabled', true)
+        ->setOption('isHtml5ParserEnabled', true)
+        ->setOption('isFontSubsettingEnabled', true)
+        ->setOption('fontDir', public_path('fonts'))
+        ->setOption('fontCache', storage_path('fonts'))
+        ->setOption('defaultFont', 'QuicksandBook');
 
         $pdf->save($pdfFile);
 
