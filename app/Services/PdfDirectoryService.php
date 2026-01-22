@@ -137,6 +137,8 @@ class PdfDirectoryService
         $carpetaPlanchas = storage_path("app/pdf/planchas/{$fecha}");
         $carpetaCintasCoser = storage_path("app/pdf/Cintas - Coser");
         $carpetaCintasPlanchar = storage_path("app/pdf/Cintas - Planchar");
+        $carpetaBandas = storage_path("app/pdf/Bandas");
+        $carpetaSellos = storage_path("app/pdf/Sellos");
 
         $resultado = [
             'fecha' => $fecha,
@@ -148,7 +150,9 @@ class PdfDirectoryService
             'cintas_planchar' => [
                 'x24' => null,
                 'x48' => null
-            ]
+            ],
+            'bandas' => null,
+            'sellos' => null
         ];
 
         // Obtener PDFs de pedidos
@@ -221,6 +225,34 @@ class PdfDirectoryService
             }
         }
 
+        // Obtener PDF de bandas
+        if (is_dir($carpetaBandas)) {
+            $bandasPdf = "{$carpetaBandas}/{$fecha}-bandas.pdf";
+
+            if (file_exists($bandasPdf)) {
+                $resultado['bandas'] = [
+                    'nombre' => basename($bandasPdf),
+                    'ruta' => $bandasPdf,
+                    'tamanio' => filesize($bandasPdf),
+                    'fecha_modificacion' => date('Y-m-d H:i:s', filemtime($bandasPdf))
+                ];
+            }
+        }
+
+        // Obtener PDF de sellos
+        if (is_dir($carpetaSellos)) {
+            $sellosPdf = "{$carpetaSellos}/{$fecha}-sellos.pdf";
+
+            if (file_exists($sellosPdf)) {
+                $resultado['sellos'] = [
+                    'nombre' => basename($sellosPdf),
+                    'ruta' => $sellosPdf,
+                    'tamanio' => filesize($sellosPdf),
+                    'fecha_modificacion' => date('Y-m-d H:i:s', filemtime($sellosPdf))
+                ];
+            }
+        }
+
         return $resultado;
     }
 
@@ -245,6 +277,18 @@ class PdfDirectoryService
         $rutaCintasPlanchar = storage_path("app/pdf/Cintas - Planchar/{$nombrePdf}");
         if (file_exists($rutaCintasPlanchar)) {
             return $rutaCintasPlanchar;
+        }
+
+        // Buscar en bandas
+        $rutaBandas = storage_path("app/pdf/Bandas/{$nombrePdf}");
+        if (file_exists($rutaBandas)) {
+            return $rutaBandas;
+        }
+
+        // Buscar en sellos
+        $rutaSellos = storage_path("app/pdf/Sellos/{$nombrePdf}");
+        if (file_exists($rutaSellos)) {
+            return $rutaSellos;
         }
 
         return null;

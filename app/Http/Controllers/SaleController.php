@@ -22,9 +22,11 @@ use App\Models\Sale;
 use App\Models\SaleProduct;
 use App\Models\SaleStatus;
 use App\Models\SaleStatusHistory;
+use App\Services\BandaService;
 use App\Services\CintaCoserService;
 use App\Services\CintaPlancharService;
 use App\Services\EtiquetaService;
+use App\Services\SelloService;
 use App\Services\StockService;
 use App\Traits\ApiResponse;
 use App\Traits\FindObject;
@@ -555,7 +557,7 @@ class SaleController extends Controller
                 'sale_status_id' => $request->sale_status_id,
                 'date' => Carbon::now(),
             ]);
-            
+
             $notifyEmail = env('MAIL_NOTIFICATION_TO');
 
             Mail::to($sale->client->email)->send(new OrderSummaryMail($sale));
@@ -567,6 +569,8 @@ class SaleController extends Controller
             EtiquetaService::limpiarPdfsDelPedido($sale->id, $sale->created_at);
             CintaCoserService::limpiarEtiquetasDeVenta($sale->id, $sale->created_at);
             CintaPlancharService::limpiarEtiquetasDeVenta($sale->id, $sale->created_at);
+            BandaService::limpiarBandasDeVenta($sale->id, $sale->created_at);
+            SelloService::limpiarSellosDeVenta($sale->id, $sale->created_at);
 
             foreach ($sale->products as $productOrder) {
                 // === 1. Datos base ===
@@ -580,6 +584,46 @@ class SaleController extends Controller
 
                 if ($customIcon && $customData['icon']['name'] == 'Sin dibujo') {
                     $customIcon = null;
+                }
+
+                // === SELLOS PERSONALIZADOS (Producto 481) ===
+                if (SelloService::esProductoSello($productOrder->product_id)) {
+                    try {
+                        SelloService::agregarSelloAlPdf(
+                            $sale->id,
+                            $productOrder,
+                            $nombreCompleto,
+                            $customColor,
+                            $customIcon,
+                            $sale->created_at
+                        );
+                        Log::info("Sello agregado para {$nombreCompleto}");
+                    } catch (\Throwable $e) {
+                        Log::error("Error agregando sello", [
+                            'error' => $e->getMessage(),
+                            'product_order_id' => $productOrder->id,
+                        ]);
+                    }
+                }
+
+                // === BANDAS (Productos 52944 y 52796) ===
+                if (BandaService::esProductoBanda($productOrder->product_id)) {
+                    try {
+                        BandaService::agregarBandaAlPdf(
+                            $sale->id,
+                            $productOrder,
+                            $nombreCompleto,
+                            $customColor,
+                            $customIcon,
+                            $sale->created_at
+                        );
+                        Log::info("Banda agregada para {$nombreCompleto}");
+                    } catch (\Throwable $e) {
+                        Log::error("Error agregando banda", [
+                            'error' => $e->getMessage(),
+                            'product_order_id' => $productOrder->id,
+                        ]);
+                    }
                 }
 
                 // === CINTAS PARA COSER (Producto 1291) ===
@@ -772,6 +816,8 @@ class SaleController extends Controller
             EtiquetaService::limpiarPdfsDelPedido($sale->id, $sale->created_at);
             CintaCoserService::limpiarEtiquetasDeVenta($sale->id, $sale->created_at);
             CintaPlancharService::limpiarEtiquetasDeVenta($sale->id, $sale->created_at);
+            BandaService::limpiarBandasDeVenta($sale->id, $sale->created_at);
+            SelloService::limpiarSellosDeVenta($sale->id, $sale->created_at);
 
             foreach ($sale->products as $productOrder) {
                 // === 1. Datos base ===
@@ -785,6 +831,46 @@ class SaleController extends Controller
 
                 if ($customIcon && $customData['icon']['name'] == 'Sin dibujo') {
                     $customIcon = null;
+                }
+
+                // === SELLOS PERSONALIZADOS (Producto 481) ===
+                if (SelloService::esProductoSello($productOrder->product_id)) {
+                    try {
+                        SelloService::agregarSelloAlPdf(
+                            $sale->id,
+                            $productOrder,
+                            $nombreCompleto,
+                            $customColor,
+                            $customIcon,
+                            $sale->created_at
+                        );
+                        Log::info("Sello agregado para {$nombreCompleto}");
+                    } catch (\Throwable $e) {
+                        Log::error("Error agregando sello", [
+                            'error' => $e->getMessage(),
+                            'product_order_id' => $productOrder->id,
+                        ]);
+                    }
+                }
+
+                // === BANDAS (Productos 52944 y 52796) ===
+                if (BandaService::esProductoBanda($productOrder->product_id)) {
+                    try {
+                        BandaService::agregarBandaAlPdf(
+                            $sale->id,
+                            $productOrder,
+                            $nombreCompleto,
+                            $customColor,
+                            $customIcon,
+                            $sale->created_at
+                        );
+                        Log::info("Banda agregada para {$nombreCompleto}");
+                    } catch (\Throwable $e) {
+                        Log::error("Error agregando banda", [
+                            'error' => $e->getMessage(),
+                            'product_order_id' => $productOrder->id,
+                        ]);
+                    }
                 }
 
                 // === CINTAS PARA COSER (Producto 1291) ===
@@ -1281,6 +1367,8 @@ class SaleController extends Controller
             EtiquetaService::limpiarPdfsDelPedido($sale->id, $sale->created_at);
             CintaCoserService::limpiarEtiquetasDeVenta($sale->id, $sale->created_at);
             CintaPlancharService::limpiarEtiquetasDeVenta($sale->id, $sale->created_at);
+            BandaService::limpiarBandasDeVenta($sale->id, $sale->created_at);
+            SelloService::limpiarSellosDeVenta($sale->id, $sale->created_at);
 
             foreach ($sale->products as $productOrder) {
                 // === 1. Datos base ===
@@ -1294,6 +1382,46 @@ class SaleController extends Controller
 
                 if ($customIcon && $customData['icon']['name'] == 'Sin dibujo') {
                     $customIcon = null;
+                }
+
+                // === SELLOS PERSONALIZADOS (Producto 481) ===
+                if (SelloService::esProductoSello($productOrder->product_id)) {
+                    try {
+                        SelloService::agregarSelloAlPdf(
+                            $sale->id,
+                            $productOrder,
+                            $nombreCompleto,
+                            $customColor,
+                            $customIcon,
+                            $sale->created_at
+                        );
+                        Log::info("Sello agregado para {$nombreCompleto}");
+                    } catch (\Throwable $e) {
+                        Log::error("Error agregando sello", [
+                            'error' => $e->getMessage(),
+                            'product_order_id' => $productOrder->id,
+                        ]);
+                    }
+                }
+
+                // === BANDAS (Productos 52944 y 52796) ===
+                if (BandaService::esProductoBanda($productOrder->product_id)) {
+                    try {
+                        BandaService::agregarBandaAlPdf(
+                            $sale->id,
+                            $productOrder,
+                            $nombreCompleto,
+                            $customColor,
+                            $customIcon,
+                            $sale->created_at
+                        );
+                        Log::info("Banda agregada para {$nombreCompleto}");
+                    } catch (\Throwable $e) {
+                        Log::error("Error agregando banda", [
+                            'error' => $e->getMessage(),
+                            'product_order_id' => $productOrder->id,
+                        ]);
+                    }
                 }
 
                 // === CINTAS PARA COSER (Producto 1291) ===
@@ -1464,6 +1592,10 @@ class SaleController extends Controller
                 try {
                     // 🗑️ Eliminar todos los PDFs anteriores de este pedido antes de generar nuevos
                     EtiquetaService::limpiarPdfsDelPedido($sale->id, $sale->created_at);
+                    CintaCoserService::limpiarEtiquetasDeVenta($sale->id, $sale->created_at);
+                    CintaPlancharService::limpiarEtiquetasDeVenta($sale->id, $sale->created_at);
+                    BandaService::limpiarBandasDeVenta($sale->id, $sale->created_at);
+                    SelloService::limpiarSellosDeVenta($sale->id, $sale->created_at);
 
                     foreach ($sale->products as $productOrder) {
                         // === 1. Datos base ===
@@ -1477,6 +1609,86 @@ class SaleController extends Controller
 
                         if ($customIcon && $customData['icon']['name'] == 'Sin dibujo') {
                             $customIcon = null;
+                        }
+
+                        // === SELLOS PERSONALIZADOS (Producto 481) ===
+                        if (SelloService::esProductoSello($productOrder->product_id)) {
+                            try {
+                                SelloService::agregarSelloAlPdf(
+                                    $sale->id,
+                                    $productOrder,
+                                    $nombreCompleto,
+                                    $customColor,
+                                    $customIcon,
+                                    $sale->created_at
+                                );
+                                Log::info("Sello agregado para {$nombreCompleto}");
+                            } catch (\Throwable $e) {
+                                Log::error("Error agregando sello", [
+                                    'error' => $e->getMessage(),
+                                    'product_order_id' => $productOrder->id,
+                                ]);
+                            }
+                        }
+
+                        // === BANDAS (Productos 52944 y 52796) ===
+                        if (BandaService::esProductoBanda($productOrder->product_id)) {
+                            try {
+                                BandaService::agregarBandaAlPdf(
+                                    $sale->id,
+                                    $productOrder,
+                                    $nombreCompleto,
+                                    $customColor,
+                                    $customIcon,
+                                    $sale->created_at
+                                );
+                                Log::info("Banda agregada para {$nombreCompleto}");
+                            } catch (\Throwable $e) {
+                                Log::error("Error agregando banda", [
+                                    'error' => $e->getMessage(),
+                                    'product_order_id' => $productOrder->id,
+                                ]);
+                            }
+                        }
+
+                        // === CINTAS PARA COSER (Producto 1291) ===
+                        if (CintaCoserService::esProductoCoser($productOrder->product_id)) {
+                            try {
+                                CintaCoserService::agregarEtiquetaAlPdf(
+                                    $sale->id,
+                                    $productOrder,
+                                    $nombreCompleto,
+                                    $customColor,
+                                    $customIcon,
+                                    $sale->created_at
+                                );
+                                Log::info("Etiqueta de cinta para coser agregada para {$nombreCompleto}");
+                            } catch (\Throwable $e) {
+                                Log::error("Error agregando etiqueta de cinta para coser", [
+                                    'error' => $e->getMessage(),
+                                    'product_order_id' => $productOrder->id,
+                                ]);
+                            }
+                        }
+
+                        // === CINTAS PARA PLANCHAR (Producto 1247) ===
+                        if (CintaPlancharService::esProductoPlanchar($productOrder->product_id)) {
+                            try {
+                                CintaPlancharService::agregarEtiquetaAlPdf(
+                                    $sale->id,
+                                    $productOrder,
+                                    $nombreCompleto,
+                                    $customColor,
+                                    $customIcon,
+                                    $sale->created_at
+                                );
+                                Log::info("Etiqueta de cinta para planchar agregada para {$nombreCompleto}");
+                            } catch (\Throwable $e) {
+                                Log::error("Error agregando etiqueta de cinta para planchar", [
+                                    'error' => $e->getMessage(),
+                                    'product_order_id' => $productOrder->id,
+                                ]);
+                            }
                         }
 
                         $variant = $productOrder->variant?->variant;
