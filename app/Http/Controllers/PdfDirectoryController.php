@@ -215,6 +215,24 @@ class PdfDirectoryController extends Controller
                 $archivosAgregados++;
             }
 
+            // Agregar bandas
+            if (!empty($pdfsData['bandas']) && file_exists($pdfsData['bandas']['ruta'])) {
+                $zip->addFile(
+                    $pdfsData['bandas']['ruta'],
+                    'bandas/' . $pdfsData['bandas']['nombre']
+                );
+                $archivosAgregados++;
+            }
+
+            // Agregar sellos
+            if (!empty($pdfsData['sellos']) && file_exists($pdfsData['sellos']['ruta'])) {
+                $zip->addFile(
+                    $pdfsData['sellos']['ruta'],
+                    'sellos/' . $pdfsData['sellos']['nombre']
+                );
+                $archivosAgregados++;
+            }
+
             $zip->close();
 
             if ($archivosAgregados === 0) {
