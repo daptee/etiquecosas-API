@@ -19,10 +19,9 @@
             src: url('{{ public_path("fonts/Oswald-Bold.ttf") }}') format('truetype');
         }
 
-        * {
+        body {
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
         }
 
         @page {
@@ -32,7 +31,6 @@
         .hoja {
             padding-left: 5px;
             width: 18.5cm;
-            height: 29cm;
         }
 
         /* ---------- CONTENEDOR GENERAL ---------- */
