@@ -12,18 +12,22 @@
             src: url('{{ public_path("fonts/QuicksandBook-Regular.ttf") }}') format('truetype');
         }
 
-        * {
+        body {
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
         }
 
         @page {
-            margin: 0.5cm;
+            margin-left: 1.0cm;
+            margin-right: 1.5cm;
+            margin-top: 0.4cm;
+            margin-bottom: 0.2cm;
         }
 
         .page {
-            width: 100%;
+            padding-left: 5px;
+            width: 18.5cm;
+            height: 29cm;
             page-break-after: always;
             position: relative;
         }
@@ -52,7 +56,10 @@
 
         .bandas-container {
             width: 100%;
-            text-align: center;
+            height: 26cm;
+            column-count: 4;
+            column-gap: 0.3cm;
+            column-fill: auto;
         }
 
         /* Area de cada banda: 4.5cm x 3.5cm */
@@ -61,8 +68,8 @@
             height: 3.5cm;
             display: block;
             text-align: center;
-            margin: 0 auto 0.2cm auto;
-            border: 1px solid #000;
+            margin: 0 0 0.2cm 0;
+            break-inside: avoid;
         }
 
         .banda-content {
