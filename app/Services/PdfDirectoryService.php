@@ -143,16 +143,7 @@ class PdfDirectoryService
         $resultado = [
             'fecha' => $fecha,
             'pdfs_pedidos' => [],
-            'cintas_coser' => [
-                'x24' => null,
-                'x48' => null
-            ],
-            'cintas_planchar' => [
-                'x24' => null,
-                'x48' => null
-            ],
-            'bandas' => null,
-            'sellos' => null
+            'extras' => []
         ];
 
         // Obtener PDFs de pedidos
@@ -183,7 +174,7 @@ class PdfDirectoryService
             $cintaCoserX48 = "{$carpetaCintasCoser}/{$fecha}-coser-x48.pdf";
 
             if (file_exists($cintaCoserX24)) {
-                $resultado['cintas_coser']['x24'] = [
+                $resultado['extras'][] = [
                     'nombre' => basename($cintaCoserX24),
                     'ruta' => $cintaCoserX24,
                     'tamanio' => filesize($cintaCoserX24),
@@ -192,7 +183,7 @@ class PdfDirectoryService
             }
 
             if (file_exists($cintaCoserX48)) {
-                $resultado['cintas_coser']['x48'] = [
+                $resultado['extras'][] = [
                     'nombre' => basename($cintaCoserX48),
                     'ruta' => $cintaCoserX48,
                     'tamanio' => filesize($cintaCoserX48),
@@ -207,7 +198,7 @@ class PdfDirectoryService
             $cintaPlancharX48 = "{$carpetaCintasPlanchar}/{$fecha}-planchar-x48.pdf";
 
             if (file_exists($cintaPlancharX24)) {
-                $resultado['cintas_planchar']['x24'] = [
+                $resultado['extras'][] = [
                     'nombre' => basename($cintaPlancharX24),
                     'ruta' => $cintaPlancharX24,
                     'tamanio' => filesize($cintaPlancharX24),
@@ -216,7 +207,7 @@ class PdfDirectoryService
             }
 
             if (file_exists($cintaPlancharX48)) {
-                $resultado['cintas_planchar']['x48'] = [
+                $resultado['extras'][] = [
                     'nombre' => basename($cintaPlancharX48),
                     'ruta' => $cintaPlancharX48,
                     'tamanio' => filesize($cintaPlancharX48),
@@ -230,7 +221,7 @@ class PdfDirectoryService
             $bandasPdf = "{$carpetaBandas}/{$fecha}-bandas.pdf";
 
             if (file_exists($bandasPdf)) {
-                $resultado['bandas'] = [
+                $resultado['extras'][] = [
                     'nombre' => basename($bandasPdf),
                     'ruta' => $bandasPdf,
                     'tamanio' => filesize($bandasPdf),
@@ -244,7 +235,7 @@ class PdfDirectoryService
             $sellosPdf = "{$carpetaSellos}/{$fecha}-sellos.pdf";
 
             if (file_exists($sellosPdf)) {
-                $resultado['sellos'] = [
+                $resultado['extras'][] = [
                     'nombre' => basename($sellosPdf),
                     'ruta' => $sellosPdf,
                     'tamanio' => filesize($sellosPdf),

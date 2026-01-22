@@ -181,56 +181,32 @@ class PdfDirectoryController extends Controller
                 }
             }
 
-            // Agregar cintas coser
-            if (!empty($pdfsData['cintas_coser']['x24']) && file_exists($pdfsData['cintas_coser']['x24']['ruta'])) {
-                $zip->addFile(
-                    $pdfsData['cintas_coser']['x24']['ruta'],
-                    'cintas_coser/' . $pdfsData['cintas_coser']['x24']['nombre']
-                );
-                $archivosAgregados++;
-            }
+            // Agregar PDFs extras (cintas, bandas, sellos) en carpetas separadas
+            if (!empty($pdfsData['extras'])) {
+                foreach ($pdfsData['extras'] as $extra) {
+                    if (file_exists($extra['ruta'])) {
+                        $nombre = $extra['nombre'];
 
-            if (!empty($pdfsData['cintas_coser']['x48']) && file_exists($pdfsData['cintas_coser']['x48']['ruta'])) {
-                $zip->addFile(
-                    $pdfsData['cintas_coser']['x48']['ruta'],
-                    'cintas_coser/' . $pdfsData['cintas_coser']['x48']['nombre']
-                );
-                $archivosAgregados++;
-            }
+                        // Determinar la carpeta según el tipo de archivo
+                        if (strpos($nombre, '-coser-') !== false) {
+                            $carpeta = 'cintas_coser';
+                        } elseif (strpos($nombre, '-planchar-') !== false) {
+                            $carpeta = 'cintas_planchar';
+                        } elseif (strpos($nombre, '-bandas.pdf') !== false) {
+                            $carpeta = 'bandas';
+                        } elseif (strpos($nombre, '-sellos.pdf') !== false) {
+                            $carpeta = 'sellos';
+                        } else {
+                            $carpeta = 'extras';
+                        }
 
-            // Agregar cintas planchar
-            if (!empty($pdfsData['cintas_planchar']['x24']) && file_exists($pdfsData['cintas_planchar']['x24']['ruta'])) {
-                $zip->addFile(
-                    $pdfsData['cintas_planchar']['x24']['ruta'],
-                    'cintas_planchar/' . $pdfsData['cintas_planchar']['x24']['nombre']
-                );
-                $archivosAgregados++;
-            }
-
-            if (!empty($pdfsData['cintas_planchar']['x48']) && file_exists($pdfsData['cintas_planchar']['x48']['ruta'])) {
-                $zip->addFile(
-                    $pdfsData['cintas_planchar']['x48']['ruta'],
-                    'cintas_planchar/' . $pdfsData['cintas_planchar']['x48']['nombre']
-                );
-                $archivosAgregados++;
-            }
-
-            // Agregar bandas
-            if (!empty($pdfsData['bandas']) && file_exists($pdfsData['bandas']['ruta'])) {
-                $zip->addFile(
-                    $pdfsData['bandas']['ruta'],
-                    'bandas/' . $pdfsData['bandas']['nombre']
-                );
-                $archivosAgregados++;
-            }
-
-            // Agregar sellos
-            if (!empty($pdfsData['sellos']) && file_exists($pdfsData['sellos']['ruta'])) {
-                $zip->addFile(
-                    $pdfsData['sellos']['ruta'],
-                    'sellos/' . $pdfsData['sellos']['nombre']
-                );
-                $archivosAgregados++;
+                        $zip->addFile(
+                            $extra['ruta'],
+                            $carpeta . '/' . $nombre
+                        );
+                        $archivosAgregados++;
+                    }
+                }
             }
 
             $zip->close();
