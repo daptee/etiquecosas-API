@@ -4,6 +4,7 @@ namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
@@ -23,6 +24,9 @@ class ShippingClaimMail extends Mailable
     {
         return new Envelope(
             subject: "Reclamo de envío - Pedido #{$this->mailData['order_id']}",
+            replyTo: [
+                new Address($this->mailData['client_email'], $this->mailData['client_name']),
+            ],
         );
     }
 
@@ -32,6 +36,7 @@ class ShippingClaimMail extends Mailable
             view: 'emails.shippingClaim',
             with: [
                 'clientName' => $this->mailData['client_name'],
+                'clientEmail' => $this->mailData['client_email'],
                 'orderId' => $this->mailData['order_id'],
                 'clientMessage' => $this->mailData['message'],
             ],
