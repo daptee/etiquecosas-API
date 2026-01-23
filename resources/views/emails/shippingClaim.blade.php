@@ -42,6 +42,7 @@
                   <td class="sm-px-24" style="padding: 48px; text-align: left; font-size: 16px; line-height: 26px; color: #444;">
                     <h2 style="color:#2c3e50; margin-bottom:20px;">Reclamo de envío</h2>
                     <p style="font-size:15px; color:#333;">El cliente <strong>{{ $clientName }}</strong> realizó un reclamo sobre el pedido <strong>#{{ $orderId }}</strong>.</p>
+                    <p style="font-size:15px; color:#333;">Correo del cliente: <a href="mailto:{{ $clientEmail }}" style="color: #347AA7; text-decoration: none;">{{ $clientEmail }}</a></p>
 
                     <div style="margin-top:20px; padding:15px; background:#f9f9f9; border-left:4px solid #e74c3c;">
                       <p style="margin:0; font-size:14px; color:#555;"><strong>Detalle del reclamo:</strong></p>
