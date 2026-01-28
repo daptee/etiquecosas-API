@@ -53,6 +53,12 @@ class User extends Authenticatable implements JWTSubject
         return $this->belongsTo(Profile::class, 'profile_id');
     }
 
+    public function localities()
+    {
+        return $this->belongsToMany(Locality::class, 'user_localities', 'user_id', 'locality_id')
+            ->withTimestamps();
+    }
+
     public function getJWTIdentifier()
     {
         return $this->getKey();

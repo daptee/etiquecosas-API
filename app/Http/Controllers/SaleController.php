@@ -61,6 +61,8 @@ class SaleController extends Controller
                 'shippingMethod',
                 'coupon',
                 'user',
+                'cadete',
+                'locality',
                 'childSales',
                 'parentSale'
             ])
@@ -69,6 +71,11 @@ class SaleController extends Controller
         // Si es diseñador (profile_id = 2), solo mostrar ventas asignadas a él
         if ($user && $user->profile_id === 2) {
             $query->where('user_id', $user->id);
+        }
+
+        // Si es cadete (profile_id = 4), solo mostrar ventas asignadas a él
+        if ($user && $user->profile_id === 4) {
+            $query->where('cadete_id', $user->id);
         }
 
         // 🔹 Buscador
@@ -96,6 +103,12 @@ class SaleController extends Controller
                         // Buscar por email del cliente
                         ->orWhereHas('client', function ($q3) use ($search) {
                             $q3->where('email', 'like', "%{$search}%");
+                        })
+                        // Buscar por dirección
+                        ->orWhere('address', 'like', "%{$search}%")
+                        // Buscar por nombre de localidad
+                        ->orWhereHas('locality', function ($q3) use ($search) {
+                            $q3->where('name', 'like', "%{$search}%");
                         });
                     });
                 }
@@ -565,12 +578,15 @@ class SaleController extends Controller
 
             StockService::discountStock($sale);
 
+            // Usar la fecha de aprobación (ahora) en lugar de la fecha de creación de la venta
+            $fechaAprobacion = Carbon::now();
+
             // 🗑️ Eliminar todos los PDFs anteriores de este pedido antes de generar nuevos
-            EtiquetaService::limpiarPdfsDelPedido($sale->id, $sale->created_at);
-            CintaCoserService::limpiarEtiquetasDeVenta($sale->id, $sale->created_at);
-            CintaPlancharService::limpiarEtiquetasDeVenta($sale->id, $sale->created_at);
-            BandaService::limpiarBandasDeVenta($sale->id, $sale->created_at);
-            SelloService::limpiarSellosDeVenta($sale->id, $sale->created_at);
+            EtiquetaService::limpiarPdfsDelPedido($sale->id, $fechaAprobacion);
+            CintaCoserService::limpiarEtiquetasDeVenta($sale->id, $fechaAprobacion);
+            CintaPlancharService::limpiarEtiquetasDeVenta($sale->id, $fechaAprobacion);
+            BandaService::limpiarBandasDeVenta($sale->id, $fechaAprobacion);
+            SelloService::limpiarSellosDeVenta($sale->id, $fechaAprobacion);
 
             foreach ($sale->products as $productOrder) {
                 // === 1. Datos base ===
@@ -595,7 +611,7 @@ class SaleController extends Controller
                             $nombreCompleto,
                             $customColor,
                             $customIcon,
-                            $sale->created_at
+                            $fechaAprobacion
                         );
                         Log::info("Sello agregado para {$nombreCompleto}");
                     } catch (\Throwable $e) {
@@ -615,7 +631,7 @@ class SaleController extends Controller
                             $nombreCompleto,
                             $customColor,
                             $customIcon,
-                            $sale->created_at
+                            $fechaAprobacion
                         );
                         Log::info("Banda agregada para {$nombreCompleto}");
                     } catch (\Throwable $e) {
@@ -635,7 +651,7 @@ class SaleController extends Controller
                             $nombreCompleto,
                             $customColor,
                             $customIcon,
-                            $sale->created_at
+                            $fechaAprobacion
                         );
                         Log::info("Etiqueta de cinta para coser agregada para {$nombreCompleto}");
                     } catch (\Throwable $e) {
@@ -655,7 +671,7 @@ class SaleController extends Controller
                             $nombreCompleto,
                             $customColor,
                             $customIcon,
-                            $sale->created_at
+                            $fechaAprobacion
                         );
                         Log::info("Etiqueta de cinta para planchar agregada para {$nombreCompleto}");
                     } catch (\Throwable $e) {
@@ -697,7 +713,7 @@ class SaleController extends Controller
                                     $tematicaCoincidente,
                                     $customColor,
                                     $customIcon,
-                                    $sale->created_at
+                                    $fechaAprobacion
                                 );
 
                                 Log::info("PDF generado para {$nombreCompleto}, temática ID: {$tematicaId}");
@@ -724,7 +740,7 @@ class SaleController extends Controller
                                     $tematica,
                                     $customColor,
                                     $customIcon,
-                                    $sale->created_at
+                                    $fechaAprobacion
                                 );
 
                                 Log::info("PDF generado sin variante para {$nombreCompleto}, temática ID: {$tematicaId}");
@@ -812,12 +828,15 @@ class SaleController extends Controller
 
             StockService::discountStock($sale);
 
+            // Usar la fecha de aprobación (ahora) en lugar de la fecha de creación de la venta
+            $fechaAprobacion = Carbon::now();
+
             // 🗑️ Eliminar todos los PDFs anteriores de este pedido antes de generar nuevos
-            EtiquetaService::limpiarPdfsDelPedido($sale->id, $sale->created_at);
-            CintaCoserService::limpiarEtiquetasDeVenta($sale->id, $sale->created_at);
-            CintaPlancharService::limpiarEtiquetasDeVenta($sale->id, $sale->created_at);
-            BandaService::limpiarBandasDeVenta($sale->id, $sale->created_at);
-            SelloService::limpiarSellosDeVenta($sale->id, $sale->created_at);
+            EtiquetaService::limpiarPdfsDelPedido($sale->id, $fechaAprobacion);
+            CintaCoserService::limpiarEtiquetasDeVenta($sale->id, $fechaAprobacion);
+            CintaPlancharService::limpiarEtiquetasDeVenta($sale->id, $fechaAprobacion);
+            BandaService::limpiarBandasDeVenta($sale->id, $fechaAprobacion);
+            SelloService::limpiarSellosDeVenta($sale->id, $fechaAprobacion);
 
             foreach ($sale->products as $productOrder) {
                 // === 1. Datos base ===
@@ -842,7 +861,7 @@ class SaleController extends Controller
                             $nombreCompleto,
                             $customColor,
                             $customIcon,
-                            $sale->created_at
+                            $fechaAprobacion
                         );
                         Log::info("Sello agregado para {$nombreCompleto}");
                     } catch (\Throwable $e) {
@@ -862,7 +881,7 @@ class SaleController extends Controller
                             $nombreCompleto,
                             $customColor,
                             $customIcon,
-                            $sale->created_at
+                            $fechaAprobacion
                         );
                         Log::info("Banda agregada para {$nombreCompleto}");
                     } catch (\Throwable $e) {
@@ -882,7 +901,7 @@ class SaleController extends Controller
                             $nombreCompleto,
                             $customColor,
                             $customIcon,
-                            $sale->created_at
+                            $fechaAprobacion
                         );
                         Log::info("Etiqueta de cinta para coser agregada para {$nombreCompleto}");
                     } catch (\Throwable $e) {
@@ -902,7 +921,7 @@ class SaleController extends Controller
                             $nombreCompleto,
                             $customColor,
                             $customIcon,
-                            $sale->created_at
+                            $fechaAprobacion
                         );
                         Log::info("Etiqueta de cinta para planchar agregada para {$nombreCompleto}");
                     } catch (\Throwable $e) {
@@ -944,7 +963,7 @@ class SaleController extends Controller
                                     $tematicaCoincidente,
                                     $customColor,
                                     $customIcon,
-                                    $sale->created_at
+                                    $fechaAprobacion
                                 );
 
                                 Log::info("PDF generado para {$nombreCompleto}, temática ID: {$tematicaId}");
@@ -971,7 +990,7 @@ class SaleController extends Controller
                                     $tematica,
                                     $customColor,
                                     $customIcon,
-                                    $sale->created_at
+                                    $fechaAprobacion
                                 );
 
                                 Log::info("PDF generado sin variante para {$nombreCompleto}, temática ID: {$tematicaId}");
@@ -1165,6 +1184,110 @@ class SaleController extends Controller
         return $this->success($sales, 'Usuario asignado correctamente a las ventas seleccionadas');
     }
 
+    public function assignCadete(Request $request, $id)
+    {
+        $rules = [
+            'cadete_id' => 'required|integer|exists:users,id',
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails()) {
+            $this->logAudit(Auth::user(), 'Sale Validation Fail (Assign Cadete)', $request->all(), $validator->errors());
+            return $this->validationError($validator->errors());
+        }
+
+        // Validar que el usuario sea cadete (profile_id = 4)
+        $cadete = \App\Models\User::find($request->cadete_id);
+        if (!$cadete || $cadete->profile_id !== 4) {
+            return $this->error('El usuario seleccionado no es un cadete', 400);
+        }
+
+        $sale = Sale::findOrFail($id);
+        $sale->cadete_id = $request->cadete_id;
+        $sale->save();
+
+        $sale->load(['client', 'channel', 'products.product', 'products.variant', 'status', 'statusHistory', 'user', 'cadete', 'locality']);
+
+        $this->logAudit(Auth::user(), 'Assign Cadete To Sale', ['id' => $id, 'cadete_id' => $request->cadete_id], $sale);
+
+        return $this->success($sale, 'Cadete asignado a la venta correctamente');
+    }
+
+    public function assignCadeteMultiple(Request $request)
+    {
+        $rules = [
+            'cadete_id' => 'required|integer|exists:users,id',
+            'sale_ids' => 'required|array|min:1',
+            'sale_ids.*' => 'integer|exists:sales,id',
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails()) {
+            $this->logAudit(Auth::user(), 'Sales Validation Fail (Assign Cadete)', $request->all(), $validator->errors());
+            return $this->validationError($validator->errors());
+        }
+
+        // Validar que el usuario sea cadete (profile_id = 4)
+        $cadete = \App\Models\User::find($request->cadete_id);
+        if (!$cadete || $cadete->profile_id !== 4) {
+            return $this->error('El usuario seleccionado no es un cadete', 400);
+        }
+
+        $sales = Sale::whereIn('id', $request->sale_ids)->get();
+
+        foreach ($sales as $sale) {
+            $sale->cadete_id = $request->cadete_id;
+            $sale->save();
+        }
+
+        $sales->load(['client', 'channel', 'products.product', 'products.variant', 'status', 'statusHistory', 'user', 'cadete', 'locality']);
+
+        $this->logAudit(Auth::user(), 'Assign Cadete To Multiple Sales', ['sale_ids' => $request->sale_ids, 'cadete_id' => $request->cadete_id], $sales);
+
+        return $this->success($sales, 'Cadete asignado correctamente a las ventas seleccionadas');
+    }
+
+    public function updateReceiverData(Request $request, $id)
+    {
+        $user = Auth::user();
+
+        // Solo admin (profile_id = 1) puede modificar datos del receptor
+        if (!$user || $user->profile_id !== 1) {
+            return $this->error('Solo los administradores pueden modificar los datos del receptor', 403);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'receiver_name' => 'nullable|string|max:255',
+            'receiver_dni' => [
+                'nullable',
+                'string',
+                'regex:/^\d{7,8}$|^\d{2}\.\d{3}\.\d{3}$/'
+            ],
+        ], [
+            'receiver_dni.regex' => 'El DNI debe tener formato argentino (7-8 dígitos o XX.XXX.XXX)',
+        ]);
+
+        if ($validator->fails()) {
+            $this->logAudit($user, 'Update Receiver Data Validation Fail', $request->all(), $validator->errors());
+            return $this->validationError($validator->errors());
+        }
+
+        $sale = Sale::findOrFail($id);
+
+        if ($request->has('receiver_name')) {
+            $sale->receiver_name = $request->receiver_name;
+        }
+        if ($request->has('receiver_dni')) {
+            $sale->receiver_dni = $request->receiver_dni;
+        }
+        $sale->save();
+
+        $sale->load(['client', 'channel', 'products.product', 'products.variant', 'status', 'statusHistory', 'user', 'cadete', 'locality']);
+
+        $this->logAudit($user, 'Update Receiver Data', ['id' => $id, 'receiver_name' => $request->receiver_name, 'receiver_dni' => $request->receiver_dni], $sale);
+
+        return $this->success($sale, 'Datos del receptor actualizados correctamente');
+    }
 
     public function storeLocalSale(Request $request)
     {
