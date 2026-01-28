@@ -29,7 +29,11 @@ class Sale extends Model
         'internal_comments',
         'sale_status_id',
         'sale_id',
-        'user_id'
+        'user_id',
+        'cadete_id',
+        'receiver_name',
+        'receiver_dni',
+        'delivered_at'
     ];
 
     // 🔹 Relaciones
@@ -41,6 +45,11 @@ class Sale extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function cadete()
+    {
+        return $this->belongsTo(User::class, 'cadete_id');
     }
 
     public function channel()

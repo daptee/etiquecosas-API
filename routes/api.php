@@ -38,6 +38,7 @@ use App\Http\Controllers\InstructiveController;
 use App\Http\Controllers\CustomerServiceController;
 use App\Http\Controllers\FacebookFeedController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\CadeteController;
 
 // cache
 Route::get('/clear-cache', [CacheController::class, 'clearCache'])->name('clearCache');
@@ -117,6 +118,7 @@ Route::prefix('v1')->group(function () {
 // User
 Route::middleware('jwt.auth')->prefix('users')->group(function () {
     Route::get('/', [UserController::class, 'index']);
+    Route::get('/cadetes', [UserController::class, 'getCadetes']);
     Route::post('/', [UserController::class, 'store']);
     Route::put('/{id}', [UserController::class, 'update']);
     Route::patch('/update-profile', [UserController::class, 'updateProfile']);
@@ -258,6 +260,9 @@ Route::middleware('jwt.auth')->prefix('sales')->group(function () {
     Route::get('/export', [SaleController::class, 'exportExcel']);
     Route::get('/{id}', [SaleController::class, 'show']);
     Route::put('/assign-user-sale-multiple', [SaleController::class, 'assignUserToMultipleSales']);
+    Route::put('/assign-cadete/{id}', [SaleController::class, 'assignCadete']);
+    Route::put('/assign-cadete-multiple', [SaleController::class, 'assignCadeteMultiple']);
+    Route::put('/receiver-data/{id}', [SaleController::class, 'updateReceiverData']);
     Route::put('/{id}', [SaleController::class, 'update']);
     Route::put('/change-status-admin/{id}', [SaleController::class, 'changeStatusAdmin']);
     Route::put('/internal_comments/{id}', [SaleController::class, 'updateInternalComment']);
@@ -270,6 +275,11 @@ Route::middleware('jwt.auth')->prefix('sales')->group(function () {
     Route::put('/local/{id}', [SaleController::class, 'updateLocalSale']);
     Route::get('/generate-pdf/{id}', [SaleController::class, 'generarPdfSale']);
     Route::post('/generate-bulk-pdfs', [SaleController::class, 'generateBulkPdfs']);
+});
+
+// Cadete
+Route::middleware('jwt.auth')->prefix('cadete')->group(function () {
+    Route::post('/deliver/{saleId}', [CadeteController::class, 'markAsDelivered']);
 });
 
 // Sales Client

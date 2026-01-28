@@ -24,7 +24,7 @@ class UserController extends Controller
         $page = $request->query('page', 1);
         $search = $request->query('search');
 
-        $query = User::with('profile');
+        $query = User::with(['profile', 'localities']);
 
         // 🔹 Buscador por nombre, apellido o email
         if ($search) {
@@ -79,6 +79,8 @@ class UserController extends Controller
             'password' => 'required|string|min:8|confirmed',
             'profileId' => 'required',
             'isActive' => 'nullable',
+            'localityIds' => 'nullable|array',
+            'localityIds.*' => 'integer|exists:localities,id',
         ]);
         if ($validator->fails()) {
             $this->logAudit(Auth::user(), 'Store User', $request->all(), $validator->errors());
@@ -93,6 +95,13 @@ class UserController extends Controller
             'profile_id' => $request->profileId,
             'is_active' => $request->isActive ?? 1,
         ]);
+
+        // Si es cadete (profile_id = 4) y se enviaron localidades, asociarlas
+        if ($request->has('localityIds') && is_array($request->localityIds)) {
+            $user->localities()->sync($request->localityIds);
+        }
+
+        $user->load(['profile', 'localities']);
         $this->logAudit(Auth::user(), 'Store User', $request->all(), $user);
         return $this->success($user, 'Usuario creado');
     }
@@ -106,6 +115,8 @@ class UserController extends Controller
             'email' => 'nullable|string|email|max:255|unique:users,email,' . $user->id,
             'password' => 'nullable|string|min:8|confirmed',
             'profileId' => 'nullable',
+            'localityIds' => 'nullable|array',
+            'localityIds.*' => 'integer|exists:localities,id',
         ]);
         if ($validator->fails()) {
             $this->logAudit(Auth::user(), 'Update User', $request->all(), $validator->errors());
@@ -120,6 +131,13 @@ class UserController extends Controller
             $user->password = Hash::make($request->password);
         }
         $user->save();
+
+        // Actualizar localidades si se enviaron
+        if ($request->has('localityIds')) {
+            $user->localities()->sync($request->localityIds ?? []);
+        }
+
+        $user->load(['profile', 'localities']);
         $this->logAudit(Auth::user(), 'Update User', $request->all(), $user);
         return $this->success($user, 'Usuario actualizado');
     }
@@ -232,5 +250,53 @@ class UserController extends Controller
         $user->save();
         $this->logAudit(Auth::user(), 'Change Status User', ['id' => $id], $user);
         return $this->success($user, 'Estado del usuario actualizado');
+    }
+
+    public function getCadetes(Request $request)
+    {
+        $perPage = $request->query('quantity');
+        $page = $request->query('page', 1);
+        $search = $request->query('search');
+
+        $query = User::with(['profile', 'localities'])
+            ->where('profile_id', 4); // Solo cadetes
+
+        // Buscador por nombre, apellido o email
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('lastName', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        // Filtro por estado (activo/inactivo)
+        if ($request->has('is_active')) {
+            $query->where('is_active', $request->query('is_active'));
+        }
+
+        $query->orderBy('name', 'asc');
+
+        // Si no hay paginación, traer todo
+        if (!$perPage) {
+            $cadetes = $query->get();
+            $this->logAudit(Auth::user(), 'Get Cadetes List', $request->all(), $cadetes->first());
+            return $this->success($cadetes, 'Cadetes obtenidos');
+        }
+
+        // Paginación
+        $cadetes = $query->paginate($perPage, ['*'], 'page', $page);
+
+        $metaData = [
+            'current_page' => $cadetes->currentPage(),
+            'last_page' => $cadetes->lastPage(),
+            'per_page' => $cadetes->perPage(),
+            'total' => $cadetes->total(),
+            'from' => $cadetes->firstItem(),
+            'to' => $cadetes->lastItem(),
+        ];
+
+        $this->logAudit(Auth::user(), 'Get Cadetes List', $request->all(), $cadetes->first());
+        return $this->success($cadetes->items(), 'Cadetes obtenidos', $metaData);
     }
 }
