@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Lora:400,700,400italic|Oswald:400,700" media="screen">
+    
     <style>
         @font-face {
             font-family: 'Lora';
@@ -33,40 +34,87 @@
             font-weight: 700;
             src: url('file://{{ public_path("fonts/Oswald-Bold.ttf") }}') format('truetype');
         }
-        {!! file_get_contents(public_path('css/sinDibujo.css')) !!}
+        {!! file_get_contents(public_path('css/etiquetas.css')) !!}
     </style>
 </head>
 
 <body>
     <div class="hoja">
 
-    {{-- SUPER MINI --}}
-    <div style="height: 8px; width: 100%;"></div>
-    <div class="supermini">
-        @for ($i = 0; $i < $plantilla['filas']; $i++)
-            <div class="primer-color" style="background: cmyk({{ $plantilla['colores'][2] }})">
-            <p class="texto1" style="font-family: 'Oswald';font-size: x-small;">{{mb_strtoupper($product_order->name)}}</p>
-    </div>
-    <div class="segundo-color" style="background: cmyk({{ $plantilla['colores'][4] }})">
-        <p class="texto1" style="font-family: 'Oswald';font-size: x-small;">{{mb_strtoupper($product_order->name)}}</p>
-    </div>
-    <div class="tercer-color" style="background: cmyk({{ $plantilla['colores'][1] }})">
-        <p class="texto1" style="font-family: 'Oswald';font-size: x-small;">{{mb_strtoupper($product_order->name)}}</p>
-    </div>
-    <div class="primer-color" style="background: cmyk({{ $plantilla['colores'][3] }})">
-        <p class="texto1" style="font-family: 'Oswald';font-size: x-small;">{{mb_strtoupper($product_order->name)}}</p>
-    </div>
-    <div class="segundo-color" style="background: cmyk({{ $plantilla['colores'][5] }})">
-        <p class="texto1" style="font-family: 'Oswald';font-size: x-small;">{{mb_strtoupper($product_order->name)}}</p>
-    </div>
-    <div class="tercer-color" style="background: cmyk({{ $plantilla['colores'][6] }})">
-        <p class="texto1" style="font-family: 'Oswald';font-size: x-small;">{{mb_strtoupper($product_order->name)}}</p>
-    </div>
-    @endfor
-    </div>
-    <div class="numeroOrder">
-        <p class="texto3" style="font-family: 'Oswald';font-size: large;"> PEDIDO # {{$product_order->order->id_external}} </p>
-    </div>
+        {{-- SUPER MINI --}}
+        <div style="height: 8px; width: 100%;"></div>
+        <table class="etiquetas-super-mini-container">
+            @for ($i = 0; $i < $plantilla['filas']; $i++)
+                <tr>
+                <td class="etiqueta-super-mini" style="background: cmyk({{ $plantilla['colores'][2] }})">
+                    <table class="etiqueta-super-mini-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 6px;"></td>
+                <td class="etiqueta-super-mini" style="background: cmyk({{ $plantilla['colores'][4] }})">
+                    <table class="etiqueta-super-mini-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 6px;"></td>
+                <td class="etiqueta-super-mini" style="background: cmyk({{ $plantilla['colores'][1] }})">
+                    <table class="etiqueta-super-mini-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 6px;"></td>
+                <td class="etiqueta-super-mini" style="background: cmyk({{ $plantilla['colores'][3] }})">
+                    <table class="etiqueta-super-mini-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 6px;"></td>
+                <td class="etiqueta-super-mini" style="background: cmyk({{ $plantilla['colores'][5] }})">
+                    <table class="etiqueta-super-mini-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 6px;"></td>
+                <td class="etiqueta-super-mini" style="background: cmyk({{ $plantilla['colores'][6] }})">
+                    <table class="etiqueta-super-mini-content-container">
+                        <tr>
+                            <td>
+                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="11" style="height: 12px;"></td>
+            </tr>
+            @endfor
+        </table>
+
+        <div class="numeroOrder">
+            <p> PEDIDO # {{$product_order->order->id_external}} </p>
+        </div>
     </div>
 </body>
 
