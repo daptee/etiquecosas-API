@@ -22,11 +22,9 @@ class HomeContentController extends Controller
         $homeContent = HomeContent::first();
 
         if (!$homeContent) {
-            $this->logAudit(Auth::user(), 'Get Home Content', [], 'No content found');
             return $this->success(null, 'No hay contenido configurado');
         }
 
-        $this->logAudit(Auth::user(), 'Get Home Content', [], $homeContent);
         return $this->success($homeContent, 'Contenido obtenido');
     }
 

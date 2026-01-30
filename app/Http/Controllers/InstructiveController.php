@@ -45,13 +45,11 @@ class InstructiveController extends Controller
         // Without pagination
         if (!$perPage) {
             $instructives = $query->get();
-            $this->logAudit(Auth::user(), 'Get Instructives List', $request->all(), $instructives);
             return $this->success($instructives, 'Instructives obtenidos');
         }
 
         // With pagination
         $instructives = $query->paginate($perPage, ['*'], 'page', $page);
-        $this->logAudit(Auth::user(), 'Get Instructives List', $request->all(), $instructives);
 
         $metaData = [
             'current_page' => $instructives->currentPage(),

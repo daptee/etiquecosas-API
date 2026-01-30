@@ -33,12 +33,10 @@ class CostController extends Controller
         $query->orderBy('name', 'asc');
         if (!$perPage) {
             $costs = $query->get();
-            $this->logAudit(Auth::user(), 'Get Costs List', $request->all(), $costs);
             return $this->success($costs, 'Costos obtenidos');
         }
 
         $costs = $query->paginate($perPage, ['*'], 'page', $page);
-        $this->logAudit(Auth::user(), 'Get Costs List', $request->all(), $costs);
         $metaData = [
             'current_page' => $costs->currentPage(),
             'last_page' => $costs->lastPage(),

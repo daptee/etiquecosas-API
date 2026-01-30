@@ -39,13 +39,11 @@ class ClientAddressController extends Controller
 
         if (!$perPage) {
             $addresses = $query->get();
-            $this->logAudit(null, 'Get Client Addresses', $request->all(), $addresses);
             return $this->success($addresses, 'Direcciones obtenidas');
         }
 
         $addresses = $query->paginate($perPage, ['*'], 'page', $page);
-        $this->logAudit(null, 'Get Client Addresses', $request->all(), $addresses);
-
+        
         $metaData = [
             'current_page' => $addresses->currentPage(),
             'last_page' => $addresses->lastPage(),

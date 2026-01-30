@@ -27,12 +27,10 @@ class ShippingTemplateController extends Controller
         $query->orderBy('created_at', 'desc');
         if (!$perPage) {
             $shippingTemplates = $query->get();
-            $this->logAudit(Auth::user(), 'Get Shipping Template List', $request->all(), $shippingTemplates);
             return $this->success($shippingTemplates, 'Plantilas de envio obtenidas');
         }
 
         $shippingTemplates = $query->paginate($perPage, ['*'], 'page', $page);
-        $this->logAudit(Auth::user(), 'Get Shipping Template List', $request->all(), $shippingTemplates);
         $metaData = [
             'current_page' => $shippingTemplates->currentPage(),
             'last_page' => $shippingTemplates->lastPage(),

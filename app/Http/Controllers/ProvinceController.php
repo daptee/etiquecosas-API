@@ -36,12 +36,10 @@ class ProvinceController extends Controller
         $query->orderBy('name', 'asc');
         if (!$perPage) {
             $provinces = $query->get();
-            $this->logAudit(Auth::user(), 'Get Provinces List', '/provinces', '/provinces');
             return $this->success($provinces, 'Provincias obtenidas');
         }
 
         $provinces = $query->paginate($perPage, ['*'], 'page', $page);
-        $this->logAudit(Auth::user(), 'Get Provinces List', '/provinces', '/provinces');
         $metaData = [
             'current_page' => $provinces->currentPage(),
             'last_page' => $provinces->lastPage(),

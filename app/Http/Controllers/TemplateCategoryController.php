@@ -27,12 +27,10 @@ class TemplateCategoryController extends Controller
         $query->orderBy('name', 'asc');
         if (!$perPage) {
             $templateCategories = $query->get();
-            $this->logAudit(Auth::user(), 'Get Template Category List', $request->all(), $templateCategories);
             return $this->success($templateCategories, 'Plantillas de categoria obtenidas');
         }
 
         $templateCategories = $query->paginate($perPage, ['*'], 'page', $page);
-        $this->logAudit(Auth::user(), 'Get Template Category List', $request->all(), $templateCategories);
         $metaData = [
             'current_page' => $templateCategories->currentPage(),
             'last_page' => $templateCategories->lastPage(),

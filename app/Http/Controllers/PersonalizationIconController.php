@@ -29,12 +29,10 @@ class PersonalizationIconController extends Controller
         $query->orderBy('name', 'asc');
         if (!$perPage) {
             $icons = $query->get();
-            $this->logAudit(Auth::user(), 'Get Pesonalization Icons List', $request->all(), $icons);
             return $this->success($icons, 'Iconos obtenidos');
         }
 
         $icons = $query->paginate($perPage, ['*'], 'page', $page);
-        $this->logAudit(Auth::user(), 'Get Pesonalization Icons List', $request->all(), $icons);
         $metaData = [
             'current_page' => $icons->currentPage(),
             'last_page' => $icons->lastPage(),
