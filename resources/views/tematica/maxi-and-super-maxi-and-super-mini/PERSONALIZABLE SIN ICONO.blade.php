@@ -129,7 +129,7 @@
 
         .icon-cuadro .texto2 {
             text-align: center;
-            line-height: 0.8;
+            line-height: 0.9;
             color: white;
             margin: 0;
             font-family: 'Oswald';
@@ -138,6 +138,7 @@
             left: 50%;
             transform: translate(-50%, -50%);
             width: 100%;
+            white-space: normal;
         }
 
         .texto3 {
@@ -168,59 +169,108 @@
             margin-top: 0.4cm;
             margin-bottom: 0.2cm;
         }
+        {!! file_get_contents(public_path('css/etiquetas.css')) !!}
     </style>
 
 <body>
     <div class="hoja">
         @for ($i = 0; $i < 2; $i++)
             <div class="icon-cuadroGrande">
-                <p class="texto2">{!! formatName($product_order->name, 2) !!}</p>
+                <p class="texto2">{!! formatName($product_order->name, 2, 15) !!}</p>
                 <div class="cuadroRenglon"></div>
             </div>
             <div class="icon-cuadroGrande">
-                <p class="texto2">{!! formatName($product_order->name, 2) !!}</p>
+                <p class="texto2">{!! formatName($product_order->name, 2, 15) !!}</p>
                 <div class="cuadroRenglon"></div>
             </div>
             <div class="icon-cuadroGrande">
-                <p class="texto2">{!! formatName($product_order->name, 2) !!}</p>
+                <p class="texto2">{!! formatName($product_order->name, 2, 15) !!}</p>
                 <div class="cuadroRenglon"></div>
             </div>
         @endfor
 
         @for ($i = 0; $i < 3; $i++)
             <div class="icon-cuadro">
-                <p class="texto2" style="font-size: 1.05em;">{!! formatName($product_order->name, 2) !!}</p>
+                <p class="texto2" style="font-size: 1.05em;">{!! formatName($product_order->name, 2, 15) !!}</p>
             </div>
             <div class="icon-cuadro">
-                <p class="texto2" style="font-size: 1.05em;">{!! formatName($product_order->name, 2) !!}</p>
+                <p class="texto2" style="font-size: 1.05em;">{!! formatName($product_order->name, 2, 15) !!}</p>
             </div>
             <div class="icon-cuadro">
-                <p class="texto2" style="font-size: 1.05em;">{!! formatName($product_order->name, 2) !!}</p>
+                <p class="texto2" style="font-size: 1.05em;">{!! formatName($product_order->name, 2, 15) !!}</p>
             </div>
         @endfor
 
         <div style="height: 12px;"></div>
 
+        <table>
         @for ($i = 0; $i < 10; $i++)
-            <div class="primer-color">
-                <p class="texto1" style="font-family: 'Oswald';font-size: x-small;">{!! formatName($product_order->name, 2) !!}</p>
-            </div>
-            <div class="segundo-color">
-                <p class="texto1" style="font-family: 'Oswald';font-size: x-small;">{!! formatName($product_order->name, 2) !!}</p>
-            </div>
-            <div class="tercer-color">
-                <p class="texto1" style="font-family: 'Oswald';font-size: x-small;">{!! formatName($product_order->name, 2) !!}</p>
-            </div>
-            <div class="primer-color">
-                <p class="texto1" style="font-family: 'Oswald';font-size: x-small;">{!! formatName($product_order->name, 2) !!}</p>
-            </div>
-            <div class="segundo-color">
-                <p class="texto1" style="font-family: 'Oswald';font-size: x-small;">{!! formatName($product_order->name, 2) !!}</p>
-            </div>
-            <div class="tercer-color">
-                <p class="texto1" style="font-family: 'Oswald';font-size: x-small;">{!! formatName($product_order->name, 2) !!}</p>
-            </div>
-        @endfor
+            <tr>
+                    <td class="etiqueta-super-mini" style="background: {{ $plantilla['colores'] }}">
+                        <table class="etiqueta-super-mini-content-container">
+                            <tr>
+                                <td>
+                                    <p class="{{ $plantilla['fontClass'] }}" >{!! formatName($product_order->name, 2, 15) !!}</p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                    <td style="width: 6px;"></td>
+                    <td class="etiqueta-super-mini" style="background: {{ $plantilla['colores'] }}">
+                        <table class="etiqueta-super-mini-content-container">
+                            <tr>
+                                <td>
+                                    <p class="{{ $plantilla['fontClass'] }}" >{!! formatName($product_order->name, 2, 15) !!}</p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                    <td style="width: 6px;"></td>
+                    <td class="etiqueta-super-mini" style="background: {{ $plantilla['colores'] }}">
+                        <table class="etiqueta-super-mini-content-container">
+                            <tr>
+                                <td>
+                                    <p class="{{ $plantilla['fontClass'] }}" >{!! formatName($product_order->name, 2, 15) !!}</p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                    <td style="width: 6px;"></td>
+                    <td class="etiqueta-super-mini" style="background: {{ $plantilla['colores'] }}">
+                        <table class="etiqueta-super-mini-content-container">
+                            <tr>
+                                <td>
+                                    <p class="{{ $plantilla['fontClass'] }}" >{!! formatName($product_order->name, 2, 15) !!}</p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                    <td style="width: 6px;"></td>
+                    <td class="etiqueta-super-mini" style="background: {{ $plantilla['colores'] }}">
+                        <table class="etiqueta-super-mini-content-container">
+                            <tr>
+                                <td>
+                                    <p class="{{ $plantilla['fontClass'] }}" >{!! formatName($product_order->name, 2, 15) !!}</p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                    <td style="width: 6px;"></td>
+                    <td class="etiqueta-super-mini" style="background: {{ $plantilla['colores'] }}">
+                        <table class="etiqueta-super-mini-content-container">
+                            <tr>
+                                <td>
+                                    <p class="{{ $plantilla['fontClass'] }}" >{!! formatName($product_order->name, 2, 15) !!}</p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="11" style="height: 5px;"></td>
+                </tr>
+            @endfor
+        </table>
 
         <div class="numeroOrder">
             <p class="texto3" style="font-family: 'Oswald';font-size: large;"> PEDIDO # {{$product_order->order->id_external}} </p>

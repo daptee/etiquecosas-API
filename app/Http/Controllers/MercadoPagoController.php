@@ -6,9 +6,11 @@ use App\Models\Sale;
 use App\Models\SaleProduct;
 use App\Models\SaleStatusHistory;
 use App\Models\ProductPdf;
+use App\Services\BandaService;
 use App\Services\CintaCoserService;
 use App\Services\CintaPlancharService;
 use App\Services\EtiquetaService;
+use App\Services\SelloService;
 use App\Services\StockService;
 use App\Mail\OrderSummaryMail;
 use App\Mail\OrderSummaryMailTo;
@@ -458,6 +460,8 @@ class MercadoPagoController extends Controller
             EtiquetaService::limpiarPdfsDelPedido($sale->id, $fechaAprobacion);
             CintaCoserService::limpiarEtiquetasDeVenta($sale->id, $fechaAprobacion);
             CintaPlancharService::limpiarEtiquetasDeVenta($sale->id, $fechaAprobacion);
+            BandaService::limpiarBandasDeVenta($sale->id, $fechaAprobacion);
+            SelloService::limpiarSellosDeVenta($sale->id, $fechaAprobacion);
 
             foreach ($sale->products as $productOrder) {
                 $customData = json_decode($productOrder->customization_data, true);
@@ -506,6 +510,45 @@ class MercadoPagoController extends Controller
                         Log::info("Etiqueta de cinta para planchar agregada para {$nombreCompleto}");
                     } catch (\Throwable $e) {
                         Log::error("Error agregando etiqueta de cinta para planchar", [
+                            'error' => $e->getMessage(),
+                            'product_order_id' => $productOrder->id,
+                        ]);
+                    }
+                }
+
+                // === BANDAS DE SILICONA (Productos 52944 y 52796) ===
+                if (BandaService::esProductoBanda($productOrder->product_id)) {
+                    try {
+                        BandaService::agregarBandaAlPdf(
+                            $sale->id,
+                            $productOrder,
+                            $nombreCompleto,
+                            $customColor,
+                            $customIcon,
+                            $fechaAprobacion
+                        );
+                        Log::info("Banda agregada al PDF para venta {$sale->id}");
+                    } catch (\Throwable $e) {
+                        Log::error("Error agregando banda al PDF", [
+                            'error' => $e->getMessage(),
+                            'product_order_id' => $productOrder->id,
+                        ]);
+                    }
+                }
+
+                // === SELLOS PERSONALIZADOS (Producto 481) ===
+                if (SelloService::esProductoSello($productOrder->product_id)) {
+                    try {
+                        SelloService::agregarSelloAlPdf(
+                            $sale->id,
+                            $productOrder,
+                            $nombreCompleto,
+                            $customIcon,
+                            $fechaAprobacion
+                        );
+                        Log::info("Sello agregado al PDF para {$nombreCompleto}");
+                    } catch (\Throwable $e) {
+                        Log::error("Error agregando sello al PDF", [
                             'error' => $e->getMessage(),
                             'product_order_id' => $productOrder->id,
                         ]);
