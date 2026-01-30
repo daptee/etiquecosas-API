@@ -45,6 +45,7 @@ Route::get('/clear-cache', [CacheController::class, 'clearCache'])->name('clearC
 Route::get('/run', [BackupController::class, 'createBackup']);
 Route::get('/clean', [BackupController::class, 'cleanOldBackups']);
 Route::get('/notify-production', [BackupController::class, 'notifyProductionOrders']);
+Route::get('/notify-stalled-production', [BackupController::class, 'notifyStalledProduction']);
 
 // Auth
 Route::post('login', [LoginController::class, 'login']);

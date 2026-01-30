@@ -21,9 +21,12 @@ class CadeteController extends Controller
     {
         $user = Auth::user();
 
-        // Validar que el usuario sea cadete (profile_id = 4)
-        if ($user->profile_id !== 4) {
-            return $this->error('Solo los cadetes pueden marcar pedidos como entregados', 403);
+        // Validar que el usuario sea cadete (profile_id = 4) o admin (profile_id = 1)
+        $isAdmin = $user->profile_id === 1;
+        $isCadete = $user->profile_id === 4;
+
+        if (!$isAdmin && !$isCadete) {
+            return $this->error('Solo los administradores o cadetes pueden marcar pedidos como entregados', 403);
         }
 
         // Validar datos del receptor
@@ -52,8 +55,8 @@ class CadeteController extends Controller
             return $this->notFound('Venta no encontrada');
         }
 
-        // Validar que la venta esté asignada a este cadete
-        if ($sale->cadete_id !== $user->id) {
+        // Si es cadete, validar que la venta esté asignada a él. Admin puede marcar cualquier venta.
+        if ($isCadete && $sale->cadete_id !== $user->id) {
             $this->logAudit($user, 'Cadete Mark Delivered Unauthorized', ['sale_id' => $saleId], 'Venta no asignada a este cadete');
             return $this->error('Esta venta no está asignada a tu cuenta', 403);
         }
