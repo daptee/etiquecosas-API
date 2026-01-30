@@ -21,12 +21,10 @@ class ProfileController extends Controller
         $query = Profile::query()->orderBy('created_at', 'desc');
         if (!$perPage) {
             $profiles = $query->get();
-            $this->logAudit(Auth::user(), 'Get Profiles List', $request->all(), $profiles);
             return $this->success($profiles, 'Perfiles obtenidos');
         }
 
         $profiles = $query->paginate($perPage, ['*'], 'page', $page);
-        $this->logAudit(Auth::user(), 'Get Profiles List', $request->all(), $profiles);
         $metaData = [
             'current_page' => $profiles->currentPage(),
             'last_page' => $profiles->lastPage(),

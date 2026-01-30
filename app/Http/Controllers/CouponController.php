@@ -57,12 +57,10 @@ class CouponController extends Controller
 
     if (!$perPage) {
         $coupons = $query->get();
-        $this->logAudit(Auth::user(), 'Get Coupons List', $request->all(), $coupons);
         return $this->success($coupons, 'Cupones obtenidos');
     }
 
     $coupons = $query->paginate($perPage, ['*'], 'page', $page);
-    $this->logAudit(Auth::user(), 'Get Coupons List', $request->all(), $coupons);
 
     $metaData = [
         'current_page' => $coupons->currentPage(),
@@ -309,8 +307,6 @@ public function update(Request $request, $id)
             'categories' => $coupon->categories,
             'products' => $coupon->products,
         ];
-
-        $this->logAudit(Auth::user(), 'Validate Coupon', $request->all(), $response);
 
         return $this->success($response, 'Cupón válido');
     }

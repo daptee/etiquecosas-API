@@ -21,12 +21,10 @@ class ClientTypeController extends Controller
         $query = ClientType::query()->orderBy('name', 'asc');
         if (!$perPage) {
             $clientTypes = $query->get();
-            $this->logAudit(Auth::user(), 'Get Client Type List', $request->all(), $clientTypes);
             return $this->success($clientTypes, 'Tipos de cliente obtenidos');
         }
 
         $clientTypes = $query->paginate($perPage, ['*'], 'page', $page);
-        $this->logAudit(Auth::user(), 'Get Client Type List', $request->all(), $clientTypes);
         $metaData = [
             'current_page' => $clientTypes->currentPage(),
             'last_page' => $clientTypes->lastPage(),
@@ -35,7 +33,6 @@ class ClientTypeController extends Controller
             'from' => $clientTypes->firstItem(),
             'to' => $clientTypes->lastItem(),
         ];
-        $this->logAudit(Auth::user(), 'Get Client Type List', $request->all(), $clientTypes);
         return $this->success($clientTypes->items(), 'Tipos de cliente obtenidos', $metaData);
     }
 }

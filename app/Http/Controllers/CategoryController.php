@@ -39,13 +39,11 @@ class CategoryController extends Controller
         $query->orderBy('name', 'asc');
         if (!$perPage) {
             $categories = $query->get();
-            $this->logAudit(Auth::user(), 'Get Categories List', $request->all(), $categories->first());
             return $this->success($categories, 'Categorias obtenidas');
         }
 
         $categories = $query->paginate($perPage, ['*'], 'page', $page);
         
-        $this->logAudit(Auth::user(), 'Get Categories List', $request->all(), $categories->first());
         $metaData = [
             'current_page' => $categories->currentPage(),
             'last_page' => $categories->lastPage(),
@@ -347,8 +345,6 @@ class CategoryController extends Controller
         $formattedCategories = $categories->map(function ($category) {
             return $this->formatCategoryForPublicApi($category);
         });
-
-        $this->logAudit(null, 'Get Public Categories List V1', $request->all(), $formattedCategories);
 
         return response()->json($formattedCategories, 200);
     }

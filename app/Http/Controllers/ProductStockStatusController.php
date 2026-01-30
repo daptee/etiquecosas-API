@@ -27,12 +27,10 @@ class ProductStockStatusController extends Controller
         $query->orderBy('name', 'asc');
         if (!$perPage) {
             $productStockStatuses = $query->get();
-            $this->logAudit(Auth::user(), 'Get Product Stock Status List', $request->all(), $productStockStatuses);
             return $this->success($productStockStatuses, 'Estados de existencias de producto obtenidos');
         }
 
         $productStockStatuses = $query->paginate($perPage, ['*'], 'page', $page);
-        $this->logAudit(Auth::user(), 'Get Product Stock Status List', $request->all(), $productStockStatuses);
         $metaData = [
             'current_page' => $productStockStatuses->currentPage(),
             'last_page' => $productStockStatuses->lastPage(),

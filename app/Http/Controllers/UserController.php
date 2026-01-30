@@ -50,7 +50,6 @@ class UserController extends Controller
         // 🔹 Si no hay paginación, traer todo
         if (!$perPage) {
             $users = $query->get();
-            $this->logAudit(Auth::user(), 'Get Users List', $request->all(), $users->first());
             return $this->success($users, 'Usuarios obtenidos');
         }
 
@@ -66,7 +65,6 @@ class UserController extends Controller
             'to' => $users->lastItem(),
         ];
 
-        $this->logAudit(Auth::user(), 'Get Users List', $request->all(), $users->first());
         return $this->success($users->items(), 'Usuarios obtenidos', $metaData);
     }
 
@@ -280,7 +278,6 @@ class UserController extends Controller
         // Si no hay paginación, traer todo
         if (!$perPage) {
             $cadetes = $query->get();
-            $this->logAudit(Auth::user(), 'Get Cadetes List', $request->all(), $cadetes->first());
             return $this->success($cadetes, 'Cadetes obtenidos');
         }
 
@@ -296,7 +293,6 @@ class UserController extends Controller
             'to' => $cadetes->lastItem(),
         ];
 
-        $this->logAudit(Auth::user(), 'Get Cadetes List', $request->all(), $cadetes->first());
         return $this->success($cadetes->items(), 'Cadetes obtenidos', $metaData);
     }
 }

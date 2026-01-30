@@ -41,14 +41,11 @@ class SaleClientController extends Controller
         // Si no hay perPage, traer todo
         if (!$perPage) {
             $orders = $query->get();
-            $this->logAudit(null, 'Get Order History', $request->all(), $orders->take(1));
             return $this->success($orders, 'Historial de pedidos obtenido correctamente');
         }
 
         // Paginación
         $orders = $query->paginate($perPage, ['*'], 'page', $page);
-
-        $this->logAudit(null, 'Get Order History', $request->all(), collect($orders->items())->take(1));
 
         $metaData = [
             'current_page' => $orders->currentPage(),
@@ -82,7 +79,6 @@ class SaleClientController extends Controller
 
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
-            $this->logAudit(null, 'Order Modification Fail', $request->all(), $validator->errors());
             return $this->validationError($validator->errors());
         }
 
@@ -95,8 +91,6 @@ class SaleClientController extends Controller
         $notifyEmail = env('MAIL_NOTIFICATION_TO');
 
         Mail::to($notifyEmail)->send(new OrderModificationRequestMail($mailData));
-
-        $this->logAudit(null, 'Order Modification Sent', $request->all(), $mailData);
 
         return $this->success($mailData, 'Solicitud de modificación enviada correctamente');
     }
@@ -124,7 +118,6 @@ class SaleClientController extends Controller
 
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
-            $this->logAudit(null, 'Address Change Validation Fail', $request->all(), $validator->errors());
             return $this->validationError($validator->errors());
         }
 
@@ -138,8 +131,6 @@ class SaleClientController extends Controller
         $notifyEmail = env('MAIL_NOTIFICATION_TO');
 
         \Mail::to($notifyEmail)->send(new OrderAddressChangeMail($mailData));
-
-        $this->logAudit(null, 'Request Address Change', ['orderId' => $request->order_id], $mailData);
 
         return $this->success($mailData, 'Solicitud de cambio de dirección enviada correctamente');
     }
@@ -177,8 +168,6 @@ class SaleClientController extends Controller
         $notifyEmail = env('MAIL_NOTIFICATION_TO');
 
         Mail::to($notifyEmail)->send(new ShippingClaimMail($mailData));
-
-        $this->logAudit(null, 'Request Shipping Claim', ['orderId' => $request->order_id], $mailData);
 
         return $this->success($mailData, 'Reclamo de envío enviado correctamente');
     }

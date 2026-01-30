@@ -212,13 +212,11 @@ class SaleController extends Controller
         // 🔹 Si no hay perPage, traer todo
         if (!$perPage) {
             $sales = $query->get();
-            $this->logAudit(Auth::user(), 'Get Sales List', $request->all(), $sales->take(1));
             return $this->success($sales, 'Ventas obtenidas');
         }
 
         // 🔹 Paginación
         $sales = $query->paginate($perPage, ['*'], 'page', $page);
-        $this->logAudit(Auth::user(), 'Get Sales List', $request->all(), collect($sales->items())->take(1));
 
         $metaData = [
             'current_page' => $sales->currentPage(),
@@ -244,7 +242,6 @@ class SaleController extends Controller
         $sale->load(['client', 'channel', 'products.product', 'products.variant', 'status', 'statusHistory', 'shippingMethod', 'coupon', 'user', 'childSales', 'parentSale'])
             ->findOrFail($id);
 
-        $this->logAudit(Auth::user(), 'Get Sale Detail', ['id' => $id], $sale);
         return $this->success($sale, 'Venta obtenida correctamente');
 
     }
@@ -273,8 +270,6 @@ class SaleController extends Controller
             'products' => $sale->products,
             'coupon' => $sale->coupon
         ];
-
-        $this->logAudit(null, 'Get Sale Summary', ['id' => $id], $data);
 
         return $this->success($data, 'Venta resumida obtenida correctamente');
     }
@@ -2314,8 +2309,6 @@ class SaleController extends Controller
                 'products_sold' => $productsSold,
                 'sales' => $salesList
             ];
-
-            $this->logAudit(Auth::user(), 'Get Dashboard Stats', $request->all(), $response);
 
             return $this->success($response, 'Estadísticas obtenidas correctamente');
 
