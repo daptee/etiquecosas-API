@@ -20,7 +20,6 @@ class ShippingConfigController extends Controller
     public function index()
     {
         $config = ShippingConfig::get();
-        $this->logAudit(Auth::user(), 'Get Shipping Config', [], $config);
         return $this->success($config, 'Configuración de envío obtenida');
     }
 
@@ -30,7 +29,6 @@ class ShippingConfigController extends Controller
     public function show($id)
     {
         $config = $this->findObject(ShippingConfig::class, $id);
-        $this->logAudit(Auth::user(), 'Get Shipping Config Details', $id, $config);
         return $this->success($config, 'Detalles de configuración obtenidos');
     }
 

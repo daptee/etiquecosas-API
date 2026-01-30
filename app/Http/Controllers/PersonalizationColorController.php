@@ -27,12 +27,10 @@ class PersonalizationColorController extends Controller
         $query->orderBy('name', 'asc');
         if (!$perPage) {
             $colors = $query->get();
-            $this->logAudit(Auth::user(), 'Get Personalization Colors List', $request->all(), $colors);
             return $this->success($colors, 'Colores obtenidos');
         }
 
         $colors = $query->paginate($perPage, ['*'], 'page', $page);
-        $this->logAudit(Auth::user(), 'Get Personalization Colors List', $request->all(), $colors);
         $metaData = [
             'current_page' => $colors->currentPage(),
             'last_page' => $colors->lastPage(),

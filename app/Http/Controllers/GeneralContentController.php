@@ -21,11 +21,9 @@ class GeneralContentController extends Controller
         $generalContent = GeneralContent::first();
 
         if (!$generalContent) {
-            $this->logAudit(Auth::user(), 'Get General Content', [], 'No content found');
             return $this->success(null, 'No hay contenido configurado');
         }
 
-        $this->logAudit(Auth::user(), 'Get General Content', [], $generalContent);
         return $this->success($generalContent, 'Contenido obtenido');
     }
 

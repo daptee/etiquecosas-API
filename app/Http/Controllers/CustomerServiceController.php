@@ -44,13 +44,11 @@ class CustomerServiceController extends Controller
         // Without pagination
         if (!$perPage) {
             $customerServices = $query->get();
-            $this->logAudit(Auth::user(), 'Get Customer Services List', $request->all(), $customerServices);
             return $this->success($customerServices, 'Customer services obtenidos');
         }
 
         // With pagination
         $customerServices = $query->paginate($perPage, ['*'], 'page', $page);
-        $this->logAudit(Auth::user(), 'Get Customer Services List', $request->all(), $customerServices);
 
         $metaData = [
             'current_page' => $customerServices->currentPage(),

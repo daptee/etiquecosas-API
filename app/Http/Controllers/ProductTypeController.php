@@ -27,12 +27,10 @@ class ProductTypeController extends Controller
         $query->orderBy('name', 'asc');
         if (!$perPage) {
             $productTypes = $query->get();
-            $this->logAudit(Auth::user(), 'Get Product Type List', $request->all(), $productTypes);
             return $this->success($productTypes, 'Tipos de producto obtenidos');
         }
 
         $productTypes = $query->paginate($perPage, ['*'], 'page', $page);
-        $this->logAudit(Auth::user(), 'Get Product Type List', $request->all(), $productTypes);
         $metaData = [
             'current_page' => $productTypes->currentPage(),
             'last_page' => $productTypes->lastPage(),

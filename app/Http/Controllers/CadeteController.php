@@ -97,12 +97,6 @@ class CadeteController extends Controller
 
         $sale->load(['client', 'channel', 'products.product', 'products.variant', 'status', 'statusHistory', 'cadete']);
 
-        $this->logAudit($user, 'Cadete Mark Delivered', [
-            'sale_id' => $saleId,
-            'receiver_name' => $request->receiver_name,
-            'receiver_dni' => $request->receiver_dni
-        ], $sale);
-
         return $this->success($sale, 'Pedido marcado como entregado correctamente');
     }
 }
