@@ -244,6 +244,72 @@
             margin-top: 0.4cm;
             margin-bottom: 0.2cm;
         }
+        
+        /* ETIQUETAS SUPER MINI */
+        .etiquetas-super-mini-container {
+            margin: 0 !important;
+            padding: 0 !important;
+            border-spacing: 0 !important;
+        }
+
+        .etiquetas-super-mini-container tr td {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .etiqueta-super-mini {
+            width: 2.9cm;
+            height: 1.15cm;
+            display: inline-block;
+            position: relative;
+        }
+
+        .etiqueta-super-mini-content-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 2.4cm;
+            height: auto;
+            margin: 0 !important;
+            padding: 0 !important;
+            border-spacing: 0 !important;
+            text-align: center;
+            /* border: 1px solid red; */
+        }
+
+        .etiqueta-super-mini-content-container tr td {
+            margin: 0 !important;
+            padding: 0 !important;
+            height: fit-content;
+            vertical-align: middle;
+            /* border: 1px solid red; */
+        }
+
+        .etiqueta-super-mini-content-container p {
+            font-family: 'Oswald';
+            font-size: 9pt;
+            text-align: center;
+            line-height: 0.7;
+            color: #FFF;
+            display: inline-block;
+            margin: 0 !important;
+            padding: 0 !important;
+            /* border: 1px solid black; */
+        }
+
+        .etiqueta-super-mini-content-container p.normal-text-size {
+            font-size: 9pt !important;
+            line-height: 1 !important;
+        }
+        .etiqueta-super-mini-content-container p.small-text-size {
+            font-size: 9pt !important;
+        }
+        .etiqueta-super-mini-content-container p.extra-small-text-size {
+            font-size: 8pt !important;
+            line-height: 0.7 !important;
+        }
+
     </style>
 
 <body>
@@ -254,7 +320,7 @@
                     <img class="personaje" src="{{ $plantilla['imagen'] }}" alt="">
                 </div>
                 <div class="cuadroGrande">
-                    <p class="texto2" style="font-family: 'Oswald'; color:{{$plantilla['colores']}};font-size: 1.15em;">{{mb_strtoupper($product_order->name)}}</p>
+                    <p class="texto2" style="font-family: 'Oswald'; color:{{$plantilla['colores']}};font-size: 1.15em;">{!! formatName($product_order->name, 2, 15) !!}</p>
                 </div>
             </div>
             <div class="cuadroRenglon">
@@ -266,7 +332,7 @@
                 <img class="personaje" src="{{ $plantilla['imagen'] }}" alt="">
             </div>
             <div class="cuadroGrande">
-                <p class="texto2" style="font-family: 'Oswald'; color:{{$plantilla['colores']}};font-size: 1.15em;">{{mb_strtoupper($product_order->name)}}</p>
+                <p class="texto2" style="font-family: 'Oswald'; color:{{$plantilla['colores']}};font-size: 1.15em;">{!! formatName($product_order->name, 2, 15) !!}</p>
             </div>
             <div class="cuadroRenglon">
             </div>
@@ -278,7 +344,7 @@
                 <img class="personaje" src="{{ $plantilla['imagen'] }}" alt="">
             </div>
             <div class="cuadroGrande">
-                <p class="texto2" style="font-family: 'Oswald';color:{{$plantilla['colores']}};font-size: 1.15em;">{{mb_strtoupper($product_order->name)}}</p>
+                <p class="texto2" style="font-family: 'Oswald';color:{{$plantilla['colores']}};font-size: 1.15em;">{!! formatName($product_order->name, 2, 15) !!}</p>
             </div>
             <div class="cuadroRenglon">
             </div>
@@ -302,7 +368,7 @@
                                     <td class="etiqueta-maxi-text"
                                         style="width:62%; height:100%; background: {{ $plantilla['colores'] }}; text-align:center; vertical-align:middle;">
                                         <p class="{{ $plantilla['fontClass'] }}" style="margin:0; line-height:1; color:#FFF;">
-                                            {!! formatName($product_order->name, 2) !!}
+                                            {!! formatName($product_order->name, 2, 15) !!}
                                         </p>
                                     </td>
                                 </tr>
@@ -312,29 +378,74 @@
                 </tr>
             @endfor
         </table>
-
-        <div style="height: 12px;"></div>
-
+        <table>
         @for ($i = 0; $i < 10; $i++)
-            <div class="primer-color" style="background:{{$plantilla['colores']}};">
-            <p class="texto1" style="font-family: 'Oswald';font-size: x-small;">{{mb_strtoupper($product_order->name)}}</p>
-            </div>
-            <div class="segundo-color" style="background:{{$plantilla['colores']}};">
-                <p class="texto1" style="font-family: 'Oswald';font-size: x-small;">{{mb_strtoupper($product_order->name)}}</p>
-            </div>
-            <div class="tercer-color" style="background:{{$plantilla['colores']}};">
-                <p class="texto1" style="font-family: 'Oswald';font-size: x-small;">{{mb_strtoupper($product_order->name)}}</p>
-            </div>
-            <div class="primer-color" style="background:{{$plantilla['colores']}};">
-                <p class="texto1" style="font-family: 'Oswald';font-size: x-small;">{{mb_strtoupper($product_order->name)}}</p>
-            </div>
-            <div class="segundo-color" style="background:{{$plantilla['colores']}};">
-                <p class="texto1" style="font-family: 'Oswald';font-size: x-small;">{{mb_strtoupper($product_order->name)}}</p>
-            </div>
-            <div class="tercer-color" style="background:{{$plantilla['colores']}};">
-                <p class="texto1" style="font-family: 'Oswald';font-size: x-small;">{{mb_strtoupper($product_order->name)}}</p>
-            </div>
+            <tr>
+                    <td class="etiqueta-super-mini" style="background: {{ $plantilla['colores'] }}">
+                        <table class="etiqueta-super-mini-content-container">
+                            <tr>
+                                <td>
+                                    <p class="{{ $plantilla['fontClass'] }}" >{!! formatName($product_order->name, 2, 15) !!}</p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                    <td style="width: 6px;"></td>
+                    <td class="etiqueta-super-mini" style="background: {{ $plantilla['colores'] }}">
+                        <table class="etiqueta-super-mini-content-container">
+                            <tr>
+                                <td>
+                                    <p class="{{ $plantilla['fontClass'] }}" >{!! formatName($product_order->name, 2, 15) !!}</p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                    <td style="width: 6px;"></td>
+                    <td class="etiqueta-super-mini" style="background: {{ $plantilla['colores'] }}">
+                        <table class="etiqueta-super-mini-content-container">
+                            <tr>
+                                <td>
+                                    <p class="{{ $plantilla['fontClass'] }}" >{!! formatName($product_order->name, 2, 15) !!}</p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                    <td style="width: 6px;"></td>
+                    <td class="etiqueta-super-mini" style="background: {{ $plantilla['colores'] }}">
+                        <table class="etiqueta-super-mini-content-container">
+                            <tr>
+                                <td>
+                                    <p class="{{ $plantilla['fontClass'] }}" >{!! formatName($product_order->name, 2, 15) !!}</p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                    <td style="width: 6px;"></td>
+                    <td class="etiqueta-super-mini" style="background: {{ $plantilla['colores'] }}">
+                        <table class="etiqueta-super-mini-content-container">
+                            <tr>
+                                <td>
+                                    <p class="{{ $plantilla['fontClass'] }}" >{!! formatName($product_order->name, 2, 15) !!}</p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                    <td style="width: 6px;"></td>
+                    <td class="etiqueta-super-mini" style="background: {{ $plantilla['colores'] }}">
+                        <table class="etiqueta-super-mini-content-container">
+                            <tr>
+                                <td>
+                                    <p class="{{ $plantilla['fontClass'] }}" >{!! formatName($product_order->name, 2, 15) !!}</p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="11" style="height: 5px;"></td>
+                </tr>
             @endfor
+            </table>
             <div class="numeroOrder">
                 <p class="texto3" style="font-family: 'Oswald';font-size: large;"> PEDIDO # {{$product_order->order->id_external}} </p>
             </div>
