@@ -67,7 +67,7 @@
 
         .texto1 {
             text-align: center;
-            line-height: 1;
+            line-height: 0.8;
             color: white;
             margin: 0;
             position: absolute;
@@ -144,13 +144,23 @@
     <div class="hoja">
 
         <!-- FILA SPOT AGREGADA -->
+        @php
+            $nameLength = Str::length($product_order->name);
+            if ($nameLength <= 16) {
+                $spotFontsize = '11pt';
+            } elseif ($nameLength <= 25) {
+                $spotFontsize = '9pt';
+            } else {
+                $spotFontsize = '8pt';
+            }
+        @endphp
         <div class="circulo-principal">
             @for ($i = 0; $i < 20; $i++)
                 <div class="circulo-personaje">
                     <div class="circuloCuadro">
                         <img class="personajeCirculo" src="{{ $plantilla['imagen'] }}" alt="">
                     </div>
-                    <p class="circulo-texto {{ $plantilla['fontClass'] }}" style="font-family: 'Oswald';color:{{$plantilla['colores']}}">
+                    <p class="circulo-texto {{ $plantilla['fontClass'] }}" style="font-family: 'Oswald';color:{{$plantilla['colores']}};font-size:{{ $spotFontsize }};">
                         {!! formatNameExactLines($product_order->name, 2) !!}
                     </p>
                 </div>
@@ -161,7 +171,7 @@
         @for ($i = 0; $i < 60; $i++)
             <div class="super-mini" style="background: {{$plantilla['colores']}})">
                 <p class="texto1" style="font-family: 'Oswald';font-size: x-small;">
-                    {{mb_strtoupper($product_order->name)}}</p>
+                    {!! formatName($product_order->name, 2, 15) !!}</p>
             </div>
         @endfor
 
