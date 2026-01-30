@@ -138,7 +138,7 @@
 
         .texto1 {
             text-align: center;
-            line-height: 1;
+            line-height: 0.8;
             color: white;
             margin: 0;
             position: absolute;
@@ -185,13 +185,13 @@
         @for ($i = 0; $i < 60; $i++)
             <div class="super-mini" style="background: {{$plantilla['colores']}})">
                 <p class="texto1" style="font-family: 'Oswald';font-size: x-small;">
-                    {{mb_strtoupper($product_order->name)}}</p>
+                    {!! formatName($product_order->name, 2, 15) !!}</p>
             </div>
         @endfor
 
         <!-- NUMERO DE PEDIDO -->
         <div class="numeroOrder">
-            <p>PEDIDOs # {{$product_order->order->id_external}}</p>
+            <p>PEDIDO # {{$product_order->order->id_external}}</p>
         </div>
     </div>
 </body>

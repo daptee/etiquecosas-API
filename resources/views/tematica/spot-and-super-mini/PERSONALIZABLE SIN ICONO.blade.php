@@ -69,7 +69,7 @@
 
         .texto1 {
             text-align: center;
-            line-height: 1;
+            line-height: 0.8;
             color: white;
             margin: 0;
             position: absolute;
@@ -142,7 +142,7 @@
             @for ($i = 0; $i < 20; $i++)
                 <div class="circulo-personaje">
                     <p class="circulo-texto {{ $plantilla['fontClass'] }}" style="font-family: 'Oswald';">
-                        {!! formatNameExactLines($product_order->name, 2) !!}
+                        {!! formatName($product_order->name, 2, 15) !!}
                     </p>
                 </div>
             @endfor
@@ -152,7 +152,7 @@
         @for ($i = 0; $i < 60; $i++)
             <div class="super-mini">
                 <p class="texto1" style="font-family: 'Oswald';font-size: x-small;">
-                    {{mb_strtoupper($product_order->name)}}</p>
+                    {!! formatName($product_order->name, 2, 15) !!}</p>
             </div>
         @endfor
 

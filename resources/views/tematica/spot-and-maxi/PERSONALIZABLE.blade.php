@@ -175,13 +175,23 @@
     <div class="hoja">
 
         <!-- FILA SPOT AGREGADA -->
+         @php
+            $nameLength = Str::length($product_order->name);
+            if ($nameLength <= 16) {
+                $spotFontsize = '11pt';
+            } elseif ($nameLength <= 25) {
+                $spotFontsize = '9pt';
+            } else {
+                $spotFontsize = '8pt';
+            }
+        @endphp
         <div class="circulo-principal">
             @for ($i = 0; $i < 10; $i++)
                 <div class="circulo-personaje">
                     <div class="circuloCuadro">
                         <img class="personajeCirculo" src="{{ $plantilla['imagen'] }}" alt="">
                     </div>
-                    <p class="circulo-texto" style="font-family: 'Oswald';font-size: small;color:{{$plantilla['colores']}}">
+                    <p class="circulo-texto {{ $plantilla['fontClass'] }}" style="font-family: 'Oswald';color:{{$plantilla['colores']}};font-size:{{ $spotFontsize }};">
                         {!! formatNameExactLines($product_order->name, 2) !!}
                     </p>
                 </div>
