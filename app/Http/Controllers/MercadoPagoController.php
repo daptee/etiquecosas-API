@@ -543,6 +543,7 @@ class MercadoPagoController extends Controller
                             $sale->id,
                             $productOrder,
                             $nombreCompleto,
+                            $customColor,
                             $customIcon,
                             $fechaAprobacion
                         );
