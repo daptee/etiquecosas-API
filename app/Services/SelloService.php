@@ -79,7 +79,8 @@ class SelloService
             'fecha' => $fechaCarpeta,
             'nombre' => $nombreCompleto,
             'cantidad' => $cantidad,
-            'con_icono' => $customIcon !== null
+            'con_icono' => $customIcon !== null,
+            'icono_path' => $customIcon
         ]);
     }
 
