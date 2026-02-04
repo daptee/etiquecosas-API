@@ -16,7 +16,7 @@ class CintaPlancharService
     const PRODUCTO_COMBO_MATERNAL_ID = 141;
 
     // Producto ID para "Cintas para pegar" (6x2.5cm) - va en PDF x24
-    const PRODUCTO_PEGAR_ID = 92909;
+    const PRODUCTO_PEGAR_ID = 92932;
 
     // Variantes: 801 = 24 etiquetas, 802 = 48 etiquetas
     const VARIANTE_24 = 801;
