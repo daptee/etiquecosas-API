@@ -40,7 +40,8 @@ class CouponController extends Controller
             'applies_to_all_products',
             'value'
         )
-        ->with('status', 'categories:id', 'products:id');
+        ->with('status', 'categories:id', 'products:id')
+        ->withCount('sales');
 
     if ($search) {
         $query->where(function ($q) use ($search) {
