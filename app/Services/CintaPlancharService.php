@@ -99,6 +99,13 @@ class CintaPlancharService
 
         $tipo = self::getTipoPorVariante($variantId, $productId);
 
+        Log::info("CintaPlancharService - Procesando producto", [
+            'product_id' => $productId,
+            'variant_id' => $variantId,
+            'tipo' => $tipo,
+            'es_pegar' => self::esProductoPegar($productId)
+        ]);
+
         if (!$tipo) {
             Log::warning("No se pudo determinar el tipo (x24/x48) para el producto planchar", [
                 'variant_id' => $variantId,
