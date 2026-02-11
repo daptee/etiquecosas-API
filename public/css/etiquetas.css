@@ -242,7 +242,7 @@
     padding: 0 !important;
     word-break: break-word;
     overflow-wrap: break-word;
-    /* border: 1px solid black; */
+    border: 1px solid black;
 }
 
 
