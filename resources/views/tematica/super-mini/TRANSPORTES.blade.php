@@ -46,7 +46,7 @@
         <table class="etiquetas-super-mini-container">
             @for ($i = 0; $i < $plantilla['filas']; $i++)
                 <tr>
-                <td class="etiqueta-super-mini" style="background: cmyk({{ $plantilla['colores'][6] }})">
+                <td class="etiqueta-super-mini" style="background: cmyk({{ $plantilla['colores'][1] }})">
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
                             <td>
@@ -76,7 +76,7 @@
                     </table>
                 </td>
                 <td style="width: 6px;"></td>
-                <td class="etiqueta-super-mini" style="background: cmyk({{ $plantilla['colores'][1] }})">
+                <td class="etiqueta-super-mini" style="background: cmyk({{ $plantilla['colores'][3] }})">
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
                             <td>
@@ -86,7 +86,7 @@
                     </table>
                 </td>
                 <td style="width: 6px;"></td>
-                <td class="etiqueta-super-mini" style="background: cmyk({{ $plantilla['colores'][3] }})">
+                <td class="etiqueta-super-mini" style="background: cmyk({{ $plantilla['colores'][0] }})">
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
                             <td>
