@@ -133,8 +133,26 @@ class SaleController extends Controller
             $query->where('user_id', $request->query('user_id'));
         }
 
-        if ($request->has('unassigned_user') && $request->query('unassigned_user')) {
-            $query->whereNull('user_id');
+        if ($request->has('assigned_user')) {
+            $assignedUser = $request->query('assigned_user');
+            if ($assignedUser == 'true' || $assignedUser == '1') {
+                $query->whereNotNull('user_id');
+            } else {
+                $query->whereNull('user_id');
+            }
+        }
+
+        if ($request->has('cadete_id')) {
+            $query->where('cadete_id', $request->query('cadete_id'));
+        }
+
+        if ($request->has('assigned_cadete')) {
+            $assignedCadete = $request->query('assigned_cadete');
+            if ($assignedCadete == 'true' || $assignedCadete == '1') {
+                $query->whereNotNull('cadete_id');
+            } else {
+                $query->whereNull('cadete_id');
+            }
         }
 
         if ($request->has('client_id')) {
