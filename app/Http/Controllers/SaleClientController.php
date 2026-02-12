@@ -84,6 +84,7 @@ class SaleClientController extends Controller
 
         $mailData = [
             'client_name' => $client->name . ' ' . $client->lastname,
+            'client_email' => $client->email,
             'order_id' => $request->order_id,
             'message' => $request->note,
         ];
@@ -123,6 +124,7 @@ class SaleClientController extends Controller
 
         $mailData = [
             'client_name' => $client->name . ' ' . $client->lastname,
+            'client_email' => $client->email,
             'order_id' => $request->order_id,
             'new_address' => $request->new_address,
             'message' => $request->message,
