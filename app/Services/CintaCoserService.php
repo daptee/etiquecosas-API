@@ -11,23 +11,40 @@ class CintaCoserService
     // Producto ID para "Etiquetas de tela PARA COSER"
     const PRODUCTO_COSER_ID = 1291;
 
+    // Producto ID para "Etiquetas para pegar" (6x2.5cm) - va en PDF x24
+    const PRODUCTO_PEGAR_ID = 92932;
+
     // Variantes: 799 = 24 etiquetas, 800 = 48 etiquetas
     const VARIANTE_24 = 799;
     const VARIANTE_48 = 800;
 
     /**
      * Verifica si un producto es de tipo "Etiquetas de tela PARA COSER"
+     * o "Etiquetas para pegar"
      */
     public static function esProductoCoser(int $productId): bool
     {
-        return $productId === self::PRODUCTO_COSER_ID;
+        return in_array($productId, [self::PRODUCTO_COSER_ID, self::PRODUCTO_PEGAR_ID]);
     }
 
     /**
-     * Obtiene el tipo de PDF (x24 o x48) según la variante
+     * Verifica si un producto es "Etiquetas para pegar" (etiqueta grande 6x2.5cm)
      */
-    public static function getTipoPorVariante($variantId): ?string
+    public static function esProductoPegar(int $productId): bool
     {
+        return $productId === self::PRODUCTO_PEGAR_ID;
+    }
+
+    /**
+     * Obtiene el tipo de PDF (x24 o x48) según la variante o producto
+     */
+    public static function getTipoPorVariante($variantId, $productId = null): ?string
+    {
+        // Etiquetas para pegar siempre van en x24
+        if ($productId && $productId === self::PRODUCTO_PEGAR_ID) {
+            return 'x24';
+        }
+
         if ($variantId == self::VARIANTE_24) {
             return 'x24';
         } elseif ($variantId == self::VARIANTE_48) {
@@ -61,10 +78,11 @@ class CintaCoserService
             mkdir($dirPath, 0755, true);
         }
 
-        // Obtener variante ID del producto (usar el variant_id directo, no el de attributesvalues)
+        // Obtener variante ID y product ID del producto
         $variantId = $productOrder->variant_id;
+        $productId = $productOrder->product_id ?? null;
 
-        $tipo = self::getTipoPorVariante($variantId);
+        $tipo = self::getTipoPorVariante($variantId, $productId);
 
         if (!$tipo) {
             Log::warning("No se pudo determinar el tipo (x24/x48) para el producto coser", [
@@ -85,6 +103,7 @@ class CintaCoserService
 
         // Agregar la nueva etiqueta
         $cantidad = $productOrder->quantity ?? 1;
+        $esGrande = self::esProductoPegar($productId); // Etiqueta 6x2.5cm
 
         $etiqueta = [
             'venta_id' => $ventaId,
@@ -93,6 +112,7 @@ class CintaCoserService
             'cantidad' => $cantidad,
             'color' => $customColor,
             'icono' => $customIcon,
+            'grande' => $esGrande,
         ];
 
         $etiquetas[] = $etiqueta;

@@ -4,6 +4,7 @@ namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
@@ -25,6 +26,9 @@ class OrderModificationRequestMail extends Mailable
         Log::info($this->mailData);
         return new Envelope(
             subject: "Solicitud de modificación del pedido #{$this->mailData['order_id']}",
+            replyTo: [
+                new Address($this->mailData['client_email'], $this->mailData['client_name']),
+            ],
         );
     }
 

@@ -196,25 +196,25 @@
                                                         $totalChars = mb_strlen(str_replace(' ', '', $nombreMayus), 'UTF-8');
                                                         $target = ceil($totalChars / 2);
 
-                                                        $linea1 = '';
-                                                        $linea2 = '';
-                                                        $chars = 0;
+                                                        // Encontrar el mejor punto de corte manteniendo el orden original
+                                                        $mejorCorte = 1; // al menos 1 palabra en la primera linea
+                                                        $mejorDiff = PHP_INT_MAX;
 
-                                                        foreach ($palabras as $palabra) {
-                                                            $len = mb_strlen($palabra, 'UTF-8');
+                                                        $charsAcumulados = 0;
+                                                        for ($i = 0; $i < count($palabras); $i++) {
+                                                            $charsAcumulados += mb_strlen($palabras[$i], 'UTF-8');
 
-                                                            if ($chars + $len <= $target) {
-                                                                $linea1 .= ($linea1 ? ' ' : '') . $palabra;
-                                                                $chars += $len;
-                                                            } else {
-                                                                $linea2 .= ($linea2 ? ' ' : '') . $palabra;
+                                                            if ($i < count($palabras) - 1) { // no poner todo en linea1
+                                                                $diff = abs($charsAcumulados - ($totalChars - $charsAcumulados));
+                                                                if ($diff < $mejorDiff) {
+                                                                    $mejorDiff = $diff;
+                                                                    $mejorCorte = $i + 1;
+                                                                }
                                                             }
                                                         }
 
-                                                        if ($linea2 === '') {
-                                                            $linea1 = implode(' ', array_slice($palabras, 0, 1));
-                                                            $linea2 = implode(' ', array_slice($palabras, 1));
-                                                        }
+                                                        $linea1 = implode(' ', array_slice($palabras, 0, $mejorCorte));
+                                                        $linea2 = implode(' ', array_slice($palabras, $mejorCorte));
 
                                                         $nombreRender = $linea1 . '<br>' . $linea2;
                                                     } else {

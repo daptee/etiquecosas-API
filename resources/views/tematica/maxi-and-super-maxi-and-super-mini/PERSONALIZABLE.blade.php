@@ -390,7 +390,7 @@
                             </tr>
                         </table>
                     </td>
-                    <td style="width: 6px;"></td>
+                    <td style="width: 2px;"></td>
                     <td class="etiqueta-super-mini" style="background: {{ $plantilla['colores'] }}">
                         <table class="etiqueta-super-mini-content-container">
                             <tr>
@@ -400,7 +400,7 @@
                             </tr>
                         </table>
                     </td>
-                    <td style="width: 6px;"></td>
+                    <td style="width: 2px;"></td>
                     <td class="etiqueta-super-mini" style="background: {{ $plantilla['colores'] }}">
                         <table class="etiqueta-super-mini-content-container">
                             <tr>
@@ -410,7 +410,7 @@
                             </tr>
                         </table>
                     </td>
-                    <td style="width: 6px;"></td>
+                    <td style="width: 2px;"></td>
                     <td class="etiqueta-super-mini" style="background: {{ $plantilla['colores'] }}">
                         <table class="etiqueta-super-mini-content-container">
                             <tr>
@@ -420,7 +420,7 @@
                             </tr>
                         </table>
                     </td>
-                    <td style="width: 6px;"></td>
+                    <td style="width: 2px;"></td>
                     <td class="etiqueta-super-mini" style="background: {{ $plantilla['colores'] }}">
                         <table class="etiqueta-super-mini-content-container">
                             <tr>
@@ -430,7 +430,7 @@
                             </tr>
                         </table>
                     </td>
-                    <td style="width: 6px;"></td>
+                    <td style="width: 2px;"></td>
                     <td class="etiqueta-super-mini" style="background: {{ $plantilla['colores'] }}">
                         <table class="etiqueta-super-mini-content-container">
                             <tr>
