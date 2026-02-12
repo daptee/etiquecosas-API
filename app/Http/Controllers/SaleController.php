@@ -126,7 +126,12 @@ class SaleController extends Controller
 
         // 🔹 Filtros
         if ($request->has('sale_status_id')) {
-            $query->where('sale_status_id', $request->query('sale_status_id'));
+            $statusIds = $request->query('sale_status_id');
+            if (is_array($statusIds)) {
+                $query->whereIn('sale_status_id', $statusIds);
+            } else {
+                $query->where('sale_status_id', $statusIds);
+            }
         }
 
         if ($request->has('user_id')) {
