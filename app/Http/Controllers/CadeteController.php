@@ -37,6 +37,7 @@ class CadeteController extends Controller
                 'string',
                 'regex:/^\d{7,8}$|^\d{2}\.\d{3}\.\d{3}$/'
             ],
+            'receiver_observations' => 'nullable|string',
         ], [
             'receiver_name.required' => 'El nombre del receptor es obligatorio',
             'receiver_dni.required' => 'El DNI del receptor es obligatorio',
@@ -75,6 +76,7 @@ class CadeteController extends Controller
         $sale->sale_status_id = 4; // Entregado
         $sale->receiver_name = $request->receiver_name;
         $sale->receiver_dni = $request->receiver_dni;
+        $sale->receiver_observations = $request->receiver_observations;
         $sale->delivered_at = Carbon::now();
         $sale->save();
 

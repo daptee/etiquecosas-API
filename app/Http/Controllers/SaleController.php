@@ -1258,6 +1258,7 @@ class SaleController extends Controller
                 'string',
                 'regex:/^\d{7,8}$|^\d{2}\.\d{3}\.\d{3}$/'
             ],
+            'receiver_observations' => 'nullable|string',
         ], [
             'receiver_dni.regex' => 'El DNI debe tener formato argentino (7-8 dígitos o XX.XXX.XXX)',
         ]);
@@ -1274,6 +1275,9 @@ class SaleController extends Controller
         }
         if ($request->has('receiver_dni')) {
             $sale->receiver_dni = $request->receiver_dni;
+        }
+        if ($request->has('receiver_observations')) {
+            $sale->receiver_observations = $request->receiver_observations;
         }
         $sale->save();
 

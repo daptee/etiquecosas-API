@@ -33,6 +33,7 @@ class Sale extends Model
         'cadete_id',
         'receiver_name',
         'receiver_dni',
+        'receiver_observations',
         'delivered_at'
     ];
 
