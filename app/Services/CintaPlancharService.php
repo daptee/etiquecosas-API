@@ -15,9 +15,6 @@ class CintaPlancharService
     const PRODUCTO_COMBO_PRIMARIA_ID = 79;
     const PRODUCTO_COMBO_MATERNAL_ID = 141;
 
-    // Producto ID para "Cintas para pegar" (6x2.5cm) - va en PDF x24
-    const PRODUCTO_PEGAR_ID = 92932;
-
     // Variantes: 801 = 24 etiquetas, 802 = 48 etiquetas
     const VARIANTE_24 = 801;
     const VARIANTE_48 = 802;
@@ -25,24 +22,14 @@ class CintaPlancharService
     /**
      * Verifica si un producto es de tipo "Etiquetas de tela PARA PLANCHAR"
      * o si es un Combo (primaria/maternal) que también genera planchables
-     * o si es "Cintas para pegar"
      */
     public static function esProductoPlanchar(int $productId): bool
     {
         return in_array($productId, [
             self::PRODUCTO_PLANCHAR_ID,
             self::PRODUCTO_COMBO_PRIMARIA_ID,
-            self::PRODUCTO_COMBO_MATERNAL_ID,
-            self::PRODUCTO_PEGAR_ID
+            self::PRODUCTO_COMBO_MATERNAL_ID
         ]);
-    }
-
-    /**
-     * Verifica si un producto es "Cintas para pegar" (etiqueta grande 6x2.5cm)
-     */
-    public static function esProductoPegar(int $productId): bool
-    {
-        return $productId === self::PRODUCTO_PEGAR_ID;
     }
 
     /**
@@ -50,12 +37,8 @@ class CintaPlancharService
      */
     public static function getTipoPorVariante($variantId, $productId = null): ?string
     {
-        // Los productos Combo (primaria/maternal) y Pegar siempre son x24
-        if ($productId && in_array($productId, [
-            self::PRODUCTO_COMBO_PRIMARIA_ID,
-            self::PRODUCTO_COMBO_MATERNAL_ID,
-            self::PRODUCTO_PEGAR_ID
-        ])) {
+        // Los productos Combo (primaria/maternal) siempre son x24
+        if ($productId && in_array($productId, [self::PRODUCTO_COMBO_PRIMARIA_ID, self::PRODUCTO_COMBO_MATERNAL_ID])) {
             return 'x24';
         }
 
@@ -99,13 +82,6 @@ class CintaPlancharService
 
         $tipo = self::getTipoPorVariante($variantId, $productId);
 
-        Log::info("CintaPlancharService - Procesando producto", [
-            'product_id' => $productId,
-            'variant_id' => $variantId,
-            'tipo' => $tipo,
-            'es_pegar' => self::esProductoPegar($productId)
-        ]);
-
         if (!$tipo) {
             Log::warning("No se pudo determinar el tipo (x24/x48) para el producto planchar", [
                 'variant_id' => $variantId,
@@ -125,7 +101,6 @@ class CintaPlancharService
 
         // Agregar la nueva etiqueta
         $cantidad = $productOrder->quantity ?? 1;
-        $esGrande = self::esProductoPegar($productId); // Etiqueta 6x2.5cm
 
         $etiqueta = [
             'venta_id' => $ventaId,
@@ -134,7 +109,6 @@ class CintaPlancharService
             'cantidad' => $cantidad,
             'color' => $customColor,
             'icono' => $customIcon,
-            'grande' => $esGrande,
         ];
 
         $etiquetas[] = $etiqueta;

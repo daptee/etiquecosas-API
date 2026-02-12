@@ -42,20 +42,10 @@
             text-align: center;
         }
 
-        /* Etiqueta grande para cintas pegar (6x2.5cm) */
-        .icon-cuadro.grande {
-            height: 2.5cm;
-            line-height: 2.5cm;
-        }
-
         .cuadro {
             display: inline-block;
             vertical-align: middle;
             line-height: 1cm;
-        }
-
-        .cuadro.grande {
-            line-height: 2.5cm;
         }
 
         .imagen {
@@ -65,21 +55,11 @@
             text-align: center;
         }
 
-        .imagen.grande {
-            line-height: 2.5cm;
-        }
-
         .personaje {
             max-height: 0.8cm;
             margin-top: 7px;
             margin-right: 7px;
             vertical-align: middle;
-        }
-
-        .personaje.grande {
-            max-height: 2cm;
-            margin-top: 0;
-            margin-right: 10px;
         }
 
         .texto2 {
@@ -102,21 +82,6 @@
         .texto2.sin-icono {
             padding-top: 5px;
             line-height: 12px;
-        }
-
-        /* Texto para etiquetas grandes (18pt) */
-        .texto2.grande {
-            font-size: 18pt;
-            line-height: 1.1;
-        }
-
-        .texto2.grande.con-icono {
-            line-height: 1.1;
-        }
-
-        .texto2.grande.sin-icono {
-            padding-top: 0;
-            line-height: 1.1;
         }
 
         .cantidad-label {
@@ -153,37 +118,26 @@
                         $cantidad = $etiqueta['cantidad'] ?? 1;
                         $color = $etiqueta['color'] ?? '#000000';
                         $icono = $etiqueta['icono'] ?? null;
-                        $esGrande = $etiqueta['grande'] ?? false;
 
                         $nameLength = mb_strlen($nombre, 'UTF-8');
-
-                        // Tamaños de fuente diferentes para etiquetas grandes vs normales
-                        if ($esGrande) {
-                            // Etiqueta grande (6x2.5cm) - tipografía base 18pt
-                            $fontsize = '18pt';
+                        if ($nameLength <= 16) {
+                            $fontsize = '1.1em';
+                        } elseif ($nameLength <= 25) {
+                            $fontsize = '0.9em';
                         } else {
-                            // Etiqueta normal (6x1cm)
-                            if ($nameLength <= 16) {
-                                $fontsize = '1.1em';
-                            } elseif ($nameLength <= 25) {
-                                $fontsize = '0.9em';
-                            } else {
-                                $fontsize = '0.7em';
-                            }
+                            $fontsize = '0.7em';
                         }
-
-                        $grandeClass = $esGrande ? 'grande' : '';
                     @endphp
 
                     <div class="etiqueta-row">
-                        <div class="icon-cuadro {{ $grandeClass }}">
+                        <div class="icon-cuadro">
                             @if ($icono)
-                                <div class="imagen {{ $grandeClass }}">
-                                    <img class="personaje {{ $grandeClass }}" src="{{ public_path($icono) }}">
+                                <div class="imagen">
+                                    <img class="personaje" src="{{ public_path($icono) }}">
                                 </div>
                             @endif
-                            <div class="cuadro {{ $grandeClass }}">
-                                <p class="texto2 {{ $icono ? 'con-icono' : 'sin-icono' }} {{ $grandeClass }}" style="color:{{ $color }};font-size: {{ $fontsize }};">
+                            <div class="cuadro">
+                                <p class="texto2 {{ $icono ? 'con-icono' : 'sin-icono' }}" style="color:{{ $color }};font-size: {{ $fontsize }};">
                                     {{ mb_strtoupper($nombre) }}
                                 </p>
                             </div>
