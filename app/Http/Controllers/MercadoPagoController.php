@@ -104,31 +104,17 @@ class MercadoPagoController extends Controller
 
         Log::info('mercado pago platform id' . $platformId);
 
-        $preferenceData = [
-            "items" => $items,
-            "back_urls" => $backUrls,
-            "auto_return" => "approved",
-            "external_reference" => (string) $sale->id,
-        ];
-
-        $metaPixelId = config('services.mercadopago.meta_pixel_id');
-        if (!empty($metaPixelId)) {
-            $preferenceData["tracks"] = [
-                [
-                    "type" => "facebook_ad",
-                    "values" => [
-                        "pixel_id" => $metaPixelId,
-                    ],
-                ],
-            ];
-        }
-
         // Crear preferencia vía HTTP
         $response = Http::withToken(config('services.mercadopago.token'))
             ->withHeaders([
                 'X-Platform-Id' => $platformId
             ])
-            ->post('https://api.mercadopago.com/checkout/preferences', $preferenceData);
+            ->post('https://api.mercadopago.com/checkout/preferences', [
+                "items" => $items,
+                "back_urls" => $backUrls,
+                "auto_return" => "approved",
+                "external_reference" => (string) $sale->id,
+            ]);
 
         $data = $response->json();
 
