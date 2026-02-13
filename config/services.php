@@ -34,6 +34,7 @@ return [
     'mercadopago' => [
         'token' => env('MERCADO_PAGO_ACCESS_TOKEN'),
         'platform_id' => env('MP_PLATFORM_ID'),
+        'meta_pixel_id' => env('META_PIXEL_ID'),
     ],
 
     'front_url' => env('FRONT_URL', 'http://localhost:3000'),
