@@ -129,7 +129,7 @@
 
         .icon-cuadro .texto2 {
             text-align: center;
-            line-height: 0.9;
+            line-height: 0.8;
             color: white;
             margin: 0;
             font-family: 'Oswald';
