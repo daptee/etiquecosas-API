@@ -119,7 +119,7 @@
     color: #FFF;
     font-family: 'Oswald';
     text-align: center;
-    line-height: 0.7;
+    line-height: 0.8;
     margin: 0 !important;
     padding: 3px 0 0 0 !important;
 }
@@ -182,7 +182,7 @@
     font-family: 'Oswald';
     font-size: 17.25pt;
     text-align: center;
-    line-height: 0.7;
+    line-height: 0.8;
     color: #FFF;
     margin: 0 auto !important;
     padding: 3px 0 0 0 !important;
@@ -234,7 +234,7 @@
     font-family: 'Oswald';
     font-size: 9pt;
     text-align: center;
-    line-height: 0.7;
+    line-height: 0.8;
     color: #FFF;
     display: block;
     margin: 0 !important;
@@ -260,12 +260,12 @@
 
 .etiqueta-super-mini-content-container p.normal-text-size {
     font-size: 9pt !important;
-    line-height: 1 !important;
+    line-height: 0.8 !important;
 }
 
 .small-text-size {
     font-size: 11pt !important;
-    line-height: 0.7 !important;
+    line-height: 0.8 !important;
 }
 
 .etiqueta-maxi-content-container p.small-text-size {
@@ -282,12 +282,12 @@
 
 .extra-small-text-size {
     font-size: 10pt !important;
-    line-height: 0.7 !important;
+    line-height: 0.8 !important;
 }
 
 .etiqueta-maxi-content-container p.extra-small-text-size {
     font-size: 11pt !important;
-    line-height: 0.7 !important;
+    line-height: 0.8 !important;
 }
 
 .etiqueta-super-maxi-content-container p.extra-small-text-size {
@@ -296,7 +296,7 @@
 
 .etiqueta-super-mini-content-container p.extra-small-text-size {
     font-size: 8pt !important;
-    line-height: 0.7 !important;
+    line-height: 0.8 !important;
 }
 
 .texto-negro {

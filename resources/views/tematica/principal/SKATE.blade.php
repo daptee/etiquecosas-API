@@ -279,7 +279,7 @@
             font-family: 'Oswald';
             font-size: 9pt;
             text-align: center;
-            line-height: 0.7;
+            line-height: 0.8;
             color: #FFF;
             display: inline-block;
             margin: 0 !important;
@@ -311,7 +311,7 @@
 
         .small-text-size {
             font-size: 11pt !important;
-            line-height: 0.7 !important;
+            line-height: 0.8 !important;
         }
 
         .etiqueta-maxi-content-container p.small-text-size {
@@ -328,12 +328,12 @@
 
         .extra-small-text-size {
             font-size: 10pt !important;
-            line-height: 0.6 !important;
+            line-height: 0.7 !important;
         }
 
         .etiqueta-maxi-content-container p.extra-small-text-size {
             font-size: 11pt !important;
-            line-height: 0.7 !important;
+            line-height: 0.8 !important;
         }
 
         .etiqueta-super-maxi-content-container p.extra-small-text-size {
@@ -342,7 +342,7 @@
 
         .etiqueta-super-mini-content-container p.extra-small-text-size {
             font-size: 8pt !important;
-            line-height: 0.7 !important;
+            line-height: 0.8 !important;
         }
 
 
