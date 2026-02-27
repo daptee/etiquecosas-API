@@ -6,8 +6,9 @@ use App\Models\Client;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use Maatwebsite\Excel\Concerns\WithColumnWidths;
 
-class WholesaleClientsExport implements FromCollection, WithHeadings, WithMapping
+class WholesaleClientsExport implements FromCollection, WithHeadings, WithMapping, WithColumnWidths
 {
     public function collection()
     {
@@ -15,6 +16,18 @@ class WholesaleClientsExport implements FromCollection, WithHeadings, WithMappin
             ->where('client_type_id', 2)
             ->orderBy('name')
             ->get();
+    }
+
+    public function columnWidths(): array
+    {
+        return [
+            'B' => 25, // Nombre
+            'C' => 25, // Apellido
+            'D' => 35, // Email
+            'E' => 18, // Teléfono
+            'F' => 18, // CUIT
+            'G' => 35, // Razón Social
+        ];
     }
 
     public function headings(): array
