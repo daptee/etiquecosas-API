@@ -177,8 +177,10 @@ Route::middleware('jwt.auth')->prefix('profiles')->group(function () {
 });
 
 // Client
+Route::get('clients/export/wholesale', [ClientController::class, 'exportWholesaleClients']);
 Route::middleware('jwt.auth')->prefix('clients')->group(function () {
     Route::get('/', [ClientController::class, 'index']);
+    
     Route::get('/{id}', [ClientController::class, 'show']);
     Route::post('/', [ClientController::class, 'store']);
     Route::put('/{id}', [ClientController::class, 'update']);
