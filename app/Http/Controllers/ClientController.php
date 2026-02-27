@@ -15,6 +15,8 @@ use App\Traits\Auditable;
 use Illuminate\Validation\Rule;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Facades\Hash;
+use App\Exports\WholesaleClientsExport;
+use Maatwebsite\Excel\Facades\Excel;
 class ClientController extends Controller
 {
     use FindObject, ApiResponse, Auditable;
@@ -341,5 +343,11 @@ class ClientController extends Controller
             'user' => $client,
             'token' => $token
         ], 'Perfil actualizado y nuevo token generado');
+    }
+
+    public function exportWholesaleClients()
+    {
+        $filename = 'clientes-mayoristas-' . now()->format('Y-m-d') . '.xlsx';
+        return Excel::download(new WholesaleClientsExport(), $filename);
     }
 }
