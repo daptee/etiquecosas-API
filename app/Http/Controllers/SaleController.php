@@ -452,6 +452,13 @@ class SaleController extends Controller
 
         $sale->load(['client', 'products.product', 'products.variant', 'shippingMethod', 'locality']);
 
+        // Ventas mayoristas se aprueban automáticamente al crear la reserva
+        if ($sale->channel_id === 4) {
+            $sale->sale_status_id = 1;
+            $sale->save();
+            $this->approveSale($sale);
+        }
+
         $this->logAudit(Auth::user() ?? null, 'Add Sale', $request->all(), $sale);
         return $this->success($sale, 'Venta creada correctamente');
     }
@@ -582,207 +589,204 @@ class SaleController extends Controller
         }
 
         if ($sale->sale_status_id == 1 && $saleStatusOld != 1) {
-            // Guardar historial
-            SaleStatusHistory::create([
-                'sale_id' => $sale->id,
-                'sale_status_id' => $request->sale_status_id,
-                'date' => Carbon::now(),
-            ]);
-
-            $notifyEmail = env('MAIL_NOTIFICATION_TO');
-
-            Mail::to($sale->client->email)->send(new OrderSummaryMail($sale));
-            Mail::to($notifyEmail)->send(new OrderSummaryMailTo($sale));
-
-            StockService::discountStock($sale);
-
-            // Usar la fecha de aprobación (ahora) en lugar de la fecha de creación de la venta
-            $fechaAprobacion = Carbon::now();
-
-            // 🗑️ Eliminar todos los PDFs anteriores de este pedido antes de generar nuevos
-            EtiquetaService::limpiarPdfsDelPedido($sale->id, $fechaAprobacion);
-            CintaCoserService::limpiarEtiquetasDeVenta($sale->id, $fechaAprobacion);
-            CintaPlancharService::limpiarEtiquetasDeVenta($sale->id, $fechaAprobacion);
-            BandaService::limpiarBandasDeVenta($sale->id, $fechaAprobacion);
-            SelloService::limpiarSellosDeVenta($sale->id, $fechaAprobacion);
-
-            foreach ($sale->products as $productOrder) {
-                // === 1. Datos base ===
-                $customData = json_decode($productOrder->customization_data, true);
-
-                $form = $customData['form'] ?? [];
-                $nombreCompleto = trim(($form['name'] ?? '') . ' ' . ($form['lastName'] ?? ''));
-
-                $customColor = $customData['color']['color_code'] ?? null;
-                $customIcon = $customData['icon']['icon'] ?? null;
-
-                if ($customIcon && $customData['icon']['name'] == 'Sin dibujo') {
-                    $customIcon = null;
-                }
-
-                // === SELLOS PERSONALIZADOS (Producto 481) ===
-                if (SelloService::esProductoSello($productOrder->product_id)) {
-                    try {
-                        SelloService::agregarSelloAlPdf(
-                            $sale->id,
-                            $productOrder,
-                            $nombreCompleto,
-                            $customColor,
-                            $customIcon,
-                            $fechaAprobacion
-                        );
-                        Log::info("Sello agregado para {$nombreCompleto}");
-                    } catch (\Throwable $e) {
-                        Log::error("Error agregando sello", [
-                            'error' => $e->getMessage(),
-                            'product_order_id' => $productOrder->id,
-                        ]);
-                    }
-                }
-
-                // === BANDAS (Productos 52944 y 52796) ===
-                if (BandaService::esProductoBanda($productOrder->product_id)) {
-                    try {
-                        BandaService::agregarBandaAlPdf(
-                            $sale->id,
-                            $productOrder,
-                            $nombreCompleto,
-                            $customColor,
-                            $customIcon,
-                            $fechaAprobacion
-                        );
-                        Log::info("Banda agregada para {$nombreCompleto}");
-                    } catch (\Throwable $e) {
-                        Log::error("Error agregando banda", [
-                            'error' => $e->getMessage(),
-                            'product_order_id' => $productOrder->id,
-                        ]);
-                    }
-                }
-
-                // === CINTAS PARA COSER (Producto 1291) ===
-                if (CintaCoserService::esProductoCoser($productOrder->product_id)) {
-                    try {
-                        CintaCoserService::agregarEtiquetaAlPdf(
-                            $sale->id,
-                            $productOrder,
-                            $nombreCompleto,
-                            $customColor,
-                            $customIcon,
-                            $fechaAprobacion
-                        );
-                        Log::info("Etiqueta de cinta para coser agregada para {$nombreCompleto}");
-                    } catch (\Throwable $e) {
-                        Log::error("Error agregando etiqueta de cinta para coser", [
-                            'error' => $e->getMessage(),
-                            'product_order_id' => $productOrder->id,
-                        ]);
-                    }
-                }
-
-                // === CINTAS PARA PLANCHAR (Producto 1247) ===
-                if (CintaPlancharService::esProductoPlanchar($productOrder->product_id)) {
-                    try {
-                        CintaPlancharService::agregarEtiquetaAlPdf(
-                            $sale->id,
-                            $productOrder,
-                            $nombreCompleto,
-                            $customColor,
-                            $customIcon,
-                            $fechaAprobacion
-                        );
-                        Log::info("Etiqueta de cinta para planchar agregada para {$nombreCompleto}");
-                    } catch (\Throwable $e) {
-                        Log::error("Error agregando etiqueta de cinta para planchar", [
-                            'error' => $e->getMessage(),
-                            'product_order_id' => $productOrder->id,
-                        ]);
-                    }
-                }
-
-                $variant = $productOrder->variant?->variant;
-                $productPdf = ProductPdf::where('product_id', $productOrder->product_id)->first();
-
-                // === 2. Si hay un ProductPdf configurado ===
-                if ($productPdf) {
-                    Log::info($productPdf);
-
-                    $tematicasGuardadas = $productPdf['data']['tematicas'] ?? [];
-                    Log::info("Temáticas guardadas en ProductPdf: " . count($tematicasGuardadas));
-
-                    if ($variant) {
-                        $tematicaId = $variant['attributesvalues'][0]['id'] ?? null;
-
-                        if (!$tematicaId) {
-                            Log::warning("No se encontró temática para {$nombreCompleto}, product_order ID: {$productOrder->id}");
-                            continue;
-                        }
-
-                        // Buscar la temática correspondiente
-                        $tematicaCoincidente = collect($tematicasGuardadas)->firstWhere('id', $tematicaId);
-
-                        if ($tematicaCoincidente) {
-                            try {
-                                $pdfPaths[] = EtiquetaService::generarEtiquetas(
-                                    $sale->id,
-                                    $tematicaId,
-                                    [$nombreCompleto],
-                                    $productOrder,
-                                    $tematicaCoincidente,
-                                    $customColor,
-                                    $customIcon,
-                                    $fechaAprobacion
-                                );
-
-                                Log::info("PDF generado para {$nombreCompleto}, temática ID: {$tematicaId}");
-                                continue;
-                            } catch (\Throwable $e) {
-                                Log::error("Error generando PDF para {$nombreCompleto}, temática ID: {$tematicaId}", [
-                                    'error' => $e->getMessage(),
-                                    'product_order_id' => $productOrder->id,
-                                ]);
-                                continue;
-                            }
-                        }
-                    } else {
-                        // Sin variant: generar PDF por cada temática guardada
-                        foreach ($tematicasGuardadas as $tematica) {
-                            $tematicaId = $tematica['id'] ?? null;
-
-                            try {
-                                $pdfPaths[] = EtiquetaService::generarEtiquetas(
-                                    $sale->id,
-                                    $tematicaId,
-                                    [$nombreCompleto],
-                                    $productOrder,
-                                    $tematica,
-                                    $customColor,
-                                    $customIcon,
-                                    $fechaAprobacion
-                                );
-
-                                Log::info("PDF generado sin variante para {$nombreCompleto}, temática ID: {$tematicaId}");
-                            } catch (\Throwable $e) {
-                                Log::error("Error generando PDF para {$nombreCompleto}, temática ID: {$tematicaId}", [
-                                    'error' => $e->getMessage(),
-                                    'product_order_id' => $productOrder->id,
-                                ]);
-                            }
-                        }
-                    }
-                }
-
-                Log::info(message: "Sin informacion del pdf en el producto con id: $productOrder->product_id");
-
-                        continue;
-            }
+            $this->approveSale($sale);
         }
 
         $sale->load(['products.variant', 'statusHistory']);
 
-
         $this->logAudit(Auth::user() ?? null, 'Update Status Sale', $request->all(), $sale);
         return $this->success($sale, 'Estado de venta actualizada correctamente');
+    }
+
+    private function approveSale(Sale $sale): void
+    {
+        SaleStatusHistory::create([
+            'sale_id' => $sale->id,
+            'sale_status_id' => 1,
+            'date' => Carbon::now(),
+        ]);
+
+        $notifyEmail = env('MAIL_NOTIFICATION_TO');
+
+        Mail::to($sale->client->email)->send(new OrderSummaryMail($sale));
+        Mail::to($notifyEmail)->send(new OrderSummaryMailTo($sale));
+
+        StockService::discountStock($sale);
+
+        $fechaAprobacion = Carbon::now();
+
+        EtiquetaService::limpiarPdfsDelPedido($sale->id, $fechaAprobacion);
+        CintaCoserService::limpiarEtiquetasDeVenta($sale->id, $fechaAprobacion);
+        CintaPlancharService::limpiarEtiquetasDeVenta($sale->id, $fechaAprobacion);
+        BandaService::limpiarBandasDeVenta($sale->id, $fechaAprobacion);
+        SelloService::limpiarSellosDeVenta($sale->id, $fechaAprobacion);
+
+        foreach ($sale->products as $productOrder) {
+            $customData = json_decode($productOrder->customization_data, true);
+
+            $form = $customData['form'] ?? [];
+            $nombreCompleto = trim(($form['name'] ?? '') . ' ' . ($form['lastName'] ?? ''));
+
+            $customColor = $customData['color']['color_code'] ?? null;
+            $customIcon = $customData['icon']['icon'] ?? null;
+
+            if ($customIcon && $customData['icon']['name'] == 'Sin dibujo') {
+                $customIcon = null;
+            }
+
+            // === SELLOS PERSONALIZADOS (Producto 481) ===
+            if (SelloService::esProductoSello($productOrder->product_id)) {
+                try {
+                    SelloService::agregarSelloAlPdf(
+                        $sale->id,
+                        $productOrder,
+                        $nombreCompleto,
+                        $customColor,
+                        $customIcon,
+                        $fechaAprobacion
+                    );
+                    Log::info("Sello agregado para {$nombreCompleto}");
+                } catch (\Throwable $e) {
+                    Log::error("Error agregando sello", [
+                        'error' => $e->getMessage(),
+                        'product_order_id' => $productOrder->id,
+                    ]);
+                }
+            }
+
+            // === BANDAS (Productos 52944 y 52796) ===
+            if (BandaService::esProductoBanda($productOrder->product_id)) {
+                try {
+                    BandaService::agregarBandaAlPdf(
+                        $sale->id,
+                        $productOrder,
+                        $nombreCompleto,
+                        $customColor,
+                        $customIcon,
+                        $fechaAprobacion
+                    );
+                    Log::info("Banda agregada para {$nombreCompleto}");
+                } catch (\Throwable $e) {
+                    Log::error("Error agregando banda", [
+                        'error' => $e->getMessage(),
+                        'product_order_id' => $productOrder->id,
+                    ]);
+                }
+            }
+
+            // === CINTAS PARA COSER (Producto 1291) ===
+            if (CintaCoserService::esProductoCoser($productOrder->product_id)) {
+                try {
+                    CintaCoserService::agregarEtiquetaAlPdf(
+                        $sale->id,
+                        $productOrder,
+                        $nombreCompleto,
+                        $customColor,
+                        $customIcon,
+                        $fechaAprobacion
+                    );
+                    Log::info("Etiqueta de cinta para coser agregada para {$nombreCompleto}");
+                } catch (\Throwable $e) {
+                    Log::error("Error agregando etiqueta de cinta para coser", [
+                        'error' => $e->getMessage(),
+                        'product_order_id' => $productOrder->id,
+                    ]);
+                }
+            }
+
+            // === CINTAS PARA PLANCHAR (Producto 1247) ===
+            if (CintaPlancharService::esProductoPlanchar($productOrder->product_id)) {
+                try {
+                    CintaPlancharService::agregarEtiquetaAlPdf(
+                        $sale->id,
+                        $productOrder,
+                        $nombreCompleto,
+                        $customColor,
+                        $customIcon,
+                        $fechaAprobacion
+                    );
+                    Log::info("Etiqueta de cinta para planchar agregada para {$nombreCompleto}");
+                } catch (\Throwable $e) {
+                    Log::error("Error agregando etiqueta de cinta para planchar", [
+                        'error' => $e->getMessage(),
+                        'product_order_id' => $productOrder->id,
+                    ]);
+                }
+            }
+
+            $variant = $productOrder->variant?->variant;
+            $productPdf = ProductPdf::where('product_id', $productOrder->product_id)->first();
+
+            if ($productPdf) {
+                Log::info($productPdf);
+
+                $tematicasGuardadas = $productPdf['data']['tematicas'] ?? [];
+                Log::info("Temáticas guardadas en ProductPdf: " . count($tematicasGuardadas));
+
+                if ($variant) {
+                    $tematicaId = $variant['attributesvalues'][0]['id'] ?? null;
+
+                    if (!$tematicaId) {
+                        Log::warning("No se encontró temática para {$nombreCompleto}, product_order ID: {$productOrder->id}");
+                        continue;
+                    }
+
+                    $tematicaCoincidente = collect($tematicasGuardadas)->firstWhere('id', $tematicaId);
+
+                    if ($tematicaCoincidente) {
+                        try {
+                            $pdfPaths[] = EtiquetaService::generarEtiquetas(
+                                $sale->id,
+                                $tematicaId,
+                                [$nombreCompleto],
+                                $productOrder,
+                                $tematicaCoincidente,
+                                $customColor,
+                                $customIcon,
+                                $fechaAprobacion
+                            );
+
+                            Log::info("PDF generado para {$nombreCompleto}, temática ID: {$tematicaId}");
+                            continue;
+                        } catch (\Throwable $e) {
+                            Log::error("Error generando PDF para {$nombreCompleto}, temática ID: {$tematicaId}", [
+                                'error' => $e->getMessage(),
+                                'product_order_id' => $productOrder->id,
+                            ]);
+                            continue;
+                        }
+                    }
+                } else {
+                    foreach ($tematicasGuardadas as $tematica) {
+                        $tematicaId = $tematica['id'] ?? null;
+
+                        try {
+                            $pdfPaths[] = EtiquetaService::generarEtiquetas(
+                                $sale->id,
+                                $tematicaId,
+                                [$nombreCompleto],
+                                $productOrder,
+                                $tematica,
+                                $customColor,
+                                $customIcon,
+                                $fechaAprobacion
+                            );
+
+                            Log::info("PDF generado sin variante para {$nombreCompleto}, temática ID: {$tematicaId}");
+                        } catch (\Throwable $e) {
+                            Log::error("Error generando PDF para {$nombreCompleto}, temática ID: {$tematicaId}", [
+                                'error' => $e->getMessage(),
+                                'product_order_id' => $productOrder->id,
+                            ]);
+                        }
+                    }
+                }
+            }
+
+            Log::info(message: "Sin informacion del pdf en el producto con id: $productOrder->product_id");
+
+            continue;
+        }
     }
 
     public function changeStatusAdmin(Request $request, $id)
