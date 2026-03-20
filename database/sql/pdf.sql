@@ -783,13 +783,13 @@ VALUES (
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     141,
-    '{"tematicas": [{"pdf": ["Etiquetas spot and maxi", "Etiquetas planchables"], "pdf-url": ["spot-and-maxi/PERSONALIZABLE", "planchable/PERSONALIZABLE"], "name": "Personalizacion"}]}'
+    '{"tematicas": [{"pdf": ["Etiquetas spot and maxi"], "pdf-url": ["spot-and-maxi/PERSONALIZABLE"], "name": "Personalizacion"}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)
 VALUES (
     79,
-    '{"tematicas": [{"pdf": ["Etiquetas maxi and super maxi and super mini", "Etiquetas planchables"], "pdf-url": ["maxi-and-super-maxi-and-super-mini/PERSONALIZABLE", "planchable/PERSONALIZABLE"], "name": "Personalizacion"}]}'
+    '{"tematicas": [{"pdf": ["Etiquetas maxi and super maxi and super mini"], "pdf-url": ["maxi-and-super-maxi-and-super-mini/PERSONALIZABLE"], "name": "Personalizacion"}]}'
 );
 
 INSERT INTO product_pdf (product_id, data)

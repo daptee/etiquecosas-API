@@ -112,7 +112,7 @@
             position: relative;
             position: absolute;
             top: 10;
-            left: 10;
+            left: 20;
         }
 
         .icon-cuadro {
@@ -189,9 +189,8 @@
         }
 
         .etiquetas-maxi-container {
-            width: 100%;
             border-spacing: 0;
-            margin: 0;
+            margin: 0 auto;
             padding: 0;
         }
 
@@ -262,6 +261,8 @@
             height: 1.15cm;
             display: inline-block;
             position: relative;
+            margin: 0 !important;
+            padding: 0 !important;
         }
 
         .etiqueta-super-mini-content-container {
@@ -313,7 +314,7 @@
     </style>
 
 <body>
-    <div class="hoja">@for ($i = 0; $i < 2; $i++)
+    <div class="hoja"><div style="text-align: center;">@for ($i = 0; $i < 2; $i++)
             <div class="icon-cuadroGrande">
             <div>
                 <div class="imagenGrande">
@@ -350,7 +351,7 @@
             </div>
         </div>
     </div>
-    @endfor
+    @endfor</div>
         <table class="etiquetas-maxi-container">
             @for ($row = 0; $row < 3; $row++)
                 <tr>
@@ -378,7 +379,7 @@
                 </tr>
             @endfor
         </table>
-        <table>
+        <table style="margin-top: 5px;">
         @for ($i = 0; $i < 10; $i++)
             <tr>
                     <td class="etiqueta-super-mini" style="background: {{ $plantilla['colores'] }}">
@@ -390,7 +391,7 @@
                             </tr>
                         </table>
                     </td>
-                    <td style="width: 2px;"></td>
+                    <td style="width: 1px"></td>
                     <td class="etiqueta-super-mini" style="background: {{ $plantilla['colores'] }}">
                         <table class="etiqueta-super-mini-content-container">
                             <tr>
@@ -400,7 +401,7 @@
                             </tr>
                         </table>
                     </td>
-                    <td style="width: 2px;"></td>
+                    <td style="width: 1px"></td>
                     <td class="etiqueta-super-mini" style="background: {{ $plantilla['colores'] }}">
                         <table class="etiqueta-super-mini-content-container">
                             <tr>
@@ -410,7 +411,7 @@
                             </tr>
                         </table>
                     </td>
-                    <td style="width: 2px;"></td>
+                    <td style="width: 1px"></td>
                     <td class="etiqueta-super-mini" style="background: {{ $plantilla['colores'] }}">
                         <table class="etiqueta-super-mini-content-container">
                             <tr>
@@ -420,7 +421,7 @@
                             </tr>
                         </table>
                     </td>
-                    <td style="width: 2px;"></td>
+                    <td style="width: 1px"></td>
                     <td class="etiqueta-super-mini" style="background: {{ $plantilla['colores'] }}">
                         <table class="etiqueta-super-mini-content-container">
                             <tr>
@@ -430,7 +431,7 @@
                             </tr>
                         </table>
                     </td>
-                    <td style="width: 2px;"></td>
+                    <td style="width: 1px"></td>
                     <td class="etiqueta-super-mini" style="background: {{ $plantilla['colores'] }}">
                         <table class="etiqueta-super-mini-content-container">
                             <tr>
@@ -442,7 +443,7 @@
                     </td>
                 </tr>
                 <tr>
-                    <td colspan="11" style="height: 5px;"></td>
+                    <td colspan="11" style="height: 6px;"></td>
                 </tr>
             @endfor
             </table>

@@ -35,17 +35,22 @@
             border: solid 1px;
             width: 6cm;
             height: 1cm;
+            max-height: 1cm;
             vertical-align: middle;
             display: table-cell;
             white-space: nowrap;
             line-height: 1cm;
             text-align: center;
+            overflow: hidden;
         }
 
         /* Etiqueta grande para etiquetas pegar (6x2.5cm) */
         .icon-cuadro.grande {
             height: 2.5cm;
-            line-height: 2.5cm;
+            max-height: 2.5cm;
+            line-height: normal;
+            white-space: nowrap;
+            vertical-align: middle;
         }
 
         .cuadro {
@@ -55,7 +60,9 @@
         }
 
         .cuadro.grande {
-            line-height: 2.5cm;
+            line-height: normal;
+            vertical-align: middle;
+            white-space: normal;
         }
 
         .imagen {
@@ -66,7 +73,8 @@
         }
 
         .imagen.grande {
-            line-height: 2.5cm;
+            line-height: normal;
+            vertical-align: middle;
         }
 
         .personaje {
@@ -80,6 +88,7 @@
             max-height: 2cm;
             margin-top: 0;
             margin-right: 10px;
+            vertical-align: middle;
         }
 
         .texto2 {
@@ -104,10 +113,14 @@
             line-height: 12px;
         }
 
-        /* Texto para etiquetas grandes (18pt) */
+        /* Texto para etiquetas grandes (14pt) */
         .texto2.grande {
-            font-size: 18pt;
+            font-size: 14pt;
             line-height: 1.1;
+            white-space: normal;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            max-width: 4cm;
         }
 
         .texto2.grande.con-icono {
@@ -158,7 +171,7 @@
                         $nameLength = mb_strlen($nombre, 'UTF-8');
 
                         if ($esGrande) {
-                            $fontsize = '18pt';
+                            $fontsize = '14pt';
                         } else {
                             if ($nameLength <= 16) {
                                 $fontsize = '1.1em';
@@ -181,7 +194,11 @@
                             @endif
                             <div class="cuadro {{ $grandeClass }}">
                                 <p class="texto2 {{ $icono ? 'con-icono' : 'sin-icono' }} {{ $grandeClass }}" style="color:{{ $color }};font-size: {{ $fontsize }};">
-                                    {{ mb_strtoupper($nombre) }}
+                                    @if ($esGrande)
+                                        {!! formatName($nombre, 2, 12) !!}
+                                    @else
+                                        {{ mb_strtoupper($nombre) }}
+                                    @endif
                                 </p>
                             </div>
                         </div>

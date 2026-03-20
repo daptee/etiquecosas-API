@@ -134,8 +134,8 @@
         .circulo-personaje {
             width: 3cm;
             height: 3cm;
-            margin-right: 4.85mm;
-            margin-bottom: 4.63mm;
+            margin-right: 6.15mm;
+            margin-bottom: 10.61mm;
             vertical-align: top;
             display: inline-block;
             position: relative;
