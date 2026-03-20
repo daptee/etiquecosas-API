@@ -369,7 +369,7 @@
                                     <td class="etiqueta-maxi-text"
                                         style="width:62%; height:100%; background: {{ $plantilla['colores'] }}; text-align:center; vertical-align:middle;">
                                         <p class="{{ $plantilla['fontClass'] }}" style="margin:0; line-height:1; color:#FFF;">
-                                            {!! formatName($product_order->name, 2, 15) !!}
+                                            {!! formatNameExactLines($product_order->name, 2) !!}
                                         </p>
                                     </td>
                                 </tr>
