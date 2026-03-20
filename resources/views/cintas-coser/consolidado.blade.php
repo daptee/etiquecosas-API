@@ -171,7 +171,13 @@
                         $nameLength = mb_strlen($nombre, 'UTF-8');
 
                         if ($esGrande) {
-                            $fontsize = '14pt';
+                            if ($nameLength <= 10) {
+                                $fontsize = '14pt';
+                            } elseif ($nameLength <= 18) {
+                                $fontsize = '11pt';
+                            } else {
+                                $fontsize = '9pt';
+                            }
                         } else {
                             if ($nameLength <= 16) {
                                 $fontsize = '1.1em';
@@ -195,7 +201,7 @@
                             <div class="cuadro {{ $grandeClass }}">
                                 <p class="texto2 {{ $icono ? 'con-icono' : 'sin-icono' }} {{ $grandeClass }}" style="color:{{ $color }};font-size: {{ $fontsize }};">
                                     @if ($esGrande)
-                                        {!! formatName($nombre, 2, 12) !!}
+                                        {!! formatNameExactLines($nombre, 2) !!}
                                     @else
                                         {{ mb_strtoupper($nombre) }}
                                     @endif
