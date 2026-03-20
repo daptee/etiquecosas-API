@@ -258,6 +258,8 @@ class ProductController extends Controller
             return $this->error('Producto no encontrado', 404);
         }
 
+        $isWholesaleClient = optional(auth('client')->user())->client_type_id === 2;
+
         $product->load([
             'type:id,name',
             'status:id,name',
@@ -270,7 +272,12 @@ class ProductController extends Controller
             'costs:id,name,price',
             'customization',
             'wholesales:id,product_id,amount,discount',
-            'relatedProducts:id,name,sku,slug,price,discounted_price,discounted_start,discounted_end,product_type_id,product_status_id,product_stock_status_id,stock_quantity,stock_channels,is_sale',
+            'relatedProducts' => function ($query) use ($isWholesaleClient) {
+                $query->select('products.id', 'name', 'sku', 'slug', 'price', 'discounted_price', 'discounted_start', 'discounted_end', 'product_type_id', 'product_status_id', 'product_stock_status_id', 'stock_quantity', 'stock_channels', 'is_sale');
+                if ($isWholesaleClient) {
+                    $query->where('products.is_wholesale', true);
+                }
+            },
             'relatedProducts.images:id,product_id,img,is_main',
             'relatedProducts.tag:id,name',
             'relatedProducts.stockStatus:id,name',
@@ -294,6 +301,9 @@ class ProductController extends Controller
         if (!$product) {
             return $this->error('Producto no encontrado', 404);
         }
+
+        $isWholesaleClient = optional(auth('client')->user())->client_type_id === 2;
+
         $product->load([
             'type:id,name',
             'status:id,name',
@@ -306,7 +316,12 @@ class ProductController extends Controller
             'costs:id,name',
             'customization',
             'wholesales:id,product_id,amount,discount',
-            'relatedProducts:id,name,sku,slug,price,discounted_price,discounted_start,discounted_end,product_type_id,product_status_id,product_stock_status_id,stock_quantity,stock_channels,is_sale',
+            'relatedProducts' => function ($query) use ($isWholesaleClient) {
+                $query->select('products.id', 'name', 'sku', 'slug', 'price', 'discounted_price', 'discounted_start', 'discounted_end', 'product_type_id', 'product_status_id', 'product_stock_status_id', 'stock_quantity', 'stock_channels', 'is_sale');
+                if ($isWholesaleClient) {
+                    $query->where('products.is_wholesale', true);
+                }
+            },
             'relatedProducts.images:id,product_id,img,is_main',
             'relatedProducts.tag:id,name',
             'relatedProducts.stockStatus:id,name',
