@@ -120,7 +120,7 @@
             margin-top: 10px;
             margin-left: 10px;
             margin-right: 5px;
-            margin-bottom: 5px;
+            margin-bottom: 10px;
             vertical-align: top;
             display: inline-block;
             position: relative;
@@ -163,17 +163,33 @@
             height: 29cm;
         }
 
+        .etiquetas-maxi-container {
+            border-spacing: 0;
+            margin: 0 auto;
+            padding: 0;
+        }
+
         @page {
             margin-left: 1.0cm;
             margin-right: 1.5cm;
             margin-top: 0.4cm;
             margin-bottom: 0.2cm;
         }
+
+        .etiqueta-super-mini {
+            width: 2.9cm;
+            height: 1.15cm;
+            display: inline-block;
+            position: relative;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
         {!! file_get_contents(public_path('css/etiquetas.css')) !!}
     </style>
 
 <body>
     <div class="hoja">
+        <div style="text-align: center;">
         @for ($i = 0; $i < 2; $i++)
             <div class="icon-cuadroGrande">
                 <p class="texto2">{!! formatName($product_order->name, 2, 15) !!}</p>
@@ -188,7 +204,9 @@
                 <div class="cuadroRenglon"></div>
             </div>
         @endfor
+        </div>
 
+        <div class="etiquetas-maxi-container" style="text-align: center;">
         @for ($i = 0; $i < 3; $i++)
             <div class="icon-cuadro">
                 <p class="texto2" style="font-size: 1.05em;">{!! formatName($product_order->name, 2, 15) !!}</p>
@@ -200,10 +218,9 @@
                 <p class="texto2" style="font-size: 1.05em;">{!! formatName($product_order->name, 2, 15) !!}</p>
             </div>
         @endfor
+        </div>
 
-        <div style="height: 12px;"></div>
-
-        <table>
+        <table style="margin-top: 8px;">
         @for ($i = 0; $i < 10; $i++)
             <tr>
                     <td class="etiqueta-super-mini" style="background: {{ $plantilla['colores'] }}">
@@ -215,7 +232,7 @@
                             </tr>
                         </table>
                     </td>
-                    <td style="width: 2px;"></td>
+                    <td style="width: 1px;"></td>
                     <td class="etiqueta-super-mini" style="background: {{ $plantilla['colores'] }}">
                         <table class="etiqueta-super-mini-content-container">
                             <tr>
@@ -225,7 +242,7 @@
                             </tr>
                         </table>
                     </td>
-                    <td style="width: 2px;"></td>
+                    <td style="width: 1px;"></td>
                     <td class="etiqueta-super-mini" style="background: {{ $plantilla['colores'] }}">
                         <table class="etiqueta-super-mini-content-container">
                             <tr>
@@ -235,7 +252,7 @@
                             </tr>
                         </table>
                     </td>
-                    <td style="width: 2px;"></td>
+                    <td style="width: 1px;"></td>
                     <td class="etiqueta-super-mini" style="background: {{ $plantilla['colores'] }}">
                         <table class="etiqueta-super-mini-content-container">
                             <tr>
@@ -245,7 +262,7 @@
                             </tr>
                         </table>
                     </td>
-                    <td style="width: 2px;"></td>
+                    <td style="width: 1px;"></td>
                     <td class="etiqueta-super-mini" style="background: {{ $plantilla['colores'] }}">
                         <table class="etiqueta-super-mini-content-container">
                             <tr>
@@ -255,7 +272,7 @@
                             </tr>
                         </table>
                     </td>
-                    <td style="width: 2px;"></td>
+                    <td style="width: 1px;"></td>
                     <td class="etiqueta-super-mini" style="background: {{ $plantilla['colores'] }}">
                         <table class="etiqueta-super-mini-content-container">
                             <tr>
@@ -267,7 +284,7 @@
                     </td>
                 </tr>
                 <tr>
-                    <td colspan="11" style="height: 5px;"></td>
+                    <td colspan="11" style="height: 6px;"></td>
                 </tr>
             @endfor
         </table>
