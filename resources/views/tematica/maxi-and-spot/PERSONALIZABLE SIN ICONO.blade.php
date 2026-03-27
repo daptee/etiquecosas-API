@@ -126,7 +126,7 @@
             width: 3cm;
             height: 3cm;
             margin-right: 6.15mm;
-            margin-bottom: 10.61mm;
+            margin-bottom: 4.61mm;
             vertical-align: top;
             display: inline-block;
             position: relative;

@@ -56,10 +56,10 @@
         .super-mini {
             width: 2.9cm;
             height: 1.15cm;
-            margin-top: 7px;
+            margin-top: 5px;
             margin-left: 1.5px;
             margin-right: 1px;
-            margin-bottom: 5px;
+            margin-bottom: 7px;
             display: inline-block;
             color: white;
             position: relative;
@@ -97,12 +97,13 @@
             width: 100%;
             height: auto;
             margin-left: 8px;
+            margin-bottom: 2px;
         }
         .circulo-personaje {
             width: 3cm;
             height: 3cm;
             margin-right: 6.15mm;
-            margin-bottom: 10.61mm;
+            margin-bottom: 4.61mm;
             vertical-align: top;
             display: inline-block;
             position: relative;
