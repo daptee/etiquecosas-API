@@ -171,12 +171,22 @@
                         $nameLength = mb_strlen($nombre, 'UTF-8');
 
                         if ($esGrande) {
-                            if ($nameLength <= 10) {
-                                $fontsize = '14pt';
-                            } elseif ($nameLength <= 18) {
-                                $fontsize = '11pt';
+                            if (!$icono) {
+                                if ($nameLength <= 10) {
+                                    $fontsize = '18pt';
+                                } elseif ($nameLength <= 18) {
+                                    $fontsize = '14pt';
+                                } else {
+                                    $fontsize = '11pt';
+                                }
                             } else {
-                                $fontsize = '9pt';
+                                if ($nameLength <= 10) {
+                                    $fontsize = '14pt';
+                                } elseif ($nameLength <= 18) {
+                                    $fontsize = '11pt';
+                                } else {
+                                    $fontsize = '9pt';
+                                }
                             }
                         } else {
                             if ($nameLength <= 16) {
