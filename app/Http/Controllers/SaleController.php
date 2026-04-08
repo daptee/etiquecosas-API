@@ -32,6 +32,7 @@ use App\Traits\ApiResponse;
 use App\Traits\FindObject;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -605,6 +606,8 @@ class SaleController extends Controller
             'sale_status_id' => 1,
             'date' => Carbon::now(),
         ]);
+
+        $this->sendMetaCapiPurchaseEvent($sale);
 
         $notifyEmail = env('MAIL_NOTIFICATION_TO');
 
@@ -2347,6 +2350,61 @@ class SaleController extends Controller
             Log::error('Error al obtener estadísticas del dashboard: ' . $th->getMessage());
             $this->logAudit(Auth::user(), 'Dashboard Stats Error', $request->all(), $th->getMessage());
             return $this->error('Error al obtener estadísticas: ' . $th->getMessage(), 500);
+        }
+    }
+
+    private function sendMetaCapiPurchaseEvent(Sale $sale): void
+    {
+        $pixelId = config('services.meta.pixel_id');
+        $capiToken = config('services.meta.capi_token');
+
+        if (empty($pixelId) || empty($capiToken) || !app()->isProduction()) {
+            Log::info('Meta CAPI: no configurado o entorno no productivo, se omite el evento Purchase', ['sale_id' => $sale->id]);
+            return;
+        }
+
+        try {
+            $sale->loadMissing('client');
+
+            $total = $sale->products->sum(fn($p) => $p->unit_price * $p->quantity);
+            if (!empty($sale->shipping_cost)) {
+                $total += $sale->shipping_cost;
+            }
+            if (!empty($sale->discount_amount)) {
+                $total -= $sale->discount_amount;
+            }
+
+            $eventData = [
+                'data' => [
+                    [
+                        'event_name' => 'Purchase',
+                        'event_time' => now()->timestamp,
+                        'event_id' => 'sale_' . $sale->id,
+                        'action_source' => 'website',
+                        'user_data' => [
+                            'em' => !empty($sale->client->email)
+                                ? [hash('sha256', strtolower(trim($sale->client->email)))]
+                                : [],
+                        ],
+                        'custom_data' => [
+                            'currency' => 'ARS',
+                            'value' => round((float) $total, 2),
+                            'order_id' => (string) $sale->id,
+                        ],
+                    ],
+                ],
+            ];
+
+            $response = Http::withToken($capiToken)
+                ->post("https://graph.facebook.com/v19.0/{$pixelId}/events", $eventData);
+
+            if ($response->successful()) {
+                Log::info('Meta CAPI: evento Purchase enviado', ['sale_id' => $sale->id, 'response' => $response->json()]);
+            } else {
+                Log::warning('Meta CAPI: respuesta no exitosa', ['sale_id' => $sale->id, 'status' => $response->status(), 'body' => $response->body()]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Meta CAPI: error enviando evento Purchase', ['sale_id' => $sale->id, 'error' => $e->getMessage()]);
         }
     }
 }
