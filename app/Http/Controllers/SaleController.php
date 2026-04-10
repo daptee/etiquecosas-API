@@ -457,6 +457,7 @@ class SaleController extends Controller
         if ($sale->channel_id === 4) {
             $sale->sale_status_id = 1;
             $sale->save();
+            Log::channel('meta_capi')->info('[store mayorista] Venta aprobada automáticamente → disparando CAPI', ['sale_id' => $sale->id]);
             $this->approveSale($sale);
         }
 
@@ -590,6 +591,7 @@ class SaleController extends Controller
         }
 
         if ($sale->sale_status_id == 1 && $saleStatusOld != 1) {
+            Log::channel('meta_capi')->info('[changeStatus] Venta aprobada → disparando CAPI', ['sale_id' => $sale->id]);
             $this->approveSale($sale);
         }
 
@@ -846,6 +848,9 @@ class SaleController extends Controller
         }
 
         if ($sale->sale_status_id == 1 && $saleStatusOld != 1) {
+            Log::channel('meta_capi')->info('[changeStatusAdmin] Venta aprobada → disparando CAPI', ['sale_id' => $sale->id]);
+            $this->sendMetaCapiPurchaseEvent($sale);
+
             $notifyEmail = env('MAIL_NOTIFICATION_TO');
 
             Mail::to($sale->client->email)->send(new OrderSummaryMail($sale));
@@ -2357,9 +2362,10 @@ class SaleController extends Controller
     {
         $pixelId = config('services.meta.pixel_id');
         $capiToken = config('services.meta.capi_token');
+        $capiLog = Log::channel('meta_capi');
 
         if (empty($pixelId) || empty($capiToken) || !app()->isProduction()) {
-            Log::info('Meta CAPI: no configurado o entorno no productivo, se omite el evento Purchase', ['sale_id' => $sale->id]);
+            $capiLog->info('Evento omitido: no configurado o entorno no productivo', ['sale_id' => $sale->id, 'env' => app()->environment()]);
             return;
         }
 
@@ -2374,6 +2380,8 @@ class SaleController extends Controller
                 $total -= $sale->discount_amount;
             }
 
+            $emailRaw = strtolower(trim($sale->client->email ?? ''));
+
             $eventData = [
                 'data' => [
                     [
@@ -2382,9 +2390,7 @@ class SaleController extends Controller
                         'event_id' => 'sale_' . $sale->id,
                         'action_source' => 'website',
                         'user_data' => [
-                            'em' => !empty($sale->client->email)
-                                ? [hash('sha256', strtolower(trim($sale->client->email)))]
-                                : [],
+                            'em' => !empty($emailRaw) ? [hash('sha256', $emailRaw)] : [],
                         ],
                         'custom_data' => [
                             'currency' => 'ARS',
@@ -2395,16 +2401,35 @@ class SaleController extends Controller
                 ],
             ];
 
+            $capiLog->info('Enviando evento Purchase a Meta CAPI', [
+                'sale_id'       => $sale->id,
+                'pixel_id'      => $pixelId,
+                'email_raw'     => $emailRaw,
+                'total'         => round((float) $total, 2),
+                'payload'       => $eventData,
+            ]);
+
             $response = Http::withToken($capiToken)
                 ->post("https://graph.facebook.com/v19.0/{$pixelId}/events", $eventData);
 
             if ($response->successful()) {
-                Log::info('Meta CAPI: evento Purchase enviado', ['sale_id' => $sale->id, 'response' => $response->json()]);
+                $capiLog->info('Evento Purchase enviado correctamente', [
+                    'sale_id'       => $sale->id,
+                    'http_status'   => $response->status(),
+                    'response'      => $response->json(),
+                ]);
             } else {
-                Log::warning('Meta CAPI: respuesta no exitosa', ['sale_id' => $sale->id, 'status' => $response->status(), 'body' => $response->body()]);
+                $capiLog->warning('Respuesta no exitosa de Meta CAPI', [
+                    'sale_id'       => $sale->id,
+                    'http_status'   => $response->status(),
+                    'body'          => $response->body(),
+                ]);
             }
         } catch (\Exception $e) {
-            Log::error('Meta CAPI: error enviando evento Purchase', ['sale_id' => $sale->id, 'error' => $e->getMessage()]);
+            $capiLog->error('Error enviando evento Purchase', [
+                'sale_id' => $sale->id,
+                'error'   => $e->getMessage(),
+            ]);
         }
     }
 }
