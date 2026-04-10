@@ -118,6 +118,13 @@ return [
             'replace_placeholders' => true,
         ],
 
+        'meta_capi' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/meta-capi.log'),
+            'level' => 'debug',
+            'days' => 30,
+        ],
+
         'null' => [
             'driver' => 'monolog',
             'handler' => NullHandler::class,
