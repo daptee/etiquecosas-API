@@ -653,13 +653,7 @@ class MercadoPagoController extends Controller
         try {
             $sale->loadMissing('client');
 
-            $total = $sale->products->sum(fn($p) => $p->unit_price * $p->quantity);
-            if (!empty($sale->shipping_cost)) {
-                $total += $sale->shipping_cost;
-            }
-            if (!empty($sale->discount_amount)) {
-                $total -= $sale->discount_amount;
-            }
+            $total = (float) ($sale->total ?? 0);
 
             $emailRaw = strtolower(trim($sale->client->email ?? ''));
 
