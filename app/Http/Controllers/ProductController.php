@@ -547,7 +547,16 @@ class ProductController extends Controller
 
             Log::info("Syncing attributes for product ID {$product->id}: ", $attributes);
 
-            $product->attributes()->sync($attributes);
+            // Soporta tanto array de IDs como array de objetos {id, order}
+            $syncData = [];
+            foreach ($attributes as $index => $item) {
+                if (is_array($item) && isset($item['id'])) {
+                    $syncData[(int) $item['id']] = ['order' => (int) ($item['order'] ?? $index)];
+                } else {
+                    $syncData[(int) $item] = ['order' => $index];
+                }
+            }
+            $product->attributes()->sync($syncData);
         } else {
             $product->attributes()->detach();
         }
@@ -1096,7 +1105,16 @@ class ProductController extends Controller
 
             Log::info("Syncing attributes for product ID {$product->id}: ", $attributes);
 
-            $product->attributes()->sync($attributes);
+            // Soporta tanto array de IDs como array de objetos {id, order}
+            $syncData = [];
+            foreach ($attributes as $index => $item) {
+                if (is_array($item) && isset($item['id'])) {
+                    $syncData[(int) $item['id']] = ['order' => (int) ($item['order'] ?? $index)];
+                } else {
+                    $syncData[(int) $item] = ['order' => $index];
+                }
+            }
+            $product->attributes()->sync($syncData);
 
         } else {
             $product->attributes()->detach();
