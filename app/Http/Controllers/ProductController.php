@@ -372,7 +372,8 @@ class ProductController extends Controller
             'related_products' => 'nullable|array',
             'related_products.*' => 'exists:products,id',
             'attributes' => 'nullable|array',
-            'attributes.*' => 'exists:attributes,id',
+            'attributes.*.id' => 'required_with:attributes.*|integer|exists:attributes,id',
+            'attributes.*.order' => 'nullable|integer',
             'attributes_values' => 'nullable|array',
             'attributes_values.*' => 'exists:attribute_values,id',
             'variants' => 'nullable|array',
@@ -547,7 +548,16 @@ class ProductController extends Controller
 
             Log::info("Syncing attributes for product ID {$product->id}: ", $attributes);
 
-            $product->attributes()->sync($attributes);
+            // Soporta tanto array de IDs como array de objetos {id, order}
+            $syncData = [];
+            foreach ($attributes as $index => $item) {
+                if (is_array($item) && isset($item['id'])) {
+                    $syncData[(int) $item['id']] = ['order' => (int) ($item['order'] ?? $index)];
+                } else {
+                    $syncData[(int) $item] = ['order' => $index];
+                }
+            }
+            $product->attributes()->sync($syncData);
         } else {
             $product->attributes()->detach();
         }
@@ -905,7 +915,8 @@ class ProductController extends Controller
             'related_products' => 'nullable|array',
             'related_products.*' => 'integer|exists:products,id',
             'attributes' => 'nullable|array',
-            'attributes.*' => 'integer|exists:attributes,id',
+            'attributes.*.id' => 'required_with:attributes.*|integer|exists:attributes,id',
+            'attributes.*.order' => 'nullable|integer',
             'attributes_values' => 'nullable|array',
             'attributes_values.*' => 'exists:attribute_values,id',
             'variants' => 'nullable|array',
@@ -1096,7 +1107,16 @@ class ProductController extends Controller
 
             Log::info("Syncing attributes for product ID {$product->id}: ", $attributes);
 
-            $product->attributes()->sync($attributes);
+            // Soporta tanto array de IDs como array de objetos {id, order}
+            $syncData = [];
+            foreach ($attributes as $index => $item) {
+                if (is_array($item) && isset($item['id'])) {
+                    $syncData[(int) $item['id']] = ['order' => (int) ($item['order'] ?? $index)];
+                } else {
+                    $syncData[(int) $item] = ['order' => $index];
+                }
+            }
+            $product->attributes()->sync($syncData);
 
         } else {
             $product->attributes()->detach();
