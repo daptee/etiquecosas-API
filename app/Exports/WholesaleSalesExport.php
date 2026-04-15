@@ -85,7 +85,8 @@ class WholesaleSalesExport implements FromCollection, WithHeadings, WithMapping,
                 $parts = [];
                 foreach ($customizationData as $key => $value) {
                     if (is_array($value)) {
-                        $parts[] = $key . ': ' . implode(', ', $value);
+                        $flat = array_map(fn($v) => is_array($v) ? json_encode($v) : $v, $value);
+                        $parts[] = $key . ': ' . implode(', ', $flat);
                     } else {
                         $parts[] = $key . ': ' . $value;
                     }
