@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exports\SalesExport;
+use App\Exports\WholesaleSalesExport;
 use App\Mail\OrderSummaryMail;
 use App\Mail\OrderSummaryMailTo;
 use App\Mail\OrderProductionsMail;
@@ -2017,6 +2018,17 @@ class SaleController extends Controller
 
         // Luego, si querés devolverlo para descargar:
         return Excel::download($salesExport, $fileName);
+    }
+
+    public function exportWholesaleExcel(Request $request)
+    {
+        $from = ($request->query('start_date') ?? '2024-12-01') . ' 00:00:00';
+        $to = ($request->query('end_date') ?? now()->format('Y-m-d')) . ' 23:59:59';
+
+        $export = new WholesaleSalesExport($from, $to);
+        $fileName = 'compras-mayoristas_' . now()->format('Ymd_His') . '.xlsx';
+
+        return Excel::download($export, $fileName);
     }
 
     /**

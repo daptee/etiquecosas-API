@@ -261,6 +261,7 @@ Route::middleware('jwt.auth')->prefix('sales')->group(function () {
     Route::get('/', [SaleController::class, 'index']);
     Route::get('/dashboard-stats', [SaleController::class, 'getDashboardStats']);
     Route::get('/export', [SaleController::class, 'exportExcel']);
+    Route::get('/export/wholesale', [SaleController::class, 'exportWholesaleExcel']);
     Route::get('/{id}', [SaleController::class, 'show']);
     Route::put('/assign-user-sale-multiple', [SaleController::class, 'assignUserToMultipleSales']);
     Route::put('/assign-cadete/{id}', [SaleController::class, 'assignCadete']);
