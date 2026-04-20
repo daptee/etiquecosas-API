@@ -94,9 +94,9 @@
                     <div class="circuloCuadro">
                         <img class="personajeCirculo" src="{{ $plantilla['imagen'] }}" alt="">
                     </div>
-                    <p class="circulo-texto" style="font-family: 'Oswald';font-size: small;color:{{$plantilla['colores']}}">
+                    <div class="circulo-texto" style="font-family: 'Oswald';font-size: small;color:{{$plantilla['colores']}}">
                         {!! formatNameExactLines($product_order->name, 2) !!}
-                    </p>
+                    </div>
                 </div>
             @endfor
         </div>

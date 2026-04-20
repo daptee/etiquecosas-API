@@ -80,9 +80,9 @@
         <div class="circulo-principal">
             @for ($i = 0; $i < 35; $i++)
                 <div class="circulo-personaje">
-                    <p class="circulo-texto">
+                    <div class="circulo-texto">
                         {{ formatNameExactLines($product_order->name, 2) }}
-                    </p>
+                    </div>
                 </div>
             @endfor
         </div>

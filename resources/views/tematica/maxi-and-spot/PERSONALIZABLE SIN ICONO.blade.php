@@ -164,10 +164,10 @@
         <div class="circulo-principal">
             @for ($i = 0; $i < 20; $i++)
                 <div class="circulo-personaje">
-                    <p class="circulo-texto {{ $plantilla['fontClass'] }}"
+                    <div class="circulo-texto {{ $plantilla['fontClass'] }}"
                         style="font-family: 'Oswald';color:{{$plantilla['colores']}}">
                         {!! formatNameExactLines($product_order->name, 2) !!}
-                    </p>
+                    </div>
                 </div>
             @endfor
         </div>

@@ -305,7 +305,7 @@
             @for ($i = 0; $i < 2; $i++)
                 <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][0] }})">
                 <div class="imagen">
-                    <img class="personaje" src="{{ $plantilla['imagen'][1] }}" alt="">
+                    <img class="personaje" src="{{ $plantilla['imagen'][0] }}" alt="">
                 </div>
                 <div class="cuadro">
                     <p class="texto2" style="font-family: 'Oswald';font-size: 1.05em;">{{mb_strtoupper($product_order->name)}}</p>
@@ -313,7 +313,7 @@
         </div>
         <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][1] }})">
             <div class="imagen">
-                <img class="personaje" src="{{ $plantilla['imagen'][1] }}" alt="">
+                <img class="personaje" src="{{ $plantilla['imagen'][0] }}" alt="">
             </div>
             <div class="cuadro">
                 <p class="texto2" style="font-family: 'Oswald';font-size: 1.05em;">{{mb_strtoupper($product_order->name)}}</p>
@@ -321,7 +321,7 @@
         </div>
         <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][2] }})">
             <div class="imagen">
-                <img class="personaje" src="{{ $plantilla['imagen'][1] }}" alt="">
+                <img class="personaje" src="{{ $plantilla['imagen'][0] }}" alt="">
             </div>
             <div class="cuadro">
                 <p class="texto2" style="font-family: 'Oswald';font-size: 1.05em;">{{mb_strtoupper($product_order->name)}}</p>
@@ -337,7 +337,7 @@
         </div>
         <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][4] }})">
             <div class="imagen">
-                <img class="personaje" src="{{ $plantilla['imagen'][1] }}" alt="">
+                <img class="personaje" src="{{ $plantilla['imagen'][0] }}" alt="">
             </div>
             <div class="cuadro">
                 <p class="texto2" style="font-family: 'Oswald';font-size: 1.05em;">{{mb_strtoupper($product_order->name)}}</p>
@@ -345,7 +345,7 @@
         </div>
         <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][5] }})">
             <div class="imagen">
-                <img class="personaje" src="{{ $plantilla['imagen'][1] }}" alt="">
+                <img class="personaje" src="{{ $plantilla['imagen'][0] }}" alt="">
             </div>
             <div class="cuadro">
                 <p class="texto2" style="font-family: 'Oswald';font-size: 1.05em;">{{mb_strtoupper($product_order->name)}}</p>
@@ -353,7 +353,7 @@
         </div>
         <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][3] }})">
             <div class="imagen">
-                <img class="personaje" src="{{ $plantilla['imagen'][1] }}" alt="">
+                <img class="personaje" src="{{ $plantilla['imagen'][0] }}" alt="">
             </div>
             <div class="cuadro">
                 <p class="texto2" style="font-family: 'Oswald';font-size: 1.05em;">{{mb_strtoupper($product_order->name)}}</p>
@@ -361,7 +361,7 @@
         </div>
         <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][0] }})">
             <div class="imagen">
-                <img class="personaje" src="{{ $plantilla['imagen'][1] }}" alt="">
+                <img class="personaje" src="{{ $plantilla['imagen'][0] }}" alt="">
             </div>
             <div class="cuadro">
                 <p class="texto2" style="font-family: 'Oswald';font-size: 1.05em;">{{mb_strtoupper($product_order->name)}}</p>
@@ -377,19 +377,19 @@
         @for ($i = 0; $i < 2; $i++)
             <div class="segundoD" style="background: cmyk({{ $plantilla['colores'][1] }})">
             <div class="imagenAbajo">
-                <img class="personaje2" src="{{ $plantilla['imagen'][1] }}" alt="">
+                <img class="personaje2" src="{{ $plantilla['imagen'][0] }}" alt="">
             </div>
             <p class="textoArriba" style="font-family: 'Oswald';font-size: 1.05em;">{{mb_strtoupper($product_order->name)}}</p>
     </div>
     <div class="segundoD" style="background: cmyk({{ $plantilla['colores'][4] }})">
         <div class="imagenAbajo">
-            <img class="personaje2" src="{{ $plantilla['imagen'][1] }}" alt="">
+            <img class="personaje2" src="{{ $plantilla['imagen'][0] }}" alt="">
         </div>
         <p class="textoArriba" style="font-family: 'Oswald';font-size: 1.05em;">{{mb_strtoupper($product_order->name)}}</p>
     </div>
     <div class="segundoD" style="background: cmyk({{ $plantilla['colores'][0] }})">
         <div class="imagenArriba">
-            <img class="personaje2" src="{{ $plantilla['imagen'][1] }}" alt="">
+            <img class="personaje2" src="{{ $plantilla['imagen'][0] }}" alt="">
         </div>
         <p class="textoAbajo" style="font-family: 'Oswald';font-size: 1.05em;">{{mb_strtoupper($product_order->name)}}</p>
     </div>
@@ -401,13 +401,13 @@
     </div>
     <div class="segundoD" style="background: cmyk({{ $plantilla['colores'][5] }})">
         <div class="imagenAbajo">
-            <img class="personaje2" src="{{ $plantilla['imagen'][1] }}" alt="">
+            <img class="personaje2" src="{{ $plantilla['imagen'][0] }}" alt="">
         </div>
         <p class="textoArriba" style="font-family: 'Oswald';font-size: 1.05em;">{{mb_strtoupper($product_order->name)}}</p>
     </div>
     <div class="segundoD" style="background: cmyk({{ $plantilla['colores'][2] }})">
         <div class="imagenAbajo">
-            <img class="personaje2" src="{{ $plantilla['imagen'][1] }}" alt="">
+            <img class="personaje2" src="{{ $plantilla['imagen'][0] }}" alt="">
         </div>
         <p class="textoArriba" style="font-family: 'Oswald';font-size: 1.05em;">{{mb_strtoupper($product_order->name)}}</p>
     </div>
@@ -418,7 +418,7 @@
     <div>
         <div class="tercerD" style="background: cmyk({{ $plantilla['colores'][1] }})">
             <div class="imagenT">
-                <img class="personaje3" src="{{ $plantilla['imagen'][1] }}" alt="">
+                <img class="personaje3" src="{{ $plantilla['imagen'][0] }}" alt="">
             </div>
             <div class="cuadroD">
                 <p class="texto4" style="font-family: 'Oswald';font-size: 1.45em;">{{mb_strtoupper($product_order->name)}}</p>
@@ -426,7 +426,7 @@
         </div>
         <div class="tercerD" style="background: cmyk({{ $plantilla['colores'][5] }})">
             <div class="imagenT">
-                <img class="personaje3" src="{{ $plantilla['imagen'][1] }}" alt="">
+                <img class="personaje3" src="{{ $plantilla['imagen'][0] }}" alt="">
             </div>
             <div class="cuadroD">
                 <p class="texto4" style="font-family: 'Oswald';font-size: 1.45em;">{{mb_strtoupper($product_order->name)}}</p>
@@ -434,7 +434,7 @@
         </div>
         <div class="tercerD" style="background: cmyk({{ $plantilla['colores'][4] }})">
             <div class="imagenT">
-                <img class="personaje3" src="{{ $plantilla['imagen'][1] }}" alt="">
+                <img class="personaje3" src="{{ $plantilla['imagen'][0] }}" alt="">
             </div>
             <div class="cuadroD">
                 <p class="texto4" style="font-family: 'Oswald';font-size: 1.45em;">{{mb_strtoupper($product_order->name)}}</p>
@@ -442,7 +442,7 @@
         </div>
         <div class="tercerD" style="background: cmyk({{ $plantilla['colores'][4] }})">
             <div class="imagenT">
-                <img class="personaje3" src="{{ $plantilla['imagen'][1] }}" alt="">
+                <img class="personaje3" src="{{ $plantilla['imagen'][0] }}" alt="">
             </div>
             <div class="cuadroD">
                 <p class="texto4" style="font-family: 'Oswald';font-size: 1.45em;">{{mb_strtoupper($product_order->name)}}</p>
@@ -450,7 +450,7 @@
         </div>
         <div class="tercerD" style="background: cmyk({{ $plantilla['colores'][0] }})">
             <div class="imagenT">
-                <img class="personaje3" src="{{ $plantilla['imagen'][1] }}" alt="">
+                <img class="personaje3" src="{{ $plantilla['imagen'][0] }}" alt="">
             </div>
             <div class="cuadroD">
                 <p class="texto4" style="font-family: 'Oswald';font-size: 1.45em;">{{mb_strtoupper($product_order->name)}}</p>
@@ -458,7 +458,7 @@
         </div>
         <div class="tercerD" style="background: cmyk({{ $plantilla['colores'][2] }})">
             <div class="imagenT">
-                <img class="personaje3" src="{{ $plantilla['imagen'][1] }}" alt="">
+                <img class="personaje3" src="{{ $plantilla['imagen'][0] }}" alt="">
             </div>
             <div class="cuadroD">
                 <p class="texto4" style="font-family: 'Oswald';font-size: 1.45em;">{{mb_strtoupper($product_order->name)}}</p>

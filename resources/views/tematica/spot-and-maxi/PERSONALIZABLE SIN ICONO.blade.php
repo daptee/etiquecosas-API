@@ -156,9 +156,9 @@
         <div class="circulo-principal">
             @for ($i = 0; $i < 10; $i++)
                 <div class="circulo-personaje">
-                    <p class="circulo-texto">
+                    <div class="circulo-texto">
                         {{ mb_strtoupper($product_order->name) }}
-                    </p>
+                    </div>
                 </div>
             @endfor
         </div>
