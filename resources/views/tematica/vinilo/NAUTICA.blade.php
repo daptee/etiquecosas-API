@@ -423,9 +423,9 @@
                         @endswitch
                     </div>
                 </div>
-                <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][6] }})">
+                <div class="icon-cuadro" style="background: cmyk({{ $plantilla['colores'][5] }})">
                     <div class="imagen">
-                        <img class="personajeAlto" src="{{ $plantilla['imagen'][1] }}" alt="">
+                        <img class="personajeAlto" src="{{ $plantilla['imagen'][2] }}" alt="">
                     </div>
                     <div class="cuadro">
                         @php

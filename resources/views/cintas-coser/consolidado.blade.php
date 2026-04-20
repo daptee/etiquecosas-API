@@ -177,15 +177,15 @@
                                 } elseif ($nameLength <= 18) {
                                     $fontsize = '14pt';
                                 } else {
-                                    $fontsize = '11pt';
+                                    $fontsize = '12pt';
                                 }
                             } else {
                                 if ($nameLength <= 10) {
-                                    $fontsize = '14pt';
+                                    $fontsize = '16pt';
                                 } elseif ($nameLength <= 18) {
-                                    $fontsize = '11pt';
+                                    $fontsize = '14pt';
                                 } else {
-                                    $fontsize = '9pt';
+                                    $fontsize = '12pt';
                                 }
                             }
                         } else {

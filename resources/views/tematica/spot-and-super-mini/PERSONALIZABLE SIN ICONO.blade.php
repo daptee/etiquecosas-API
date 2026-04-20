@@ -142,9 +142,9 @@
         <div class="circulo-principal">
             @for ($i = 0; $i < 20; $i++)
                 <div class="circulo-personaje">
-                    <p class="circulo-texto {{ $plantilla['fontClass'] }}" style="font-family: 'Oswald';">
+                    <div class="circulo-texto {{ $plantilla['fontClass'] }}" style="font-family: 'Oswald';">
                         {!! formatName($product_order->name, 2, 15) !!}
-                    </p>
+                    </div>
                 </div>
             @endfor
         </div>

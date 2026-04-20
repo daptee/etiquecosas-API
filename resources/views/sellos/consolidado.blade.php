@@ -109,6 +109,7 @@
             text-align: left;
             line-height: 0.8;
             white-space: normal;
+            letter-spacing: 0.05em;
         }
 
         /* ---------- TAMAÑOS DE FUENTE ---------- */
