@@ -612,6 +612,8 @@ class SaleController extends Controller
 
         $this->sendMetaCapiPurchaseEvent($sale);
 
+        $sale->load(['client', 'products.product', 'products.variant', 'shippingMethod', 'locality']);
+
         $notifyEmail = env('MAIL_NOTIFICATION_TO');
 
         Mail::to($sale->client->email)->send(new OrderSummaryMail($sale));
@@ -851,6 +853,8 @@ class SaleController extends Controller
         if ($sale->sale_status_id == 1 && $saleStatusOld != 1) {
             Log::channel('meta_capi')->info('[changeStatusAdmin] Venta aprobada → disparando CAPI', ['sale_id' => $sale->id]);
             $this->sendMetaCapiPurchaseEvent($sale);
+
+            $sale->load(['client', 'products.product', 'products.variant', 'shippingMethod', 'locality']);
 
             $notifyEmail = env('MAIL_NOTIFICATION_TO');
 
