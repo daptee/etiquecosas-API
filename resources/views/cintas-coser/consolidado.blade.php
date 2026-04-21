@@ -86,7 +86,7 @@
 
         .personaje.grande {
             max-height: 2cm;
-            margin-top: 0;
+            margin-top: 10px;
             margin-right: 10px;
             vertical-align: middle;
         }
@@ -116,7 +116,7 @@
         /* Texto para etiquetas grandes (14pt) */
         .texto2.grande {
             font-size: 14pt;
-            line-height: 1.1;
+            line-height: 0.8;
             white-space: normal;
             word-wrap: break-word;
             overflow-wrap: break-word;
@@ -124,12 +124,12 @@
         }
 
         .texto2.grande.con-icono {
-            line-height: 1.1;
+            line-height: 0.8;
         }
 
         .texto2.grande.sin-icono {
             padding-top: 0;
-            line-height: 1.1;
+            line-height: 0.8;
         }
 
         .cantidad-label {
@@ -173,19 +173,19 @@
                         if ($esGrande) {
                             if (!$icono) {
                                 if ($nameLength <= 10) {
-                                    $fontsize = '18pt';
+                                    $fontsize = '22pt';
                                 } elseif ($nameLength <= 18) {
-                                    $fontsize = '14pt';
+                                    $fontsize = '18pt';
                                 } else {
-                                    $fontsize = '12pt';
+                                    $fontsize = '15pt';
                                 }
                             } else {
                                 if ($nameLength <= 10) {
-                                    $fontsize = '16pt';
+                                    $fontsize = '20pt';
                                 } elseif ($nameLength <= 18) {
-                                    $fontsize = '14pt';
+                                    $fontsize = '16pt';
                                 } else {
-                                    $fontsize = '12pt';
+                                    $fontsize = '14pt';
                                 }
                             }
                         } else {
