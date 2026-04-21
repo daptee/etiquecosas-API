@@ -116,7 +116,7 @@
         /* Texto para etiquetas grandes (14pt) */
         .texto2.grande {
             font-size: 14pt;
-            line-height: 0.8;
+            line-height: 0.7;
             white-space: normal;
             word-wrap: break-word;
             overflow-wrap: break-word;
@@ -124,12 +124,12 @@
         }
 
         .texto2.grande.con-icono {
-            line-height: 0.8;
+            line-height: 0.7;
         }
 
         .texto2.grande.sin-icono {
             padding-top: 0;
-            line-height: 0.8;
+            line-height: 0.7;
         }
 
         .cantidad-label {
