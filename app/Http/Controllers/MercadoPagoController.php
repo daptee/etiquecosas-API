@@ -309,7 +309,7 @@ class MercadoPagoController extends Controller
 
                 // Enviar evento Purchase a Meta Conversions API
                 Log::channel('meta_capi')->info('[webhook MP] Venta aprobada → disparando CAPI', ['sale_id' => $sale->id]);
-                $this->sendMetaCapiPurchaseEvent($sale);
+                /* $this->sendMetaCapiPurchaseEvent($sale); */
 
                 // Cargar relaciones necesarias
                 $sale->load(['client', 'products.product', 'products.variant', 'shippingMethod', 'locality']);

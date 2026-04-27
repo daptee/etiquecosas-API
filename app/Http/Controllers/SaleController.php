@@ -610,7 +610,7 @@ class SaleController extends Controller
             'date' => Carbon::now(),
         ]);
 
-        $this->sendMetaCapiPurchaseEvent($sale);
+        /* $this->sendMetaCapiPurchaseEvent($sale); */
 
         $sale->load(['client', 'products.product', 'products.variant', 'shippingMethod', 'locality']);
 
@@ -852,7 +852,7 @@ class SaleController extends Controller
 
         if ($sale->sale_status_id == 1 && $saleStatusOld != 1) {
             Log::channel('meta_capi')->info('[changeStatusAdmin] Venta aprobada → disparando CAPI', ['sale_id' => $sale->id]);
-            $this->sendMetaCapiPurchaseEvent($sale);
+            /* $this->sendMetaCapiPurchaseEvent($sale); */
 
             $sale->load(['client', 'products.product', 'products.variant', 'shippingMethod', 'locality']);
 
