@@ -104,6 +104,7 @@ public function show($id)
     ]);
 
     $coupon->load('categories:id', 'products:id');
+    $coupon->loadCount('salesMany as sales_count');
     $this->logAudit(Auth::user(), 'Get Coupon Details', $id, $coupon);
 
     return $this->success($coupon, 'Cupon obtenido');
@@ -184,6 +185,7 @@ public function store(Request $request)
     }
 
     $coupon->load('categories:id', 'products:id');
+    $coupon->loadCount('salesMany as sales_count');
     $this->logAudit(Auth::user(), 'Store Coupon', $request->all(), $coupon);
 
     return $this->success($coupon, 'Cupon creado', 201);
@@ -271,6 +273,7 @@ public function update(Request $request, $id)
     }
 
     $coupon->load('categories:id', 'products:id');
+    $coupon->loadCount('salesMany as sales_count');
     $this->logAudit(Auth::user(), 'Update Coupon', $request->all(), $coupon);
 
     return $this->success($coupon, 'Cupon actualizado');
