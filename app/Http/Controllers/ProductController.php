@@ -146,6 +146,74 @@ class ProductController extends Controller
         return $this->success($products->items(), 'Productos obtenidos', $metaData);
     }
 
+    public function featured(Request $request)
+    {
+        $perPage = $request->query('quantity', 20);
+        $page = $request->query('page', 1);
+
+        $isWholesaleClient = optional(auth('client')->user())->client_type_id === 2;
+
+        $query = Product::query()
+            ->select([
+                'id',
+                'name',
+                'sku',
+                'slug',
+                'price',
+                'discounted_price',
+                'discounted_start',
+                'discounted_end',
+                'wholesale_price',
+                'wholesale_min_amount',
+                'tag_id',
+                'meta_data',
+                'stock_channels',
+                'is_feature',
+                'is_customizable',
+                'is_sale',
+                'is_wholesale',
+                'product_type_id',
+                'product_status_id',
+                'product_stock_status_id',
+            ])
+            ->with([
+                'type:id,name',
+                'status:id,name',
+                'stockStatus:id,name',
+                'categories:id,name',
+                'attributes:id,name',
+                'attributeValues:id,value,attribute_id',
+                'tag:id,name',
+                'images:id,product_id,img,is_main',
+            ])
+            ->where('is_feature', true)
+            ->where('product_status_id', 2);
+
+        if ($isWholesaleClient) {
+            $query->where('is_wholesale', true);
+        } else {
+            $query->whereJsonContains('stock_channels', ['channel' => 1]);
+        }
+
+        $query->orderBy('name', 'asc');
+
+        if (!$perPage) {
+            $products = $query->get();
+            return $this->success($products, 'Productos destacados obtenidos');
+        }
+
+        $products = $query->paginate($perPage, ['*'], 'page', $page);
+        $metaData = [
+            'current_page' => $products->currentPage(),
+            'last_page' => $products->lastPage(),
+            'per_page' => $products->perPage(),
+            'total' => $products->total(),
+            'from' => $products->firstItem(),
+            'to' => $products->lastItem(),
+        ];
+        return $this->success($products->items(), 'Productos destacados obtenidos', $metaData);
+    }
+
     public function bestSellers(Request $request)
     {
         $perPage = $request->query('quantity', 20);
