@@ -17,8 +17,9 @@ ALTER TABLE coupons
 -- Nota: tiered_discounts se persiste aunque tiered_discounts_enabled = 0
 -- para no perder la configuración cargada.
 
--- 2. Cupones relámpago: cambiar date a datetime para poder indicar hora
+-- 2. Cupones relámpago: flag habilitador + cambiar date a datetime para poder indicar hora
 ALTER TABLE coupons
+    ADD COLUMN flash_enabled TINYINT(1) NOT NULL DEFAULT 0 AFTER tiered_discounts,
     MODIFY COLUMN date_from DATETIME NOT NULL,
     MODIFY COLUMN date_to DATETIME NOT NULL;
 

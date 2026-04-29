@@ -30,6 +30,7 @@ class Coupon extends Model
         'value',
         'tiered_discounts_enabled',
         'tiered_discounts',
+        'flash_enabled',
     ];
 
     protected $casts = [
@@ -41,6 +42,7 @@ class Coupon extends Model
         'applies_to_sale_price' => 'boolean',
         'tiered_discounts_enabled' => 'boolean',
         'tiered_discounts' => 'array',
+        'flash_enabled' => 'boolean',
     ];
 
     public function status()

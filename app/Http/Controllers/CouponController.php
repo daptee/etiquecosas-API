@@ -42,7 +42,8 @@ class CouponController extends Controller
             'applies_to_all_products',
             'value',
             'tiered_discounts_enabled',
-            'tiered_discounts'
+            'tiered_discounts',
+            'flash_enabled'
         )
         ->with('status', 'categories:id', 'products:id')
         ->withCount('salesMany as sales_count');
@@ -99,6 +100,7 @@ public function show($id)
         'value',
         'tiered_discounts_enabled',
         'tiered_discounts',
+        'flash_enabled',
     ]);
 
     $coupon->load('categories:id', 'products:id');
@@ -137,6 +139,7 @@ public function store(Request $request)
         'tiered_discounts.*.min_quantity' => 'required_with:tiered_discounts|integer|min:1',
         'tiered_discounts.*.type' => 'required_with:tiered_discounts|in:Fijo,Porcentaje',
         'tiered_discounts.*.value' => 'required_with:tiered_discounts|numeric|min:0',
+        'flash_enabled' => 'boolean',
     ]);
 
     if ($validator->fails()) {
@@ -169,6 +172,7 @@ public function store(Request $request)
         'value' => $request->value,
         'tiered_discounts_enabled' => $request->tiered_discounts_enabled ?? false,
         'tiered_discounts' => $request->tiered_discounts ?? null,
+        'flash_enabled' => $request->flash_enabled ?? false,
     ]);
 
     if (!empty($request->categories)) {
@@ -222,6 +226,7 @@ public function update(Request $request, $id)
         'tiered_discounts.*.min_quantity' => 'required_with:tiered_discounts|integer|min:1',
         'tiered_discounts.*.type' => 'required_with:tiered_discounts|in:Fijo,Porcentaje',
         'tiered_discounts.*.value' => 'required_with:tiered_discounts|numeric|min:0',
+        'flash_enabled' => 'boolean',
     ]);
 
     if ($validator->fails()) {
@@ -254,6 +259,7 @@ public function update(Request $request, $id)
         'value' => $request->value,
         'tiered_discounts_enabled' => $request->tiered_discounts_enabled ?? false,
         'tiered_discounts' => $request->tiered_discounts ?? null,
+        'flash_enabled' => $request->flash_enabled ?? false,
     ]);
 
     $coupon->categories()->sync($request->categories ?? []);
@@ -339,6 +345,7 @@ public function update(Request $request, $id)
             'applies_to_sale_price' => $coupon->applies_to_sale_price,
             'tiered_discounts_enabled' => $coupon->tiered_discounts_enabled,
             'tiered_discounts' => $coupon->tiered_discounts,
+            'flash_enabled' => $coupon->flash_enabled,
             'categories' => $coupon->categories,
             'products' => $coupon->products,
         ];
