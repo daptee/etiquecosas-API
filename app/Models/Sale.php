@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Sale extends Model
 {
@@ -96,6 +95,13 @@ class Sale extends Model
     public function coupon()
     {
         return $this->belongsTo(Coupon::class, 'coupon_id');
+    }
+
+    public function coupons()
+    {
+        return $this->belongsToMany(Coupon::class, 'coupon_sale')
+            ->withPivot('discount_amount')
+            ->withTimestamps();
     }
 
     public function locality()

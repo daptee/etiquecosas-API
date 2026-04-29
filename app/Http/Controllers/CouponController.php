@@ -34,14 +34,18 @@ class CouponController extends Controller
             'min_amount',
             'type',
             'applies_to_shipping',
+            'applies_to_web',
+            'applies_to_sale_price',
             'max_use_per_user',
             'max_use_per_code',
             'coupon_status_id',
             'applies_to_all_products',
-            'value'
+            'value',
+            'tiered_discounts_enabled',
+            'tiered_discounts'
         )
         ->with('status', 'categories:id', 'products:id')
-        ->withCount('sales');
+        ->withCount('salesMany as sales_count');
 
     if ($search) {
         $query->where(function ($q) use ($search) {
@@ -86,11 +90,15 @@ public function show($id)
         'min_amount',
         'type',
         'applies_to_shipping',
+        'applies_to_web',
+        'applies_to_sale_price',
         'max_use_per_user',
         'max_use_per_code',
         'coupon_status_id',
         'applies_to_all_products',
-        'value'
+        'value',
+        'tiered_discounts_enabled',
+        'tiered_discounts',
     ]);
 
     $coupon->load('categories:id', 'products:id');
@@ -109,6 +117,8 @@ public function store(Request $request)
         'min_amount' => 'required|numeric|min:0',
         'type' => 'required|in:Fijo,Porcentaje',
         'applies_to_shipping' => 'boolean',
+        'applies_to_web' => 'boolean',
+        'applies_to_sale_price' => 'boolean',
         'max_use_per_user' => 'required|integer|min:0',
         'max_use_per_code' => 'required|integer|min:0',
         'coupon_status_id' => 'required|exists:coupon_statuses,id',
@@ -122,6 +132,11 @@ public function store(Request $request)
         ],
         'products_all' => 'nullable|boolean',
         'value' => 'required|numeric|min:0',
+        'tiered_discounts_enabled' => 'boolean',
+        'tiered_discounts' => 'nullable|array',
+        'tiered_discounts.*.min_quantity' => 'required_with:tiered_discounts|integer|min:1',
+        'tiered_discounts.*.type' => 'required_with:tiered_discounts|in:Fijo,Porcentaje',
+        'tiered_discounts.*.value' => 'required_with:tiered_discounts|numeric|min:0',
     ]);
 
     if ($validator->fails()) {
@@ -145,11 +160,15 @@ public function store(Request $request)
         'min_amount' => $request->min_amount,
         'type' => $request->type,
         'applies_to_shipping' => $request->applies_to_shipping ?? false,
+        'applies_to_web' => $request->applies_to_web ?? false,
+        'applies_to_sale_price' => $request->applies_to_sale_price ?? false,
         'max_use_per_user' => $request->max_use_per_user,
         'max_use_per_code' => $request->max_use_per_code,
         'coupon_status_id' => $request->coupon_status_id,
         'applies_to_all_products' => $appliesToAllProducts,
         'value' => $request->value,
+        'tiered_discounts_enabled' => $request->tiered_discounts_enabled ?? false,
+        'tiered_discounts' => $request->tiered_discounts ?? null,
     ]);
 
     if (!empty($request->categories)) {
@@ -183,6 +202,8 @@ public function update(Request $request, $id)
         'min_amount' => 'required|numeric|min:0',
         'type' => 'required|in:Fijo,Porcentaje',
         'applies_to_shipping' => 'boolean',
+        'applies_to_web' => 'boolean',
+        'applies_to_sale_price' => 'boolean',
         'max_use_per_user' => 'required|integer|min:0',
         'max_use_per_code' => 'required|integer|min:0',
         'coupon_status_id' => 'required|exists:coupon_statuses,id',
@@ -196,6 +217,11 @@ public function update(Request $request, $id)
         ],
         'products_all' => 'nullable|boolean',
         'value' => 'required|numeric|min:0',
+        'tiered_discounts_enabled' => 'boolean',
+        'tiered_discounts' => 'nullable|array',
+        'tiered_discounts.*.min_quantity' => 'required_with:tiered_discounts|integer|min:1',
+        'tiered_discounts.*.type' => 'required_with:tiered_discounts|in:Fijo,Porcentaje',
+        'tiered_discounts.*.value' => 'required_with:tiered_discounts|numeric|min:0',
     ]);
 
     if ($validator->fails()) {
@@ -219,11 +245,15 @@ public function update(Request $request, $id)
         'min_amount' => $request->min_amount,
         'type' => $request->type,
         'applies_to_shipping' => $request->applies_to_shipping ?? false,
+        'applies_to_web' => $request->applies_to_web ?? false,
+        'applies_to_sale_price' => $request->applies_to_sale_price ?? false,
         'max_use_per_user' => $request->max_use_per_user,
         'max_use_per_code' => $request->max_use_per_code,
         'coupon_status_id' => $request->coupon_status_id,
         'applies_to_all_products' => $appliesToAllProducts,
         'value' => $request->value,
+        'tiered_discounts_enabled' => $request->tiered_discounts_enabled ?? false,
+        'tiered_discounts' => $request->tiered_discounts ?? null,
     ]);
 
     $coupon->categories()->sync($request->categories ?? []);
@@ -301,10 +331,14 @@ public function update(Request $request, $id)
             'id' => $coupon->id,
             'name' => $coupon->name,
             'code' => $coupon->code,
-            'type' => $coupon->type, // Fijo o Porcentaje
-            'value' => $coupon->value, // o el campo que uses para el monto/descuento
+            'type' => $coupon->type,
+            'value' => $coupon->value,
             'applies_to_shipping' => $coupon->applies_to_shipping,
             'applies_to_all_products' => $coupon->applies_to_all_products,
+            'applies_to_web' => $coupon->applies_to_web,
+            'applies_to_sale_price' => $coupon->applies_to_sale_price,
+            'tiered_discounts_enabled' => $coupon->tiered_discounts_enabled,
+            'tiered_discounts' => $coupon->tiered_discounts,
             'categories' => $coupon->categories,
             'products' => $coupon->products,
         ];
