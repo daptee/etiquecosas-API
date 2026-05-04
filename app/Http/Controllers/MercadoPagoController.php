@@ -661,6 +661,7 @@ class MercadoPagoController extends Controller
 
             $userData = array_filter([
                 'em'                => !empty($emailRaw) ? [hash('sha256', $emailRaw)] : [],
+                'external_id'       => hash('sha256', (string) $sale->id),
                 'fbc'               => $fbData['fbc'] ?? null,
                 'fbp'               => $fbData['fbp'] ?? null,
                 'client_user_agent' => $fbData['client_user_agent'] ?? null,
