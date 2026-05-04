@@ -34,7 +34,12 @@ class Sale extends Model
         'receiver_name',
         'receiver_dni',
         'receiver_observations',
-        'delivered_at'
+        'delivered_at',
+        'fb_data',
+    ];
+
+    protected $casts = [
+        'fb_data' => 'array',
     ];
 
     // 🔹 Relaciones

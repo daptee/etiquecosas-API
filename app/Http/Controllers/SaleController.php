@@ -402,6 +402,13 @@ class SaleController extends Controller
         $shippingCost = $request->shipping_cost ?? 0;
         $total = $subtotal + $shippingCost;
 
+        $fbData = array_filter([
+            'fbc'               => $request->fbc ?? null,
+            'fbp'               => $request->fbp ?? null,
+            'client_user_agent' => $request->client_user_agent ?? null,
+            'client_ip_address' => $request->ip(),
+        ], fn($v) => $v !== null);
+
         $sale = Sale::create([
             'client_id' => $client->id,
             'channel_id' => $request->channel_id,
@@ -419,6 +426,7 @@ class SaleController extends Controller
             'internal_comments' => $request->internal_comments,
             'sale_status_id' => $request->sale_status_id,
             'sale_id' => $request->sale_id,
+            'fb_data' => !empty($fbData) ? $fbData : null,
         ]);
 
         if ($request->shipping_save) {
@@ -610,7 +618,7 @@ class SaleController extends Controller
             'date' => Carbon::now(),
         ]);
 
-        /* $this->sendMetaCapiPurchaseEvent($sale); */
+        $this->sendMetaCapiPurchaseEvent($sale);
 
         $sale->load(['client', 'products.product', 'products.variant', 'shippingMethod', 'locality']);
 
@@ -852,7 +860,7 @@ class SaleController extends Controller
 
         if ($sale->sale_status_id == 1 && $saleStatusOld != 1) {
             Log::channel('meta_capi')->info('[changeStatusAdmin] Venta aprobada → disparando CAPI', ['sale_id' => $sale->id]);
-            /* $this->sendMetaCapiPurchaseEvent($sale); */
+            $this->sendMetaCapiPurchaseEvent($sale);
 
             $sale->load(['client', 'products.product', 'products.variant', 'shippingMethod', 'locality']);
 
@@ -2392,6 +2400,16 @@ class SaleController extends Controller
 
             $emailRaw = strtolower(trim($sale->client->email ?? ''));
 
+            $fbData = $sale->fb_data ?? [];
+
+            $userData = array_filter([
+                'em'                => !empty($emailRaw) ? [hash('sha256', $emailRaw)] : [],
+                'fbc'               => $fbData['fbc'] ?? null,
+                'fbp'               => $fbData['fbp'] ?? null,
+                'client_user_agent' => $fbData['client_user_agent'] ?? null,
+                'client_ip_address' => $fbData['client_ip_address'] ?? null,
+            ], fn($v) => $v !== null && $v !== []);
+
             $eventData = [
                 'data' => [
                     [
@@ -2399,9 +2417,7 @@ class SaleController extends Controller
                         'event_time' => now()->timestamp,
                         'event_id' => 'sale_' . $sale->id,
                         'action_source' => 'website',
-                        'user_data' => [
-                            'em' => !empty($emailRaw) ? [hash('sha256', $emailRaw)] : [],
-                        ],
+                        'user_data' => $userData,
                         'custom_data' => [
                             'currency' => 'ARS',
                             'value' => round((float) $total, 2),
@@ -2416,6 +2432,9 @@ class SaleController extends Controller
                 'pixel_id'      => $pixelId,
                 'email_raw'     => $emailRaw,
                 'total'         => round((float) $total, 2),
+                'has_fbc'       => isset($fbData['fbc']),
+                'has_fbp'       => isset($fbData['fbp']),
+                'has_ua'        => isset($fbData['client_user_agent']),
                 'payload'       => $eventData,
             ]);
 
