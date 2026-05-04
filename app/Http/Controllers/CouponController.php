@@ -23,6 +23,10 @@ class CouponController extends Controller
     $page = $request->query('page', 1);
     $search = $request->query('search');
     $statusId = $request->query('status');
+    $tieredEnabled = $request->query('tiered_discounts_enabled');
+    $flashEnabled = $request->query('flash_enabled');
+    $appliesToWeb = $request->query('applies_to_web');
+    $appliesToSalePrice = $request->query('applies_to_sale_price');
 
     $query = Coupon::query()
         ->select(
@@ -57,6 +61,22 @@ class CouponController extends Controller
 
     if ($statusId) {
         $query->where('coupon_status_id', $statusId);
+    }
+
+    if (!is_null($tieredEnabled)) {
+        $query->where('tiered_discounts_enabled', filter_var($tieredEnabled, FILTER_VALIDATE_BOOLEAN));
+    }
+
+    if (!is_null($flashEnabled)) {
+        $query->where('flash_enabled', filter_var($flashEnabled, FILTER_VALIDATE_BOOLEAN));
+    }
+
+    if (!is_null($appliesToWeb)) {
+        $query->where('applies_to_web', filter_var($appliesToWeb, FILTER_VALIDATE_BOOLEAN));
+    }
+
+    if (!is_null($appliesToSalePrice)) {
+        $query->where('applies_to_sale_price', filter_var($appliesToSalePrice, FILTER_VALIDATE_BOOLEAN));
     }
 
     $query->orderBy('name', 'asc');
