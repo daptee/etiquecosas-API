@@ -115,6 +115,9 @@ Route::prefix('v1')->group(function () {
 
     // Contact Form
     Route::post('contact', [ContactController::class, 'sendContactForm']);
+
+    // Coupon
+    Route::get('coupons', [CouponController::class, 'index']);
 });
 
 // User
