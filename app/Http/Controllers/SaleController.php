@@ -421,7 +421,7 @@ class SaleController extends Controller
             'postal_code' => $request->shipping_postal_code,
             'client_shipping_id' => $request->client_shipping_id,
             'subtotal' => $request->subtotal,
-            'discount_amount' => $request->discount_amount ?? 0,
+            'discount_amount' => 0,
             'total' => $total,
             'shipping_cost' => $request->shipping_cost,
             'shipping_method_id' => $request->shipping_method_id,
@@ -442,18 +442,30 @@ class SaleController extends Controller
             ]);
         }
 
+        $totalDiscount = 0;
+
         if ($request->coupons) {
             foreach ($request->coupons as $c) {
                 $coupon = Coupon::where('code', $c['coupon_code'])->first();
                 if ($coupon) {
-                    $sale->coupons()->attach($coupon->id, ['discount_amount' => $c['discount_amount']]);
+                    $couponDiscount = $c['discount_amount'];
+                    $sale->coupons()->attach($coupon->id, ['discount_amount' => $couponDiscount]);
+                    $totalDiscount += $couponDiscount;
                 }
             }
         } elseif ($request->coupon_code) {
             $coupon = Coupon::where('code', $request->coupon_code)->first();
             if ($coupon) {
-                $sale->coupons()->attach($coupon->id, ['discount_amount' => $request->discount_amount ?? 0]);
+                $couponDiscount = $request->discount_amount ?? 0;
+                $sale->coupons()->attach($coupon->id, ['discount_amount' => $couponDiscount]);
+                $totalDiscount += $couponDiscount;
             }
+        }
+
+        if ($totalDiscount > 0) {
+            $sale->discount_amount = $totalDiscount;
+            $sale->total = $sale->subtotal + $sale->shipping_cost - $totalDiscount;
+            $sale->save();
         }
 
 
