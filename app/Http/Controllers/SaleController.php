@@ -61,7 +61,7 @@ class SaleController extends Controller
                 'status:id,name',
                 'statusHistory',
                 'shippingMethod',
-                'coupon',
+                'coupons',
                 'user',
                 'cadete',
                 'locality',
@@ -264,7 +264,7 @@ class SaleController extends Controller
         if (!$sale) {
             return $this->error('Producto no encontrado', 404);
         }
-        $sale->load(['client', 'channel', 'products.product', 'products.variant', 'status', 'statusHistory', 'shippingMethod', 'coupon', 'user', 'childSales', 'parentSale'])
+        $sale->load(['client', 'channel', 'products.product', 'products.variant', 'status', 'statusHistory', 'shippingMethod', 'coupons', 'user', 'childSales', 'parentSale'])
             ->findOrFail($id);
 
         return $this->success($sale, 'Venta obtenida correctamente');
@@ -280,7 +280,7 @@ class SaleController extends Controller
         }
 
         // Cargar solo las relaciones necesarias
-        $sale->load(['products.product.images', 'products.variant', 'status', 'coupon']);
+        $sale->load(['products.product.images', 'products.variant', 'status', 'coupons']);
 
         // Preparar la respuesta resumida
         $data = [
@@ -291,9 +291,9 @@ class SaleController extends Controller
             'shipping_method_id' => $sale->shipping_method_id,
             'payment_method_id' => $sale->payment_method_id,
             'discount_amount' => $sale->discount_amount,
-            'status' => $sale->status, // puedes ajustar si quieres solo el nombre o todo el objeto
+            'status' => $sale->status,
             'products' => $sale->products,
-            'coupon' => $sale->coupon
+            'coupons' => $sale->coupons,
         ];
 
         return $this->success($data, 'Venta resumida obtenida correctamente');
@@ -326,6 +326,9 @@ class SaleController extends Controller
             'sale_id' => 'nullable|integer|exists:sales,id',
             'coupon_code' => 'nullable|string|exists:coupons,code',
             'discount_amount' => 'nullable|numeric|min:0',
+            'coupons' => 'nullable|array',
+            'coupons.*.coupon_code' => 'required_with:coupons|string|exists:coupons,code',
+            'coupons.*.discount_amount' => 'required_with:coupons|numeric|min:0',
             'products' => 'required|array|min:1',
             'products.*.product_id' => 'required|integer|exists:products,id',
             'products.*.variant_id' => 'nullable|integer|exists:product_variants,id',
@@ -418,6 +421,7 @@ class SaleController extends Controller
             'postal_code' => $request->shipping_postal_code,
             'client_shipping_id' => $request->client_shipping_id,
             'subtotal' => $request->subtotal,
+            'discount_amount' => 0,
             'total' => $total,
             'shipping_cost' => $request->shipping_cost,
             'shipping_method_id' => $request->shipping_method_id,
@@ -438,13 +442,30 @@ class SaleController extends Controller
             ]);
         }
 
-        if ($request->coupon_code) {
+        $totalDiscount = 0;
+
+        if ($request->coupons) {
+            foreach ($request->coupons as $c) {
+                $coupon = Coupon::where('code', $c['coupon_code'])->first();
+                if ($coupon) {
+                    $couponDiscount = $c['discount_amount'];
+                    $sale->coupons()->attach($coupon->id, ['discount_amount' => $couponDiscount]);
+                    $totalDiscount += $couponDiscount;
+                }
+            }
+        } elseif ($request->coupon_code) {
             $coupon = Coupon::where('code', $request->coupon_code)->first();
             if ($coupon) {
-                $sale->coupon_id = $coupon->id;
-                $sale->discount_amount = $request->discount_amount;
-                $sale->save();
+                $couponDiscount = $request->discount_amount ?? 0;
+                $sale->coupons()->attach($coupon->id, ['discount_amount' => $couponDiscount]);
+                $totalDiscount += $couponDiscount;
             }
+        }
+
+        if ($totalDiscount > 0) {
+            $sale->discount_amount = $totalDiscount;
+            $sale->total = $sale->subtotal + $sale->shipping_cost - $totalDiscount;
+            $sale->save();
         }
 
 
@@ -460,7 +481,7 @@ class SaleController extends Controller
             $sale->products()->create($product);
         }
 
-        $sale->load(['client', 'products.product', 'products.variant', 'shippingMethod', 'locality']);
+        $sale->load(['client', 'products.product', 'products.variant', 'shippingMethod', 'locality', 'coupons']);
 
         // Ventas mayoristas se aprueban automáticamente al crear la reserva
         if ($sale->channel_id === 4) {
@@ -503,7 +524,7 @@ class SaleController extends Controller
         $data['total'] = $total;
         $sale->update($data);
 
-        $sale->load(['products.variant', 'statusHistory']);
+        $sale->load(['products.variant', 'statusHistory', 'coupons']);
 
         $this->logAudit(Auth::user() ?? null, 'Update Sale', $request->all(), $sale);
         return $this->success($sale, 'Venta actualizada correctamente');
@@ -1053,7 +1074,7 @@ class SaleController extends Controller
             }
         }
 
-        $sale->load(['client', 'channel', 'products.product', 'products.variant', 'status', 'statusHistory', 'shippingMethod', 'coupon', 'user', 'childSales', 'parentSale']);
+        $sale->load(['client', 'channel', 'products.product', 'products.variant', 'status', 'statusHistory', 'shippingMethod', 'coupons', 'user', 'childSales', 'parentSale']);
 
         $this->logAudit(Auth::user() ?? null, 'Update Status Sale', $request->all(), $sale);
         return $this->success($sale, 'Estado de venta actualizada correctamente');
@@ -2107,7 +2128,7 @@ class SaleController extends Controller
         $sale->sale_id = $parentSaleId;
         $sale->save();
 
-        $sale->load(['client', 'channel', 'products.product', 'products.variant', 'status', 'statusHistory', 'shippingMethod', 'coupon', 'user', 'childSales', 'parentSale']);
+        $sale->load(['client', 'channel', 'products.product', 'products.variant', 'status', 'statusHistory', 'shippingMethod', 'coupons', 'user', 'childSales', 'parentSale']);
 
         $this->logAudit(Auth::user(), 'Associate Sale', ['sale_id' => $id, 'parent_sale_id' => $parentSaleId], $sale);
 
@@ -2142,7 +2163,7 @@ class SaleController extends Controller
         $sale->sale_id = null;
         $sale->save();
 
-        $sale->load(['client', 'channel', 'products.product', 'products.variant', 'status', 'statusHistory', 'shippingMethod', 'coupon', 'user', 'childSales', 'parentSale']);
+        $sale->load(['client', 'channel', 'products.product', 'products.variant', 'status', 'statusHistory', 'shippingMethod', 'coupons', 'user', 'childSales', 'parentSale']);
 
         $this->logAudit(Auth::user(), 'Remove Sale Association', ['sale_id' => $id, 'old_parent_sale_id' => $oldParentSaleId], $sale);
 
