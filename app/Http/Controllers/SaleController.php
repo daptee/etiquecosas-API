@@ -1251,7 +1251,7 @@ class SaleController extends Controller
     public function assignCadete(Request $request, $id)
     {
         $rules = [
-            'cadete_id' => 'required|integer|exists:users,id',
+            'cadete_id' => 'nullable|integer|exists:users,id',
         ];
 
         $validator = Validator::make($request->all(), $rules);
@@ -1260,13 +1260,25 @@ class SaleController extends Controller
             return $this->validationError($validator->errors());
         }
 
+        $sale = Sale::findOrFail($id);
+
+        if (is_null($request->cadete_id)) {
+            $sale->cadete_id = null;
+            $sale->save();
+
+            $sale->load(['client', 'channel', 'products.product', 'products.variant', 'status', 'statusHistory', 'user', 'cadete', 'locality']);
+
+            $this->logAudit(Auth::user(), 'Remove Cadete From Sale', ['id' => $id], $sale);
+
+            return $this->success($sale, 'Cadete eliminado de la venta correctamente');
+        }
+
         // Validar que el usuario sea cadete (profile_id = 4)
         $cadete = \App\Models\User::find($request->cadete_id);
         if (!$cadete || $cadete->profile_id !== 4) {
             return $this->error('El usuario seleccionado no es un cadete', 400);
         }
 
-        $sale = Sale::findOrFail($id);
         $sale->cadete_id = $request->cadete_id;
         $sale->save();
 
@@ -1280,7 +1292,7 @@ class SaleController extends Controller
     public function assignCadeteMultiple(Request $request)
     {
         $rules = [
-            'cadete_id' => 'required|integer|exists:users,id',
+            'cadete_id' => 'nullable|integer|exists:users,id',
             'sale_ids' => 'required|array|min:1',
             'sale_ids.*' => 'integer|exists:sales,id',
         ];
@@ -1291,13 +1303,26 @@ class SaleController extends Controller
             return $this->validationError($validator->errors());
         }
 
+        $sales = Sale::whereIn('id', $request->sale_ids)->get();
+
+        if (is_null($request->cadete_id)) {
+            foreach ($sales as $sale) {
+                $sale->cadete_id = null;
+                $sale->save();
+            }
+
+            $sales->load(['client', 'channel', 'products.product', 'products.variant', 'status', 'statusHistory', 'user', 'cadete', 'locality']);
+
+            $this->logAudit(Auth::user(), 'Remove Cadete From Multiple Sales', ['sale_ids' => $request->sale_ids], $sales);
+
+            return $this->success($sales, 'Cadete eliminado correctamente de las ventas seleccionadas');
+        }
+
         // Validar que el usuario sea cadete (profile_id = 4)
         $cadete = \App\Models\User::find($request->cadete_id);
         if (!$cadete || $cadete->profile_id !== 4) {
             return $this->error('El usuario seleccionado no es un cadete', 400);
         }
-
-        $sales = Sale::whereIn('id', $request->sale_ids)->get();
 
         foreach ($sales as $sale) {
             $sale->cadete_id = $request->cadete_id;
