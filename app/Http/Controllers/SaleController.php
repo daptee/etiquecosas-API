@@ -421,6 +421,7 @@ class SaleController extends Controller
             'postal_code' => $request->shipping_postal_code,
             'client_shipping_id' => $request->client_shipping_id,
             'subtotal' => $request->subtotal,
+            'discount_amount' => $request->discount_amount ?? 0,
             'total' => $total,
             'shipping_cost' => $request->shipping_cost,
             'shipping_method_id' => $request->shipping_method_id,
