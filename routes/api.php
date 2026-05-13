@@ -39,6 +39,7 @@ use App\Http\Controllers\CustomerServiceController;
 use App\Http\Controllers\FacebookFeedController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CadeteController;
+use App\Http\Controllers\ProductClientExclusionController;
 
 // cache
 Route::get('/clear-cache', [CacheController::class, 'clearCache'])->name('clearCache');
@@ -250,6 +251,10 @@ Route::middleware('jwt.auth')->prefix('products')->group(function () {
     Route::post('/', [ProductController::class, 'store']);
     Route::post('/{id}', [ProductController::class, 'update']);
     Route::delete('/{id}', [ProductController::class, 'delete']);
+    // Exclusiones mayoristas por cliente
+    Route::get('/{id}/exclusions', [ProductClientExclusionController::class, 'index']);
+    Route::post('/{id}/exclusions', [ProductClientExclusionController::class, 'store']);
+    Route::delete('/{id}/exclusions/{clientId}', [ProductClientExclusionController::class, 'destroy']);
 });
 
 // Coupon 

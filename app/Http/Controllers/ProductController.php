@@ -190,7 +190,11 @@ class ProductController extends Controller
             ->where('product_status_id', 2);
 
         if ($isWholesaleClient) {
-            $query->where('is_wholesale', true);
+            $clientId = auth('client')->user()->id;
+            $query->where('is_wholesale', true)
+                ->whereDoesntHave('excludedClients', function ($q) use ($clientId) {
+                    $q->where('clients.id', $clientId);
+                });
         } else {
             $query->whereJsonContains('stock_channels', ['channel' => 1]);
         }
@@ -285,13 +289,23 @@ class ProductController extends Controller
             $query->where('product_type_id', $request->query('product_type_id'));
         }
 
-        // 🔹 Filtro por canal
-        if ($request->has('channel_id')) {
-            $channelId = $request->query('channel_id');
-            $query->whereJsonContains('stock_channels', ['channel' => (int)$channelId]);
+        $isWholesaleClient = optional(auth('client')->user())->client_type_id === 2;
+
+        if ($isWholesaleClient) {
+            $clientId = auth('client')->user()->id;
+            $query->where('is_wholesale', true)
+                ->whereDoesntHave('excludedClients', function ($q) use ($clientId) {
+                    $q->where('clients.id', $clientId);
+                });
         } else {
-            // Por defecto, solo mostrar productos del canal web (channel_id = 1)
-            $query->whereJsonContains('stock_channels', ['channel' => 1]);
+            // 🔹 Filtro por canal
+            if ($request->has('channel_id')) {
+                $channelId = $request->query('channel_id');
+                $query->whereJsonContains('stock_channels', ['channel' => (int)$channelId]);
+            } else {
+                // Por defecto, solo mostrar productos del canal web (channel_id = 1)
+                $query->whereJsonContains('stock_channels', ['channel' => 1]);
+            }
         }
 
         // cambiado el orden para los productos más vendidos
@@ -328,6 +342,14 @@ class ProductController extends Controller
 
         $isWholesaleClient = optional(auth('client')->user())->client_type_id === 2;
 
+        if ($isWholesaleClient) {
+            $clientId = auth('client')->user()->id;
+            $isExcluded = $product->excludedClients()->where('clients.id', $clientId)->exists();
+            if ($isExcluded) {
+                return $this->error('Producto no encontrado', 404);
+            }
+        }
+
         $product->load([
             'type:id,name',
             'status:id,name',
@@ -343,7 +365,11 @@ class ProductController extends Controller
             'relatedProducts' => function ($query) use ($isWholesaleClient) {
                 $query->select('products.id', 'name', 'sku', 'slug', 'price', 'discounted_price', 'discounted_start', 'discounted_end', 'product_type_id', 'product_status_id', 'product_stock_status_id', 'stock_quantity', 'stock_channels', 'is_sale');
                 if ($isWholesaleClient) {
-                    $query->where('products.is_wholesale', true);
+                    $clientId = auth('client')->user()->id;
+                    $query->where('products.is_wholesale', true)
+                        ->whereDoesntHave('excludedClients', function ($q) use ($clientId) {
+                            $q->where('clients.id', $clientId);
+                        });
                 }
             },
             'relatedProducts.images:id,product_id,img,is_main',
@@ -372,6 +398,14 @@ class ProductController extends Controller
 
         $isWholesaleClient = optional(auth('client')->user())->client_type_id === 2;
 
+        if ($isWholesaleClient) {
+            $clientId = auth('client')->user()->id;
+            $isExcluded = $product->excludedClients()->where('clients.id', $clientId)->exists();
+            if ($isExcluded) {
+                return $this->error('Producto no encontrado', 404);
+            }
+        }
+
         $product->load([
             'type:id,name',
             'status:id,name',
@@ -387,7 +421,11 @@ class ProductController extends Controller
             'relatedProducts' => function ($query) use ($isWholesaleClient) {
                 $query->select('products.id', 'name', 'sku', 'slug', 'price', 'discounted_price', 'discounted_start', 'discounted_end', 'product_type_id', 'product_status_id', 'product_stock_status_id', 'stock_quantity', 'stock_channels', 'is_sale');
                 if ($isWholesaleClient) {
-                    $query->where('products.is_wholesale', true);
+                    $clientId = auth('client')->user()->id;
+                    $query->where('products.is_wholesale', true)
+                        ->whereDoesntHave('excludedClients', function ($q) use ($clientId) {
+                            $q->where('clients.id', $clientId);
+                        });
                 }
             },
             'relatedProducts.images:id,product_id,img,is_main',

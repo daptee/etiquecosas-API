@@ -17,6 +17,7 @@ use App\Models\AttributeValue;
 use App\Models\ProductVariant;
 use App\Models\ProductCustomization;
 use App\Models\ProductImage;
+use App\Models\Client;
 
 class Product extends Model
 {
@@ -132,5 +133,10 @@ class Product extends Model
     public function relatedProducts()
     {
         return $this->belongsToMany(Product::class, 'product_related_product', 'product_id', 'related_product_id');
+    }
+
+    public function excludedClients()
+    {
+        return $this->belongsToMany(Client::class, 'product_client_exclusions');
     }
 }
