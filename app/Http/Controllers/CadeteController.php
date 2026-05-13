@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\CadeteDeliveryNotificationMail;
 use App\Mail\OrderRetiredMail;
 use App\Models\Sale;
 use App\Models\SaleStatusHistory;
@@ -92,9 +93,15 @@ class CadeteController extends Controller
             try {
                 Mail::to($sale->client->email)->send(new OrderRetiredMail($sale));
             } catch (\Exception $e) {
-                // Log del error pero no interrumpir el proceso
-                \Log::error('Error enviando email de entrega: ' . $e->getMessage());
+                \Log::error('Error enviando email de entrega al cliente: ' . $e->getMessage());
             }
+        }
+
+        // Notificación interna a etiquecosas
+        try {
+            Mail::to('info@etiquecosas.com.ar')->send(new CadeteDeliveryNotificationMail($sale, $user));
+        } catch (\Exception $e) {
+            \Log::error('Error enviando notificación interna de entrega por cadete: ' . $e->getMessage());
         }
 
         $sale->load(['client', 'channel', 'products.product', 'products.variant', 'status', 'statusHistory', 'cadete']);

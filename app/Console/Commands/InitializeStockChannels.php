@@ -78,13 +78,9 @@ class InitializeStockChannels extends Command
                         'channel' => 1,
                         'channel_name' => 'Web',
                         'stock_status' => $variant->variant['stock_status'] ?? 1,
-                        'stock_status_name' => match ($variant->variant['stock_status'] ?? 1) {
-                            "1" => 'Existente',
-                            "2" => 'Gestión de Stock',
-                            "3" => 'Sin Stock',
+                        'stock_status_name' => match ((int) ($variant->variant['stock_status'] ?? 1)) {
                             1 => 'Existente',
                             2 => 'Gestión de Stock',
-                            3 => 'Sin Stock',
                             default => 'Existente',
                         },
                         'stock_quantity' => $variant->variant['stock_quantity'] ?? 0,
