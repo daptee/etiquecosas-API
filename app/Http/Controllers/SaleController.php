@@ -1198,7 +1198,7 @@ class SaleController extends Controller
     public function assignUser(Request $request, $id)
     {
         $rules = [
-            'user_id' => 'required|integer|exists:users,id',
+            'user_id' => 'nullable|integer|exists:users,id',
         ];
 
         $validator = Validator::make($request->all(), $rules);
@@ -1208,11 +1208,22 @@ class SaleController extends Controller
         }
 
         $sale = Sale::findOrFail($id);
-        $sale->user_id = $request->user_id; // reemplaza si ya existía
+
+        if (is_null($request->user_id)) {
+            $sale->user_id = null;
+            $sale->save();
+
+            $sale->load(['client', 'channel', 'products.product', 'products.variant', 'status', 'statusHistory', 'user']);
+
+            $this->logAudit(Auth::user(), 'Remove User From Sale', ['id' => $id], $sale);
+
+            return $this->success($sale, 'Diseñador eliminado de la venta correctamente');
+        }
+
+        $sale->user_id = $request->user_id;
         $sale->save();
 
         $sale->load(['client', 'channel', 'products.product', 'products.variant', 'status', 'statusHistory', 'user']);
-
 
         $this->logAudit(Auth::user(), 'Assign User To Sale', ['id' => $id, 'user_id' => $request->user_id], $sale);
 
@@ -1222,7 +1233,7 @@ class SaleController extends Controller
     public function assignUserToMultipleSales(Request $request)
     {
         $rules = [
-            'user_id' => 'required|integer|exists:users,id',
+            'user_id' => 'nullable|integer|exists:users,id',
             'sale_ids' => 'required|array|min:1',
             'sale_ids.*' => 'integer|exists:sales,id',
         ];
@@ -1235,12 +1246,24 @@ class SaleController extends Controller
 
         $sales = Sale::whereIn('id', $request->sale_ids)->get();
 
+        if (is_null($request->user_id)) {
+            foreach ($sales as $sale) {
+                $sale->user_id = null;
+                $sale->save();
+            }
+
+            $sales->load(['client', 'channel', 'products.product', 'products.variant', 'status', 'statusHistory', 'user']);
+
+            $this->logAudit(Auth::user(), 'Remove User From Multiple Sales', ['sale_ids' => $request->sale_ids], $sales);
+
+            return $this->success($sales, 'Diseñador eliminado correctamente de las ventas seleccionadas');
+        }
+
         foreach ($sales as $sale) {
-            $sale->user_id = $request->user_id; // asigna o reemplaza si ya tenía usuario
+            $sale->user_id = $request->user_id;
             $sale->save();
         }
 
-        // Opcional: cargar relaciones solo una vez
         $sales->load(['client', 'channel', 'products.product', 'products.variant', 'status', 'statusHistory', 'user']);
 
         $this->logAudit(Auth::user(), 'Assign User To Multiple Sales', ['sale_ids' => $request->sale_ids, 'user_id' => $request->user_id], $sales);
