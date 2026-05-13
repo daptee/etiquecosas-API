@@ -12,6 +12,8 @@ class StockService
      */
     public static function discountStock(Sale $sale): void
     {
+        $affectedProductIds = [];
+
         foreach ($sale->products as $productOrder) {
             $product = $productOrder->product;
             $variant = $productOrder->variant;
@@ -43,6 +45,13 @@ class StockService
                 $product->stock_channels = $stockChannels;
                 $product->save();
             }
+
+            $affectedProductIds[$product->id] = $product;
+        }
+
+        // Evaluar alertas de stock para cada producto afectado
+        foreach ($affectedProductIds as $product) {
+            StockAlertService::checkAndNotify($product->fresh());
         }
     }
 

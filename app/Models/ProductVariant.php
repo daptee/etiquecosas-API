@@ -53,6 +53,7 @@ class ProductVariant extends Model
             'discounted_end' => $this->variant['discounted_end'] ?? null,
             'stock_status' => $this->variant['stock_status'] ?? null,
             'stock_quantity' => $this->variant['stock_quantity'] ?? null,
+            'stock_alert' => $this->variant['stock_alert'] ?? null,
             'wholesale_price' => $this->variant['wholesale_price'] ?? null,
             'wholesale_min_amount' => $this->variant['wholesale_min_amount'] ?? null,
             'order' => $this->variant['order'] ?? null,

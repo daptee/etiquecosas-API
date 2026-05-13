@@ -36,6 +36,7 @@ class Product extends Model
         'discounted_end',
         'product_stock_status_id',
         'stock_quantity',
+        'stock_alert',
         'stock_channels',
         'wholesale_price',
         'wholesale_min_amount',
@@ -64,6 +65,7 @@ class Product extends Model
         'wholesale_price' => 'float',
         'wholesale_min_amount' => 'integer',
         'stock_quantity' => 'integer',
+        'stock_alert' => 'integer',
         'stock_channels' => 'array',
     ];
 
