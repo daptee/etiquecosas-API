@@ -128,7 +128,7 @@ class ProductController extends Controller
             $query->whereJsonContains('stock_channels', ['channel' => (int)$channelId]);
         }
 
-        $query->orderBy('name', 'asc');
+        $query->orderBy('name', 'asc')->orderBy('id', 'asc');
         if (!$perPage) {
             $products = $query->get();
             return $this->success($products, 'Productos obtenidos');
@@ -195,7 +195,7 @@ class ProductController extends Controller
             $query->whereJsonContains('stock_channels', ['channel' => 1]);
         }
 
-        $query->orderBy('name', 'asc');
+        $query->orderBy('name', 'asc')->orderBy('id', 'asc');
 
         if (!$perPage) {
             $products = $query->get();
@@ -295,7 +295,7 @@ class ProductController extends Controller
         }
 
         // cambiado el orden para los productos más vendidos
-        $query->orderBy('name', 'asc');
+        $query->orderBy('name', 'asc')->orderBy('id', 'asc');
         if (!$perPage) {
             $products = $query->get();
             return $this->success($products, 'Productos obtenidos');
@@ -1779,6 +1779,31 @@ class ProductController extends Controller
         $product->delete();
         $this->logAudit(Auth::user(), 'Delete Product', $id, $product);
         return $this->success($product, 'Product eliminado');
+    }
+
+    public function bulkDelete(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'ids'   => 'required|array|min:1',
+            'ids.*' => 'required|integer|exists:products,id',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->validationError($validator->errors());
+        }
+
+        $ids = $request->input('ids');
+        $products = Product::whereIn('id', $ids)->get();
+        $deletedCount = 0;
+
+        foreach ($products as $product) {
+            $product->delete();
+            $deletedCount++;
+        }
+
+        $this->logAudit(Auth::user(), 'Bulk Delete Products', $ids, ['deleted_count' => $deletedCount]);
+
+        return $this->success(['deleted_count' => $deletedCount], "Se eliminaron {$deletedCount} productos correctamente");
     }
 
     public function generateUniqueSlug(string $name, $productId = null): string

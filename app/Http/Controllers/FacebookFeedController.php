@@ -118,25 +118,20 @@ class FacebookFeedController extends Controller
      */
     private function getAvailability(Product $product): string
     {
-        // Check stock status
-        if ($product->stockStatus) {
-            // Adjust these conditions based on your stock status IDs
-            // Common mapping: 1 = in stock, 2 = out of stock, 3 = preorder
-            if ($product->product_stock_status_id == 1) {
-                return 'in stock';
-            } elseif ($product->product_stock_status_id == 2) {
-                return 'out of stock';
-            } elseif ($product->product_stock_status_id == 3) {
-                return 'preorder';
-            }
-        }
-
-        // Fallback: check stock_quantity
-        if (isset($product->stock_quantity) && $product->stock_quantity > 0) {
+        // ID 1: Existente → in stock
+        // ID 2: Gestión de Stock → depende de la cantidad (sin stock ya no existe como estado separado)
+        if ($product->product_stock_status_id == 1) {
             return 'in stock';
         }
 
-        return 'in stock'; // Default to in stock for digital/customizable products
+        if ($product->product_stock_status_id == 2) {
+            return ($product->stock_quantity !== null && $product->stock_quantity > 0)
+                ? 'in stock'
+                : 'out of stock';
+        }
+
+        // Fallback para productos digitales/personalizables sin gestión de stock
+        return 'in stock';
     }
 
     /**
