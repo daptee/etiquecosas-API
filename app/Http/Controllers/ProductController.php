@@ -416,6 +416,7 @@ class ProductController extends Controller
             'discounted_end' => 'nullable|date',
             'product_stock_status_id' => 'required|integer|exists:product_stock_statuses,id',
             'stock_quantity' => 'nullable|integer',
+            'stock_alert' => 'nullable|integer|min:0',
             'wholesale_price' => 'nullable|numeric',
             'wholesale_min_amount' => 'nullable|integer|min:0',
             'tag_id' => 'nullable|exists:configuration_tags,id',
@@ -455,6 +456,7 @@ class ProductController extends Controller
             'variants.*.discounted_end' => 'nullable|date',
             'variants.*.stock_status' => 'nullable|integer|exists:product_stock_statuses,id',
             'variants.*.stock_quantity' => 'nullable|integer',
+            'variants.*.stock_alert' => 'nullable|integer|min:0',
             'variants.*.wholesale_price' => 'nullable|numeric',
             'variants.*.wholesale_min_amount' => 'nullable|integer|min:0',
             'variants.*.order' => 'nullable|integer|min:0',
@@ -519,6 +521,7 @@ class ProductController extends Controller
             'stock_channels.*.stock_status' => 'integer|exists:product_stock_statuses,id',
             'stock_channels.*.stock_status_name' => 'string|max:100',
             'stock_channels.*.stock_quantity' => 'nullable|integer',
+            'stock_channels.*.stock_alert' => 'nullable|integer|min:0',
         ];
         $internalValidator = Validator::make($decodedData, $internalJsonRules);
         if ($internalValidator->fails()) {
@@ -742,6 +745,7 @@ class ProductController extends Controller
                     'discounted_end' => 'nullable|date',
                     'stock_status' => 'nullable|integer|exists:product_stock_statuses,id',
                     'stock_quantity' => 'nullable|integer',
+                    'stock_alert' => 'nullable|integer|min:0',
                     'wholesale_price' => 'nullable|numeric',
                     'wholesale_min_amount' => 'nullable|integer|min:0',
                     'order' => 'nullable|integer|min:0',
@@ -751,6 +755,7 @@ class ProductController extends Controller
                     'stock_channels.*.stock_status' => 'integer|exists:product_stock_statuses,id',
                     'stock_channels.*.stock_status_name' => 'string|max:100',
                     'stock_channels.*.stock_quantity' => 'nullable|integer',
+                    'stock_channels.*.stock_alert' => 'nullable|integer|min:0',
                     'img' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
                 ]);
                 if ($singleVariantValidator->fails()) {
@@ -943,6 +948,7 @@ class ProductController extends Controller
             'wholesales',
             'relatedProducts',
         ]);
+        \App\Services\StockAlertService::checkAndNotify($product);
         return $this->success($product, 'Producto creado exitosamente', 201);
     }
 
@@ -958,6 +964,7 @@ class ProductController extends Controller
             'discounted_end' => 'nullable|date',
             'product_stock_status_id' => 'required|integer|exists:product_stock_statuses,id',
             'stock_quantity' => 'nullable|integer',
+            'stock_alert' => 'nullable|integer|min:0',
             'wholesale_price' => 'nullable|numeric',
             'wholesale_min_amount' => 'nullable|integer|min:0',
             'tag_id' => 'nullable|exists:configuration_tags,id',
@@ -1000,6 +1007,7 @@ class ProductController extends Controller
             'variants.*.discounted_end' => 'nullable|date',
             'variants.*.stock_status' => 'nullable|integer|exists:product_stock_statuses,id',
             'variants.*.stock_quantity' => 'nullable|integer',
+            'variants.*.stock_alert' => 'nullable|integer|min:0',
             'variants.*.wholesale_price' => 'nullable|numeric',
             'variants.*.wholesale_min_amount' => 'nullable|integer|min:0',
             'variants.*.order' => 'nullable|integer|min:0',
@@ -1066,6 +1074,7 @@ class ProductController extends Controller
             'stock_channels.*.stock_status' => 'integer|exists:product_stock_statuses,id',
             'stock_channels.*.stock_status_name' => 'string|max:100',
             'stock_channels.*.stock_quantity' => 'nullable|integer',
+            'stock_channels.*.stock_alert' => 'nullable|integer|min:0',
         ];
         $internalValidator = Validator::make($decodedData, $internalJsonRules);
         if ($internalValidator->fails()) {
@@ -1262,6 +1271,7 @@ class ProductController extends Controller
                     'discounted_end' => 'nullable|date',
                     'stock_status' => 'nullable|integer|exists:product_stock_statuses,id',
                     'stock_quantity' => 'nullable|integer',
+                    'stock_alert' => 'nullable|integer|min:0',
                     'wholesale_price' => 'nullable|numeric',
                     'wholesale_min_amount' => 'nullable|integer|min:0',
                     'order' => 'nullable|integer|min:0',
@@ -1271,6 +1281,7 @@ class ProductController extends Controller
                     'stock_channels.*.stock_status' => 'integer|exists:product_stock_statuses,id',
                     'stock_channels.*.stock_status_name' => 'string|max:100',
                     'stock_channels.*.stock_quantity' => 'nullable|integer',
+                    'stock_channels.*.stock_alert' => 'nullable|integer|min:0',
                     'img' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
                 ]);
 
@@ -1599,6 +1610,7 @@ class ProductController extends Controller
             'customization',
             'relatedProducts',
         ]);
+        \App\Services\StockAlertService::checkAndNotify($product);
         return $this->success($product, 'Producto actualizado exitosamente', 200);
     }
 
