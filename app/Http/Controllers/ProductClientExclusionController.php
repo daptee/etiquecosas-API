@@ -43,7 +43,8 @@ class ProductClientExclusionController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'client_id' => 'required|integer|exists:clients,id',
+            'client_ids'   => 'required|array|min:1',
+            'client_ids.*' => 'integer|exists:clients,id',
         ]);
 
         if ($validator->fails()) {
@@ -51,24 +52,28 @@ class ProductClientExclusionController extends Controller
             return $this->validationError($validator->errors());
         }
 
-        $client = Client::find($request->client_id);
+        $clients = Client::whereIn('id', $request->client_ids)->get();
 
-        if ($client->client_type_id !== 2) {
-            return $this->error('El cliente no es mayorista', 422);
+        $nonWholesale = $clients->where('client_type_id', '!=', 2)->pluck('id');
+        if ($nonWholesale->isNotEmpty()) {
+            return $this->error('Los siguientes clientes no son mayoristas: ' . $nonWholesale->join(', '), 422);
         }
 
-        if ($product->excludedClients()->where('client_id', $client->id)->exists()) {
-            return $this->error('El cliente ya está excluido de este producto', 422);
+        $alreadyExcluded = $product->excludedClients()->whereIn('clients.id', $request->client_ids)->pluck('clients.id');
+        $toAttach = collect($request->client_ids)->diff($alreadyExcluded)->values()->toArray();
+
+        if (empty($toAttach)) {
+            return $this->error('Todos los clientes indicados ya están excluidos de este producto', 422);
         }
 
-        $product->excludedClients()->attach($client->id);
+        $product->excludedClients()->attach($toAttach);
 
-        $this->logAudit(Auth::user(), 'Store Product Client Exclusion', $request->all(), ['product_id' => $product->id, 'client_id' => $client->id]);
+        $this->logAudit(Auth::user(), 'Store Product Client Exclusion', $request->all(), ['product_id' => $product->id, 'client_ids' => $toAttach]);
 
-        return $this->success(null, 'Cliente excluido del producto correctamente');
+        return $this->success(null, 'Clientes excluidos del producto correctamente');
     }
 
-    public function destroy($productId, $clientId)
+    public function destroy(Request $request, $productId)
     {
         $product = $this->findObject(Product::class, $productId);
 
@@ -76,14 +81,26 @@ class ProductClientExclusionController extends Controller
             return $this->error('Producto no encontrado', 404);
         }
 
-        if (!$product->excludedClients()->where('client_id', $clientId)->exists()) {
-            return $this->error('El cliente no está excluido de este producto', 404);
+        $validator = Validator::make($request->all(), [
+            'client_ids'   => 'required|array|min:1',
+            'client_ids.*' => 'integer|exists:clients,id',
+        ]);
+
+        if ($validator->fails()) {
+            $this->logAudit(Auth::user(), 'Destroy Product Client Exclusion', $request->all(), $validator->errors());
+            return $this->validationError($validator->errors());
         }
 
-        $product->excludedClients()->detach($clientId);
+        $existingExclusions = $product->excludedClients()->whereIn('clients.id', $request->client_ids)->pluck('clients.id');
 
-        $this->logAudit(Auth::user(), 'Destroy Product Client Exclusion', ['product_id' => $productId, 'client_id' => $clientId], null);
+        if ($existingExclusions->isEmpty()) {
+            return $this->error('Ninguno de los clientes indicados está excluido de este producto', 404);
+        }
 
-        return $this->success(null, 'Exclusión eliminada correctamente');
+        $product->excludedClients()->detach($existingExclusions->toArray());
+
+        $this->logAudit(Auth::user(), 'Destroy Product Client Exclusion', ['product_id' => $productId, 'client_ids' => $existingExclusions->toArray()], null);
+
+        return $this->success(null, 'Exclusiones eliminadas correctamente');
     }
 }
