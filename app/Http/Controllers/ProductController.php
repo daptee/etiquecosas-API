@@ -192,6 +192,7 @@ class ProductController extends Controller
         if ($isWholesaleClient) {
             $clientId = auth('client')->user()->id;
             $query->where('is_wholesale', true)
+                ->where('wholesale_hidden', false)
                 ->whereDoesntHave('excludedClients', function ($q) use ($clientId) {
                     $q->where('clients.id', $clientId);
                 });
@@ -294,6 +295,7 @@ class ProductController extends Controller
         if ($isWholesaleClient) {
             $clientId = auth('client')->user()->id;
             $query->where('is_wholesale', true)
+                ->where('wholesale_hidden', false)
                 ->whereDoesntHave('excludedClients', function ($q) use ($clientId) {
                     $q->where('clients.id', $clientId);
                 });
@@ -343,6 +345,9 @@ class ProductController extends Controller
         $isWholesaleClient = optional(auth('client')->user())->client_type_id === 2;
 
         if ($isWholesaleClient) {
+            if ($product->wholesale_hidden) {
+                return $this->error('Producto no encontrado', 404);
+            }
             $clientId = auth('client')->user()->id;
             $isExcluded = $product->excludedClients()->where('clients.id', $clientId)->exists();
             if ($isExcluded) {
@@ -399,6 +404,9 @@ class ProductController extends Controller
         $isWholesaleClient = optional(auth('client')->user())->client_type_id === 2;
 
         if ($isWholesaleClient) {
+            if ($product->wholesale_hidden) {
+                return $this->error('Producto no encontrado', 404);
+            }
             $clientId = auth('client')->user()->id;
             $isExcluded = $product->excludedClients()->where('clients.id', $clientId)->exists();
             if ($isExcluded) {
@@ -475,6 +483,7 @@ class ProductController extends Controller
             'is_feature' => 'nullable|boolean',
             'is_sale' => 'nullable|boolean',
             'is_wholesale' => 'nullable|boolean',
+            'wholesale_hidden' => 'nullable|boolean',
             'product_status_id' => 'required|integer|exists:product_statuses,id',
             'related_products' => 'nullable|array',
             'related_products.*' => 'exists:products,id',
@@ -588,6 +597,7 @@ class ProductController extends Controller
         $productData['is_customizable'] = (bool) ($request->input('is_customizable', false));
         $productData['is_sale'] = (bool) ($request->input('is_sale', true));
         $productData['is_wholesale'] = (bool) ($request->input('is_wholesale', false));
+        $productData['wholesale_hidden'] = (bool) ($request->input('wholesale_hidden', false));
 
         // Decodificar JSON de campos como meta_data y customization
         $jsonFields = ['meta_data', 'stock_channels'];
@@ -1024,6 +1034,7 @@ class ProductController extends Controller
             'is_feature' => 'nullable|boolean',
             'is_sale' => 'nullable|boolean',
             'is_wholesale' => 'nullable|boolean',
+            'wholesale_hidden' => 'nullable|boolean',
             'product_status_id' => 'required|integer|exists:product_statuses,id',
             'related_products' => 'nullable|array',
             'related_products.*' => 'integer|exists:products,id',
@@ -1141,6 +1152,7 @@ class ProductController extends Controller
         $productData['is_customizable'] = (bool) ($request->input('is_customizable', false));
         $productData['is_sale'] = (bool) ($request->input('is_sale', true));
         $productData['is_wholesale'] = (bool) ($request->input('is_wholesale', false));
+        $productData['wholesale_hidden'] = (bool) ($request->input('wholesale_hidden', false));
 
         if ($request->filled('name') && $request->input('name') !== $product->name) {
             $productData['slug'] = $this->generateUniqueSlug($request->input('name'), $product->id);

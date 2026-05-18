@@ -52,6 +52,7 @@ class Product extends Model
         'is_customizable',
         'is_sale',
         'is_wholesale',
+        'wholesale_hidden',
         'meta_data',
     ];
 
@@ -68,6 +69,7 @@ class Product extends Model
         'stock_quantity' => 'integer',
         'stock_alert' => 'integer',
         'stock_channels' => 'array',
+        'wholesale_hidden' => 'boolean',
     ];
 
     public function type()

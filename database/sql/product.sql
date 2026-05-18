@@ -84,3 +84,6 @@ ADD COLUMN stock_channels JSON NULL AFTER variant;
 
 ALTER TABLE products
 ADD COLUMN stock_alert INT NULL AFTER stock_quantity;
+
+ALTER TABLE products
+ADD COLUMN wholesale_hidden BOOLEAN NOT NULL DEFAULT FALSE AFTER is_wholesale;
