@@ -38,7 +38,10 @@ class ProductClientExclusionController extends Controller
             return $this->error('Producto no encontrado', 404);
         }
 
-        if (!$product->is_wholesale) {
+        $stockChannels = $product->stock_channels ?? [];
+        $isWholesale = collect($stockChannels)->contains('channel', 4);
+
+        if (!$isWholesale) {
             return $this->error('El producto no es mayorista', 422);
         }
 
