@@ -126,10 +126,21 @@ class ProductController extends Controller
             }
         }
 
-        // 🔹 Filtro por canal
-        if ($request->has('channel_id')) {
-            $channelId = $request->query('channel_id');
-            $query->whereJsonContains('stock_channels', ['channel' => (int)$channelId]);
+        $isWholesaleClient = optional(auth('client')->user())->client_type_id === 2;
+
+        if ($isWholesaleClient) {
+            $clientId = auth('client')->user()->id;
+            $query->whereJsonContains('stock_channels', ['channel' => 4])
+                ->where('wholesale_hidden', false)
+                ->whereDoesntHave('excludedClients', function ($q) use ($clientId) {
+                    $q->where('clients.id', $clientId);
+                });
+        } else {
+            // 🔹 Filtro por canal
+            if ($request->has('channel_id')) {
+                $channelId = $request->query('channel_id');
+                $query->whereJsonContains('stock_channels', ['channel' => (int)$channelId]);
+            }
         }
 
         $query->orderBy('name', 'asc')->orderBy('id', 'asc');
