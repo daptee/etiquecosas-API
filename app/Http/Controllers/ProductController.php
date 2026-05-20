@@ -612,7 +612,7 @@ class ProductController extends Controller
         $productData['is_customizable'] = (bool) ($request->input('is_customizable', false));
         $productData['is_sale'] = (bool) ($request->input('is_sale', true));
         $productData['is_wholesale'] = (bool) ($request->input('is_wholesale', false));
-        $productData['wholesale_hidden'] = (bool) ($request->input('wholesale_hidden', false));
+        $productData['wholesale_hidden'] = filter_var($request->input('wholesale_hidden', false), FILTER_VALIDATE_BOOLEAN);
 
         // Decodificar JSON de campos como meta_data y customization
         $jsonFields = ['meta_data', 'stock_channels'];
@@ -1167,7 +1167,7 @@ class ProductController extends Controller
         $productData['is_customizable'] = (bool) ($request->input('is_customizable', false));
         $productData['is_sale'] = (bool) ($request->input('is_sale', true));
         $productData['is_wholesale'] = (bool) ($request->input('is_wholesale', false));
-        $productData['wholesale_hidden'] = (bool) ($request->input('wholesale_hidden', false));
+        $productData['wholesale_hidden'] = filter_var($request->input('wholesale_hidden', false), FILTER_VALIDATE_BOOLEAN);
 
         if ($request->filled('name') && $request->input('name') !== $product->name) {
             $productData['slug'] = $this->generateUniqueSlug($request->input('name'), $product->id);
