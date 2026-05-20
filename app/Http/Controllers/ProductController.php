@@ -111,7 +111,11 @@ class ProductController extends Controller
             $query->where('is_sale', $request->query('is_sale'));
         }
         if ($request->has('is_wholesale')) {
-            $query->where('is_wholesale', $request->query('is_wholesale'));
+            if ($request->query('is_wholesale')) {
+                $query->whereJsonContains('stock_channels', ['channel' => 4]);
+            } else {
+                $query->whereJsonDoesntContain('stock_channels', ['channel' => 4]);
+            }
         }
         if ($request->has('has_seo')) {
             $hasSeo = $request->query('has_seo');
@@ -191,7 +195,7 @@ class ProductController extends Controller
 
         if ($isWholesaleClient) {
             $clientId = auth('client')->user()->id;
-            $query->where('is_wholesale', true)
+            $query->whereJsonContains('stock_channels', ['channel' => 4])
                 ->where('wholesale_hidden', false)
                 ->whereDoesntHave('excludedClients', function ($q) use ($clientId) {
                     $q->where('clients.id', $clientId);
@@ -294,7 +298,7 @@ class ProductController extends Controller
 
         if ($isWholesaleClient) {
             $clientId = auth('client')->user()->id;
-            $query->where('is_wholesale', true)
+            $query->whereJsonContains('stock_channels', ['channel' => 4])
                 ->where('wholesale_hidden', false)
                 ->whereDoesntHave('excludedClients', function ($q) use ($clientId) {
                     $q->where('clients.id', $clientId);
@@ -371,7 +375,7 @@ class ProductController extends Controller
                 $query->select('products.id', 'name', 'sku', 'slug', 'price', 'discounted_price', 'discounted_start', 'discounted_end', 'product_type_id', 'product_status_id', 'product_stock_status_id', 'stock_quantity', 'stock_channels', 'is_sale');
                 if ($isWholesaleClient) {
                     $clientId = auth('client')->user()->id;
-                    $query->where('products.is_wholesale', true)
+                    $query->whereJsonContains('products.stock_channels', ['channel' => 4])
                         ->whereDoesntHave('excludedClients', function ($q) use ($clientId) {
                             $q->where('clients.id', $clientId);
                         });
@@ -430,7 +434,7 @@ class ProductController extends Controller
                 $query->select('products.id', 'name', 'sku', 'slug', 'price', 'discounted_price', 'discounted_start', 'discounted_end', 'product_type_id', 'product_status_id', 'product_stock_status_id', 'stock_quantity', 'stock_channels', 'is_sale');
                 if ($isWholesaleClient) {
                     $clientId = auth('client')->user()->id;
-                    $query->where('products.is_wholesale', true)
+                    $query->whereJsonContains('products.stock_channels', ['channel' => 4])
                         ->whereDoesntHave('excludedClients', function ($q) use ($clientId) {
                             $q->where('clients.id', $clientId);
                         });
