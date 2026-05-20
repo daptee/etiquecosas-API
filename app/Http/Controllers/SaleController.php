@@ -2531,4 +2531,27 @@ class SaleController extends Controller
             ]);
         }
     }
+
+    public function updateSaleClient(Request $request, $id)
+    {
+        $rules = [
+            'client_id' => 'required|integer|exists:clients,id',
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails()) {
+            $this->logAudit(Auth::user(), 'Sale Validation Fail (Update Sale Client)', $request->all(), $validator->errors());
+            return $this->validationError($validator->errors());
+        }
+
+        $sale = Sale::findOrFail($id);
+        $sale->client_id = $request->client_id;
+        $sale->save();
+
+        $sale->load(['client', 'channel', 'products.product', 'products.variant', 'status', 'statusHistory', 'user']);
+
+        $this->logAudit(Auth::user(), 'Update Sale Client', ['id' => $id, 'client_id' => $request->client_id], $sale);
+
+        return $this->success($sale, 'Cliente del pedido actualizado correctamente');
+    }
 }
