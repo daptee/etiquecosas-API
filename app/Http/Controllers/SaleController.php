@@ -780,7 +780,8 @@ class SaleController extends Controller
                                 $tematicaCoincidente,
                                 $customColor,
                                 $customIcon,
-                                $fechaAprobacion
+                                $fechaAprobacion,
+                                [$form['name'] ?? '']
                             );
 
                             Log::info("PDF generado para {$nombreCompleto}, temática ID: {$tematicaId}");
@@ -806,7 +807,8 @@ class SaleController extends Controller
                                 $tematica,
                                 $customColor,
                                 $customIcon,
-                                $fechaAprobacion
+                                $fechaAprobacion,
+                                [$form['name'] ?? '']
                             );
 
                             Log::info("PDF generado sin variante para {$nombreCompleto}, temática ID: {$tematicaId}");
@@ -1027,7 +1029,8 @@ class SaleController extends Controller
                                     $tematicaCoincidente,
                                     $customColor,
                                     $customIcon,
-                                    $fechaAprobacion
+                                    $fechaAprobacion,
+                                    [$form['name'] ?? '']
                                 );
 
                                 Log::info("PDF generado para {$nombreCompleto}, temática ID: {$tematicaId}");
@@ -1054,7 +1057,8 @@ class SaleController extends Controller
                                     $tematica,
                                     $customColor,
                                     $customIcon,
-                                    $fechaAprobacion
+                                    $fechaAprobacion,
+                                    [$form['name'] ?? '']
                                 );
 
                                 Log::info("PDF generado sin variante para {$nombreCompleto}, temática ID: {$tematicaId}");
@@ -1734,7 +1738,8 @@ class SaleController extends Controller
                                     $tematicaCoincidente,
                                     $customColor,
                                     $customIcon,
-                                    $sale->created_at
+                                    $sale->created_at,
+                                    [$form['name'] ?? '']
                                 );
 
                                 Log::info("PDF generado para {$nombreCompleto}, temática ID: {$tematicaId}");
@@ -1761,7 +1766,8 @@ class SaleController extends Controller
                                     $tematica,
                                     $customColor,
                                     $customIcon,
-                                    $sale->created_at
+                                    $sale->created_at,
+                                    [$form['name'] ?? '']
                                 );
 
                                 Log::info("PDF generado sin variante para {$nombreCompleto}, temática ID: {$tematicaId}");
@@ -1958,7 +1964,8 @@ class SaleController extends Controller
                                             $tematicaCoincidente,
                                             $customColor,
                                             $customIcon,
-                                            $sale->created_at
+                                            $sale->created_at,
+                                            [$form['name'] ?? '']
                                         );
 
                                         $salePdfPaths[] = $pdfPath;
@@ -1986,7 +1993,8 @@ class SaleController extends Controller
                                             $tematica,
                                             $customColor,
                                             $customIcon,
-                                            $sale->created_at
+                                            $sale->created_at,
+                                            [$form['name'] ?? '']
                                         );
 
                                         $salePdfPaths[] = $pdfPath;

@@ -75,7 +75,7 @@
                         @break
                         @default
                         <p class="texto2" style="font-family: 'Oswald';font-size: 1.05em;">
-                            {{ mb_strtoupper($product_order->name) }}
+                            {!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}
                         </p>
                         @endswitch
                     </div>
@@ -112,7 +112,7 @@
                         @break
                         @default
                         <p class="texto2" style="font-family: 'Oswald';font-size: 1.05em;">
-                            {{ mb_strtoupper($product_order->name) }}
+                            {!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}
                         </p>
                         @endswitch
                     </div>
@@ -151,7 +151,7 @@
 
                         @default
                         <p class="texto2" style="font-family: 'Oswald';font-size: 1.05em;">
-                            {{ mb_strtoupper($product_order->name) }}
+                            {!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}
                         </p>
                         @endswitch
                     </div>
@@ -190,7 +190,7 @@
 
                         @default
                         <p class="texto2" style="font-family: 'Oswald';font-size: 1.05em;">
-                            {{ mb_strtoupper($product_order->name) }}
+                            {!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}
                         </p>
                         @endswitch
                     </div>
@@ -229,7 +229,7 @@
 
                         @default
                         <p class="texto2" style="font-family: 'Oswald';font-size: 1.05em;">
-                            {{ mb_strtoupper($product_order->name) }}
+                            {!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}
                         </p>
                         @endswitch
                     </div>
@@ -268,7 +268,7 @@
 
                         @default
                         <p class="texto2" style="font-family: 'Oswald';font-size: 1.05em;">
-                            {{ mb_strtoupper($product_order->name) }}
+                            {!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}
                         </p>
                         @endswitch
                     </div>
@@ -307,7 +307,7 @@
 
                         @default
                         <p class="texto2" style="font-family: 'Oswald';font-size: 1.05em;">
-                            {{ mb_strtoupper($product_order->name) }}
+                            {!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}
                         </p>
                         @endswitch
                     </div>
@@ -346,7 +346,7 @@
 
                         @default
                         <p class="texto2" style="font-family: 'Oswald';font-size: 1.05em;">
-                            {{ mb_strtoupper($product_order->name) }}
+                            {!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}
                         </p>
                         @endswitch
                     </div>
@@ -385,7 +385,7 @@
 
                         @default
                         <p class="texto2" style="font-family: 'Oswald';font-size: 1.05em;">
-                            {{ mb_strtoupper($product_order->name) }}
+                            {!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}
                         </p>
                         @endswitch
                     </div>
@@ -424,7 +424,7 @@
 
                         @default
                         <p class="texto2" style="font-family: 'Oswald';font-size: 1.05em;">
-                            {{ mb_strtoupper($product_order->name) }}
+                            {!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}
                         </p>
                         @endswitch
                     </div>
@@ -463,7 +463,7 @@
 
                         @default
                         <p class="texto2" style="font-family: 'Oswald';font-size: 1.05em;">
-                            {{ mb_strtoupper($product_order->name) }}
+                            {!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}
                         </p>
                         @endswitch
                     </div>

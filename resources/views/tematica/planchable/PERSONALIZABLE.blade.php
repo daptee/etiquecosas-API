@@ -112,7 +112,7 @@
                 </div>
                 <div class="cuadro">
                     <p class="texto2" style="color:{{ $plantilla['colores'] }};font-size: {{ $fontsize }};">
-                        {{ mb_strtoupper($product_order->name)  }}</p>
+                        {!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}</p>
                 </div>
             </div>
         @endfor

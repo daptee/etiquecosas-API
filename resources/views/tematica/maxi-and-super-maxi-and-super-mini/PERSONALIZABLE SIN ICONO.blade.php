@@ -192,15 +192,15 @@
         <div style="text-align: center;">
         @for ($i = 0; $i < 2; $i++)
             <div class="icon-cuadroGrande">
-                <p class="texto2">{!! formatName($product_order->name, 2, 15) !!}</p>
+                <p class="texto2">{!! formatName($product_order->name, 2, 15, $product_order->firstName ?? null) !!}</p>
                 <div class="cuadroRenglon"></div>
             </div>
             <div class="icon-cuadroGrande">
-                <p class="texto2">{!! formatName($product_order->name, 2, 15) !!}</p>
+                <p class="texto2">{!! formatName($product_order->name, 2, 15, $product_order->firstName ?? null) !!}</p>
                 <div class="cuadroRenglon"></div>
             </div>
             <div class="icon-cuadroGrande">
-                <p class="texto2">{!! formatName($product_order->name, 2, 15) !!}</p>
+                <p class="texto2">{!! formatName($product_order->name, 2, 15, $product_order->firstName ?? null) !!}</p>
                 <div class="cuadroRenglon"></div>
             </div>
         @endfor
@@ -209,13 +209,13 @@
         <div class="etiquetas-maxi-container" style="text-align: center;">
         @for ($i = 0; $i < 3; $i++)
             <div class="icon-cuadro">
-                <p class="texto2" style="font-size: 1.05em;">{!! formatName($product_order->name, 2, 15) !!}</p>
+                <p class="texto2" style="font-size: 1.05em;">{!! formatName($product_order->name, 2, 15, $product_order->firstName ?? null) !!}</p>
             </div>
             <div class="icon-cuadro">
-                <p class="texto2" style="font-size: 1.05em;">{!! formatName($product_order->name, 2, 15) !!}</p>
+                <p class="texto2" style="font-size: 1.05em;">{!! formatName($product_order->name, 2, 15, $product_order->firstName ?? null) !!}</p>
             </div>
             <div class="icon-cuadro">
-                <p class="texto2" style="font-size: 1.05em;">{!! formatName($product_order->name, 2, 15) !!}</p>
+                <p class="texto2" style="font-size: 1.05em;">{!! formatName($product_order->name, 2, 15, $product_order->firstName ?? null) !!}</p>
             </div>
         @endfor
         </div>
@@ -227,7 +227,7 @@
                         <table class="etiqueta-super-mini-content-container">
                             <tr>
                                 <td>
-                                    <p class="{{ $plantilla['fontClass'] }}" >{!! formatName($product_order->name, 2, 15) !!}</p>
+                                    <p class="{{ $plantilla['fontClass'] }}" >{!! formatName($product_order->name, 2, 15, $product_order->firstName ?? null) !!}</p>
                                 </td>
                             </tr>
                         </table>
@@ -237,7 +237,7 @@
                         <table class="etiqueta-super-mini-content-container">
                             <tr>
                                 <td>
-                                    <p class="{{ $plantilla['fontClass'] }}" >{!! formatName($product_order->name, 2, 15) !!}</p>
+                                    <p class="{{ $plantilla['fontClass'] }}" >{!! formatName($product_order->name, 2, 15, $product_order->firstName ?? null) !!}</p>
                                 </td>
                             </tr>
                         </table>
@@ -247,7 +247,7 @@
                         <table class="etiqueta-super-mini-content-container">
                             <tr>
                                 <td>
-                                    <p class="{{ $plantilla['fontClass'] }}" >{!! formatName($product_order->name, 2, 15) !!}</p>
+                                    <p class="{{ $plantilla['fontClass'] }}" >{!! formatName($product_order->name, 2, 15, $product_order->firstName ?? null) !!}</p>
                                 </td>
                             </tr>
                         </table>
@@ -257,7 +257,7 @@
                         <table class="etiqueta-super-mini-content-container">
                             <tr>
                                 <td>
-                                    <p class="{{ $plantilla['fontClass'] }}" >{!! formatName($product_order->name, 2, 15) !!}</p>
+                                    <p class="{{ $plantilla['fontClass'] }}" >{!! formatName($product_order->name, 2, 15, $product_order->firstName ?? null) !!}</p>
                                 </td>
                             </tr>
                         </table>
@@ -267,7 +267,7 @@
                         <table class="etiqueta-super-mini-content-container">
                             <tr>
                                 <td>
-                                    <p class="{{ $plantilla['fontClass'] }}" >{!! formatName($product_order->name, 2, 15) !!}</p>
+                                    <p class="{{ $plantilla['fontClass'] }}" >{!! formatName($product_order->name, 2, 15, $product_order->firstName ?? null) !!}</p>
                                 </td>
                             </tr>
                         </table>
@@ -277,7 +277,7 @@
                         <table class="etiqueta-super-mini-content-container">
                             <tr>
                                 <td>
-                                    <p class="{{ $plantilla['fontClass'] }}" >{!! formatName($product_order->name, 2, 15) !!}</p>
+                                    <p class="{{ $plantilla['fontClass'] }}" >{!! formatName($product_order->name, 2, 15, $product_order->firstName ?? null) !!}</p>
                                 </td>
                             </tr>
                         </table>

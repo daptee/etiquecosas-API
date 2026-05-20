@@ -140,7 +140,8 @@ class GenerateSalePdfsJob implements ShouldQueue
                                     $tematicaCoincidente,
                                     $customColor,
                                     $customIcon,
-                                    $sale->created_at
+                                    $sale->created_at,
+                                    [$form['name'] ?? '']
                                 );
 
                                 Log::info("PDF generado para {$nombreCompleto}, temática ID: {$tematicaId}");
@@ -167,7 +168,8 @@ class GenerateSalePdfsJob implements ShouldQueue
                                     $tematica,
                                     $customColor,
                                     $customIcon,
-                                    $sale->created_at
+                                    $sale->created_at,
+                                    [$form['name'] ?? '']
                                 );
 
                                 Log::info("PDF generado sin variante para {$nombreCompleto}, temática ID: {$tematicaId}");

@@ -162,7 +162,7 @@
                         <img class="personajeCirculo" src="{{ $plantilla['imagen'] }}" alt="">
                     </div>
                     <div class="circulo-texto {{ $plantilla['fontClass'] }}" style="font-family: 'Oswald';color:{{$plantilla['colores']}};font-size:{{ $spotFontsize }};">
-                        {!! formatNameExactLines($product_order->name, 2) !!}
+                        {!! formatNameExactLines($product_order->name, 2, $product_order->firstName ?? null) !!}
                     </div>
                 </div>
             @endfor
@@ -172,7 +172,7 @@
         @for ($i = 0; $i < 60; $i++)
             <div class="super-mini" style="background: {{$plantilla['colores']}})">
                 <p class="texto1" style="font-family: 'Oswald';font-size: x-small;">
-                    {!! formatName($product_order->name, 2, 15) !!}</p>
+                    {!! formatName($product_order->name, 2, 15, $product_order->firstName ?? null) !!}</p>
             </div>
         @endfor
 

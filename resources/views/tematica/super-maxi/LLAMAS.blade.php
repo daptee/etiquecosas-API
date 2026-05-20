@@ -53,7 +53,7 @@
                 </div>
                 <div class="cuadroD">
                     <p class="texto4" style="font-family: 'Oswald';font-size: 1.45em;">
-                        {{mb_strtoupper($product_order->name)}}
+                        {!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}
                     </p>
                 </div>
             </div>
@@ -63,7 +63,7 @@
                 </div>
                 <div class="cuadroD">
                     <p class="texto4" style="font-family: 'Oswald';font-size: 1.45em;">
-                        {{mb_strtoupper($product_order->name)}}
+                        {!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}
                     </p>
                 </div>
             </div>
@@ -74,7 +74,7 @@
                 </div>
                 <div class="cuadroD">
                     <p class="texto4" style="font-family: 'Oswald';font-size: 1.45em;">
-                        {{mb_strtoupper($product_order->name)}}
+                        {!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}
                     </p>
                 </div>
             </div>
@@ -84,7 +84,7 @@
                 </div>
                 <div class="cuadroD">
                     <p class="texto4" style="font-family: 'Oswald';font-size: 1.45em;">
-                        {{mb_strtoupper($product_order->name)}}
+                        {!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}
                     </p>
                 </div>
             </div>
@@ -95,7 +95,7 @@
                 </div>
                 <div class="cuadroD">
                     <p class="texto4" style="font-family: 'Oswald';font-size: 1.45em;">
-                        {{mb_strtoupper($product_order->name)}}
+                        {!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}
                     </p>
                 </div>
             </div>
@@ -105,7 +105,7 @@
                 </div>
                 <div class="cuadroD">
                     <p class="texto4" style="font-family: 'Oswald';font-size: 1.45em;">
-                        {{mb_strtoupper($product_order->name)}}
+                        {!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}
                     </p>
                 </div>
             </div>
@@ -115,7 +115,7 @@
                 </div>
                 <div class="cuadroD">
                     <p class="texto4" style="font-family: 'Oswald';font-size: 1.45em;">
-                        {{mb_strtoupper($product_order->name)}}
+                        {!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}
                     </p>
                 </div>
             </div>
@@ -125,7 +125,7 @@
                 </div>
                 <div class="cuadroD">
                     <p class="texto4" style="font-family: 'Oswald';font-size: 1.45em;">
-                        {{mb_strtoupper($product_order->name)}}
+                        {!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}
                     </p>
                 </div>
             </div>
@@ -136,7 +136,7 @@
                 </div>
                 <div class="cuadroD">
                     <p class="texto4" style="font-family: 'Oswald';font-size: 1.45em;">
-                        {{mb_strtoupper($product_order->name)}}
+                        {!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}
                     </p>
                 </div>
             </div>
@@ -146,7 +146,7 @@
                 </div>
                 <div class="cuadroD">
                     <p class="texto4" style="font-family: 'Oswald';font-size: 1.45em;">
-                        {{mb_strtoupper($product_order->name)}}
+                        {!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}
                     </p>
                 </div>
             </div>
@@ -157,7 +157,7 @@
                 </div>
                 <div class="cuadroD">
                     <p class="texto4" style="font-family: 'Oswald';font-size: 1.45em;">
-                        {{mb_strtoupper($product_order->name)}}
+                        {!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}
                     </p>
                 </div>
             </div>
@@ -167,7 +167,7 @@
                 </div>
                 <div class="cuadroD">
                     <p class="texto4" style="font-family: 'Oswald';font-size: 1.45em;">
-                        {{mb_strtoupper($product_order->name)}}
+                        {!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}
                     </p>
                 </div>
             </div>
@@ -177,7 +177,7 @@
                 </div>
                 <div class="cuadroD">
                     <p class="texto4" style="font-family: 'Oswald';font-size: 1.45em;">
-                        {{mb_strtoupper($product_order->name)}}
+                        {!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}
                     </p>
                 </div>
             </div>
@@ -187,7 +187,7 @@
                 </div>
                 <div class="cuadroD">
                     <p class="texto4" style="font-family: 'Oswald';font-size: 1.45em;">
-                        {{mb_strtoupper($product_order->name)}}
+                        {!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}
                     </p>
                 </div>
             </div>
@@ -198,7 +198,7 @@
                 </div>
                 <div class="cuadroD">
                     <p class="texto4" style="font-family: 'Oswald';font-size: 1.45em;">
-                        {{mb_strtoupper($product_order->name)}}
+                        {!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}
                     </p>
                 </div>
             </div>
@@ -208,7 +208,7 @@
                 </div>
                 <div class="cuadroD">
                     <p class="texto4" style="font-family: 'Oswald';font-size: 1.45em;">
-                        {{mb_strtoupper($product_order->name)}}
+                        {!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}
                     </p>
                 </div>
             </div>
@@ -219,7 +219,7 @@
                 </div>
                 <div class="cuadroD">
                     <p class="texto4" style="font-family: 'Oswald';font-size: 1.45em;">
-                        {{mb_strtoupper($product_order->name)}}
+                        {!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}
                     </p>
                 </div>
             </div>
@@ -229,7 +229,7 @@
                 </div>
                 <div class="cuadroD">
                     <p class="texto4" style="font-family: 'Oswald';font-size: 1.45em;">
-                        {{mb_strtoupper($product_order->name)}}
+                        {!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}
                     </p>
                 </div>
             </div>
@@ -239,7 +239,7 @@
                 </div>
                 <div class="cuadroD">
                     <p class="texto4" style="font-family: 'Oswald';font-size: 1.45em;">
-                        {{mb_strtoupper($product_order->name)}}
+                        {!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}
                     </p>
                 </div>
             </div>
@@ -249,7 +249,7 @@
                 </div>
                 <div class="cuadroD">
                     <p class="texto4" style="font-family: 'Oswald';font-size: 1.45em;">
-                        {{mb_strtoupper($product_order->name)}}
+                        {!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}
                     </p>
                 </div>
             </div>
@@ -260,7 +260,7 @@
                 </div>
                 <div class="cuadroD">
                     <p class="texto4" style="font-family: 'Oswald';font-size: 1.45em;">
-                        {{mb_strtoupper($product_order->name)}}
+                        {!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}
                     </p>
                 </div>
             </div>

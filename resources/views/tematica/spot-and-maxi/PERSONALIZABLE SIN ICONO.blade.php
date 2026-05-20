@@ -157,7 +157,7 @@
             @for ($i = 0; $i < 10; $i++)
                 <div class="circulo-personaje">
                     <div class="circulo-texto">
-                        {{ mb_strtoupper($product_order->name) }}
+                        {!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}
                     </div>
                 </div>
             @endfor
@@ -171,7 +171,7 @@
                         <td class="etiqueta-maxi">
                             <div class="etiqueta-maxi-text">
                                 <p class="{{ $plantilla['fontClass'] }}" style="margin:0; color:#FFF;">
-                                    {!! formatNameExactLines($product_order->name, 2) !!}
+                                    {!! formatNameExactLines($product_order->name, 2, $product_order->firstName ?? null) !!}
                                 </p>
                             </div>
                         </td>
