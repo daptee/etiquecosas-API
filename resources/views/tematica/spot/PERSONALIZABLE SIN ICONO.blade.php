@@ -81,7 +81,7 @@
             @for ($i = 0; $i < 35; $i++)
                 <div class="circulo-personaje">
                     <div class="circulo-texto">
-                        {{ formatNameExactLines($product_order->name, 2) }}
+                        {{ formatNameExactLines($product_order->name, 2, $product_order->firstName ?? null) }}
                     </div>
                 </div>
             @endfor

@@ -49,7 +49,7 @@
                             <td><img src="{{ $plantilla['imagen'][0] }}" alt=""></td>
                             <td style="width: 0.3cm;"></td>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -61,7 +61,7 @@
                             <td><img src="{{ $plantilla['imagen'][0] }}" alt=""></td>
                             <td style="width: 0.3cm;"></td>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -73,7 +73,7 @@
                             <td><img src="{{ $plantilla['imagen'][0] }}" alt=""></td>
                             <td style="width: 0.3cm;"></td>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -85,7 +85,7 @@
                             <td><img src="{{ $plantilla['imagen'][0] }}" alt=""></td>
                             <td style="width: 0.3cm;"></td>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -101,7 +101,7 @@
                             <td><img src="{{ $plantilla['imagen'][0] }}" alt=""></td>
                             <td style="width: 0.3cm;"></td>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -113,7 +113,7 @@
                             <td><img src="{{ $plantilla['imagen'][0] }}" alt=""></td>
                             <td style="width: 0.3cm;"></td>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -125,7 +125,7 @@
                             <td><img src="{{ $plantilla['imagen'][0] }}" alt=""></td>
                             <td style="width: 0.3cm;"></td>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -137,7 +137,7 @@
                             <td><img src="{{ $plantilla['imagen'][0] }}" alt=""></td>
                             <td style="width: 0.3cm;"></td>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -153,7 +153,7 @@
                             <td><img src="{{ $plantilla['imagen'][0] }}" alt=""></td>
                             <td style="width: 0.3cm;"></td>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -165,7 +165,7 @@
                             <td><img src="{{ $plantilla['imagen'][0] }}" alt=""></td>
                             <td style="width: 0.3cm;"></td>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -177,7 +177,7 @@
                             <td><img src="{{ $plantilla['imagen'][0] }}" alt=""></td>
                             <td style="width: 0.3cm;"></td>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -189,7 +189,7 @@
                             <td><img src="{{ $plantilla['imagen'][0] }}" alt=""></td>
                             <td style="width: 0.3cm;"></td>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -205,7 +205,7 @@
                             <td><img src="{{ $plantilla['imagen'][0] }}" alt=""></td>
                             <td style="width: 0.3cm;"></td>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -217,7 +217,7 @@
                             <td><img src="{{ $plantilla['imagen'][0] }}" alt=""></td>
                             <td style="width: 0.3cm;"></td>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -229,7 +229,7 @@
                             <td><img src="{{ $plantilla['imagen'][0] }}" alt=""></td>
                             <td style="width: 0.3cm;"></td>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -241,7 +241,7 @@
                             <td><img src="{{ $plantilla['imagen'][0] }}" alt=""></td>
                             <td style="width: 0.3cm;"></td>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -264,7 +264,7 @@
                         </tr>
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -280,7 +280,7 @@
                         </tr>
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -296,7 +296,7 @@
                         </tr>
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -312,7 +312,7 @@
                         </tr>
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -328,7 +328,7 @@
                         </tr>
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -344,7 +344,7 @@
                         </tr>
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -364,7 +364,7 @@
                         </tr>
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -380,7 +380,7 @@
                         </tr>
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -396,7 +396,7 @@
                         </tr>
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -412,7 +412,7 @@
                         </tr>
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -428,7 +428,7 @@
                         </tr>
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -444,7 +444,7 @@
                         </tr>
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -463,7 +463,7 @@
                             <td><img src="{{ $plantilla['imagen'][0] }}" alt=""></td>
                             <td style="width: 0.3cm;"></td>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -475,7 +475,7 @@
                             <td><img src="{{ $plantilla['imagen'][0] }}" alt=""></td>
                             <td style="width: 0.3cm;"></td>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -487,7 +487,7 @@
                             <td><img src="{{ $plantilla['imagen'][0] }}" alt=""></td>
                             <td style="width: 0.3cm;"></td>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -503,7 +503,7 @@
                             <td><img src="{{ $plantilla['imagen'][0] }}" alt=""></td>
                             <td style="width: 0.3cm;"></td>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -515,7 +515,7 @@
                             <td><img src="{{ $plantilla['imagen'][0] }}" alt=""></td>
                             <td style="width: 0.3cm;"></td>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -527,7 +527,7 @@
                             <td><img src="{{ $plantilla['imagen'][0] }}" alt=""></td>
                             <td style="width: 0.3cm;"></td>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -544,7 +544,7 @@
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -554,7 +554,7 @@
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -564,7 +564,7 @@
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -574,7 +574,7 @@
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -584,7 +584,7 @@
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -594,7 +594,7 @@
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -608,7 +608,7 @@
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -618,7 +618,7 @@
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -628,7 +628,7 @@
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -638,7 +638,7 @@
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -648,7 +648,7 @@
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -658,7 +658,7 @@
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -672,7 +672,7 @@
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -682,7 +682,7 @@
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -692,7 +692,7 @@
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -702,7 +702,7 @@
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -712,7 +712,7 @@
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -722,7 +722,7 @@
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }}">{{mb_strtoupper($product_order->name)}}</p>
+                                <p class="{{ $plantilla['fontClass'] }}">{!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>

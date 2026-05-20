@@ -143,7 +143,7 @@
             @for ($i = 0; $i < 20; $i++)
                 <div class="circulo-personaje">
                     <div class="circulo-texto {{ $plantilla['fontClass'] }}" style="font-family: 'Oswald';">
-                        {!! formatName($product_order->name, 2, 15) !!}
+                        {!! formatName($product_order->name, 2, 15, $product_order->firstName ?? null) !!}
                     </div>
                 </div>
             @endfor
@@ -153,7 +153,7 @@
         @for ($i = 0; $i < 60; $i++)
             <div class="super-mini">
                 <p class="texto1" style="font-family: 'Oswald';font-size: x-small;">
-                    {!! formatName($product_order->name, 2, 15) !!}</p>
+                    {!! formatName($product_order->name, 2, 15, $product_order->firstName ?? null) !!}</p>
             </div>
         @endfor
 

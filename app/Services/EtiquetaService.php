@@ -35,7 +35,7 @@ class EtiquetaService
         }
     }
 
-    public static function generarEtiquetas(int $ventaId, $tematicaId, array $nombres, $productOrder, $tematicaCoincidente, $customColor, $customIcon, $fechaCompra = null): array
+    public static function generarEtiquetas(int $ventaId, $tematicaId, array $nombres, $productOrder, $tematicaCoincidente, $customColor, $customIcon, $fechaCompra = null, array $firstNames = []): array
     {
         $logo = "https://api.etiquecosaslab.com.ar/icons/mail/etiquecosas_logo-rosa.png";
         $outputFiles = [];
@@ -137,7 +137,7 @@ class EtiquetaService
             $views = $getViews($pdf, "PERSONALIZABLE", $urlPdf);
             $customIconPath = public_path($customIcon);
 
-            foreach ($nombres as $nombre) {
+            foreach ($nombres as $idx => $nombre) {
                 $nombreLength = mb_strlen($nombre, 'UTF-8');
                 $fontClass = $nombreLength > 20 ? 'extra-small-text-size' : ($nombreLength > 16 ? 'small-text-size' : 'normal-text-size');
                 $plantilla = [
@@ -148,7 +148,7 @@ class EtiquetaService
                     'filas' => 19,
                     'label' => $numberLabels ?? 24
                 ];
-                $product_order = (object)['name' => $nombre, 'order' => (object)['id_external' => $ventaId]];
+                $product_order = (object)['name' => $nombre, 'firstName' => $firstNames[$idx] ?? null, 'order' => (object)['id_external' => $ventaId]];
 
                 foreach ($views as $i => $view) {
                     $filePath = "{$dirPath}/{$ventaId}-{$productOrder->id}-{$productOrder->product->name}-PERSONALIZABLE-" . ($i + 1) . ".pdf";
@@ -165,7 +165,7 @@ class EtiquetaService
             Log::info("🟣 Generando PDF PERSONALIZABLE sin icono (lisa)");
             $views = $getViews($pdf, "PERSONALIZABLE SIN ICONO", $urlPdf);
 
-            foreach ($nombres as $nombre) {
+            foreach ($nombres as $idx => $nombre) {
                 $nombreLength = mb_strlen($nombre, 'UTF-8');
                 $fontClass = $nombreLength > 20 ? 'extra-small-text-size' : ($nombreLength > 16 ? 'small-text-size' : 'normal-text-size');
 
@@ -176,7 +176,7 @@ class EtiquetaService
                     'filas' => 19,
                     'label' => $numberLabels ?? 24
                 ];
-                $product_order = (object)['name' => $nombre, 'order' => (object)['id_external' => $ventaId]];
+                $product_order = (object)['name' => $nombre, 'firstName' => $firstNames[$idx] ?? null, 'order' => (object)['id_external' => $ventaId]];
 
                 foreach ($views as $i => $view) {
                     $filePath = "{$dirPath}/{$ventaId}-{$productOrder->id}-{$productOrder->product->name}-PERSONALIZABLE_SIN_ICONO-" . ($i + 1) . ".pdf";
@@ -193,7 +193,7 @@ class EtiquetaService
             Log::info("🟢 Generando PDF GAMA DE COLORES");
             $views = $getViews($pdf, "COLOR RANGE", $urlPdf);
 
-            foreach ($nombres as $nombre) {
+            foreach ($nombres as $idx => $nombre) {
                 $isWhiteAndBlack = $tematicaName === 'Blanco y Negro';
                 $isWhite = $tematicaName === 'Blanco' || $tematicaName === 'Blanco y Negro' ? true : null;
                 $nombreLength = mb_strlen($nombre, 'UTF-8');
@@ -212,7 +212,7 @@ class EtiquetaService
                     'isWhite' => $isWhite ?? null
                 ];
 
-                $product_order = (object)['name' => $nombre, 'order' => (object)['id_external' => $ventaId]];
+                $product_order = (object)['name' => $nombre, 'firstName' => $firstNames[$idx] ?? null, 'order' => (object)['id_external' => $ventaId]];
 
                 foreach ($views as $i => $view) {
                     $filePath = "{$dirPath}/{$ventaId}-{$productOrder->id}-{$productOrder->product->name}-COLOR_RANGE-" . ($i + 1) . ".pdf";
@@ -259,7 +259,7 @@ class EtiquetaService
 
         $views = $getViews($pdf, $tematica, $urlPdf);
 
-        foreach ($nombres as $nombre) {
+        foreach ($nombres as $idx => $nombre) {
             $nombreLength = mb_strlen($nombre, 'UTF-8');
             $fontClass = $nombreLength > 20 ? 'extra-small-text-size' : ($nombreLength > 16 ? 'small-text-size' : 'normal-text-size');
             Log::info($colores);
@@ -272,7 +272,7 @@ class EtiquetaService
                 'filas' => 19,
             ];
 
-            $product_order = (object)['name' => $nombre, 'order' => (object)['id_external' => $ventaId]];
+            $product_order = (object)['name' => $nombre, 'firstName' => $firstNames[$idx] ?? null, 'order' => (object)['id_external' => $ventaId]];
 
             foreach ($views as $i => $view) {
                 $filePath = "{$dirPath}/{$ventaId}-{$productOrder->id}-{$productOrder->product->name}-{$tematica}-" . ($i + 1) . ".pdf";

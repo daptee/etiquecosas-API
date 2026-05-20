@@ -192,7 +192,7 @@
                         <img class="personajeCirculo" src="{{ $plantilla['imagen'] }}" alt="">
                     </div>
                     <div class="circulo-texto {{ $plantilla['fontClass'] }}" style="font-family: 'Oswald';color:{{$plantilla['colores']}};font-size:{{ $spotFontsize }};">
-                        {!! formatNameExactLines($product_order->name, 2) !!}
+                        {!! formatNameExactLines($product_order->name, 2, $product_order->firstName ?? null) !!}
                     </div>
                 </div>
             @endfor
@@ -216,7 +216,7 @@
                                     <td class="etiqueta-maxi-text"
                                         style="width:62%; height:100%; background: {{ $plantilla['colores'] }}; text-align:center; vertical-align:middle;">
                                         <p class="{{ $plantilla['fontClass'] }}" style="margin:0; line-height:1; color:#FFF;">
-                                            {!! formatName($product_order->name, 2) !!}
+                                            {!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}
                                         </p>
                                     </td>
                                 </tr>

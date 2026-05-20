@@ -57,18 +57,48 @@ if (!function_exists('formatName')) {
     /**
      * Divide un nombre en varias líneas respetando un límite de caracteres.
      * Los apellidos compuestos (ej: "de la Cruz") no se dividen entre líneas.
+     *
+     * Si se pasa $firstName, el corte entre renglones respeta la separación
+     * nombre/apellido: nunca se mezcla parte del nombre con parte del apellido
+     * en el mismo renglón. Si nombre+apellido entra en una sola línea, se deja así.
+     * Si hay que cortar, el nombre va en el primer renglón y el apellido en el segundo
+     * (o se distribuye respetando esa separación).
      */
-    function formatName($name, $maxLines = 3, $maxCharsPerLine = 10)
+    function formatName($name, $maxLines = 3, $maxCharsPerLine = 10, $firstName = null)
     {
-        $words = explode(' ', mb_strtoupper($name));
+        $nameUpper = mb_strtoupper(trim($name), 'UTF-8');
+
+        // Si se conoce el firstName, usamos lógica de corte nombre/apellido
+        if ($firstName !== null && $firstName !== '') {
+            $firstNameUpper = mb_strtoupper(trim($firstName), 'UTF-8');
+            $lastNameUpper  = mb_strtoupper(trim(mb_substr($nameUpper, mb_strlen($firstNameUpper, 'UTF-8'), null, 'UTF-8'), ' '), 'UTF-8');
+
+            // Si el nombre completo entra en una línea, devolver sin corte
+            if (mb_strlen($nameUpper, 'UTF-8') <= $maxCharsPerLine) {
+                return $nameUpper;
+            }
+
+            // Si hay apellido, cortar entre nombre y apellido
+            if ($lastNameUpper !== '') {
+                $lines = [$firstNameUpper, $lastNameUpper];
+                if (count($lines) > $maxLines) {
+                    $lines = array_slice($lines, 0, $maxLines);
+                    $lines[$maxLines - 1] .= '…';
+                }
+                return implode('<br>', $lines);
+            }
+        }
+
+        // Lógica original: corte por tokens respetando límite de caracteres
+        $words  = explode(' ', $nameUpper);
         $tokens = groupCompoundSurnameParts($words);
 
-        $lines = [];
+        $lines       = [];
         $currentLine = '';
 
         foreach ($tokens as $token) {
             // Si agrego el token supera el límite de caracteres y aún no llegué a la penúltima línea
-            if (strlen($currentLine . ' ' . $token) > $maxCharsPerLine && count($lines) < $maxLines - 1) {
+            if (mb_strlen($currentLine . ' ' . $token, 'UTF-8') > $maxCharsPerLine && count($lines) < $maxLines - 1) {
                 $lines[] = trim($currentLine);
                 $currentLine = $token;
             } else {
@@ -82,7 +112,7 @@ if (!function_exists('formatName')) {
         // Si excede el número máximo de líneas, recorto a maxLines
         if (count($lines) > $maxLines) {
             $lines = array_slice($lines, 0, $maxLines);
-            $lines[$maxLines - 1] .= '…'; // opcional: indica que se cortó
+            $lines[$maxLines - 1] .= '…';
         }
 
         return implode('<br>', $lines);
@@ -95,18 +125,36 @@ if (!function_exists('formatNameExactLines')) {
      * Si el nombre es muy corto, agrega líneas vacías.
      * Si es muy largo, lo distribuye en las líneas disponibles.
      * Los apellidos compuestos (ej: "de la Cruz") no se dividen entre líneas.
+     *
+     * Si se pasa $firstName, el corte respeta la separación nombre/apellido:
+     * el nombre va en el primer renglón y el apellido en el segundo.
      */
-    function formatNameExactLines($name, $exactLines = 2)
+    function formatNameExactLines($name, $exactLines = 2, $firstName = null)
     {
-        $name = mb_strtoupper(trim($name));
-        $words = explode(' ', $name);
-        $tokens = groupCompoundSurnameParts($words);
+        $nameUpper = mb_strtoupper(trim($name), 'UTF-8');
+
+        // Si se conoce el firstName, usamos lógica de corte nombre/apellido
+        if ($firstName !== null && $firstName !== '') {
+            $firstNameUpper = mb_strtoupper(trim($firstName), 'UTF-8');
+            $lastNameUpper  = mb_strtoupper(trim(mb_substr($nameUpper, mb_strlen($firstNameUpper, 'UTF-8'), null, 'UTF-8'), ' '), 'UTF-8');
+
+            if ($lastNameUpper !== '') {
+                $lines = [$firstNameUpper, $lastNameUpper];
+                while (count($lines) < $exactLines) {
+                    $lines[] = '&nbsp;';
+                }
+                return implode('<br>', array_slice($lines, 0, $exactLines));
+            }
+        }
+
+        // Lógica original
+        $words       = explode(' ', $nameUpper);
+        $tokens      = groupCompoundSurnameParts($words);
         $totalTokens = count($tokens);
 
         // Si solo hay un token, lo ponemos en la primera línea
         if ($totalTokens === 1) {
-            $lines = [$name];
-            // Rellenar con líneas vacías hasta completar exactLines
+            $lines = [$nameUpper];
             while (count($lines) < $exactLines) {
                 $lines[] = '&nbsp;';
             }
@@ -114,17 +162,17 @@ if (!function_exists('formatNameExactLines')) {
         }
 
         // Distribuir tokens en exactamente N líneas
-        $lines = [];
+        $lines         = [];
         $tokensPerLine = ceil($totalTokens / $exactLines);
 
         for ($i = 0; $i < $exactLines; $i++) {
-            $start = $i * $tokensPerLine;
+            $start      = $i * $tokensPerLine;
             $lineTokens = array_slice($tokens, $start, $tokensPerLine);
 
             if (!empty($lineTokens)) {
                 $lines[] = implode(' ', $lineTokens);
             } else {
-                $lines[] = '&nbsp;'; // Línea vacía
+                $lines[] = '&nbsp;';
             }
         }
 

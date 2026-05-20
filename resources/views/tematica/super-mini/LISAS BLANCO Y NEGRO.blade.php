@@ -116,22 +116,22 @@
         <div style="height: 12px; width: 100%;"></div>
         @for ($i = 0; $i < $plantilla['filas']; $i++)
             <div class="primer-color" style="background: cmyk({{ $plantilla['colores'][0] }})">
-            <p class="texto1 texto-negro" style="font-family: 'Oswald';font-size: x-small;">{{mb_strtoupper($product_order->name)}}</p>
+            <p class="texto1 texto-negro" style="font-family: 'Oswald';font-size: x-small;">{!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}</p>
     </div>
     <div class="segundo-color" style="background: cmyk({{ $plantilla['colores'][0] }})">
-        <p class="texto1 texto-negro" style="font-family: 'Oswald';font-size: x-small;">{{mb_strtoupper($product_order->name)}}</p>
+        <p class="texto1 texto-negro" style="font-family: 'Oswald';font-size: x-small;">{!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}</p>
     </div>
     <div class="tercer-color" style="background: cmyk({{ $plantilla['colores'][0] }})">
-        <p class="texto1 texto-negro" style="font-family: 'Oswald';font-size: x-small;">{{mb_strtoupper($product_order->name)}}</p>
+        <p class="texto1 texto-negro" style="font-family: 'Oswald';font-size: x-small;">{!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}</p>
     </div>
     <div class="primer-color" style="background: cmyk({{ $plantilla['colores'][0] }})">
-        <p class="texto1 texto-negro" style="font-family: 'Oswald';font-size: x-small;">{{mb_strtoupper($product_order->name)}}</p>
+        <p class="texto1 texto-negro" style="font-family: 'Oswald';font-size: x-small;">{!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}</p>
     </div>
     <div class="segundo-color" style="background: cmyk({{ $plantilla['colores'][0] }})">
-        <p class="texto1 texto-negro" style="font-family: 'Oswald';font-size: x-small;">{{mb_strtoupper($product_order->name)}}</p>
+        <p class="texto1 texto-negro" style="font-family: 'Oswald';font-size: x-small;">{!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}</p>
     </div>
     <div class="tercer-color" style="background: cmyk({{ $plantilla['colores'][0] }})">
-        <p class="texto1 texto-negro" style="font-family: 'Oswald';font-size: x-small;">{{mb_strtoupper($product_order->name)}}</p>
+        <p class="texto1 texto-negro" style="font-family: 'Oswald';font-size: x-small;">{!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}</p>
     </div>
     @endfor
     </div>

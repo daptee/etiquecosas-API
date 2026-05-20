@@ -164,13 +164,13 @@
          <div class="etiquetas-maxi-container">
             @for ($i = 0; $i < 6; $i++)
                 <div class="icon-cuadro">
-                    <p class="texto2" style="font-size: 1.05em;">{!! formatName($product_order->name, 2) !!}</p>
+                    <p class="texto2" style="font-size: 1.05em;">{!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}</p>
                 </div>
                 <div class="icon-cuadro">
-                    <p class="texto2" style="font-size: 1.05em;">{!! formatName($product_order->name, 2) !!}</p>
+                    <p class="texto2" style="font-size: 1.05em;">{!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}</p>
                 </div>
                 <div class="icon-cuadro">
-                    <p class="texto2" style="font-size: 1.05em;">{!! formatName($product_order->name, 2) !!}</p>
+                    <p class="texto2" style="font-size: 1.05em;">{!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}</p>
                 </div>
             @endfor
          </div>
@@ -178,7 +178,7 @@
         @for ($i = 0; $i < 60; $i++)
             <div class="super-mini" style="background: {{$plantilla['colores']}})">
                 <p class="texto1" style="font-family: 'Oswald';font-size: x-small;">
-                    {!! formatName($product_order->name, 2, 15) !!}</p>
+                    {!! formatName($product_order->name, 2, 15, $product_order->firstName ?? null) !!}</p>
             </div>
         @endfor
 
