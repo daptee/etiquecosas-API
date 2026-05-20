@@ -254,7 +254,7 @@ Route::middleware('jwt.auth')->prefix('products')->group(function () {
     // Exclusiones mayoristas por cliente
     Route::get('/{id}/exclusions', [ProductClientExclusionController::class, 'index']);
     Route::post('/{id}/exclusions', [ProductClientExclusionController::class, 'store']);
-    Route::delete('/{id}/exclusions/{clientId}', [ProductClientExclusionController::class, 'destroy']);
+    Route::delete('/{id}/exclusions', [ProductClientExclusionController::class, 'destroy']);
 });
 
 // Coupon 
