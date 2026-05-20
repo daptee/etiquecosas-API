@@ -126,7 +126,7 @@
                         <td class="etiqueta-maxi">
                             <div class="etiqueta-maxi-text">
                                 <p class="{{ $plantilla['fontClass'] }}" style="margin:0; color:#FFF; text-align:center; width:100%;">
-                                    {!! formatName($product_order->name, 2) !!}
+                                    {!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}
                                 </p>
                             </div>
                         </td>

@@ -589,7 +589,8 @@ class MercadoPagoController extends Controller
                                     $tematicaCoincidente,
                                     $customColor,
                                     $customIcon,
-                                    $fechaAprobacion
+                                    $fechaAprobacion,
+                                    [$form['name'] ?? '']
                                 );
 
                                 Log::info("PDF generado para {$nombreCompleto}, temática ID: {$tematicaId}");
@@ -614,7 +615,8 @@ class MercadoPagoController extends Controller
                                     $tematica,
                                     $customColor,
                                     $customIcon,
-                                    $fechaAprobacion
+                                    $fechaAprobacion,
+                                    [$form['name'] ?? '']
                                 );
 
                                 Log::info("PDF generado sin variante para {$nombreCompleto}, temática ID: {$tematicaId}");

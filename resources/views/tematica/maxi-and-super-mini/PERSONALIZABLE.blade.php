@@ -171,7 +171,7 @@
                                     <td class="etiqueta-maxi-text"
                                         style="width:62%; height:100%; background: {{ $plantilla['colores'] }}; text-align:center; vertical-align:middle;">
                                         <p class="{{ $plantilla['fontClass'] }}" style="margin:0; line-height:1; color:#FFF;">
-                                            {!! formatName($product_order->name, 2) !!}
+                                            {!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}
                                         </p>
                                     </td>
                                 </tr>
@@ -185,7 +185,7 @@
         @for ($i = 0; $i < 60; $i++)
             <div class="super-mini" style="background: {{$plantilla['colores']}})">
                 <p class="texto1" style="font-family: 'Oswald';font-size: x-small;">
-                    {!! formatName($product_order->name, 2, 15) !!}</p>
+                    {!! formatName($product_order->name, 2, 15, $product_order->firstName ?? null) !!}</p>
             </div>
         @endfor
 

@@ -47,7 +47,7 @@
         @for ($i = 1; $i < 22; $i++)
             <div class="tercerD" style="background: white">
                 <div class="cuadro">
-                    <p class="textoBlack4" style="font-family: 'Oswald';font-size: 1.45em;">{{mb_strtoupper($product_order->name)}}</p>
+                    <p class="textoBlack4" style="font-family: 'Oswald';font-size: 1.45em;">{!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}</p>
                 </div>
             </div>
         @endfor

@@ -47,7 +47,7 @@
                     <table class="etiqueta-maxi-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -57,7 +57,7 @@
                     <table class="etiqueta-maxi-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -67,7 +67,7 @@
                     <table class="etiqueta-maxi-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -77,7 +77,7 @@
                     <table class="etiqueta-maxi-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -91,7 +91,7 @@
                     <table class="etiqueta-maxi-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -101,7 +101,7 @@
                     <table class="etiqueta-maxi-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -111,7 +111,7 @@
                     <table class="etiqueta-maxi-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -121,7 +121,7 @@
                     <table class="etiqueta-maxi-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -135,7 +135,7 @@
                     <table class="etiqueta-maxi-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -145,7 +145,7 @@
                     <table class="etiqueta-maxi-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -155,7 +155,7 @@
                     <table class="etiqueta-maxi-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -165,7 +165,7 @@
                     <table class="etiqueta-maxi-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -179,7 +179,7 @@
                     <table class="etiqueta-maxi-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -189,7 +189,7 @@
                     <table class="etiqueta-maxi-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -199,7 +199,7 @@
                     <table class="etiqueta-maxi-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -209,7 +209,7 @@
                     <table class="etiqueta-maxi-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -226,7 +226,7 @@
                     <table class="etiqueta-vertical-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -236,7 +236,7 @@
                     <table class="etiqueta-vertical-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -246,7 +246,7 @@
                     <table class="etiqueta-vertical-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -256,7 +256,7 @@
                     <table class="etiqueta-vertical-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -266,7 +266,7 @@
                     <table class="etiqueta-vertical-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -276,7 +276,7 @@
                     <table class="etiqueta-vertical-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -290,7 +290,7 @@
                     <table class="etiqueta-vertical-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -300,7 +300,7 @@
                     <table class="etiqueta-vertical-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -310,7 +310,7 @@
                     <table class="etiqueta-vertical-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -320,7 +320,7 @@
                     <table class="etiqueta-vertical-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -330,7 +330,7 @@
                     <table class="etiqueta-vertical-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -340,7 +340,7 @@
                     <table class="etiqueta-vertical-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -357,7 +357,7 @@
                     <table class="etiqueta-super-maxi-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -367,7 +367,7 @@
                     <table class="etiqueta-super-maxi-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -377,7 +377,7 @@
                     <table class="etiqueta-super-maxi-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -391,7 +391,7 @@
                     <table class="etiqueta-super-maxi-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -401,7 +401,7 @@
                     <table class="etiqueta-super-maxi-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -411,7 +411,7 @@
                     <table class="etiqueta-super-maxi-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name) !!}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 3, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -428,7 +428,7 @@
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{{mb_strtoupper($product_order->name)}}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -438,7 +438,7 @@
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{{mb_strtoupper($product_order->name)}}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -448,7 +448,7 @@
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{{mb_strtoupper($product_order->name)}}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -458,7 +458,7 @@
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{{mb_strtoupper($product_order->name)}}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -468,7 +468,7 @@
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{{mb_strtoupper($product_order->name)}}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -478,7 +478,7 @@
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{{mb_strtoupper($product_order->name)}}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -492,7 +492,7 @@
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{{mb_strtoupper($product_order->name)}}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -502,7 +502,7 @@
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{{mb_strtoupper($product_order->name)}}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -512,7 +512,7 @@
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{{mb_strtoupper($product_order->name)}}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -522,7 +522,7 @@
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{{mb_strtoupper($product_order->name)}}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -532,7 +532,7 @@
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{{mb_strtoupper($product_order->name)}}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -542,7 +542,7 @@
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{{mb_strtoupper($product_order->name)}}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -556,7 +556,7 @@
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{{mb_strtoupper($product_order->name)}}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -566,7 +566,7 @@
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{{mb_strtoupper($product_order->name)}}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -576,7 +576,7 @@
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{{mb_strtoupper($product_order->name)}}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -586,7 +586,7 @@
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{{mb_strtoupper($product_order->name)}}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -596,7 +596,7 @@
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{{mb_strtoupper($product_order->name)}}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -606,7 +606,7 @@
                     <table class="etiqueta-super-mini-content-container">
                         <tr>
                             <td>
-                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{{mb_strtoupper($product_order->name)}}</p>
+                                <p class="{{ $plantilla['fontClass'] }} texto-negro">{!! formatName($product_order->name, 2, 10, $product_order->firstName ?? null) !!}</p>
                             </td>
                         </tr>
                     </table>
