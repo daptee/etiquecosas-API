@@ -1,0 +1,177 @@
+{
+  "info": {
+    "_postman_id": "43b8f756-1738-41c9-8d80-e7ce1403e661",
+    "name": "Etiquecosas doc",
+    "description": "Se deja el listado de los posibles status que retorna la API:\n\n- **200 OK**: The request has succeeded. This is the standard response for successful HTTP requests.\n    \n- **201 Created**: The request has succeeded. This is the standard response for successful created HTTP requests.\n    \n- **401 Unauthorized**: The request requires user authentication. This response is sent when the user is not authenticated.\n    \n- **403 Forbidden**: The server understood the request, but the user does not have the necessary permissions to access the requested resource. This response indicates that access is explicitly denied, even if authentication credentials are provided. For example, a user might lack the required role or permissions to perform the action requested.\n    \n- **422 Data Validation Error**: This code is used to indicate that the data provided does not match the expected type. For example, if a string is expected but an integer is received, the API will return a 422 status with a message detailing the validation error.\n    \n- **500 Internal Server Error**: The server encountered an unexpected condition that prevented it from fulfilling the request\n    \n\n**Ejemplo de respuesta API en caso correcto**\n\n\"message\": Mensaje amigable al usuario  \n\"data\": Objeto/Array que responde en caso de exito  \n\"meta_data\": Objeto que contiene informacion de metadata, como por ejemplo, la informacion de paginado para las peticiones GET ALL\n\n**Ejemplo de respuesta API en caso error**\n\n\"message\": Mensaje amigable al usuario  \n\"errors\": Objeto/Array que retorna los errores sobre la peticion",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "1349716",
+    "_collection_link": "https://go.postman.co/collection/1349716-43b8f756-1738-41c9-8d80-e7ce1403e661?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "LOGIN",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"jgonzalez@gmail.com\",\r\n    \"password\": \"password12\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}login",
+              "host": [
+                "{{baseURL}}login"
+              ]
+            },
+            "description": "Endpoint para el inicio de sesión. Devuelve un token."
+          },
+          "response": [
+            {
+              "name": "Example",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"email\": \"jgonzalez@gmail.com\",\r\n    \"password\": \"password12\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}login",
+                  "host": [
+                    "{{baseURL}}login"
+                  ]
+                }
+              },
+              "_postman_previewlanguage": null,
+              "header": null,
+              "cookie": [],
+              "body": "{\r\n    \"token\": \"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvYXBpL2xvZ2luIiwiaWF0IjoxNzQ3NDMxNDgyLCJleHAiOjE3NDc0MzUwODIsIm5iZiI6MTc0NzQzMTQ4MiwianRpIjoiT2RtaGFodlphbGR5YVM4RSIsInN1YiI6IjEiLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3IiwiaWQiOjEsIm5hbWUiOiJKdWFuIiwibGFzdE5hbWUiOiJHb256YWxleiIsImVtYWlsIjoiamdvbnphbGV6QGdtYWlsLmNvbSIsInBob3RvIjpudWxsfQ.W30rmGpMGBbTIZ57Ysu5IG2Apftz0ESXMPdrP2AbG64\"\r\n}"
+            }
+          ]
+        },
+        {
+          "name": "FORGOT PASSWORD",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"jgonzalez@gmail.com\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}forgot-password",
+              "host": [
+                "{{baseURL}}forgot-password"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Example",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"email\": \"jgonzalez@gmail.com\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}forgot-password",
+                  "host": [
+                    "{{baseURL}}forgot-password"
+                  ]
+                }
+              },
+              "_postman_previewlanguage": null,
+              "header": null,
+              "cookie": [],
+              "body": "{\r\n    \"message\": \"Se ha enviado una nueva contraseña a tu correo electrónico.\"\r\n}   "
+            }
+          ]
+        }
+      ],
+      "description": "Este directorio corresponde a las peticiones para autenticacion."
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL2FwaS5ldGlxdWVjb3Nhc2xhYi5jb20uYXIvYXBpL2xvZ2luIiwiaWF0IjoxNzc5Mjk5NzE1LCJleHAiOjE3NzkzODYxMTUsIm5iZiI6MTc3OTI5OTcxNSwianRpIjoiZmt1a1ZlY21zT2ZtcG9BbSIsInN1YiI6IjEiLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3IiwiaWQiOjEsIm5hbWUiOiJKdWFuIiwibGFzdE5hbWUiOiJHb256YWxleiIsImVtYWlsIjoiamdvbnphbGV6QGdtYWlsLmNvbSIsInBob3RvIjpudWxsLCJwcm9maWxlIjoiRGlzZcOxYWRvciIsInByb2ZpbGVfaWQiOjJ9.Yu5Tzcjx9oemxYfA0IIjKE3O3xOd_gj9CilbAMyUnZM",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ]
+}

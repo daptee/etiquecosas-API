@@ -1,0 +1,300 @@
+{
+  "info": {
+    "_postman_id": "stock-movements-1779735260721",
+    "name": "Stock Movements",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Stock Movements",
+      "item": [
+        {
+          "name": "GET ALL",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{baseURL}}stock-movements?product_id=1&date_from=2026-01-01&date_to=2026-12-31",
+              "host": [
+                "{{baseURL}}stock-movements"
+              ],
+              "query": [
+                {
+                  "key": "product_id",
+                  "value": "1",
+                  "description": "Filtrar por producto (opcional)"
+                },
+                {
+                  "key": "product_variant_id",
+                  "value": "5",
+                  "description": "Filtrar por variante (opcional)",
+                  "disabled": true
+                },
+                {
+                  "key": "sale_id",
+                  "value": "42",
+                  "description": "Filtrar por pedido (opcional)",
+                  "disabled": true
+                },
+                {
+                  "key": "date_from",
+                  "value": "2026-01-01",
+                  "description": "Fecha desde (YYYY-MM-DD, opcional)"
+                },
+                {
+                  "key": "date_to",
+                  "value": "2026-12-31",
+                  "description": "Fecha hasta (YYYY-MM-DD, opcional)"
+                },
+                {
+                  "key": "quantity",
+                  "value": "20",
+                  "description": "Cantidad de resultados por página (default 50)",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Lista el historial de movimientos de stock. Paginado, ordenado por fecha descendente.\n\nFiltros disponibles:\n- `product_id`: filtrar por producto\n- `product_variant_id`: filtrar por variante\n- `sale_id`: filtrar por pedido vinculado\n- `date_from` / `date_to`: rango de fechas (YYYY-MM-DD)\n- `quantity`: resultados por página (default 50)\n\nCada registro indica si el movimiento fue manual (tiene `user`) o automático por pedido (tiene `sale`)."
+          },
+          "response": [
+            {
+              "name": "Example",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{baseURL}}stock-movements?product_id=1",
+                  "host": [
+                    "{{baseURL}}stock-movements"
+                  ],
+                  "query": [
+                    {
+                      "key": "product_id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "body": "{\r\n    \"message\": \"Movimientos de stock obtenidos correctamente\",\r\n    \"data\": {\r\n        \"current_page\": 1,\r\n        \"data\": [\r\n            {\r\n                \"id\": 15,\r\n                \"product_id\": 1,\r\n                \"product_variant_id\": null,\r\n                \"quantity\": -2,\r\n                \"note\": \"Deducción por confirmación de pedido #87\",\r\n                \"user_id\": null,\r\n                \"sale_id\": 87,\r\n                \"created_at\": \"2026-05-25T14:32:10.000000Z\",\r\n                \"product\": {\r\n                    \"id\": 1,\r\n                    \"name\": \"Combo Primaria\",\r\n                    \"sku\": \"CP-1\"\r\n                },\r\n                \"variant\": null,\r\n                \"user\": null,\r\n                \"sale\": {\r\n                    \"id\": 87,\r\n                    \"sale_status_id\": 1\r\n                }\r\n            },\r\n            {\r\n                \"id\": 14,\r\n                \"product_id\": 1,\r\n                \"product_variant_id\": null,\r\n                \"quantity\": 5,\r\n                \"note\": \"Ingreso de mercadería del proveedor\",\r\n                \"user_id\": 1,\r\n                \"sale_id\": null,\r\n                \"created_at\": \"2026-05-20T09:15:00.000000Z\",\r\n                \"product\": {\r\n                    \"id\": 1,\r\n                    \"name\": \"Combo Primaria\",\r\n                    \"sku\": \"CP-1\"\r\n                },\r\n                \"variant\": null,\r\n                \"user\": {\r\n                    \"id\": 1,\r\n                    \"name\": \"Juan\",\r\n                    \"email\": \"jgonzalez@gmail.com\"\r\n                },\r\n                \"sale\": null\r\n            },\r\n            {\r\n                \"id\": 1,\r\n                \"product_id\": 1,\r\n                \"product_variant_id\": null,\r\n                \"quantity\": 50,\r\n                \"note\": \"Stock inicial al momento de implementación del historial\",\r\n                \"user_id\": null,\r\n                \"sale_id\": null,\r\n                \"created_at\": \"2026-05-22T10:00:00.000000Z\",\r\n                \"product\": {\r\n                    \"id\": 1,\r\n                    \"name\": \"Combo Primaria\",\r\n                    \"sku\": \"CP-1\"\r\n                },\r\n                \"variant\": null,\r\n                \"user\": null,\r\n                \"sale\": null\r\n            }\r\n        ],\r\n        \"first_page_url\": \"http://localhost:8000/api/stock-movements?page=1\",\r\n        \"from\": 1,\r\n        \"last_page\": 1,\r\n        \"last_page_url\": \"http://localhost:8000/api/stock-movements?page=1\",\r\n        \"next_page_url\": null,\r\n        \"path\": \"http://localhost:8000/api/stock-movements\",\r\n        \"per_page\": 50,\r\n        \"prev_page_url\": null,\r\n        \"to\": 3,\r\n        \"total\": 3\r\n    }\r\n}"
+            }
+          ]
+        },
+        {
+          "name": "CREATE (movimiento manual)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"product_id\": 1,\r\n    \"product_variant_id\": null,\r\n    \"channel_id\": 1,\r\n    \"quantity\": 10,\r\n    \"note\": \"Ingreso de mercadería del proveedor\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}stock-movements",
+              "host": [
+                "{{baseURL}}stock-movements"
+              ]
+            },
+            "description": "Registra un movimiento manual de stock (ingreso o salida) por un operador.\n\n**Campos:**\n- `product_id` *(requerido)*: ID del producto\n- `product_variant_id` *(opcional)*: ID de la variante. Si la variante tiene su propio `stock_channels`, el movimiento se aplica sobre ella; si no, se aplica al stock general del producto\n- `channel_id` *(opcional)*: ID del canal a actualizar. Si se omite, se actualiza el stock de todos los canales del producto/variante\n- `quantity` *(requerido)*: cantidad a mover. **Positivo** = ingreso, **negativo** = salida. No puede ser 0\n- `note` *(requerido)*: descripción del motivo del movimiento\n\n**Lógica de herencia de nivel:**\n- Si `product_variant_id` tiene `stock_channels` propio → se descuenta/ingresa en la variante\n- Si no → se descuenta/ingresa en el stock general del producto\n\nRequiere autenticación JWT (operador/admin)."
+          },
+          "response": [
+            {
+              "name": "Ingreso exitoso",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"product_id\": 1,\r\n    \"product_variant_id\": null,\r\n    \"channel_id\": 1,\r\n    \"quantity\": 10,\r\n    \"note\": \"Ingreso de mercadería del proveedor\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}stock-movements",
+                  "host": [
+                    "{{baseURL}}stock-movements"
+                  ]
+                }
+              },
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "body": "{\r\n    \"message\": \"Movimiento de stock registrado correctamente\",\r\n    \"data\": {\r\n        \"id\": 16,\r\n        \"product_id\": 1,\r\n        \"product_variant_id\": null,\r\n        \"quantity\": 10,\r\n        \"note\": \"Ingreso de mercadería del proveedor\",\r\n        \"user_id\": 1,\r\n        \"sale_id\": null,\r\n        \"created_at\": \"2026-05-25T11:00:00.000000Z\",\r\n        \"product\": {\r\n            \"id\": 1,\r\n            \"name\": \"Combo Primaria\",\r\n            \"sku\": \"CP-1\"\r\n        },\r\n        \"user\": {\r\n            \"id\": 1,\r\n            \"name\": \"Juan\",\r\n            \"email\": \"jgonzalez@gmail.com\"\r\n        }\r\n    }\r\n}"
+            },
+            {
+              "name": "Salida (quantity negativo)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"product_id\": 1,\r\n    \"product_variant_id\": null,\r\n    \"channel_id\": 2,\r\n    \"quantity\": -3,\r\n    \"note\": \"Mercadería dañada — descarte de inventario\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}stock-movements",
+                  "host": [
+                    "{{baseURL}}stock-movements"
+                  ]
+                }
+              },
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "body": "{\r\n    \"message\": \"Movimiento de stock registrado correctamente\",\r\n    \"data\": {\r\n        \"id\": 17,\r\n        \"product_id\": 1,\r\n        \"product_variant_id\": null,\r\n        \"quantity\": -3,\r\n        \"note\": \"Mercadería dañada — descarte de inventario\",\r\n        \"user_id\": 1,\r\n        \"sale_id\": null,\r\n        \"created_at\": \"2026-05-25T11:05:00.000000Z\",\r\n        \"product\": {\r\n            \"id\": 1,\r\n            \"name\": \"Combo Primaria\",\r\n            \"sku\": \"CP-1\"\r\n        },\r\n        \"user\": {\r\n            \"id\": 1,\r\n            \"name\": \"Juan\",\r\n            \"email\": \"jgonzalez@gmail.com\"\r\n        }\r\n    }\r\n}"
+            },
+            {
+              "name": "Movimiento sobre variante",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"product_id\": 10,\r\n    \"product_variant_id\": 5,\r\n    \"channel_id\": 1,\r\n    \"quantity\": 20,\r\n    \"note\": \"Reposición talle M\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}stock-movements",
+                  "host": [
+                    "{{baseURL}}stock-movements"
+                  ]
+                }
+              },
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "body": "{\r\n    \"message\": \"Movimiento de stock registrado correctamente\",\r\n    \"data\": {\r\n        \"id\": 18,\r\n        \"product_id\": 10,\r\n        \"product_variant_id\": 5,\r\n        \"quantity\": 20,\r\n        \"note\": \"Reposición talle M\",\r\n        \"user_id\": 1,\r\n        \"sale_id\": null,\r\n        \"created_at\": \"2026-05-25T11:10:00.000000Z\",\r\n        \"product\": {\r\n            \"id\": 10,\r\n            \"name\": \"Remera Personalizada\",\r\n            \"sku\": \"RP-10\"\r\n        },\r\n        \"user\": {\r\n            \"id\": 1,\r\n            \"name\": \"Juan\",\r\n            \"email\": \"jgonzalez@gmail.com\"\r\n        }\r\n    }\r\n}"
+            },
+            {
+              "name": "Error — canal no encontrado (422)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"product_id\": 1,\r\n    \"channel_id\": 99,\r\n    \"quantity\": 5,\r\n    \"note\": \"Test canal inexistente\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}stock-movements",
+                  "host": [
+                    "{{baseURL}}stock-movements"
+                  ]
+                }
+              },
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "body": "{\r\n    \"message\": \"El canal especificado no existe en el stock de este producto\"\r\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL2FwaS5ldGlxdWVjb3Nhc2xhYi5jb20uYXIvYXBpL2xvZ2luIiwiaWF0IjoxNzc5Mjk5NzE1LCJleHAiOjE3NzkzODYxMTUsIm5iZiI6MTc3OTI5OTcxNSwianRpIjoiZmt1a1ZlY21zT2ZtcG9BbSIsInN1YiI6IjEiLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3IiwiaWQiOjEsIm5hbWUiOiJKdWFuIiwibGFzdE5hbWUiOiJHb256YWxleiIsImVtYWlsIjoiamdvbnphbGV6QGdtYWlsLmNvbSIsInBob3RvIjpudWxsLCJwcm9maWxlIjoiRGlzZcOxYWRvciIsInByb2ZpbGVfaWQiOjJ9.Yu5Tzcjx9oemxYfA0IIjKE3O3xOd_gj9CilbAMyUnZM",
+        "type": "string"
+      }
+    ]
+  }
+}

@@ -40,6 +40,7 @@ use App\Http\Controllers\FacebookFeedController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CadeteController;
 use App\Http\Controllers\ProductClientExclusionController;
+use App\Http\Controllers\StockMovementController;
 
 // cache
 Route::get('/clear-cache', [CacheController::class, 'clearCache'])->name('clearCache');
@@ -395,4 +396,10 @@ Route::middleware('auth:client')->prefix('web')->group(function () {
     Route::get('wholesales', [ClientWholesaleController::class, 'index']);
     Route::post('wholesales', [ClientWholesaleController::class, 'store']);
     Route::put('wholesales/{id}', [ClientWholesaleController::class, 'update']);
+});
+
+// Stock Movements
+Route::middleware('jwt.auth')->prefix('stock-movements')->group(function () {
+    Route::get('/',  [StockMovementController::class, 'index']);
+    Route::post('/', [StockMovementController::class, 'store']);
 });
