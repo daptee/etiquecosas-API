@@ -1,0 +1,694 @@
+{
+	"info": {
+		"_postman_id": "attributes-col-etiquecosas-2026",
+		"name": "Attributes",
+		"description": "Gestión de atributos de productos (ej: Color, Talle). Cada atributo tiene valores. statusId: 1=Activo, 2=Inactivo.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "baseURL",
+			"value": "https://api.etiquecosaslab.com.ar/api/",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Get Attributes",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}attributes",
+					"host": [
+						"{{baseURL}}attributes"
+					],
+					"query": [
+						{
+							"key": "quantity",
+							"value": "10",
+							"description": "Cantidad de resultados por página",
+							"disabled": true
+						},
+						{
+							"key": "page",
+							"value": "1",
+							"description": "Número de página",
+							"disabled": true
+						},
+						{
+							"key": "search",
+							"value": "Color",
+							"description": "Busca en name del atributo",
+							"disabled": true
+						},
+						{
+							"key": "statusId",
+							"value": "1",
+							"description": "1=Activo, 2=Inactivo",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "200 OK",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}attributes",
+							"host": [
+								"{{baseURL}}attributes"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Atributos obtenidos\",\n  \"data\": [\n    {\n      \"id\": 1,\n      \"name\": \"Color\",\n      \"status_id\": 1,\n      \"status\": { \"id\": 1, \"name\": \"Activo\" },\n      \"values\": [\n        { \"id\": 1, \"value\": \"Rojo\", \"status_id\": 1 },\n        { \"id\": 2, \"value\": \"Azul\", \"status_id\": 1 },\n        { \"id\": 3, \"value\": \"Verde\", \"status_id\": 2 }\n      ]\n    },\n    {\n      \"id\": 2,\n      \"name\": \"Talle\",\n      \"status_id\": 1,\n      \"status\": { \"id\": 1, \"name\": \"Activo\" },\n      \"values\": [\n        { \"id\": 4, \"value\": \"S\", \"status_id\": 1 },\n        { \"id\": 5, \"value\": \"M\", \"status_id\": 1 },\n        { \"id\": 6, \"value\": \"L\", \"status_id\": 1 },\n        { \"id\": 7, \"value\": \"XL\", \"status_id\": 1 }\n      ]\n    },\n    {\n      \"id\": 3,\n      \"name\": \"Material\",\n      \"status_id\": 2,\n      \"status\": { \"id\": 2, \"name\": \"Inactivo\" },\n      \"values\": [\n        { \"id\": 8, \"value\": \"Vinilo\", \"status_id\": 1 },\n        { \"id\": 9, \"value\": \"Papel\", \"status_id\": 1 }\n      ]\n    }\n  ],\n  \"metaData\": {\n    \"current_page\": 1,\n    \"last_page\": 1,\n    \"per_page\": 10,\n    \"total\": 3,\n    \"from\": 1,\n    \"to\": 3\n  }\n}"
+				},
+				{
+					"name": "401 Unauthenticated",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}attributes",
+							"host": [
+								"{{baseURL}}attributes"
+							]
+						}
+					},
+					"status": "Unauthorized",
+					"code": 401,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+				}
+			]
+		},
+		{
+			"name": "Create Attribute",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"name\": \"Acabado\",\n  \"statusId\": 1,\n  \"values\": [\n    { \"value\": \"Mate\", \"statusId\": 1 },\n    { \"value\": \"Brillante\", \"statusId\": 1 },\n    { \"value\": \"Satinado\", \"statusId\": 1 }\n  ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseURL}}attributes",
+					"host": [
+						"{{baseURL}}attributes"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "200 Con Valores",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Acabado\",\n  \"statusId\": 1,\n  \"values\": [\n    { \"value\": \"Mate\", \"statusId\": 1 },\n    { \"value\": \"Brillante\", \"statusId\": 1 },\n    { \"value\": \"Satinado\", \"statusId\": 1 }\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}attributes",
+							"host": [
+								"{{baseURL}}attributes"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Atributo creado\",\n  \"data\": {\n    \"id\": 4,\n    \"name\": \"Acabado\",\n    \"status_id\": 1,\n    \"status\": { \"id\": 1, \"name\": \"Activo\" },\n    \"values\": [\n      { \"id\": 10, \"value\": \"Mate\", \"status_id\": 1 },\n      { \"id\": 11, \"value\": \"Brillante\", \"status_id\": 1 },\n      { \"id\": 12, \"value\": \"Satinado\", \"status_id\": 1 }\n    ]\n  }\n}"
+				},
+				{
+					"name": "200 Sin Valores",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Formato\",\n  \"statusId\": 1,\n  \"values\": []\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}attributes",
+							"host": [
+								"{{baseURL}}attributes"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Atributo creado\",\n  \"data\": {\n    \"id\": 5,\n    \"name\": \"Formato\",\n    \"status_id\": 1,\n    \"status\": { \"id\": 1, \"name\": \"Activo\" },\n    \"values\": []\n  }\n}"
+				},
+				{
+					"name": "422 Nombre Duplicado",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Color\",\n  \"statusId\": 1,\n  \"values\": []\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}attributes",
+							"host": [
+								"{{baseURL}}attributes"
+							]
+						}
+					},
+					"status": "Unprocessable Entity",
+					"code": 422,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"name\": [\"El nombre del atributo ya existe\"]\n  }\n}"
+				},
+				{
+					"name": "422 Nombre Requerido",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"statusId\": 1,\n  \"values\": []\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}attributes",
+							"host": [
+								"{{baseURL}}attributes"
+							]
+						}
+					},
+					"status": "Unprocessable Entity",
+					"code": 422,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"name\": [\"El campo nombre es obligatorio\"]\n  }\n}"
+				},
+				{
+					"name": "422 StatusId Inválido",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Acabado\",\n  \"statusId\": 99,\n  \"values\": []\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}attributes",
+							"host": [
+								"{{baseURL}}attributes"
+							]
+						}
+					},
+					"status": "Unprocessable Entity",
+					"code": 422,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"statusId\": [\"El campo estado debe ser 1 o 2\"]\n  }\n}"
+				},
+				{
+					"name": "422 Valor Requerido",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Acabado\",\n  \"statusId\": 1,\n  \"values\": [\n    { \"value\": \"\", \"statusId\": 1 }\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}attributes",
+							"host": [
+								"{{baseURL}}attributes"
+							]
+						}
+					},
+					"status": "Unprocessable Entity",
+					"code": 422,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"values.0.value\": [\"El campo valor es obligatorio\"]\n  }\n}"
+				},
+				{
+					"name": "401 Unauthenticated",
+					"originalRequest": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}attributes",
+							"host": [
+								"{{baseURL}}attributes"
+							]
+						}
+					},
+					"status": "Unauthorized",
+					"code": 401,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+				}
+			]
+		},
+		{
+			"name": "Update Attribute",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"description": "Para los valores: si incluye id existente = actualiza, sin id = crea nuevo, omitido = elimina.",
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"name\": \"Color\",\n  \"statusId\": 1,\n  \"values\": [\n    { \"id\": 1, \"value\": \"Rojo\", \"statusId\": 1 },\n    { \"id\": 2, \"value\": \"Azul Marino\", \"statusId\": 1 },\n    { \"value\": \"Amarillo\", \"statusId\": 1 }\n  ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseURL}}attributes/1",
+					"host": [
+						"{{baseURL}}attributes"
+					],
+					"path": [
+						"1"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "200 OK",
+					"originalRequest": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Color\",\n  \"statusId\": 1,\n  \"values\": [\n    { \"id\": 1, \"value\": \"Rojo\", \"statusId\": 1 },\n    { \"id\": 2, \"value\": \"Azul Marino\", \"statusId\": 1 },\n    { \"value\": \"Amarillo\", \"statusId\": 1 }\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}attributes/1",
+							"host": [
+								"{{baseURL}}attributes"
+							],
+							"path": [
+								"1"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Atributo actualizado\",\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"Color\",\n    \"status_id\": 1,\n    \"values\": [\n      { \"id\": 1, \"value\": \"Rojo\", \"status_id\": 1 },\n      { \"id\": 2, \"value\": \"Azul Marino\", \"status_id\": 1 },\n      { \"id\": 13, \"value\": \"Amarillo\", \"status_id\": 1 }\n    ]\n  }\n}"
+				},
+				{
+					"name": "404 Not Found",
+					"originalRequest": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}attributes/1",
+							"host": [
+								"{{baseURL}}attributes"
+							],
+							"path": [
+								"1"
+							]
+						}
+					},
+					"status": "Not Found",
+					"code": 404,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Atributo no encontrado\"\n}"
+				},
+				{
+					"name": "422 Nombre Duplicado",
+					"originalRequest": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Talle\",\n  \"statusId\": 1,\n  \"values\": []\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}attributes/1",
+							"host": [
+								"{{baseURL}}attributes"
+							],
+							"path": [
+								"1"
+							]
+						}
+					},
+					"status": "Unprocessable Entity",
+					"code": 422,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"name\": [\"El nombre del atributo ya existe\"]\n  }\n}"
+				},
+				{
+					"name": "422 StatusId Inválido",
+					"originalRequest": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Color\",\n  \"statusId\": 99,\n  \"values\": []\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}attributes/1",
+							"host": [
+								"{{baseURL}}attributes"
+							],
+							"path": [
+								"1"
+							]
+						}
+					},
+					"status": "Unprocessable Entity",
+					"code": 422,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"statusId\": [\"El campo estado debe ser 1 o 2\"]\n  }\n}"
+				},
+				{
+					"name": "401 Unauthenticated",
+					"originalRequest": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}attributes/1",
+							"host": [
+								"{{baseURL}}attributes"
+							],
+							"path": [
+								"1"
+							]
+						}
+					},
+					"status": "Unauthorized",
+					"code": 401,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+				}
+			]
+		},
+		{
+			"name": "Delete Attribute",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}attributes/1",
+					"host": [
+						"{{baseURL}}attributes"
+					],
+					"path": [
+						"1"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "200 Deleted",
+					"originalRequest": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}attributes/1",
+							"host": [
+								"{{baseURL}}attributes"
+							],
+							"path": [
+								"1"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Atributo eliminado\"\n}"
+				},
+				{
+					"name": "404 Not Found",
+					"originalRequest": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}attributes/1",
+							"host": [
+								"{{baseURL}}attributes"
+							],
+							"path": [
+								"1"
+							]
+						}
+					},
+					"status": "Not Found",
+					"code": 404,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Atributo no encontrado\"\n}"
+				},
+				{
+					"name": "401 Unauthenticated",
+					"originalRequest": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}attributes/1",
+							"host": [
+								"{{baseURL}}attributes"
+							],
+							"path": [
+								"1"
+							]
+						}
+					},
+					"status": "Unauthorized",
+					"code": 401,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,1887 @@
+{
+	"info": {
+		"_postman_id": "config-col-etiquecosas-2026",
+		"name": "Config",
+		"description": "Configuración general del sistema: Tags, Colores de personalización, Íconos, Perfiles de usuario, y catálogos de estados y tipos de productos.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "baseURL",
+			"value": "https://api.etiquecosaslab.com.ar/api/",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Tags",
+			"item": [
+				{
+					"name": "Get Tags",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}tags",
+							"host": [
+								"{{baseURL}}tags"
+							],
+							"query": [
+								{
+									"key": "quantity",
+									"value": "10",
+									"disabled": true
+								},
+								{
+									"key": "page",
+									"value": "1",
+									"disabled": true
+								},
+								{
+									"key": "search",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "statusId",
+									"value": "",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}tags",
+									"host": [
+										"{{baseURL}}tags"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Etiquetas obtenidas\",\n  \"data\": [\n    {\n      \"id\": 1,\n      \"name\": \"Vuelta al Cole\",\n      \"color\": \"#EBA4AB\",\n      \"status\": {\n        \"id\": 1,\n        \"name\": \"Activo\"\n      },\n      \"created_at\": \"2025-12-01T10:00:00.000000Z\"\n    },\n    {\n      \"id\": 2,\n      \"name\": \"Outlet\",\n      \"color\": \"#347AA7\",\n      \"status\": {\n        \"id\": 1,\n        \"name\": \"Activo\"\n      },\n      \"created_at\": \"2025-12-05T10:00:00.000000Z\"\n    },\n    {\n      \"id\": 3,\n      \"name\": \"Nuevo\",\n      \"color\": \"#4CAF50\",\n      \"status\": {\n        \"id\": 2,\n        \"name\": \"Inactivo\"\n      },\n      \"created_at\": \"2026-01-10T10:00:00.000000Z\"\n    }\n  ],\n  \"metaData\": {\n    \"current_page\": 1,\n    \"last_page\": 1,\n    \"per_page\": 10,\n    \"total\": 3,\n    \"from\": 1,\n    \"to\": 3\n  }\n}"
+						},
+						{
+							"name": "401 Unauthenticated",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}tags",
+									"host": [
+										"{{baseURL}}tags"
+									]
+								}
+							},
+							"status": "Unauthorized",
+							"code": 401,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Create Tag",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Promo Invierno\",\n  \"color\": \"#9C27B0\",\n  \"statusId\": 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}tags",
+							"host": [
+								"{{baseURL}}tags"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 Created",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Promo Invierno\",\n  \"color\": \"#9C27B0\",\n  \"statusId\": 1\n}"
+								},
+								"url": {
+									"raw": "{{baseURL}}tags",
+									"host": [
+										"{{baseURL}}tags"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Etiqueta creada\",\n  \"data\": {\n    \"id\": 4,\n    \"name\": \"Promo Invierno\",\n    \"color\": \"#9C27B0\",\n    \"status\": {\"id\": 1, \"name\": \"Activo\"},\n    \"created_at\": \"2026-05-25T09:00:00.000000Z\"\n  }\n}"
+						},
+						{
+							"name": "422 Duplicate Name",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Promo Invierno\",\n  \"color\": \"#9C27B0\",\n  \"statusId\": 1\n}"
+								},
+								"url": {
+									"raw": "{{baseURL}}tags",
+									"host": [
+										"{{baseURL}}tags"
+									]
+								}
+							},
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"name\": [\"Ya existe una etiqueta con ese nombre\"]\n  }\n}"
+						},
+						{
+							"name": "422 Required Fields Missing",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{}"
+								},
+								"url": {
+									"raw": "{{baseURL}}tags",
+									"host": [
+										"{{baseURL}}tags"
+									]
+								}
+							},
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"name\": [\"El campo nombre es obligatorio\"]\n  }\n}"
+						},
+						{
+							"name": "401 Unauthenticated",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}tags",
+									"host": [
+										"{{baseURL}}tags"
+									]
+								}
+							},
+							"status": "Unauthorized",
+							"code": 401,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Update Tag",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Vuelta al Cole 2026\",\n  \"color\": \"#EBA4AB\",\n  \"statusId\": 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}tags/1",
+							"host": [
+								"{{baseURL}}tags/1"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 Updated",
+							"originalRequest": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Vuelta al Cole 2026\",\n  \"color\": \"#EBA4AB\",\n  \"statusId\": 1\n}"
+								},
+								"url": {
+									"raw": "{{baseURL}}tags/1",
+									"host": [
+										"{{baseURL}}tags/1"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Etiqueta actualizada\",\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"Vuelta al Cole 2026\",\n    \"color\": \"#EBA4AB\",\n    \"status\": {\"id\": 1, \"name\": \"Activo\"},\n    \"created_at\": \"2025-12-01T10:00:00.000000Z\"\n  }\n}"
+						},
+						{
+							"name": "404 Not Found",
+							"originalRequest": {
+								"method": "PUT",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}tags/1",
+									"host": [
+										"{{baseURL}}tags/1"
+									]
+								}
+							},
+							"status": "Not Found",
+							"code": 404,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Etiqueta no encontrada\"\n}"
+						},
+						{
+							"name": "422 Validation Error",
+							"originalRequest": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{}"
+								},
+								"url": {
+									"raw": "{{baseURL}}tags/1",
+									"host": [
+										"{{baseURL}}tags/1"
+									]
+								}
+							},
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"name\": [\"El campo nombre es obligatorio\"]\n  }\n}"
+						},
+						{
+							"name": "401 Unauthenticated",
+							"originalRequest": {
+								"method": "PUT",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}tags/1",
+									"host": [
+										"{{baseURL}}tags/1"
+									]
+								}
+							},
+							"status": "Unauthorized",
+							"code": 401,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Delete Tag",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}tags/1",
+							"host": [
+								"{{baseURL}}tags/1"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 Deleted",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}tags/1",
+									"host": [
+										"{{baseURL}}tags/1"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Etiqueta eliminada\"\n}"
+						},
+						{
+							"name": "404 Not Found",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}tags/1",
+									"host": [
+										"{{baseURL}}tags/1"
+									]
+								}
+							},
+							"status": "Not Found",
+							"code": 404,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Etiqueta no encontrada\"\n}"
+						},
+						{
+							"name": "401 Unauthenticated",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}tags/1",
+									"host": [
+										"{{baseURL}}tags/1"
+									]
+								}
+							},
+							"status": "Unauthorized",
+							"code": 401,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Colores",
+			"item": [
+				{
+					"name": "Get Colors",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}colors",
+							"host": [
+								"{{baseURL}}colors"
+							],
+							"query": [
+								{
+									"key": "quantity",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "page",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "search",
+									"value": "",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}colors",
+									"host": [
+										"{{baseURL}}colors"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Colores obtenidos\",\n  \"data\": [\n    {\n      \"id\": 1,\n      \"name\": \"Rojo\",\n      \"color_code\": [\n        \"#FF0000\",\n        \"#CC0000\"\n      ],\n      \"created_at\": \"2025-01-10T10:00:00.000000Z\"\n    },\n    {\n      \"id\": 2,\n      \"name\": \"Azul\",\n      \"color_code\": [\n        \"#347AA7\",\n        \"#1A5276\"\n      ],\n      \"created_at\": \"2025-01-11T10:00:00.000000Z\"\n    },\n    {\n      \"id\": 3,\n      \"name\": \"Rosa\",\n      \"color_code\": [\n        \"#EBA4AB\",\n        \"#D98A91\"\n      ],\n      \"created_at\": \"2025-01-12T10:00:00.000000Z\"\n    }\n  ],\n  \"metaData\": {\n    \"current_page\": 1,\n    \"last_page\": 1,\n    \"per_page\": 10,\n    \"total\": 3,\n    \"from\": 1,\n    \"to\": 3\n  }\n}"
+						},
+						{
+							"name": "401 Unauthenticated",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}colors",
+									"host": [
+										"{{baseURL}}colors"
+									]
+								}
+							},
+							"status": "Unauthorized",
+							"code": 401,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Create Color",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Verde\",\n  \"colorCode\": [\"#2ECC71\", \"#1A9E50\"]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}colors",
+							"host": [
+								"{{baseURL}}colors"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 Created",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Verde\",\n  \"colorCode\": [\"#2ECC71\", \"#1A9E50\"]\n}"
+								},
+								"url": {
+									"raw": "{{baseURL}}colors",
+									"host": [
+										"{{baseURL}}colors"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Color creado\",\n  \"data\": {\n    \"id\": 4,\n    \"name\": \"Verde\",\n    \"color_code\": [\"#2ECC71\", \"#1A9E50\"],\n    \"created_at\": \"2026-05-25T09:00:00.000000Z\"\n  }\n}"
+						},
+						{
+							"name": "422 Duplicate Name",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Verde\",\n  \"colorCode\": [\"#2ECC71\", \"#1A9E50\"]\n}"
+								},
+								"url": {
+									"raw": "{{baseURL}}colors",
+									"host": [
+										"{{baseURL}}colors"
+									]
+								}
+							},
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"name\": [\"Ya existe un color con ese nombre\"]\n  }\n}"
+						},
+						{
+							"name": "422 Required Fields Missing",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{}"
+								},
+								"url": {
+									"raw": "{{baseURL}}colors",
+									"host": [
+										"{{baseURL}}colors"
+									]
+								}
+							},
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"name\": [\"El campo nombre es obligatorio\"],\n    \"colorCode\": [\"El campo colorCode es obligatorio\"]\n  }\n}"
+						},
+						{
+							"name": "401 Unauthenticated",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}colors",
+									"host": [
+										"{{baseURL}}colors"
+									]
+								}
+							},
+							"status": "Unauthorized",
+							"code": 401,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Update Color",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Rojo\",\n  \"colorCode\": [\"#FF0000\", \"#CC0000\", \"#990000\"]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}colors/1",
+							"host": [
+								"{{baseURL}}colors/1"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 Updated",
+							"originalRequest": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Rojo\",\n  \"colorCode\": [\"#FF0000\", \"#CC0000\", \"#990000\"]\n}"
+								},
+								"url": {
+									"raw": "{{baseURL}}colors/1",
+									"host": [
+										"{{baseURL}}colors/1"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Color actualizado\",\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"Rojo\",\n    \"color_code\": [\"#FF0000\", \"#CC0000\", \"#990000\"]\n  }\n}"
+						},
+						{
+							"name": "404 Not Found",
+							"originalRequest": {
+								"method": "PUT",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}colors/1",
+									"host": [
+										"{{baseURL}}colors/1"
+									]
+								}
+							},
+							"status": "Not Found",
+							"code": 404,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Color no encontrado\"\n}"
+						},
+						{
+							"name": "401 Unauthenticated",
+							"originalRequest": {
+								"method": "PUT",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}colors/1",
+									"host": [
+										"{{baseURL}}colors/1"
+									]
+								}
+							},
+							"status": "Unauthorized",
+							"code": 401,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Delete Color",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}colors/1",
+							"host": [
+								"{{baseURL}}colors/1"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 Deleted",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}colors/1",
+									"host": [
+										"{{baseURL}}colors/1"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Color eliminado\"\n}"
+						},
+						{
+							"name": "404 Not Found",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}colors/1",
+									"host": [
+										"{{baseURL}}colors/1"
+									]
+								}
+							},
+							"status": "Not Found",
+							"code": 404,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Color no encontrado\"\n}"
+						},
+						{
+							"name": "401 Unauthenticated",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}colors/1",
+									"host": [
+										"{{baseURL}}colors/1"
+									]
+								}
+							},
+							"status": "Unauthorized",
+							"code": 401,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Íconos",
+			"item": [
+				{
+					"name": "Get Icons",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}icons",
+							"host": [
+								"{{baseURL}}icons"
+							],
+							"query": [
+								{
+									"key": "quantity",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "page",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "search",
+									"value": "",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}icons",
+									"host": [
+										"{{baseURL}}icons"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Iconos obtenidos\",\n  \"data\": [\n    {\n      \"id\": 1,\n      \"name\": \"Estrella\",\n      \"icon\": \"https://api.etiquecosaslab.com.ar/storage/icons/estrella.svg\",\n      \"status\": {\n        \"id\": 1,\n        \"name\": \"Activo\"\n      }\n    },\n    {\n      \"id\": 2,\n      \"name\": \"Corazón\",\n      \"icon\": \"https://api.etiquecosaslab.com.ar/storage/icons/corazon.svg\",\n      \"status\": {\n        \"id\": 1,\n        \"name\": \"Activo\"\n      }\n    },\n    {\n      \"id\": 3,\n      \"name\": \"Dinosaurio\",\n      \"icon\": \"https://api.etiquecosaslab.com.ar/storage/icons/dinosaurio.svg\",\n      \"status\": {\n        \"id\": 2,\n        \"name\": \"Inactivo\"\n      }\n    }\n  ],\n  \"metaData\": {\n    \"current_page\": 1,\n    \"last_page\": 1,\n    \"per_page\": 10,\n    \"total\": 3,\n    \"from\": 1,\n    \"to\": 3\n  }\n}"
+						},
+						{
+							"name": "401 Unauthenticated",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}icons",
+									"host": [
+										"{{baseURL}}icons"
+									]
+								}
+							},
+							"status": "Unauthorized",
+							"code": 401,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Create Icon",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "name",
+									"value": "Luna",
+									"type": "text"
+								},
+								{
+									"key": "icon",
+									"type": "file",
+									"src": []
+								},
+								{
+									"key": "statusId",
+									"value": "1",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseURL}}icons",
+							"host": [
+								"{{baseURL}}icons"
+							]
+						},
+						"description": "Enviar como multipart/form-data. El campo icon debe ser un archivo SVG (máx 2MB)."
+					},
+					"response": [
+						{
+							"name": "200 Created",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "name",
+											"value": "Luna",
+											"type": "text"
+										},
+										{
+											"key": "icon",
+											"type": "file",
+											"src": []
+										},
+										{
+											"key": "statusId",
+											"value": "1",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{baseURL}}icons",
+									"host": [
+										"{{baseURL}}icons"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Ícono creado\",\n  \"data\": {\n    \"id\": 4,\n    \"name\": \"Luna\",\n    \"icon\": \"https://api.etiquecosaslab.com.ar/storage/icons/luna.svg\",\n    \"status_id\": 1\n  }\n}"
+						},
+						{
+							"name": "422 Wrong Format",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "name",
+											"value": "Luna",
+											"type": "text"
+										},
+										{
+											"key": "icon",
+											"type": "file",
+											"src": []
+										},
+										{
+											"key": "statusId",
+											"value": "1",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{baseURL}}icons",
+									"host": [
+										"{{baseURL}}icons"
+									]
+								}
+							},
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"icon\": [\"El archivo debe ser un SVG\"]\n  }\n}"
+						},
+						{
+							"name": "422 Required Fields Missing",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": []
+								},
+								"url": {
+									"raw": "{{baseURL}}icons",
+									"host": [
+										"{{baseURL}}icons"
+									]
+								}
+							},
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"name\": [\"El campo nombre es obligatorio\"],\n    \"icon\": [\"El campo icon es obligatorio\"]\n  }\n}"
+						},
+						{
+							"name": "401 Unauthenticated",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}icons",
+									"host": [
+										"{{baseURL}}icons"
+									]
+								}
+							},
+							"status": "Unauthorized",
+							"code": 401,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Update Icon",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "name",
+									"value": "Estrella Dorada",
+									"type": "text"
+								},
+								{
+									"key": "statusId",
+									"value": "1",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseURL}}icons/1",
+							"host": [
+								"{{baseURL}}icons/1"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 Updated",
+							"originalRequest": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "name",
+											"value": "Estrella Dorada",
+											"type": "text"
+										},
+										{
+											"key": "statusId",
+											"value": "1",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{baseURL}}icons/1",
+									"host": [
+										"{{baseURL}}icons/1"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Ícono actualizado\",\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"Estrella Dorada\",\n    \"icon\": \"https://api.etiquecosaslab.com.ar/storage/icons/estrella.svg\",\n    \"status_id\": 1\n  }\n}"
+						},
+						{
+							"name": "404 Not Found",
+							"originalRequest": {
+								"method": "PUT",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}icons/1",
+									"host": [
+										"{{baseURL}}icons/1"
+									]
+								}
+							},
+							"status": "Not Found",
+							"code": 404,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Ícono no encontrado\"\n}"
+						},
+						{
+							"name": "401 Unauthenticated",
+							"originalRequest": {
+								"method": "PUT",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}icons/1",
+									"host": [
+										"{{baseURL}}icons/1"
+									]
+								}
+							},
+							"status": "Unauthorized",
+							"code": 401,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Delete Icon",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}icons/1",
+							"host": [
+								"{{baseURL}}icons/1"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 Deleted",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}icons/1",
+									"host": [
+										"{{baseURL}}icons/1"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Ícono eliminado\"\n}"
+						},
+						{
+							"name": "404 Not Found",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}icons/1",
+									"host": [
+										"{{baseURL}}icons/1"
+									]
+								}
+							},
+							"status": "Not Found",
+							"code": 404,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Ícono no encontrado\"\n}"
+						},
+						{
+							"name": "401 Unauthenticated",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}icons/1",
+									"host": [
+										"{{baseURL}}icons/1"
+									]
+								}
+							},
+							"status": "Unauthorized",
+							"code": 401,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Perfiles",
+			"item": [
+				{
+					"name": "Get Profiles",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}profiles",
+							"host": [
+								"{{baseURL}}profiles"
+							],
+							"query": [
+								{
+									"key": "quantity",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "page",
+									"value": "",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}profiles",
+									"host": [
+										"{{baseURL}}profiles"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Perfiles obtenidos\",\n  \"data\": [\n    {\n      \"id\": 1,\n      \"name\": \"Administrador\",\n      \"created_at\": \"2024-01-01T00:00:00.000000Z\"\n    },\n    {\n      \"id\": 2,\n      \"name\": \"Diseñador\",\n      \"created_at\": \"2024-01-01T00:00:00.000000Z\"\n    },\n    {\n      \"id\": 3,\n      \"name\": \"Operador\",\n      \"created_at\": \"2024-01-01T00:00:00.000000Z\"\n    }\n  ],\n  \"metaData\": {\n    \"current_page\": 1,\n    \"last_page\": 1,\n    \"per_page\": 10,\n    \"total\": 3,\n    \"from\": 1,\n    \"to\": 3\n  }\n}"
+						},
+						{
+							"name": "401 Unauthenticated",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}profiles",
+									"host": [
+										"{{baseURL}}profiles"
+									]
+								}
+							},
+							"status": "Unauthorized",
+							"code": 401,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Create Profile",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Cadete\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}profiles",
+							"host": [
+								"{{baseURL}}profiles"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 Created",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Cadete\"\n}"
+								},
+								"url": {
+									"raw": "{{baseURL}}profiles",
+									"host": [
+										"{{baseURL}}profiles"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Perfil creado\",\n  \"data\": {\n    \"id\": 4,\n    \"name\": \"Cadete\",\n    \"created_at\": \"2026-05-25T10:00:00.000000Z\"\n  }\n}"
+						},
+						{
+							"name": "422 Duplicate Name",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Cadete\"\n}"
+								},
+								"url": {
+									"raw": "{{baseURL}}profiles",
+									"host": [
+										"{{baseURL}}profiles"
+									]
+								}
+							},
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"name\": [\"El nombre ya está en uso\"]\n  }\n}"
+						},
+						{
+							"name": "422 Required Fields Missing",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{}"
+								},
+								"url": {
+									"raw": "{{baseURL}}profiles",
+									"host": [
+										"{{baseURL}}profiles"
+									]
+								}
+							},
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"name\": [\"El campo nombre es obligatorio\"]\n  }\n}"
+						},
+						{
+							"name": "401 Unauthenticated",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}profiles",
+									"host": [
+										"{{baseURL}}profiles"
+									]
+								}
+							},
+							"status": "Unauthorized",
+							"code": 401,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Update Profile",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Super Administrador\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}profiles/1",
+							"host": [
+								"{{baseURL}}profiles/1"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 Updated",
+							"originalRequest": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Super Administrador\"\n}"
+								},
+								"url": {
+									"raw": "{{baseURL}}profiles/1",
+									"host": [
+										"{{baseURL}}profiles/1"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Perfil actualizado\",\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"Super Administrador\",\n    \"created_at\": \"2024-01-01T00:00:00.000000Z\"\n  }\n}"
+						},
+						{
+							"name": "404 Not Found",
+							"originalRequest": {
+								"method": "PUT",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}profiles/1",
+									"host": [
+										"{{baseURL}}profiles/1"
+									]
+								}
+							},
+							"status": "Not Found",
+							"code": 404,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Perfil no encontrado\"\n}"
+						},
+						{
+							"name": "401 Unauthenticated",
+							"originalRequest": {
+								"method": "PUT",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}profiles/1",
+									"host": [
+										"{{baseURL}}profiles/1"
+									]
+								}
+							},
+							"status": "Unauthorized",
+							"code": 401,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Catálogos",
+			"item": [
+				{
+					"name": "Get Product Statuses",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}product-statuses",
+							"host": [
+								"{{baseURL}}product-statuses"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}product-statuses",
+									"host": [
+										"{{baseURL}}product-statuses"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"data\": [\n    {\"id\": 1, \"name\": \"Publicado\"},\n    {\"id\": 2, \"name\": \"Borrador\"}\n  ]\n}"
+						},
+						{
+							"name": "401 Unauthenticated",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}product-statuses",
+									"host": [
+										"{{baseURL}}product-statuses"
+									]
+								}
+							},
+							"status": "Unauthorized",
+							"code": 401,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Product Types",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}product-types",
+							"host": [
+								"{{baseURL}}product-types"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}product-types",
+									"host": [
+										"{{baseURL}}product-types"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"data\": [\n    {\"id\": 1, \"name\": \"Producto\"},\n    {\"id\": 2, \"name\": \"Servicio\"}\n  ]\n}"
+						},
+						{
+							"name": "401 Unauthenticated",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}product-types",
+									"host": [
+										"{{baseURL}}product-types"
+									]
+								}
+							},
+							"status": "Unauthorized",
+							"code": 401,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Product Stock Statuses",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}product-stock-statuses",
+							"host": [
+								"{{baseURL}}product-stock-statuses"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}product-stock-statuses",
+									"host": [
+										"{{baseURL}}product-stock-statuses"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"data\": [\n    {\"id\": 1, \"name\": \"Existente\"},\n    {\"id\": 2, \"name\": \"Gestión de Stock\"},\n    {\"id\": 3, \"name\": \"Sin Stock\"}\n  ]\n}"
+						},
+						{
+							"name": "401 Unauthenticated",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}product-stock-statuses",
+									"host": [
+										"{{baseURL}}product-stock-statuses"
+									]
+								}
+							},
+							"status": "Unauthorized",
+							"code": 401,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
+				}
+			]
+		}
+	]
+}
