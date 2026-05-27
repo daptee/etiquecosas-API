@@ -1,0 +1,854 @@
+{
+	"info": {
+		"name": "Web Client",
+		"_postman_id": "webclient-col-etiquecosas-2026",
+		"description": "Endpoints del portal del cliente web. Requieren token JWT de CLIENTE (auth:client), distinto al token admin. El cliente solo puede ver y modificar sus propios recursos. Base path: /api/web/",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "CLIENT_JWT_TOKEN_HERE",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "baseURL",
+			"value": "https://api.etiquecosaslab.com.ar/api/"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Pedidos del Cliente",
+			"description": "Todas las operaciones envían emails al equipo. No modifican el pedido directamente.",
+			"item": [
+				{
+					"name": "Get Order History",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "CLIENT_JWT_TOKEN_HERE",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}web/sales-client/history",
+							"host": [
+								"{{baseURL}}web"
+							],
+							"path": [
+								"sales-client",
+								"history"
+							],
+							"query": [
+								{
+									"key": "quantity",
+									"value": "10",
+									"disabled": true
+								},
+								{
+									"key": "page",
+									"value": "1",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Historial de pedidos\",\n  \"data\": [\n    {\n      \"id\": 142,\n      \"sale_status_id\": 1,\n      \"channel_id\": 1,\n      \"subtotal\": 4500,\n      \"shipping_cost\": 850,\n      \"discount_amount\": 450,\n      \"total\": 4900,\n      \"created_at\": \"2026-05-25T14:30:00.000000Z\",\n      \"status\": {\"id\": 1, \"name\": \"Aprobado\"},\n      \"channel\": {\"id\": 1, \"name\": \"Web\"},\n      \"products\": [\n        {\n          \"id\": 201,\n          \"quantity\": 3,\n          \"unit_price\": 1500,\n          \"product\": {\n            \"id\": 15,\n            \"name\": \"Etiquetas personalizadas para colegios\",\n            \"images\": [\n              {\"img\": \"https://api.etiquecosaslab.com.ar/storage/products/etiquetas-colegios.jpg\", \"is_main\": true}\n            ]\n          }\n        }\n      ]\n    },\n    {\n      \"id\": 138,\n      \"sale_status_id\": 4,\n      \"channel_id\": 1,\n      \"subtotal\": 2200,\n      \"shipping_cost\": 0,\n      \"discount_amount\": 0,\n      \"total\": 2200,\n      \"created_at\": \"2026-04-10T11:00:00.000000Z\",\n      \"status\": {\"id\": 4, \"name\": \"Entregado\"},\n      \"channel\": {\"id\": 1, \"name\": \"Web\"},\n      \"products\": [\n        {\n          \"id\": 195,\n          \"quantity\": 1,\n          \"unit_price\": 2200,\n          \"product\": {\n            \"id\": 8,\n            \"name\": \"Combo Escolar Temáticas\",\n            \"images\": [\n              {\"img\": \"https://api.etiquecosaslab.com.ar/storage/products/combo-escolar.jpg\", \"is_main\": true}\n            ]\n          }\n        }\n      ]\n    }\n  ],\n  \"meta_data\": {\n    \"current_page\": 1,\n    \"last_page\": 2,\n    \"per_page\": 10,\n    \"total\": 14,\n    \"from\": 1,\n    \"to\": 10\n  }\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "401 Unauthorized",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"No autenticado\"\n}",
+							"_postman_previewlanguage": "json"
+						}
+					]
+				},
+				{
+					"name": "Send Order Note",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "CLIENT_JWT_TOKEN_HERE",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"order_id\": 142,\n  \"note\": \"Necesito cambiar el nombre en las etiquetas de Sofía a Valentina. ¿Es posible antes de que se despache?\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}web/sales-client/note",
+							"host": [
+								"{{baseURL}}web"
+							],
+							"path": [
+								"sales-client",
+								"note"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Tu solicitud fue enviada correctamente. Te contactaremos a la brevedad.\",\n  \"data\": {\n    \"client_name\": \"Luciana\",\n    \"client_email\": \"luciana.martinez@gmail.com\",\n    \"order_id\": 142,\n    \"message\": \"Necesito cambiar el nombre en las etiquetas de Sofía a Valentina.\"\n  }\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "422 Validation Error",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"order_id\": [\"El campo order_id es obligatorio.\"],\n    \"note\": [\"El campo note es obligatorio.\"]\n  }\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "401 Unauthorized",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"No autenticado\"\n}",
+							"_postman_previewlanguage": "json"
+						}
+					]
+				},
+				{
+					"name": "Request Address Change",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "CLIENT_JWT_TOKEN_HERE",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"order_id\": 142,\n  \"new_address\": \"Av. Santa Fe 1234 Piso 3 Dto A, CABA\",\n  \"message\": \"Me mudé, por favor actualicen la dirección antes de despachar\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}web/sales-client/change-address",
+							"host": [
+								"{{baseURL}}web"
+							],
+							"path": [
+								"sales-client",
+								"change-address"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Solicitud de cambio de dirección enviada. Te contactaremos para confirmar.\",\n  \"data\": {\n    \"client_name\": \"Luciana\",\n    \"client_email\": \"luciana.martinez@gmail.com\",\n    \"order_id\": 142,\n    \"new_address\": \"Av. Santa Fe 1234 Piso 3 Dto A, CABA\",\n    \"message\": \"Me mudé, por favor actualicen la dirección antes de despachar\"\n  }\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "422 Validation Error",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"order_id\": [\"El campo order_id es obligatorio.\"],\n    \"new_address\": [\"El campo new_address es obligatorio.\"]\n  }\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "401 Unauthorized",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"No autenticado\"\n}",
+							"_postman_previewlanguage": "json"
+						}
+					]
+				},
+				{
+					"name": "Submit Claim",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "CLIENT_JWT_TOKEN_HERE",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"order_id\": 142,\n  \"message\": \"El paquete llegó abierto y algunas etiquetas estaban dañadas. Voy a adjuntar fotos al email.\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}web/sales-client/claim",
+							"host": [
+								"{{baseURL}}web"
+							],
+							"path": [
+								"sales-client",
+								"claim"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Tu reclamo fue recibido. Nos pondremos en contacto en las próximas 48 horas hábiles.\",\n  \"data\": {\n    \"client_name\": \"Luciana\",\n    \"client_email\": \"luciana.martinez@gmail.com\",\n    \"order_id\": 142,\n    \"message\": \"El paquete llegó abierto y algunas etiquetas estaban dañadas.\"\n  }\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "422 Validation Error",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"message\": [\"El campo message es obligatorio.\"],\n    \"order_id\": [\"El campo order_id es obligatorio.\"]\n  }\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "401 Unauthorized",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"No autenticado\"\n}",
+							"_postman_previewlanguage": "json"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Direcciones",
+			"item": [
+				{
+					"name": "List Addresses",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "CLIENT_JWT_TOKEN_HERE",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}web/addresses",
+							"host": [
+								"{{baseURL}}web"
+							],
+							"path": [
+								"addresses"
+							],
+							"query": [
+								{
+									"key": "quantity",
+									"value": "10",
+									"disabled": true
+								},
+								{
+									"key": "page",
+									"value": "1",
+									"disabled": true
+								},
+								{
+									"key": "search",
+									"value": "",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Direcciones\",\n  \"data\": [\n    {\n      \"id\": 1,\n      \"name\": \"Casa\",\n      \"address\": \"Av. Corrientes 3421 Piso 5 Dto B\",\n      \"localityId\": 1,\n      \"locality\": {\"id\": 1, \"name\": \"Buenos Aires\"},\n      \"postalCode\": \"1193\",\n      \"observations\": \"Timbre roto, llamar por teléfono\"\n    },\n    {\n      \"id\": 2,\n      \"name\": \"Trabajo\",\n      \"address\": \"Florida 550 Piso 3\",\n      \"localityId\": 1,\n      \"locality\": {\"id\": 1, \"name\": \"Buenos Aires\"},\n      \"postalCode\": \"1005\",\n      \"observations\": null\n    }\n  ],\n  \"meta_data\": {\n    \"current_page\": 1,\n    \"last_page\": 1,\n    \"per_page\": 10,\n    \"total\": 2,\n    \"from\": 1,\n    \"to\": 2\n  }\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "401 Unauthorized",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"No autenticado\"\n}",
+							"_postman_previewlanguage": "json"
+						}
+					]
+				},
+				{
+					"name": "Create Address",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "CLIENT_JWT_TOKEN_HERE",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Casa de mis padres\",\n  \"address\": \"Av. Rivadavia 5840\",\n  \"localityId\": 1,\n  \"postalCode\": \"1406\",\n  \"observations\": \"Departamento 3B, segundo piso\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}web/addresses",
+							"host": [
+								"{{baseURL}}web"
+							],
+							"path": [
+								"addresses"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK - Created",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Dirección creada\",\n  \"data\": {\n    \"id\": 3,\n    \"name\": \"Casa de mis padres\",\n    \"address\": \"Av. Rivadavia 5840\",\n    \"localityId\": 1,\n    \"locality\": {\"id\": 1, \"name\": \"Buenos Aires\"},\n    \"postalCode\": \"1406\",\n    \"observations\": \"Departamento 3B, segundo piso\"\n  }\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "422 Validation Error",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"name\": [\"El campo nombre es obligatorio.\"],\n    \"address\": [\"El campo dirección es obligatorio.\"],\n    \"localityId\": [\"El campo localidad es obligatorio.\"],\n    \"postalCode\": [\"El campo código postal es obligatorio.\"]\n  }\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "401 Unauthorized",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"No autenticado\"\n}",
+							"_postman_previewlanguage": "json"
+						}
+					]
+				},
+				{
+					"name": "Update Address",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "CLIENT_JWT_TOKEN_HERE",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Casa\",\n  \"address\": \"Av. Corrientes 3421 Piso 5 Dto B\",\n  \"localityId\": 1,\n  \"postalCode\": \"1193\",\n  \"observations\": \"Departamento renovado, timbre funciona ahora\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}web/addresses/1",
+							"host": [
+								"{{baseURL}}web"
+							],
+							"path": [
+								"addresses",
+								"1"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK - Updated",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Dirección actualizada\",\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"Casa\",\n    \"address\": \"Av. Corrientes 3421 Piso 5 Dto B\",\n    \"localityId\": 1,\n    \"locality\": {\"id\": 1, \"name\": \"Buenos Aires\"},\n    \"postalCode\": \"1193\",\n    \"observations\": \"Departamento renovado, timbre funciona ahora\"\n  }\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "403 Forbidden",
+							"status": "Forbidden",
+							"code": 403,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"La dirección no pertenece al cliente autenticado\"\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "422 Validation Error",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"localityId\": [\"El campo localidad no existe.\"]\n  }\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "401 Unauthorized",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"No autenticado\"\n}",
+							"_postman_previewlanguage": "json"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Datos Mayorista",
+			"item": [
+				{
+					"name": "List Wholesale Data",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "CLIENT_JWT_TOKEN_HERE",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}web/wholesales",
+							"host": [
+								"{{baseURL}}web"
+							],
+							"path": [
+								"wholesales"
+							],
+							"query": [
+								{
+									"key": "quantity",
+									"value": "10",
+									"disabled": true
+								},
+								{
+									"key": "page",
+									"value": "1",
+									"disabled": true
+								},
+								{
+									"key": "search",
+									"value": "",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Datos mayorista\",\n  \"data\": [\n    {\n      \"id\": 1,\n      \"name\": \"Depósito Central\",\n      \"address\": \"Ruta 9 Km 15 Nave Industrial 3\",\n      \"localityId\": 5,\n      \"locality\": {\"id\": 5, \"name\": \"Córdoba\"},\n      \"postalCode\": \"5016\"\n    },\n    {\n      \"id\": 2,\n      \"name\": \"Sucursal Norte\",\n      \"address\": \"Av. Colón 4820\",\n      \"localityId\": 6,\n      \"locality\": {\"id\": 6, \"name\": \"Villa Carlos Paz\"},\n      \"postalCode\": \"5152\"\n    }\n  ],\n  \"meta_data\": {\n    \"current_page\": 1,\n    \"last_page\": 1,\n    \"per_page\": 10,\n    \"total\": 2,\n    \"from\": 1,\n    \"to\": 2\n  }\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "401 Unauthorized",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"No autenticado\"\n}",
+							"_postman_previewlanguage": "json"
+						}
+					]
+				},
+				{
+					"name": "Create Wholesale Data",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "CLIENT_JWT_TOKEN_HERE",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Nueva Sucursal Rosario\",\n  \"localityId\": 8,\n  \"address\": \"Bv. Oroño 1250\",\n  \"postalCode\": \"2000\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}web/wholesales",
+							"host": [
+								"{{baseURL}}web"
+							],
+							"path": [
+								"wholesales"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK - Created",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Cliente mayorista creado\",\n  \"data\": {\n    \"id\": 3,\n    \"name\": \"Nueva Sucursal Rosario\",\n    \"address\": \"Bv. Oroño 1250\",\n    \"localityId\": 8,\n    \"locality\": {\"id\": 8, \"name\": \"Rosario\"},\n    \"postalCode\": \"2000\"\n  }\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "422 Validation Error",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"name\": [\"El campo nombre es obligatorio.\"],\n    \"localityId\": [\"El campo localidad es obligatorio.\"],\n    \"address\": [\"El campo dirección es obligatorio.\"],\n    \"postalCode\": [\"El campo código postal es obligatorio.\"]\n  }\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "401 Unauthorized",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"No autenticado\"\n}",
+							"_postman_previewlanguage": "json"
+						}
+					]
+				},
+				{
+					"name": "Update Wholesale Data",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "CLIENT_JWT_TOKEN_HERE",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Depósito Central - Ampliado\",\n  \"localityId\": 5,\n  \"address\": \"Ruta 9 Km 15 Naves 3 y 4\",\n  \"postalCode\": \"5016\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}web/wholesales/1",
+							"host": [
+								"{{baseURL}}web"
+							],
+							"path": [
+								"wholesales",
+								"1"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK - Updated",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Cliente mayorista actualizado\",\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"Depósito Central - Ampliado\",\n    \"address\": \"Ruta 9 Km 15 Naves 3 y 4\",\n    \"localityId\": 5,\n    \"locality\": {\"id\": 5, \"name\": \"Córdoba\"},\n    \"postalCode\": \"5016\"\n  }\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "403 Forbidden",
+							"status": "Forbidden",
+							"code": 403,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"El cliente mayorista no pertenece al cliente autenticado\"\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "422 Validation Error",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"localityId\": [\"El campo localidad no existe.\"]\n  }\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "401 Unauthorized",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"No autenticado\"\n}",
+							"_postman_previewlanguage": "json"
+						}
+					]
+				}
+			]
+		}
+	]
+}

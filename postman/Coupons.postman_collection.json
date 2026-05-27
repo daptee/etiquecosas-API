@@ -1,0 +1,1059 @@
+{
+	"info": {
+		"_postman_id": "coupons-col-etiquecosas-2026",
+		"name": "Coupons",
+		"description": "Gestión de cupones de descuento. Tipos: Fijo o Porcentaje. Soporta descuentos escalonados (tiered) y flash. El endpoint de validación público no requiere autenticación.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "baseURL",
+			"value": "https://api.etiquecosaslab.com.ar/api/",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Get Coupons",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}coupons",
+					"host": [
+						"{{baseURL}}coupons"
+					],
+					"query": [
+						{
+							"key": "quantity",
+							"value": "10",
+							"description": "Cantidad de resultados por página",
+							"disabled": true
+						},
+						{
+							"key": "page",
+							"value": "1",
+							"description": "Número de página",
+							"disabled": true
+						},
+						{
+							"key": "search",
+							"value": "VUELTA",
+							"description": "Busca en name o code del cupón",
+							"disabled": true
+						},
+						{
+							"key": "status",
+							"value": "1",
+							"description": "Filtra por estado del cupón",
+							"disabled": true
+						},
+						{
+							"key": "tiered_discounts_enabled",
+							"value": "true",
+							"description": "Solo cupones con descuento escalonado",
+							"disabled": true
+						},
+						{
+							"key": "flash_enabled",
+							"value": "false",
+							"description": "Solo cupones flash",
+							"disabled": true
+						},
+						{
+							"key": "applies_to_web",
+							"value": "true",
+							"description": "Solo cupones aplicables al sitio web",
+							"disabled": true
+						},
+						{
+							"key": "applies_to_sale_price",
+							"value": "false",
+							"description": "Solo cupones aplicables sobre precio con descuento",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "200 OK",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}coupons",
+							"host": [
+								"{{baseURL}}coupons"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Cupones obtenidos\",\n  \"data\": [\n    {\n      \"id\": 1,\n      \"name\": \"Vuelta al Cole 10%\",\n      \"code\": \"VUELTAALCOLE10\",\n      \"type\": \"Porcentaje\",\n      \"value\": 10.00,\n      \"min_amount\": 0.00,\n      \"max_use_per_code\": 500,\n      \"max_use_per_user\": 1,\n      \"date_from\": \"2026-02-01\",\n      \"date_to\": \"2026-04-30\",\n      \"applies_to_shipping\": false,\n      \"applies_to_web\": true,\n      \"applies_to_sale_price\": false,\n      \"tiered_discounts_enabled\": false,\n      \"flash_enabled\": false,\n      \"coupon_status_id\": 1,\n      \"status\": { \"id\": 1, \"name\": \"Activo\" },\n      \"sales_count\": 127\n    },\n    {\n      \"id\": 2,\n      \"name\": \"Promo Mayo Fijo\",\n      \"code\": \"MAYO2026\",\n      \"type\": \"Fijo\",\n      \"value\": 500.00,\n      \"min_amount\": 3000.00,\n      \"max_use_per_code\": 200,\n      \"max_use_per_user\": 1,\n      \"date_from\": \"2026-05-01\",\n      \"date_to\": \"2026-05-31\",\n      \"applies_to_shipping\": false,\n      \"applies_to_web\": true,\n      \"applies_to_sale_price\": false,\n      \"tiered_discounts_enabled\": false,\n      \"flash_enabled\": false,\n      \"coupon_status_id\": 1,\n      \"status\": { \"id\": 1, \"name\": \"Activo\" },\n      \"sales_count\": 43\n    }\n  ],\n  \"metaData\": {\n    \"current_page\": 1,\n    \"last_page\": 1,\n    \"per_page\": 10,\n    \"total\": 2,\n    \"from\": 1,\n    \"to\": 2\n  }\n}"
+				},
+				{
+					"name": "401 Unauthenticated",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}coupons",
+							"host": [
+								"{{baseURL}}coupons"
+							]
+						}
+					},
+					"status": "Unauthorized",
+					"code": 401,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+				}
+			]
+		},
+		{
+			"name": "Get Coupon",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}coupons/1",
+					"host": [
+						"{{baseURL}}coupons"
+					],
+					"path": [
+						"1"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "200 OK",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}coupons/1",
+							"host": [
+								"{{baseURL}}coupons"
+							],
+							"path": [
+								"1"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Cupon obtenido\",\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"Vuelta al Cole 10%\",\n    \"code\": \"VUELTAALCOLE10\",\n    \"type\": \"Porcentaje\",\n    \"value\": 10.00,\n    \"min_amount\": 0.00,\n    \"max_use_per_code\": 500,\n    \"max_use_per_user\": 1,\n    \"date_from\": \"2026-02-01\",\n    \"date_to\": \"2026-04-30\",\n    \"applies_to_shipping\": false,\n    \"applies_to_web\": true,\n    \"applies_to_sale_price\": false,\n    \"applies_to_all_products\": true,\n    \"tiered_discounts_enabled\": false,\n    \"tiered_discounts\": null,\n    \"flash_enabled\": false,\n    \"coupon_status_id\": 1,\n    \"categories\": [],\n    \"products\": [],\n    \"sales_count\": 127\n  },\n  \"metaData\": null\n}"
+				},
+				{
+					"name": "404 Not Found",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}coupons/1",
+							"host": [
+								"{{baseURL}}coupons"
+							],
+							"path": [
+								"1"
+							]
+						}
+					},
+					"status": "Not Found",
+					"code": 404,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Cupón no encontrado\"\n}"
+				},
+				{
+					"name": "401 Unauthenticated",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}coupons/1",
+							"host": [
+								"{{baseURL}}coupons"
+							],
+							"path": [
+								"1"
+							]
+						}
+					},
+					"status": "Unauthorized",
+					"code": 401,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+				}
+			]
+		},
+		{
+			"name": "Create Coupon",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"name\": \"Invierno 2026\",\n  \"code\": \"INVIERNO2026\",\n  \"type\": \"Porcentaje\",\n  \"value\": 15,\n  \"min_amount\": 2000,\n  \"date_from\": \"2026-06-21\",\n  \"date_to\": \"2026-09-22\",\n  \"applies_to_shipping\": false,\n  \"applies_to_web\": true,\n  \"applies_to_sale_price\": false,\n  \"max_use_per_user\": 1,\n  \"max_use_per_code\": 300,\n  \"coupon_status_id\": 1,\n  \"products_all\": true,\n  \"categories\": [],\n  \"products\": [],\n  \"tiered_discounts_enabled\": false,\n  \"tiered_discounts\": [],\n  \"flash_enabled\": false\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseURL}}coupons",
+					"host": [
+						"{{baseURL}}coupons"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "200 Created",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Invierno 2026\",\n  \"code\": \"INVIERNO2026\",\n  \"type\": \"Porcentaje\",\n  \"value\": 15,\n  \"min_amount\": 2000,\n  \"date_from\": \"2026-06-21\",\n  \"date_to\": \"2026-09-22\",\n  \"applies_to_shipping\": false,\n  \"applies_to_web\": true,\n  \"applies_to_sale_price\": false,\n  \"max_use_per_user\": 1,\n  \"max_use_per_code\": 300,\n  \"coupon_status_id\": 1,\n  \"products_all\": true,\n  \"categories\": [],\n  \"products\": [],\n  \"tiered_discounts_enabled\": false,\n  \"tiered_discounts\": [],\n  \"flash_enabled\": false\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}coupons",
+							"host": [
+								"{{baseURL}}coupons"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Cupon creado\",\n  \"data\": {\n    \"id\": 3,\n    \"name\": \"Invierno 2026\",\n    \"code\": \"INVIERNO2026\",\n    \"type\": \"Porcentaje\",\n    \"value\": 15.00,\n    \"min_amount\": 2000.00,\n    \"max_use_per_code\": 300,\n    \"max_use_per_user\": 1,\n    \"date_from\": \"2026-06-21\",\n    \"date_to\": \"2026-09-22\",\n    \"applies_to_shipping\": false,\n    \"applies_to_web\": true,\n    \"applies_to_sale_price\": false,\n    \"applies_to_all_products\": true,\n    \"tiered_discounts_enabled\": false,\n    \"tiered_discounts\": null,\n    \"flash_enabled\": false,\n    \"coupon_status_id\": 1,\n    \"categories\": [],\n    \"products\": [],\n    \"sales_count\": 0\n  },\n  \"metaData\": 201\n}"
+				},
+				{
+					"name": "422 Code Duplicate",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Invierno 2026\",\n  \"code\": \"INVIERNO2026\",\n  \"type\": \"Porcentaje\",\n  \"value\": 15,\n  \"min_amount\": 2000,\n  \"date_from\": \"2026-06-21\",\n  \"date_to\": \"2026-09-22\",\n  \"applies_to_shipping\": false,\n  \"applies_to_web\": true,\n  \"applies_to_sale_price\": false,\n  \"max_use_per_user\": 1,\n  \"max_use_per_code\": 300,\n  \"coupon_status_id\": 1,\n  \"products_all\": true,\n  \"categories\": [],\n  \"products\": [],\n  \"tiered_discounts_enabled\": false,\n  \"tiered_discounts\": [],\n  \"flash_enabled\": false\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}coupons",
+							"host": [
+								"{{baseURL}}coupons"
+							]
+						}
+					},
+					"status": "Unprocessable Entity",
+					"code": 422,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"code\": [\"El código de cupón ya está en uso\"]\n  }\n}"
+				},
+				{
+					"name": "422 Type Invalid",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Invierno 2026\",\n  \"code\": \"INVIERNO2026\",\n  \"type\": \"Invalido\",\n  \"value\": 15,\n  \"min_amount\": 2000,\n  \"date_from\": \"2026-06-21\",\n  \"date_to\": \"2026-09-22\",\n  \"applies_to_shipping\": false,\n  \"applies_to_web\": true,\n  \"applies_to_sale_price\": false,\n  \"max_use_per_user\": 1,\n  \"max_use_per_code\": 300,\n  \"coupon_status_id\": 1,\n  \"products_all\": true,\n  \"tiered_discounts_enabled\": false,\n  \"flash_enabled\": false\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}coupons",
+							"host": [
+								"{{baseURL}}coupons"
+							]
+						}
+					},
+					"status": "Unprocessable Entity",
+					"code": 422,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"type\": [\"El campo tipo debe ser Fijo o Porcentaje\"]\n  }\n}"
+				},
+				{
+					"name": "422 Date Invalid",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Invierno 2026\",\n  \"code\": \"INVIERNO2026\",\n  \"type\": \"Porcentaje\",\n  \"value\": 15,\n  \"min_amount\": 2000,\n  \"date_from\": \"2026-09-22\",\n  \"date_to\": \"2026-06-21\",\n  \"applies_to_shipping\": false,\n  \"applies_to_web\": true,\n  \"applies_to_sale_price\": false,\n  \"max_use_per_user\": 1,\n  \"max_use_per_code\": 300,\n  \"coupon_status_id\": 1,\n  \"products_all\": true,\n  \"tiered_discounts_enabled\": false,\n  \"flash_enabled\": false\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}coupons",
+							"host": [
+								"{{baseURL}}coupons"
+							]
+						}
+					},
+					"status": "Unprocessable Entity",
+					"code": 422,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"date_to\": [\"La fecha de fin debe ser igual o posterior a la fecha de inicio\"]\n  }\n}"
+				},
+				{
+					"name": "422 Required Fields Missing",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}coupons",
+							"host": [
+								"{{baseURL}}coupons"
+							]
+						}
+					},
+					"status": "Unprocessable Entity",
+					"code": 422,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"name\": [\"El campo nombre es obligatorio\"],\n    \"code\": [\"El campo código es obligatorio\"],\n    \"type\": [\"El campo tipo es obligatorio\"],\n    \"value\": [\"El campo valor es obligatorio\"],\n    \"date_from\": [\"El campo fecha de inicio es obligatorio\"],\n    \"date_to\": [\"El campo fecha de fin es obligatorio\"],\n    \"max_use_per_user\": [\"El campo usos por usuario es obligatorio\"],\n    \"max_use_per_code\": [\"El campo usos por código es obligatorio\"],\n    \"coupon_status_id\": [\"El campo estado es obligatorio\"]\n  }\n}"
+				},
+				{
+					"name": "401 Unauthenticated",
+					"originalRequest": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}coupons",
+							"host": [
+								"{{baseURL}}coupons"
+							]
+						}
+					},
+					"status": "Unauthorized",
+					"code": 401,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+				}
+			]
+		},
+		{
+			"name": "Update Coupon",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"name\": \"Vuelta al Cole - Extendido\",\n  \"code\": \"VUELTAALCOLE10\",\n  \"type\": \"Porcentaje\",\n  \"value\": 10,\n  \"min_amount\": 1500,\n  \"date_from\": \"2026-02-01\",\n  \"date_to\": \"2026-05-15\",\n  \"applies_to_shipping\": false,\n  \"applies_to_web\": true,\n  \"applies_to_sale_price\": false,\n  \"max_use_per_user\": 1,\n  \"max_use_per_code\": 600,\n  \"coupon_status_id\": 1,\n  \"products_all\": true,\n  \"tiered_discounts_enabled\": false,\n  \"flash_enabled\": false\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseURL}}coupons/1",
+					"host": [
+						"{{baseURL}}coupons"
+					],
+					"path": [
+						"1"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "200 Updated",
+					"originalRequest": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Vuelta al Cole - Extendido\",\n  \"code\": \"VUELTAALCOLE10\",\n  \"type\": \"Porcentaje\",\n  \"value\": 10,\n  \"min_amount\": 1500,\n  \"date_from\": \"2026-02-01\",\n  \"date_to\": \"2026-05-15\",\n  \"applies_to_shipping\": false,\n  \"applies_to_web\": true,\n  \"applies_to_sale_price\": false,\n  \"max_use_per_user\": 1,\n  \"max_use_per_code\": 600,\n  \"coupon_status_id\": 1,\n  \"products_all\": true,\n  \"tiered_discounts_enabled\": false,\n  \"flash_enabled\": false\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}coupons/1",
+							"host": [
+								"{{baseURL}}coupons"
+							],
+							"path": [
+								"1"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Cupon actualizado\",\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"Vuelta al Cole - Extendido\",\n    \"code\": \"VUELTAALCOLE10\",\n    \"type\": \"Porcentaje\",\n    \"value\": 10.00,\n    \"min_amount\": 1500.00,\n    \"max_use_per_code\": 600,\n    \"max_use_per_user\": 1,\n    \"date_from\": \"2026-02-01\",\n    \"date_to\": \"2026-05-15\",\n    \"applies_to_shipping\": false,\n    \"applies_to_web\": true,\n    \"applies_to_sale_price\": false,\n    \"applies_to_all_products\": true,\n    \"tiered_discounts_enabled\": false,\n    \"flash_enabled\": false,\n    \"coupon_status_id\": 1,\n    \"categories\": [],\n    \"products\": [],\n    \"sales_count\": 127\n  },\n  \"metaData\": null\n}"
+				},
+				{
+					"name": "404 Not Found",
+					"originalRequest": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}coupons/1",
+							"host": [
+								"{{baseURL}}coupons"
+							],
+							"path": [
+								"1"
+							]
+						}
+					},
+					"status": "Not Found",
+					"code": 404,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Cupón no encontrado\"\n}"
+				},
+				{
+					"name": "422 Type Invalid",
+					"originalRequest": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Vuelta al Cole - Extendido\",\n  \"code\": \"VUELTAALCOLE10\",\n  \"type\": \"Invalido\",\n  \"value\": 10,\n  \"date_from\": \"2026-02-01\",\n  \"date_to\": \"2026-05-15\",\n  \"max_use_per_user\": 1,\n  \"max_use_per_code\": 600,\n  \"coupon_status_id\": 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}coupons/1",
+							"host": [
+								"{{baseURL}}coupons"
+							],
+							"path": [
+								"1"
+							]
+						}
+					},
+					"status": "Unprocessable Entity",
+					"code": 422,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"type\": [\"El campo tipo debe ser Fijo o Porcentaje\"]\n  }\n}"
+				},
+				{
+					"name": "422 Value Negative",
+					"originalRequest": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Vuelta al Cole - Extendido\",\n  \"code\": \"VUELTAALCOLE10\",\n  \"type\": \"Porcentaje\",\n  \"value\": -5,\n  \"date_from\": \"2026-02-01\",\n  \"date_to\": \"2026-05-15\",\n  \"max_use_per_user\": 1,\n  \"max_use_per_code\": 600,\n  \"coupon_status_id\": 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}coupons/1",
+							"host": [
+								"{{baseURL}}coupons"
+							],
+							"path": [
+								"1"
+							]
+						}
+					},
+					"status": "Unprocessable Entity",
+					"code": 422,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"value\": [\"El campo valor debe ser mayor o igual a 0\"]\n  }\n}"
+				},
+				{
+					"name": "401 Unauthenticated",
+					"originalRequest": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}coupons/1",
+							"host": [
+								"{{baseURL}}coupons"
+							],
+							"path": [
+								"1"
+							]
+						}
+					},
+					"status": "Unauthorized",
+					"code": 401,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+				}
+			]
+		},
+		{
+			"name": "Delete Coupon",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}coupons/1",
+					"host": [
+						"{{baseURL}}coupons"
+					],
+					"path": [
+						"1"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "200 Deleted",
+					"originalRequest": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}coupons/1",
+							"host": [
+								"{{baseURL}}coupons"
+							],
+							"path": [
+								"1"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Cupón eliminado\"\n}"
+				},
+				{
+					"name": "404 Not Found",
+					"originalRequest": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}coupons/1",
+							"host": [
+								"{{baseURL}}coupons"
+							],
+							"path": [
+								"1"
+							]
+						}
+					},
+					"status": "Not Found",
+					"code": 404,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Cupón no encontrado\"\n}"
+				},
+				{
+					"name": "401 Unauthenticated",
+					"originalRequest": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}coupons/1",
+							"host": [
+								"{{baseURL}}coupons"
+							],
+							"path": [
+								"1"
+							]
+						}
+					},
+					"status": "Unauthorized",
+					"code": 401,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+				}
+			]
+		},
+		{
+			"name": "Validate Coupon",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"code\": \"VUELTAALCOLE10\",\n  \"client_id\": null\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseURL}}v1/coupons/validate",
+					"host": [
+						"{{baseURL}}v1"
+					],
+					"path": [
+						"coupons",
+						"validate"
+					]
+				},
+				"description": "Valida un cupón antes de aplicarlo. No requiere autenticación."
+			},
+			"response": [
+				{
+					"name": "200 Válido",
+					"originalRequest": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"code\": \"VUELTAALCOLE10\",\n  \"client_id\": null\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}v1/coupons/validate",
+							"host": [
+								"{{baseURL}}v1"
+							],
+							"path": [
+								"coupons",
+								"validate"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Cupón válido\",\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"Vuelta al Cole 10%\",\n    \"code\": \"VUELTAALCOLE10\",\n    \"type\": \"Porcentaje\",\n    \"value\": 10.00,\n    \"applies_to_shipping\": false,\n    \"applies_to_all_products\": true,\n    \"applies_to_web\": true,\n    \"applies_to_sale_price\": false,\n    \"tiered_discounts_enabled\": false,\n    \"tiered_discounts\": null,\n    \"flash_enabled\": false,\n    \"categories\": [],\n    \"products\": []\n  },\n  \"metaData\": null\n}"
+				},
+				{
+					"name": "400 Cupón expirado",
+					"originalRequest": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"code\": \"VUELTAALCOLE10\",\n  \"client_id\": null\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}v1/coupons/validate",
+							"host": [
+								"{{baseURL}}v1"
+							],
+							"path": [
+								"coupons",
+								"validate"
+							]
+						}
+					},
+					"status": "Bad Request",
+					"code": 400,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Cupón vencido o aún no vigente\"\n}"
+				},
+				{
+					"name": "400 Máximo de usos por código",
+					"originalRequest": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"code\": \"MAYO2026\",\n  \"client_id\": null\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}v1/coupons/validate",
+							"host": [
+								"{{baseURL}}v1"
+							],
+							"path": [
+								"coupons",
+								"validate"
+							]
+						}
+					},
+					"status": "Bad Request",
+					"code": 400,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Este cupón alcanzó el máximo de usos permitidos\"\n}"
+				},
+				{
+					"name": "400 Ya usado el máximo de veces por usuario",
+					"originalRequest": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"code\": \"CUPONNOWEB\",\n  \"client_id\": 5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}v1/coupons/validate",
+							"host": [
+								"{{baseURL}}v1"
+							],
+							"path": [
+								"coupons",
+								"validate"
+							]
+						}
+					},
+					"status": "Bad Request",
+					"code": 400,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Ya has usado este cupón el máximo de veces permitidas\"\n}"
+				},
+				{
+					"name": "404 Not Found",
+					"originalRequest": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"coupon_code\": \"INEXISTENTE\",\n  \"subtotal\": 3500\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}v1/coupons/validate",
+							"host": [
+								"{{baseURL}}v1"
+							],
+							"path": [
+								"coupons",
+								"validate"
+							]
+						}
+					},
+					"status": "Not Found",
+					"code": 404,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Cupón no encontrado\"\n}"
+				},
+				{
+					"name": "422 Code Required",
+					"originalRequest": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"client_id\": null\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}v1/coupons/validate",
+							"host": [
+								"{{baseURL}}v1"
+							],
+							"path": [
+								"coupons",
+								"validate"
+							]
+						}
+					},
+					"status": "Unprocessable Entity",
+					"code": 422,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Error de validacion\",\n  \"errors\": {\n    \"code\": [\"El campo code es obligatorio\"]\n  }\n}"
+				}
+			]
+		}
+	]
+}

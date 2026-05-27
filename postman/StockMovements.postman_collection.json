@@ -1,0 +1,255 @@
+{
+  "info": {
+		"name": "Stock Movements",
+		"_postman_id": "stock-movements-col-etiquecosas-2026",
+		"description": "Historial de movimientos de stock. Solo lectura + registro manual. quantity positivo = ingreso, negativo = salida. Si product_variant_id tiene stock_channels propios, el movimiento se aplica a la variante; si no, al producto. Todos los endpoints requieren JWT.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "GET stock-movements",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}stock-movements",
+					"host": [
+						"{{baseURL}}stock-movements"
+					],
+					"query": [
+						{
+							"key": "product_id",
+							"value": "15",
+							"description": "Filtra por producto",
+							"disabled": true
+						},
+						{
+							"key": "product_variant_id",
+							"value": "3",
+							"description": "Filtra por variante específica",
+							"disabled": true
+						},
+						{
+							"key": "sale_id",
+							"value": "142",
+							"description": "Filtra por pedido",
+							"disabled": true
+						},
+						{
+							"key": "date_from",
+							"value": "2026-05-01",
+							"description": "Desde esta fecha (YYYY-MM-DD)",
+							"disabled": true
+						},
+						{
+							"key": "date_to",
+							"value": "2026-05-31",
+							"description": "Hasta esta fecha (YYYY-MM-DD)",
+							"disabled": true
+						},
+						{
+							"key": "quantity",
+							"value": "50",
+							"description": "Resultados por página (default: 50)",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "200 - Con resultados",
+					"status": "OK",
+					"code": 200,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Movimientos de stock obtenidos correctamente\",\n  \"data\": {\n    \"current_page\": 1,\n    \"data\": [\n      {\n        \"id\": 301,\n        \"product_id\": 15,\n        \"product_variant_id\": null,\n        \"quantity\": -3,\n        \"note\": \"Deducción por confirmación de pedido #142\",\n        \"user_id\": null,\n        \"sale_id\": 142,\n        \"created_at\": \"2026-05-25T14:31:00.000000Z\",\n        \"product\": {\n          \"id\": 15,\n          \"name\": \"Etiquetas personalizadas para colegios\",\n          \"sku\": \"ETQ-COL-001\"\n        },\n        \"variant\": null,\n        \"user\": null,\n        \"sale\": {\n          \"id\": 142,\n          \"sale_status_id\": 1\n        }\n      },\n      {\n        \"id\": 298,\n        \"product_id\": 15,\n        \"product_variant_id\": null,\n        \"quantity\": 50,\n        \"note\": \"Reposición de stock — proveedor Imprenta Córdoba\",\n        \"user_id\": 1,\n        \"sale_id\": null,\n        \"created_at\": \"2026-05-20T10:00:00.000000Z\",\n        \"product\": {\n          \"id\": 15,\n          \"name\": \"Etiquetas personalizadas para colegios\",\n          \"sku\": \"ETQ-COL-001\"\n        },\n        \"variant\": null,\n        \"user\": {\n          \"id\": 1,\n          \"name\": \"Juan\",\n          \"email\": \"juan@etiquecosas.com.ar\"\n        },\n        \"sale\": null\n      },\n      {\n        \"id\": 1,\n        \"product_id\": 15,\n        \"product_variant_id\": null,\n        \"quantity\": 75,\n        \"note\": \"Stock inicial al momento de implementación del historial\",\n        \"user_id\": null,\n        \"sale_id\": null,\n        \"created_at\": \"2026-05-22T00:00:00.000000Z\",\n        \"product\": {\n          \"id\": 15,\n          \"name\": \"Etiquetas personalizadas para colegios\",\n          \"sku\": \"ETQ-COL-001\"\n        },\n        \"variant\": null,\n        \"user\": null,\n        \"sale\": null\n      }\n    ],\n    \"first_page_url\": \"...\",\n    \"last_page\": 1,\n    \"last_page_url\": \"...\",\n    \"next_page_url\": null,\n    \"per_page\": 50,\n    \"prev_page_url\": null,\n    \"to\": 3,\n    \"total\": 3\n  },\n  \"metaData\": null\n}"
+				},
+				{
+					"name": "200 - Sin resultados",
+					"status": "OK",
+					"code": 200,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Movimientos de stock obtenidos correctamente\",\n  \"data\": {\n    \"current_page\": 1,\n    \"data\": [],\n    \"last_page\": 1,\n    \"per_page\": 50,\n    \"total\": 0\n  },\n  \"metaData\": null\n}"
+				},
+				{
+					"name": "401 - No autenticado",
+					"status": "Unauthorized",
+					"code": 401,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+				}
+			]
+		},
+		{
+			"name": "POST stock-movements",
+			"description": "Registra un movimiento manual de stock. quantity positivo = ingreso, negativo = salida. Si channel_id es null se actualiza TODOS los canales del producto/variante. Si se especifica channel_id se actualiza solo ese canal.",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"product_id\": 15,\n  \"product_variant_id\": null,\n  \"channel_id\": 1,\n  \"quantity\": 50,\n  \"note\": \"Reposición de stock — proveedor Imprenta Córdoba\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseURL}}stock-movements",
+					"host": [
+						"{{baseURL}}stock-movements"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "201 - Ingreso con canal específico",
+					"status": "Created",
+					"code": 201,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Movimiento de stock registrado correctamente\",\n  \"data\": {\n    \"id\": 302,\n    \"product_id\": 15,\n    \"product_variant_id\": null,\n    \"quantity\": 50,\n    \"note\": \"Reposición de stock — proveedor Imprenta Córdoba\",\n    \"user_id\": 1,\n    \"sale_id\": null,\n    \"created_at\": \"2026-05-26T10:00:00.000000Z\",\n    \"product\": {\n      \"id\": 15,\n      \"name\": \"Etiquetas personalizadas para colegios\",\n      \"sku\": \"ETQ-COL-001\"\n    },\n    \"variant\": null,\n    \"user\": {\n      \"id\": 1,\n      \"name\": \"Juan\",\n      \"email\": \"juan@etiquecosas.com.ar\"\n    },\n    \"sale\": null\n  }\n}"
+				},
+				{
+					"name": "201 - Ingreso todos los canales (channel_id null)",
+					"status": "Created",
+					"code": 201,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Movimiento de stock registrado correctamente\",\n  \"data\": {\n    \"id\": 303,\n    \"product_id\": 15,\n    \"product_variant_id\": null,\n    \"quantity\": 10,\n    \"note\": \"Ajuste de inventario — conteo físico\",\n    \"user_id\": 1,\n    \"sale_id\": null,\n    \"created_at\": \"2026-05-26T10:05:00.000000Z\",\n    \"product\": {\n      \"id\": 15,\n      \"name\": \"Etiquetas personalizadas para colegios\",\n      \"sku\": \"ETQ-COL-001\"\n    },\n    \"variant\": null,\n    \"user\": {\n      \"id\": 1,\n      \"name\": \"Juan\",\n      \"email\": \"juan@etiquecosas.com.ar\"\n    },\n    \"sale\": null\n  }\n}"
+				},
+				{
+					"name": "201 - Egreso (quantity negativo)",
+					"status": "Created",
+					"code": 201,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Movimiento de stock registrado correctamente\",\n  \"data\": {\n    \"id\": 304,\n    \"product_id\": 15,\n    \"product_variant_id\": null,\n    \"quantity\": -5,\n    \"note\": \"Merma por daño en producción\",\n    \"user_id\": 1,\n    \"sale_id\": null,\n    \"created_at\": \"2026-05-26T10:10:00.000000Z\",\n    \"product\": {\n      \"id\": 15,\n      \"name\": \"Etiquetas personalizadas para colegios\",\n      \"sku\": \"ETQ-COL-001\"\n    },\n    \"variant\": null,\n    \"user\": {\n      \"id\": 1,\n      \"name\": \"Juan\",\n      \"email\": \"juan@etiquecosas.com.ar\"\n    },\n    \"sale\": null\n  }\n}"
+				},
+				{
+					"name": "422 - product_id requerido",
+					"status": "Unprocessable Entity",
+					"code": 422,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"product_id\": [\"El campo product_id es obligatorio\"]\n  }\n}"
+				},
+				{
+					"name": "422 - quantity cero",
+					"status": "Unprocessable Entity",
+					"code": 422,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"quantity\": [\"El campo quantity no puede ser 0\"]\n  }\n}"
+				},
+				{
+					"name": "422 - note requerida",
+					"status": "Unprocessable Entity",
+					"code": 422,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"note\": [\"El campo note es obligatorio\"]\n  }\n}"
+				},
+				{
+					"name": "422 - channel_id inválido",
+					"status": "Unprocessable Entity",
+					"code": 422,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"El canal especificado no existe en el stock del producto\",\n  \"errors\": {\n    \"channel_id\": [\"Canal no encontrado en stock_channels del producto\"]\n  }\n}"
+				},
+				{
+					"name": "401 - No autenticado",
+					"status": "Unauthorized",
+					"code": 401,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+				}
+			]
+		}
+	],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL2FwaS5ldGlxdWVjb3Nhc2xhYi5jb20uYXIvYXBpL2xvZ2luIiwiaWF0IjoxNzc5Mjk5NzE1LCJleHAiOjE3NzkzODYxMTUsIm5iZiI6MTc3OTI5OTcxNSwianRpIjoiZmt1a1ZlY21zT2ZtcG9BbSIsInN1YiI6IjEiLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3IiwiaWQiOjEsIm5hbWUiOiJKdWFuIiwibGFzdE5hbWUiOiJHb256YWxleiIsImVtYWlsIjoiamdvbnphbGV6QGdtYWlsLmNvbSIsInBob3RvIjpudWxsLCJwcm9maWxlIjoiRGlzZcOxYWRvciIsInByb2ZpbGVfaWQiOjJ9.Yu5Tzcjx9oemxYfA0IIjKE3O3xOd_gj9CilbAMyUnZM",
+        "type": "string"
+      }
+    ]
+  }
+}

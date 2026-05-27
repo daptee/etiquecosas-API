@@ -1,0 +1,1747 @@
+{
+	"info": {
+		"name": "Sales",
+		"_postman_id": "sales-col-etiquecosas-2026",
+		"description": "Gestión de pedidos. Estados: 1=Aprobado, 2=En producción, 3=Listo/Enviado, 4=Entregado, 5=Cancelado, 6=Casi listo, 7=Retirado, 8=Pendiente de pago, 9=Pago rechazado. Canales: 1=Web, 2=Instagram, 3=WhatsApp, 4=Mayorista. payment_status: paid|unpaid.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "baseURL",
+			"value": "https://api.etiquecosaslab.com.ar/api/",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Público (v1)",
+			"item": [
+				{
+					"name": "GET v1/sales/statuses",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}v1/sales/statuses",
+							"host": [
+								"{{baseURL}}v1"
+							],
+							"path": [
+								"sales",
+								"statuses"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - Estados de pedido",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "[\n  { \"id\": 1, \"name\": \"Aprobado\" },\n  { \"id\": 2, \"name\": \"En producción\" },\n  { \"id\": 3, \"name\": \"Listo\" },\n  { \"id\": 4, \"name\": \"Entregado\" },\n  { \"id\": 5, \"name\": \"Cancelado\" },\n  { \"id\": 6, \"name\": \"Casi listo\" },\n  { \"id\": 7, \"name\": \"Retirado\" },\n  { \"id\": 8, \"name\": \"Pendiente de pago\" },\n  { \"id\": 9, \"name\": \"Pago rechazado\" }\n]"
+						}
+					]
+				},
+				{
+					"name": "GET v1/sales/payment-method",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}v1/sales/payment-method",
+							"host": [
+								"{{baseURL}}v1"
+							],
+							"path": [
+								"sales",
+								"payment-method"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - Métodos de pago",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "[\n  { \"id\": 1, \"name\": \"MercadoPago\" },\n  { \"id\": 2, \"name\": \"Transferencia bancaria\" },\n  { \"id\": 3, \"name\": \"Efectivo\" }\n]"
+						}
+					]
+				},
+				{
+					"name": "GET v1/sales/channel-sale",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}v1/sales/channel-sale",
+							"host": [
+								"{{baseURL}}v1"
+							],
+							"path": [
+								"sales",
+								"channel-sale"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - Canales de venta",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "[\n  { \"id\": 1, \"name\": \"Web\" },\n  { \"id\": 2, \"name\": \"Instagram\" },\n  { \"id\": 3, \"name\": \"WhatsApp\" },\n  { \"id\": 4, \"name\": \"Mayorista\" }\n]"
+						}
+					]
+				},
+				{
+					"name": "GET v1/sales/:id",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}v1/sales/142",
+							"host": [
+								"{{baseURL}}v1"
+							],
+							"path": [
+								"sales",
+								"142"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - Pedido encontrado",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"id\": 142,\n  \"client_id\": 12,\n  \"channel_id\": 1,\n  \"shipping_method_id\": 3,\n  \"sale_status_id\": 1,\n  \"user_id\": null,\n  \"cadete_id\": null,\n  \"address\": \"Av. Corrientes 3421 Piso 5 Dto B\",\n  \"locality_id\": 1,\n  \"postal_code\": \"1193\",\n  \"subtotal\": 4500.00,\n  \"shipping_cost\": 850.00,\n  \"discount_amount\": 450.00,\n  \"total\": 4900.00,\n  \"customer_notes\": \"Por favor envolver para regalo\",\n  \"internal_comments\": null,\n  \"created_at\": \"2026-05-25T14:30:00.000000Z\",\n  \"updated_at\": \"2026-05-25T14:30:00.000000Z\",\n  \"client\": {\n    \"id\": 12,\n    \"name\": \"Luciana\",\n    \"lastName\": \"Martínez\",\n    \"email\": \"luciana.martinez@gmail.com\",\n    \"phone\": \"+54 11 3456-7890\"\n  },\n  \"channel\": {\n    \"id\": 1,\n    \"name\": \"Web\"\n  },\n  \"products\": [\n    {\n      \"id\": 201,\n      \"product_id\": 15,\n      \"variant_id\": null,\n      \"quantity\": 3,\n      \"unit_price\": 1500.00,\n      \"comment\": null,\n      \"customization_data\": {\n        \"fields\": [\n          {\n            \"label\": \"Nombre\",\n            \"value\": \"Sofía\"\n          }\n        ]\n      },\n      \"product\": {\n        \"id\": 15,\n        \"name\": \"Etiquetas personalizadas para colegios\",\n        \"sku\": \"ETQ-COL-001\"\n      },\n      \"variant\": null\n    }\n  ],\n  \"status\": {\n    \"id\": 1,\n    \"name\": \"Aprobado\"\n  },\n  \"statusHistory\": [\n    {\n      \"id\": 301,\n      \"sale_id\": 142,\n      \"sale_status_id\": 8,\n      \"date\": \"2026-05-25T14:30:00.000000Z\"\n    },\n    {\n      \"id\": 302,\n      \"sale_id\": 142,\n      \"sale_status_id\": 1,\n      \"date\": \"2026-05-25T14:31:00.000000Z\"\n    }\n  ],\n  \"shippingMethod\": {\n    \"id\": 3,\n    \"name\": \"Envío Estándar\",\n    \"price\": 850.00\n  },\n  \"locality\": {\n    \"id\": 1,\n    \"name\": \"Buenos Aires\"\n  },\n  \"coupons\": [\n    {\n      \"id\": 5,\n      \"code\": \"VUELTAALCOLE10\",\n      \"discount_amount\": 450.00\n    }\n  ]\n}"
+						},
+						{
+							"name": "404 - No encontrado",
+							"status": "Not Found",
+							"code": 404,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Pedido no encontrado\"\n}"
+						}
+					]
+				},
+				{
+					"name": "POST v1/sales",
+					"description": "Crea un pedido desde el canal web. Si el cliente no existe se crea automáticamente. Si hay stock insuficiente retorna 422 con detalle por producto.",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"client_mail\": \"luciana.martinez@gmail.com\",\n  \"client_name\": \"Luciana\",\n  \"client_lastname\": \"Martínez\",\n  \"client_phone\": \"+54 11 3456-7890\",\n  \"client_locality_id\": 1,\n  \"channel_id\": 1,\n  \"shipping_address\": \"Av. Corrientes 3421 Piso 5 Dto B\",\n  \"shipping_locality_id\": 1,\n  \"shipping_postal_code\": \"1193\",\n  \"shipping_save\": true,\n  \"shipping_method_id\": 3,\n  \"subtotal\": 4500.00,\n  \"shipping_cost\": 850.00,\n  \"sale_status_id\": 8,\n  \"customer_notes\": \"Por favor envolver para regalo\",\n  \"coupon_code\": \"VUELTAALCOLE10\",\n  \"discount_amount\": 450.00,\n  \"products\": [\n    {\n      \"product_id\": 15,\n      \"variant_id\": null,\n      \"quantity\": 3,\n      \"unit_price\": 1500.00,\n      \"comment\": null,\n      \"customization_data\": \"{\\\"fields\\\":[{\\\"label\\\":\\\"Nombre\\\",\\\"value\\\":\\\"Sofía\\\"}]}\"\n    }\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}v1/sales",
+							"host": [
+								"{{baseURL}}v1"
+							],
+							"path": [
+								"sales"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - Pedido creado",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Pedido creado\",\n  \"data\": {\n    \"id\": 142,\n    \"client_id\": 12,\n    \"channel_id\": 1,\n    \"shipping_method_id\": 3,\n    \"sale_status_id\": 1,\n    \"user_id\": null,\n    \"cadete_id\": null,\n    \"address\": \"Av. Corrientes 3421 Piso 5 Dto B\",\n    \"locality_id\": 1,\n    \"postal_code\": \"1193\",\n    \"subtotal\": 4500.00,\n    \"shipping_cost\": 850.00,\n    \"discount_amount\": 450.00,\n    \"total\": 4900.00,\n    \"customer_notes\": \"Por favor envolver para regalo\",\n    \"internal_comments\": null,\n    \"created_at\": \"2026-05-25T14:30:00.000000Z\",\n    \"updated_at\": \"2026-05-25T14:30:00.000000Z\",\n    \"client\": {\n      \"id\": 12,\n      \"name\": \"Luciana\",\n      \"lastName\": \"Martínez\",\n      \"email\": \"luciana.martinez@gmail.com\",\n      \"phone\": \"+54 11 3456-7890\"\n    },\n    \"channel\": { \"id\": 1, \"name\": \"Web\" },\n    \"products\": [\n      {\n        \"id\": 201,\n        \"product_id\": 15,\n        \"variant_id\": null,\n        \"quantity\": 3,\n        \"unit_price\": 1500.00,\n        \"comment\": null,\n        \"customization_data\": { \"fields\": [{ \"label\": \"Nombre\", \"value\": \"Sofía\" }] },\n        \"product\": { \"id\": 15, \"name\": \"Etiquetas personalizadas para colegios\", \"sku\": \"ETQ-COL-001\" },\n        \"variant\": null\n      }\n    ],\n    \"status\": { \"id\": 1, \"name\": \"Aprobado\" },\n    \"statusHistory\": [\n      { \"id\": 301, \"sale_id\": 142, \"sale_status_id\": 8, \"date\": \"2026-05-25T14:30:00.000000Z\" },\n      { \"id\": 302, \"sale_id\": 142, \"sale_status_id\": 1, \"date\": \"2026-05-25T14:31:00.000000Z\" }\n    ],\n    \"shippingMethod\": { \"id\": 3, \"name\": \"Envío Estándar\", \"price\": 850.00 },\n    \"locality\": { \"id\": 1, \"name\": \"Buenos Aires\" },\n    \"coupons\": [{ \"id\": 5, \"code\": \"VUELTAALCOLE10\", \"discount_amount\": 450.00 }]\n  }\n}"
+						},
+						{
+							"name": "422 - Stock insuficiente",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Stock insuficiente para completar el pedido\",\n  \"errors\": [\n    {\n      \"product_id\": 15,\n      \"product_name\": \"Etiquetas personalizadas para colegios\",\n      \"product_variant_id\": null,\n      \"requested\": 3,\n      \"available\": 1\n    }\n  ]\n}"
+						},
+						{
+							"name": "422 - Error de validación",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"products\": [\"El campo productos es obligatorio\"],\n    \"shipping_method_id\": [\"El campo método de envío es obligatorio\"],\n    \"client_mail\": [\"El campo email del cliente es obligatorio\"],\n    \"subtotal\": [\"El campo subtotal es obligatorio\"],\n    \"shipping_cost\": [\"El campo costo de envío es obligatorio\"],\n    \"sale_status_id\": [\"El campo estado del pedido es obligatorio\"],\n    \"channel_id\": [\"El campo canal es obligatorio\"]\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "PUT v1/sales/change-status/:id",
+					"description": "Cambia el estado del pedido desde el portal del cliente. Al pasar a estado 5 (Cancelado) se restaura el stock si el pedido había sido aprobado.",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"sale_status_id\": 5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}v1/sales/change-status/142",
+							"host": [
+								"{{baseURL}}v1"
+							],
+							"path": [
+								"sales",
+								"change-status",
+								"142"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - Estado actualizado",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Estado actualizado\",\n  \"data\": {\n    \"id\": 142,\n    \"client_id\": 12,\n    \"channel_id\": 1,\n    \"shipping_method_id\": 3,\n    \"sale_status_id\": 5,\n    \"user_id\": null,\n    \"cadete_id\": null,\n    \"address\": \"Av. Corrientes 3421 Piso 5 Dto B\",\n    \"locality_id\": 1,\n    \"postal_code\": \"1193\",\n    \"subtotal\": 4500.00,\n    \"shipping_cost\": 850.00,\n    \"discount_amount\": 450.00,\n    \"total\": 4900.00,\n    \"customer_notes\": \"Por favor envolver para regalo\",\n    \"internal_comments\": null,\n    \"status\": { \"id\": 5, \"name\": \"Cancelado\" },\n    \"updated_at\": \"2026-05-25T15:00:00.000000Z\"\n  }\n}"
+						},
+						{
+							"name": "422 - Error de validación",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"sale_status_id\": [\"El campo sale_status_id es obligatorio\"]\n  }\n}"
+						},
+						{
+							"name": "404 - No encontrado",
+							"status": "Not Found",
+							"code": 404,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Pedido no encontrado\"\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Admin",
+			"item": [
+				{
+					"name": "GET sales",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}sales",
+							"host": [
+								"{{baseURL}}sales"
+							],
+							"query": [
+								{
+									"key": "quantity",
+									"value": "20",
+									"description": "Resultados por página",
+									"disabled": true
+								},
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Número de página",
+									"disabled": true
+								},
+								{
+									"key": "search",
+									"value": "142",
+									"description": "Busca por ID, nombre producto, email cliente, dirección",
+									"disabled": true
+								},
+								{
+									"key": "channel_id[]",
+									"value": "1",
+									"description": "Puede ser array. Canal: 1=Web, 2=Instagram, 3=WhatsApp, 4=Mayorista",
+									"disabled": true
+								},
+								{
+									"key": "sale_status_id[]",
+									"value": "1",
+									"description": "Puede ser array. Estado: 1-9",
+									"disabled": true
+								},
+								{
+									"key": "user_id",
+									"value": "2",
+									"description": "Filtra por diseñador asignado",
+									"disabled": true
+								},
+								{
+									"key": "assigned_user",
+									"value": "true",
+									"description": "true=con usuario asignado, omitir=sin usuario",
+									"disabled": true
+								},
+								{
+									"key": "cadete_id",
+									"value": "5",
+									"description": "Filtra por cadete asignado",
+									"disabled": true
+								},
+								{
+									"key": "assigned_cadete",
+									"value": "true",
+									"description": "true=con cadete asignado, omitir=sin cadete",
+									"disabled": true
+								},
+								{
+									"key": "client_id",
+									"value": "12",
+									"description": "Filtra por cliente",
+									"disabled": true
+								},
+								{
+									"key": "shipping_method_id",
+									"value": "3",
+									"description": "Filtra por método de envío",
+									"disabled": true
+								},
+								{
+									"key": "payment_status",
+									"value": "paid",
+									"description": "paid o unpaid",
+									"disabled": true
+								},
+								{
+									"key": "from_date",
+									"value": "2026-05-01",
+									"description": "Fecha de inicio del rango (YYYY-MM-DD)",
+									"disabled": true
+								},
+								{
+									"key": "to_date",
+									"value": "2026-05-31",
+									"description": "Fecha de fin del rango (YYYY-MM-DD)",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - Lista de pedidos",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Ventas obtenidas\",\n  \"data\": [\n    {\n      \"id\": 142,\n      \"client_id\": 12,\n      \"channel_id\": 1,\n      \"shipping_method_id\": 3,\n      \"sale_status_id\": 1,\n      \"user_id\": null,\n      \"cadete_id\": null,\n      \"address\": \"Av. Corrientes 3421 Piso 5 Dto B\",\n      \"locality_id\": 1,\n      \"postal_code\": \"1193\",\n      \"subtotal\": 4500.0,\n      \"shipping_cost\": 850.0,\n      \"discount_amount\": 450.0,\n      \"total\": 4900.0,\n      \"customer_notes\": \"Por favor envolver para regalo\",\n      \"internal_comments\": null,\n      \"created_at\": \"2026-05-25T14:30:00.000000Z\",\n      \"updated_at\": \"2026-05-25T14:30:00.000000Z\",\n      \"client\": {\n        \"id\": 12,\n        \"name\": \"Luciana\",\n        \"lastName\": \"Martínez\",\n        \"email\": \"luciana.martinez@gmail.com\",\n        \"phone\": \"+54 11 3456-7890\"\n      },\n      \"channel\": {\n        \"id\": 1,\n        \"name\": \"Web\"\n      },\n      \"products\": [\n        {\n          \"id\": 201,\n          \"product_id\": 15,\n          \"variant_id\": null,\n          \"quantity\": 3,\n          \"unit_price\": 1500.0,\n          \"comment\": null,\n          \"customization_data\": {\n            \"fields\": [\n              {\n                \"label\": \"Nombre\",\n                \"value\": \"Sofía\"\n              }\n            ]\n          },\n          \"product\": {\n            \"id\": 15,\n            \"name\": \"Etiquetas personalizadas para colegios\",\n            \"sku\": \"ETQ-COL-001\"\n          },\n          \"variant\": null\n        }\n      ],\n      \"status\": {\n        \"id\": 1,\n        \"name\": \"Aprobado\"\n      },\n      \"statusHistory\": [\n        {\n          \"id\": 301,\n          \"sale_id\": 142,\n          \"sale_status_id\": 8,\n          \"date\": \"2026-05-25T14:30:00.000000Z\"\n        },\n        {\n          \"id\": 302,\n          \"sale_id\": 142,\n          \"sale_status_id\": 1,\n          \"date\": \"2026-05-25T14:31:00.000000Z\"\n        }\n      ],\n      \"shippingMethod\": {\n        \"id\": 3,\n        \"name\": \"Envío Estándar\",\n        \"price\": 850.0\n      },\n      \"locality\": {\n        \"id\": 1,\n        \"name\": \"Buenos Aires\"\n      },\n      \"coupons\": [\n        {\n          \"id\": 5,\n          \"code\": \"VUELTAALCOLE10\",\n          \"discount_amount\": 450.0\n        }\n      ]\n    }\n  ],\n  \"metaData\": {\n    \"current_page\": 1,\n    \"last_page\": 3,\n    \"per_page\": 20,\n    \"total\": 52,\n    \"from\": 1,\n    \"to\": 1\n  }\n}"
+						},
+						{
+							"name": "401 - No autenticado",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
+				},
+				{
+					"name": "GET sales/:id",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}sales/142",
+							"host": [
+								"{{baseURL}}sales"
+							],
+							"path": [
+								"142"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - Pedido encontrado",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"id\": 142,\n  \"client_id\": 12,\n  \"channel_id\": 1,\n  \"shipping_method_id\": 3,\n  \"sale_status_id\": 1,\n  \"user_id\": null,\n  \"cadete_id\": null,\n  \"address\": \"Av. Corrientes 3421 Piso 5 Dto B\",\n  \"locality_id\": 1,\n  \"postal_code\": \"1193\",\n  \"subtotal\": 4500.00,\n  \"shipping_cost\": 850.00,\n  \"discount_amount\": 450.00,\n  \"total\": 4900.00,\n  \"customer_notes\": \"Por favor envolver para regalo\",\n  \"internal_comments\": null,\n  \"created_at\": \"2026-05-25T14:30:00.000000Z\",\n  \"updated_at\": \"2026-05-25T14:30:00.000000Z\",\n  \"client\": {\n    \"id\": 12,\n    \"name\": \"Luciana\",\n    \"lastName\": \"Martínez\",\n    \"email\": \"luciana.martinez@gmail.com\",\n    \"phone\": \"+54 11 3456-7890\"\n  },\n  \"channel\": { \"id\": 1, \"name\": \"Web\" },\n  \"products\": [\n    {\n      \"id\": 201,\n      \"product_id\": 15,\n      \"variant_id\": null,\n      \"quantity\": 3,\n      \"unit_price\": 1500.00,\n      \"comment\": null,\n      \"customization_data\": { \"fields\": [{ \"label\": \"Nombre\", \"value\": \"Sofía\" }] },\n      \"product\": { \"id\": 15, \"name\": \"Etiquetas personalizadas para colegios\", \"sku\": \"ETQ-COL-001\" },\n      \"variant\": null\n    }\n  ],\n  \"status\": { \"id\": 1, \"name\": \"Aprobado\" },\n  \"statusHistory\": [\n    { \"id\": 301, \"sale_id\": 142, \"sale_status_id\": 8, \"date\": \"2026-05-25T14:30:00.000000Z\" },\n    { \"id\": 302, \"sale_id\": 142, \"sale_status_id\": 1, \"date\": \"2026-05-25T14:31:00.000000Z\" }\n  ],\n  \"shippingMethod\": { \"id\": 3, \"name\": \"Envío Estándar\", \"price\": 850.00 },\n  \"locality\": { \"id\": 1, \"name\": \"Buenos Aires\" },\n  \"coupons\": [{ \"id\": 5, \"code\": \"VUELTAALCOLE10\", \"discount_amount\": 450.00 }]\n}"
+						},
+						{
+							"name": "404 - No encontrado",
+							"status": "Not Found",
+							"code": 404,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Pedido no encontrado\"\n}"
+						},
+						{
+							"name": "401 - No autenticado",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
+				},
+				{
+					"name": "PUT sales/:id",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"address\": \"Av. Corrientes 3421 Piso 5 Dto B\",\n  \"locality_id\": 1,\n  \"postal_code\": \"1193\",\n  \"subtotal\": 4500.00,\n  \"shipping_cost\": 950.00,\n  \"shipping_method_id\": 3,\n  \"customer_notes\": \"Cliente prefiere retiro en local.\",\n  \"internal_comments\": \"Acordar con cliente por WhatsApp.\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}sales/142",
+							"host": [
+								"{{baseURL}}sales"
+							],
+							"path": [
+								"142"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - Pedido actualizado",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Pedido actualizado\",\n  \"data\": {\n    \"id\": 142,\n    \"client_id\": 12,\n    \"channel_id\": 1,\n    \"shipping_method_id\": 3,\n    \"sale_status_id\": 1,\n    \"user_id\": null,\n    \"cadete_id\": null,\n    \"address\": \"Av. Corrientes 3421 Piso 5 Dto B\",\n    \"locality_id\": 1,\n    \"postal_code\": \"1193\",\n    \"subtotal\": 4500.00,\n    \"shipping_cost\": 950.00,\n    \"discount_amount\": 450.00,\n    \"total\": 5000.00,\n    \"customer_notes\": \"Cliente prefiere retiro en local.\",\n    \"internal_comments\": \"Acordar con cliente por WhatsApp.\",\n    \"updated_at\": \"2026-05-26T09:00:00.000000Z\"\n  }\n}"
+						},
+						{
+							"name": "404 - No encontrado",
+							"status": "Not Found",
+							"code": 404,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Pedido no encontrado\"\n}"
+						},
+						{
+							"name": "401 - No autenticado",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
+				},
+				{
+					"name": "DELETE sales/:id",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}sales/142",
+							"host": [
+								"{{baseURL}}sales"
+							],
+							"path": [
+								"142"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - Pedido eliminado",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Pedido eliminado\"\n}"
+						},
+						{
+							"name": "404 - No encontrado",
+							"status": "Not Found",
+							"code": 404,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Pedido no encontrado\"\n}"
+						},
+						{
+							"name": "401 - No autenticado",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
+				},
+				{
+					"name": "PUT sales/change-status/:id (admin)",
+					"description": "Al pasar a estado 1 (Aprobado) se descuenta stock por canal. Al pasar a 5 (Cancelado) se restaura el stock si el pedido había sido aprobado previamente. No se puede volver a aprobar un pedido ya aprobado.",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"sale_status_id\": 2\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}sales/change-status/142",
+							"host": [
+								"{{baseURL}}sales"
+							],
+							"path": [
+								"change-status",
+								"142"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - Estado actualizado",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Estado actualizado\",\n  \"data\": {\n    \"id\": 142,\n    \"sale_status_id\": 2,\n    \"status\": { \"id\": 2, \"name\": \"En producción\" },\n    \"updated_at\": \"2026-05-25T15:30:00.000000Z\"\n  }\n}"
+						},
+						{
+							"name": "422 - Stock insuficiente",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"No se pudo aprobar el pedido. Stock insuficiente.\",\n  \"errors\": [\n    {\n      \"product_id\": 15,\n      \"product_name\": \"Etiquetas personalizadas para colegios\",\n      \"product_variant_id\": null,\n      \"requested\": 3,\n      \"available\": 0\n    }\n  ]\n}"
+						},
+						{
+							"name": "404 - No encontrado",
+							"status": "Not Found",
+							"code": 404,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Pedido no encontrado\"\n}"
+						},
+						{
+							"name": "401 - No autenticado",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
+				},
+				{
+					"name": "POST sales/assign-user/:id",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"user_id\": 2\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}sales/assign-user/142",
+							"host": [
+								"{{baseURL}}sales"
+							],
+							"path": [
+								"assign-user",
+								"142"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - Usuario asignado",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Usuario asignado\",\n  \"data\": {\n    \"id\": 142,\n    \"user_id\": 2,\n    \"user\": { \"id\": 2, \"name\": \"María\", \"lastName\": \"López\" },\n    \"updated_at\": \"2026-05-26T09:15:00.000000Z\"\n  }\n}"
+						},
+						{
+							"name": "422 - Error de validación",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"user_id\": [\"El campo user_id es obligatorio\"]\n  }\n}"
+						},
+						{
+							"name": "401 - No autenticado",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
+				},
+				{
+					"name": "POST sales/assign-cadete/:id",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"cadete_id\": 5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}sales/assign-cadete/142",
+							"host": [
+								"{{baseURL}}sales"
+							],
+							"path": [
+								"assign-cadete",
+								"142"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - Cadete asignado",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Cadete asignado\",\n  \"data\": {\n    \"id\": 142,\n    \"cadete_id\": 5,\n    \"cadete\": { \"id\": 5, \"name\": \"Diego\", \"lastName\": \"Ramírez\" },\n    \"updated_at\": \"2026-05-26T09:20:00.000000Z\"\n  }\n}"
+						},
+						{
+							"name": "422 - Error de validación",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"cadete_id\": [\"El campo cadete_id es obligatorio\"]\n  }\n}"
+						},
+						{
+							"name": "401 - No autenticado",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
+				},
+				{
+					"name": "PATCH sales/update-internal-comment/:id",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"internal_comments\": \"Cliente contactado por WhatsApp el 25/05. Confirmar pago transferencia.\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}sales/update-internal-comment/142",
+							"host": [
+								"{{baseURL}}sales"
+							],
+							"path": [
+								"update-internal-comment",
+								"142"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - Comentario interno actualizado",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Comentario interno actualizado\",\n  \"data\": {\n    \"id\": 142,\n    \"internal_comments\": \"Cliente contactado por WhatsApp el 25/05. Confirmar pago transferencia.\",\n    \"updated_at\": \"2026-05-26T09:30:00.000000Z\"\n  }\n}"
+						},
+						{
+							"name": "401 - No autenticado",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
+				},
+				{
+					"name": "PATCH sales/update-customer-notes/:id",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"customer_notes\": \"El cliente quiere retiro en local el viernes entre 10 y 13hs.\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}sales/update-customer-notes/142",
+							"host": [
+								"{{baseURL}}sales"
+							],
+							"path": [
+								"update-customer-notes",
+								"142"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - Nota del cliente actualizada",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Nota del cliente actualizada\",\n  \"data\": {\n    \"id\": 142,\n    \"customer_notes\": \"El cliente quiere retiro en local el viernes entre 10 y 13hs.\",\n    \"updated_at\": \"2026-05-26T09:35:00.000000Z\"\n  }\n}"
+						},
+						{
+							"name": "401 - No autenticado",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
+				},
+				{
+					"name": "GET sales/pdf/:id",
+					"description": "Descarga el PDF del pedido.",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}sales/pdf/142",
+							"host": [
+								"{{baseURL}}sales"
+							],
+							"path": [
+								"pdf",
+								"142"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - PDF del pedido",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/pdf"
+								},
+								{
+									"key": "Content-Disposition",
+									"value": "attachment; filename=\"pedido-142.pdf\""
+								}
+							],
+							"body": "(PDF binario)"
+						},
+						{
+							"name": "404 - No encontrado",
+							"status": "Not Found",
+							"code": 404,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Pedido no encontrado\"\n}"
+						},
+						{
+							"name": "401 - No autenticado",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
+				},
+				{
+					"name": "GET sales/export",
+					"description": "Exporta pedidos pagos a Excel filtrado por fechas.",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}sales/export?start_date=2026-05-01&end_date=2026-05-31",
+							"host": [
+								"{{baseURL}}sales"
+							],
+							"path": [
+								"export"
+							],
+							"query": [
+								{
+									"key": "start_date",
+									"value": "2026-05-01",
+									"description": "Fecha de inicio del rango (YYYY-MM-DD)"
+								},
+								{
+									"key": "end_date",
+									"value": "2026-05-31",
+									"description": "Fecha de fin del rango (YYYY-MM-DD)"
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - Excel exportado",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+								},
+								{
+									"key": "Content-Disposition",
+									"value": "attachment; filename=\"pedidos_2026-05-01_2026-05-31.xlsx\""
+								}
+							],
+							"body": "(Excel binario)"
+						},
+						{
+							"name": "401 - No autenticado",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
+				},
+				{
+					"name": "GET sales/export-wholesale",
+					"description": "Exporta pedidos mayoristas a Excel.",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}sales/export-wholesale?start_date=2026-05-01&end_date=2026-05-31",
+							"host": [
+								"{{baseURL}}sales"
+							],
+							"path": [
+								"export-wholesale"
+							],
+							"query": [
+								{
+									"key": "start_date",
+									"value": "2026-05-01",
+									"description": "Fecha de inicio del rango (YYYY-MM-DD)"
+								},
+								{
+									"key": "end_date",
+									"value": "2026-05-31",
+									"description": "Fecha de fin del rango (YYYY-MM-DD)"
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - Excel mayorista exportado",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+								},
+								{
+									"key": "Content-Disposition",
+									"value": "attachment; filename=\"pedidos_2026-05-01_2026-05-31.xlsx\""
+								}
+							],
+							"body": "(Excel binario)"
+						},
+						{
+							"name": "401 - No autenticado",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
+				},
+				{
+					"name": "GET sales/dashboard-stats",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}sales/dashboard-stats",
+							"host": [
+								"{{baseURL}}sales/dashboard-stats"
+							]
+						}
+					},
+					"description": "Estadisticas del dashboard de ventas.",
+					"response": []
+				},
+				{
+					"name": "GET sales/export/wholesale",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}sales/export/wholesale",
+							"host": [
+								"{{baseURL}}sales/export/wholesale"
+							],
+							"query": [
+								{
+									"key": "start_date",
+									"value": "2026-05-01",
+									"description": "Desde (YYYY-MM-DD)"
+								},
+								{
+									"key": "end_date",
+									"value": "2026-05-31",
+									"description": "Hasta (YYYY-MM-DD)"
+								}
+							]
+						}
+					},
+					"description": "Exporta pedidos mayoristas a Excel por rango de fechas.",
+					"response": []
+				},
+				{
+					"name": "PUT sales/change-status-admin/{id}",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}sales/change-status-admin/142",
+							"host": [
+								"{{baseURL}}sales/change-status-admin/142"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"sale_status_id\": 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"description": "Cambia el estado de un pedido (admin). Al pasar a 1 (Aprobado) descuenta stock. Al pasar a 5 (Cancelado) restaura stock si fue aprobado.",
+					"response": []
+				},
+				{
+					"name": "PUT sales/assign-user/{id}",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}sales/assign-user/142",
+							"host": [
+								"{{baseURL}}sales/assign-user/142"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"user_id\": 2\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"description": "Asigna un usuario operador al pedido.",
+					"response": []
+				},
+				{
+					"name": "PUT sales/assign-user-sale-multiple",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}sales/assign-user-sale-multiple",
+							"host": [
+								"{{baseURL}}sales/assign-user-sale-multiple"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"user_id\": 2,\n  \"sale_ids\": [140, 141, 142]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"description": "Asigna un usuario a multiples pedidos.",
+					"response": []
+				},
+				{
+					"name": "PUT sales/assign-cadete/{id}",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}sales/assign-cadete/142",
+							"host": [
+								"{{baseURL}}sales/assign-cadete/142"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"cadete_id\": 5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"description": "Asigna un cadete al pedido.",
+					"response": []
+				},
+				{
+					"name": "PUT sales/assign-cadete-multiple",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}sales/assign-cadete-multiple",
+							"host": [
+								"{{baseURL}}sales/assign-cadete-multiple"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"cadete_id\": 5,\n  \"sale_ids\": [140, 141, 142]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"description": "Asigna un cadete a multiples pedidos.",
+					"response": []
+				},
+				{
+					"name": "PUT sales/receiver-data/{id}",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}sales/receiver-data/142",
+							"host": [
+								"{{baseURL}}sales/receiver-data/142"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"receiver_name\": \"Maria Lopez\",\n  \"receiver_dni\": \"30123456\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"description": "Actualiza los datos del receptor del pedido.",
+					"response": []
+				},
+				{
+					"name": "PUT sales/internal_comments/{id}",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}sales/internal_comments/142",
+							"host": [
+								"{{baseURL}}sales/internal_comments/142"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"internal_comment\": \"Revisar dirección de entrega\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"description": "Actualiza el comentario interno del pedido (solo visible para el equipo).",
+					"response": []
+				},
+				{
+					"name": "PUT sales/customer_notes/{id}",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}sales/customer_notes/142",
+							"host": [
+								"{{baseURL}}sales/customer_notes/142"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"customer_notes\": \"Sin maní por favor\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"description": "Actualiza las notas del cliente en el pedido.",
+					"response": []
+				},
+				{
+					"name": "PUT sales/client-data/{id}",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}sales/client-data/142",
+							"host": [
+								"{{baseURL}}sales/client-data/142"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"client_name\": \"Maria\",\n  \"client_email\": \"maria@mail.com\",\n  \"client_phone\": \"1122334455\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"description": "Actualiza los datos del cliente en el pedido.",
+					"response": []
+				},
+				{
+					"name": "PUT sales/update-client/{id}",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}sales/update-client/142",
+							"host": [
+								"{{baseURL}}sales/update-client/142"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"client_id\": 12\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"description": "Asocia un cliente existente al pedido.",
+					"response": []
+				},
+				{
+					"name": "PUT sales/associate/{id}",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}sales/associate/142",
+							"host": [
+								"{{baseURL}}sales/associate/142"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"associated_sale_id\": 140\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"description": "Asocia dos pedidos entre si.",
+					"response": []
+				},
+				{
+					"name": "PUT sales/remove-association/{id}",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}sales/remove-association/142",
+							"host": [
+								"{{baseURL}}sales/remove-association/142"
+							]
+						}
+					},
+					"description": "Elimina la asociacion entre pedidos.",
+					"response": []
+				},
+				{
+					"name": "POST sales/local",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}sales/local",
+							"host": [
+								"{{baseURL}}sales/local"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"client_id\": 12,\n  \"channel_id\": 3,\n  \"products\": [\n    {\"product_id\": 15, \"quantity\": 2, \"unit_price\": 1500}\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"description": "Crea un pedido local (WhatsApp/Instagram) directamente desde el panel admin. Valida stock y descuenta si hay suficiente.",
+					"response": []
+				},
+				{
+					"name": "PUT sales/local/{id}",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}sales/local/142",
+							"host": [
+								"{{baseURL}}sales/local/142"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"products\": [\n    {\"product_id\": 15, \"quantity\": 3, \"unit_price\": 1500}\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"description": "Actualiza un pedido local existente.",
+					"response": []
+				},
+				{
+					"name": "GET sales/generate-pdf/{id}",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}sales/generate-pdf/142",
+							"host": [
+								"{{baseURL}}sales/generate-pdf/142"
+							]
+						}
+					},
+					"description": "Genera y descarga el PDF del pedido.",
+					"response": []
+				},
+				{
+					"name": "POST sales/generate-bulk-pdfs",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}sales/generate-bulk-pdfs",
+							"host": [
+								"{{baseURL}}sales/generate-bulk-pdfs"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"sale_ids\": [140, 141, 142]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"description": "Genera PDFs en lote para multiples pedidos.",
+					"response": []
+				}
+			]
+		}
+	]
+}

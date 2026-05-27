@@ -1,0 +1,805 @@
+{
+	"info": {
+		"_postman_id": "users-col-etiquecosas-2026",
+		"name": "Users",
+		"description": "Gestion de usuarios internos del sistema. Todos los endpoints requieren JWT. profile_id: 1=Admin, 2=Disenador, 3=Operador, 4=Cadete. Incluye endpoints de perfil propio (update-profile, update-password, update-photo) y administracion (create-admin-user sin JWT, change-status, cadetes).",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "baseURL",
+			"value": "https://api.etiquecosaslab.com.ar/api/",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Get Users",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseURL}}users",
+					"host": [
+						"{{baseURL}}users"
+					],
+					"query": [
+						{
+							"key": "quantity",
+							"value": "10",
+							"description": "Número de resultados por página",
+							"disabled": true
+						},
+						{
+							"key": "page",
+							"value": "1",
+							"disabled": true
+						},
+						{
+							"key": "search",
+							"value": "González",
+							"description": "Busca en name, lastName, email",
+							"disabled": true
+						},
+						{
+							"key": "profile_id",
+							"value": "2",
+							"description": "Filtra por perfil (1=Admin, 2=Diseñador, etc.)",
+							"disabled": true
+						},
+						{
+							"key": "is_active",
+							"value": "1",
+							"description": "1=activo, 0=inactivo",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "200 OK",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}users",
+							"host": [
+								"{{baseURL}}users"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Usuarios obtenidos\",\n  \"data\": [\n    {\n      \"id\": 3,\n      \"name\": \"Juan\",\n      \"lastName\": \"González\",\n      \"email\": \"jgonzalez@gmail.com\",\n      \"photo\": null,\n      \"profile\": {\n        \"id\": 2,\n        \"name\": \"Diseñador\"\n      },\n      \"is_active\": true,\n      \"localities\": [\n        {\n          \"id\": 1,\n          \"name\": \"Buenos Aires\"\n        }\n      ],\n      \"created_at\": \"2025-06-01T10:00:00.000000Z\"\n    },\n    {\n      \"id\": 4,\n      \"name\": \"María\",\n      \"lastName\": \"López\",\n      \"email\": \"mlopez@etiquecosaslab.com.ar\",\n      \"photo\": null,\n      \"profile\": {\n        \"id\": 1,\n        \"name\": \"Admin\"\n      },\n      \"is_active\": false,\n      \"localities\": [],\n      \"created_at\": \"2025-07-15T09:00:00.000000Z\"\n    }\n  ],\n  \"metaData\": {\n    \"current_page\": 1,\n    \"last_page\": 1,\n    \"per_page\": 10,\n    \"total\": 2,\n    \"from\": 1,\n    \"to\": 2\n  }\n}"
+				},
+				{
+					"name": "401 Unauthenticated",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}users",
+							"host": [
+								"{{baseURL}}users"
+							]
+						}
+					},
+					"status": "Unauthorized",
+					"code": 401,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+				}
+			]
+		},
+		{
+			"name": "Create User",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"name\": \"Carlos\",\n  \"lastName\": \"Rodríguez\",\n  \"email\": \"crodriguez@etiquecosaslab.com.ar\",\n  \"password\": \"Segura1234\",\n  \"password_confirmation\": \"Segura1234\",\n  \"profileId\": 2,\n  \"isActive\": true,\n  \"localityIds\": [1, 3]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseURL}}users",
+					"host": [
+						"{{baseURL}}users"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "200 OK - Usuario creado",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Carlos\",\n  \"lastName\": \"Rodríguez\",\n  \"email\": \"crodriguez@etiquecosaslab.com.ar\",\n  \"password\": \"Segura1234\",\n  \"password_confirmation\": \"Segura1234\",\n  \"profileId\": 2,\n  \"isActive\": true,\n  \"localityIds\": [1, 3]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}users",
+							"host": [
+								"{{baseURL}}users"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Usuario creado\",\n  \"data\": {\n    \"id\": 5,\n    \"name\": \"Carlos\",\n    \"lastName\": \"Rodríguez\",\n    \"email\": \"crodriguez@etiquecosaslab.com.ar\",\n    \"photo\": null,\n    \"profile\": {\n      \"id\": 2,\n      \"name\": \"Diseñador\"\n    },\n    \"is_active\": true,\n    \"localities\": [\n      {\n        \"id\": 1,\n        \"name\": \"Buenos Aires\"\n      },\n      {\n        \"id\": 3,\n        \"name\": \"Mar del Plata\"\n      }\n    ],\n    \"created_at\": \"2026-05-26T09:00:00.000000Z\"\n  }\n}"
+				},
+				{
+					"name": "422 Email duplicado",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Carlos\",\n  \"lastName\": \"Rodríguez\",\n  \"email\": \"crodriguez@etiquecosaslab.com.ar\",\n  \"password\": \"Segura1234\",\n  \"password_confirmation\": \"Segura1234\",\n  \"profileId\": 2,\n  \"isActive\": true,\n  \"localityIds\": [1, 3]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}users",
+							"host": [
+								"{{baseURL}}users"
+							]
+						}
+					},
+					"status": "Unprocessable Entity",
+					"code": 422,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"email\": [\n      \"El email ya está en uso\"\n    ]\n  }\n}"
+				},
+				{
+					"name": "422 Campos requeridos faltantes",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}users",
+							"host": [
+								"{{baseURL}}users"
+							]
+						}
+					},
+					"status": "Unprocessable Entity",
+					"code": 422,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"name\": [\n      \"El campo nombre es obligatorio\"\n    ],\n    \"lastName\": [\n      \"El campo apellido es obligatorio\"\n    ],\n    \"email\": [\n      \"El campo email es obligatorio\"\n    ],\n    \"password\": [\n      \"El campo contraseña es obligatorio\"\n    ],\n    \"profileId\": [\n      \"El campo perfil es obligatorio\"\n    ]\n  }\n}"
+				},
+				{
+					"name": "422 Password no coincide",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Carlos\",\n  \"lastName\": \"Rodríguez\",\n  \"email\": \"crodriguez@etiquecosaslab.com.ar\",\n  \"password\": \"Segura1234\",\n  \"password_confirmation\": \"OtraClaveDistinta\",\n  \"profileId\": 2,\n  \"isActive\": true,\n  \"localityIds\": [1, 3]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}users",
+							"host": [
+								"{{baseURL}}users"
+							]
+						}
+					},
+					"status": "Unprocessable Entity",
+					"code": 422,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"password\": [\n      \"La confirmación de contraseña no coincide\"\n    ]\n  }\n}"
+				},
+				{
+					"name": "401 Unauthenticated",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}users",
+							"host": [
+								"{{baseURL}}users"
+							]
+						}
+					},
+					"status": "Unauthorized",
+					"code": 401,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+				}
+			]
+		},
+		{
+			"name": "Update User",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"name\": \"Juan\",\n  \"lastName\": \"González\",\n  \"email\": \"jgonzalez@etiquecosaslab.com.ar\",\n  \"profileId\": 1,\n  \"localityIds\": [1]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseURL}}users/3",
+					"host": [
+						"{{baseURL}}users/3"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "200 OK - Usuario actualizado",
+					"originalRequest": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Juan\",\n  \"lastName\": \"González\",\n  \"email\": \"jgonzalez@etiquecosaslab.com.ar\",\n  \"profileId\": 1,\n  \"localityIds\": [1]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}users/3",
+							"host": [
+								"{{baseURL}}users/3"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Usuario actualizado\",\n  \"data\": {\n    \"id\": 3,\n    \"name\": \"Juan\",\n    \"lastName\": \"González\",\n    \"email\": \"jgonzalez@etiquecosaslab.com.ar\",\n    \"photo\": null,\n    \"profile\": {\n      \"id\": 1,\n      \"name\": \"Admin\"\n    },\n    \"is_active\": true,\n    \"localities\": [\n      {\n        \"id\": 1,\n        \"name\": \"Buenos Aires\"\n      }\n    ]\n  }\n}"
+				},
+				{
+					"name": "404 Not Found",
+					"originalRequest": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}users/3",
+							"host": [
+								"{{baseURL}}users/3"
+							]
+						}
+					},
+					"status": "Not Found",
+					"code": 404,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Usuario no encontrado\"\n}"
+				},
+				{
+					"name": "422 Email inválido",
+					"originalRequest": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}users/3",
+							"host": [
+								"{{baseURL}}users/3"
+							]
+						}
+					},
+					"status": "Unprocessable Entity",
+					"code": 422,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"email\": [\n      \"El campo email debe ser una dirección de correo válida\"\n    ]\n  }\n}"
+				},
+				{
+					"name": "422 Email duplicado",
+					"originalRequest": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}users/3",
+							"host": [
+								"{{baseURL}}users/3"
+							]
+						}
+					},
+					"status": "Unprocessable Entity",
+					"code": 422,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"email\": [\n      \"El email ya está en uso\"\n    ]\n  }\n}"
+				},
+				{
+					"name": "401 Unauthenticated",
+					"originalRequest": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}users/3",
+							"host": [
+								"{{baseURL}}users/3"
+							]
+						}
+					},
+					"status": "Unauthorized",
+					"code": 401,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+				}
+			]
+		},
+		{
+			"name": "Delete User",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseURL}}users/3",
+					"host": [
+						"{{baseURL}}users/3"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "200 OK - Usuario eliminado",
+					"originalRequest": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}users/3",
+							"host": [
+								"{{baseURL}}users/3"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Usuario eliminado\"\n}"
+				},
+				{
+					"name": "404 Not Found",
+					"originalRequest": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}users/3",
+							"host": [
+								"{{baseURL}}users/3"
+							]
+						}
+					},
+					"status": "Not Found",
+					"code": 404,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Usuario no encontrado\"\n}"
+				},
+				{
+					"name": "401 Unauthenticated",
+					"originalRequest": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}users/3",
+							"host": [
+								"{{baseURL}}users/3"
+							]
+						}
+					},
+					"status": "Unauthorized",
+					"code": 401,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+				}
+			]
+		},
+		{
+			"name": "POST create-admin-user",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{baseURL}}create-admin-user",
+					"host": [
+						"{{baseURL}}create-admin-user"
+					]
+				},
+				"auth": {
+					"type": "noauth"
+				},
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"name\": \"Juan\",\n  \"email\": \"juan@etiquecosas.com.ar\",\n  \"password\": \"secret123\",\n  \"profile_id\": 1\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				}
+			},
+			"description": "Crea un usuario admin. No requiere autenticacion.",
+			"response": []
+		},
+		{
+			"name": "GET users/cadetes",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}users/cadetes",
+					"host": [
+						"{{baseURL}}users/cadetes"
+					]
+				}
+			},
+			"description": "Retorna lista de usuarios con profile_id=4 (cadetes).",
+			"response": []
+		},
+		{
+			"name": "PATCH users/update-profile",
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{baseURL}}users/update-profile",
+					"host": [
+						"{{baseURL}}users/update-profile"
+					]
+				},
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"name\": \"Juan\",\n  \"email\": \"juan@etiquecosas.com.ar\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				}
+			},
+			"description": "Actualiza nombre y email del usuario autenticado.",
+			"response": []
+		},
+		{
+			"name": "PATCH users/update-password",
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{baseURL}}users/update-password",
+					"host": [
+						"{{baseURL}}users/update-password"
+					]
+				},
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"current_password\": \"oldpass\",\n  \"password\": \"newpass\",\n  \"password_confirmation\": \"newpass\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				}
+			},
+			"description": "Cambia la contrasena del usuario autenticado.",
+			"response": []
+		},
+		{
+			"name": "PATCH users/change-status/{id}",
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}users/change-status/3",
+					"host": [
+						"{{baseURL}}users/change-status/3"
+					]
+				}
+			},
+			"description": "Activa o desactiva un usuario por ID.",
+			"response": []
+		}
+	]
+}

@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Gestión de Stock – Documentación Técnica</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #1e40af;
+      --primary-light: #dbeafe;
+      --accent: #0ea5e9;
+      --success: #16a34a;
+      --success-light: #dcfce7;
+      --warning: #d97706;
+      --warning-light: #fef3c7;
+      --danger: #dc2626;
+      --danger-light: #fee2e2;
+      --gray-50: #f8fafc;
+      --gray-100: #f1f5f9;
+      --gray-200: #e2e8f0;
+      --gray-400: #94a3b8;
+      --gray-600: #475569;
+      --gray-800: #1e293b;
+      --gray-900: #0f172a;
+      --radius: 8px;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      font-size: 11pt;
+      color: var(--gray-800);
+      background: #fff;
+      line-height: 1.6;
+    }
+
+    /* ── COVER ── */
+    .cover {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #0e7490 100%);
+      color: #fff;
+      text-align: center;
+      padding: 60px 40px;
+      page-break-after: always;
+    }
+    .cover-badge {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 20px;
+      padding: 6px 18px;
+      font-size: 9.5pt;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 32px;
+      color: #93c5fd;
+    }
+    .cover h1 {
+      font-size: 32pt;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 16px;
+    }
+    .cover h1 span { color: #38bdf8; }
+    .cover-subtitle {
+      font-size: 13pt;
+      color: #94a3b8;
+      margin-bottom: 48px;
+    }
+    .cover-meta {
+      display: flex;
+      gap: 40px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .cover-meta-item { text-align: center; }
+    .cover-meta-item .label { font-size: 8.5pt; color: #64748b; text-transform: uppercase; letter-spacing: 0.06em; }
+    .cover-meta-item .value { font-size: 11pt; font-weight: 600; color: #e2e8f0; margin-top: 4px; }
+    .cover-divider {
+      width: 60px;
+      height: 3px;
+      background: linear-gradient(90deg, #38bdf8, #818cf8);
+      border-radius: 2px;
+      margin: 40px auto;
+    }
+
+    /* ── LAYOUT ── */
+    .page {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 48px 52px;
+    }
+
+    @media print {
+      .page { padding: 32px 44px; }
+      .cover { min-height: 100vh; }
+    }
+
+    /* ── TOC ── */
+    .toc-page {
+      page-break-after: always;
+    }
+    .toc-title {
+      font-size: 18pt;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 32px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--primary-light);
+    }
+    .toc-section { margin-bottom: 6px; }
+    .toc-row {
+      display: flex;
+      align-items: baseline;
+      gap: 0;
+      padding: 5px 0;
+    }
+    .toc-num {
+      font-weight: 600;
+      color: var(--primary);
+      width: 28px;
+      flex-shrink: 0;
+      font-size: 10pt;
+    }
+    .toc-label {
+      flex: 1;
+      font-size: 10.5pt;
+      color: var(--gray-800);
+    }
+    .toc-dots {
+      flex: 1;
+      border-bottom: 1.5px dotted var(--gray-200);
+      margin: 0 8px;
+      position: relative;
+      top: -3px;
+    }
+    .toc-page-num {
+      font-size: 10pt;
+      color: var(--gray-400);
+      font-weight: 500;
+      width: 24px;
+      text-align: right;
+    }
+    .toc-group-label {
+      font-size: 8.5pt;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--gray-400);
+      margin: 20px 0 8px 0;
+    }
+
+    /* ── SECTION HEADERS ── */
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 24px;
+      padding-bottom: 14px;
+      border-bottom: 2px solid var(--primary-light);
+    }
+    .section-number {
+      background: var(--primary);
+      color: #fff;
+      font-size: 11pt;
+      font-weight: 700;
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .section-title {
+      font-size: 16pt;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    .section-subtitle {
+      font-size: 10pt;
+      color: var(--gray-400);
+      margin-top: 2px;
+    }
+
+    h3 {
+      font-size: 12pt;
+      font-weight: 600;
+      color: var(--gray-900);
+      margin: 28px 0 12px 0;
+    }
+    h4 {
+      font-size: 10.5pt;
+      font-weight: 600;
+      color: var(--gray-600);
+      margin: 18px 0 8px 0;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    p { margin-bottom: 12px; }
+
+    /* ── CARDS ── */
+    .card {
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius);
+      padding: 20px 22px;
+      margin-bottom: 18px;
+      background: var(--gray-50);
+    }
+    .card-primary {
+      border-left: 4px solid var(--primary);
+      background: var(--primary-light);
+    }
+    .card-success {
+      border-left: 4px solid var(--success);
+      background: var(--success-light);
+    }
+    .card-warning {
+      border-left: 4px solid var(--warning);
+      background: var(--warning-light);
+    }
+    .card-danger {
+      border-left: 4px solid var(--danger);
+      background: var(--danger-light);
+    }
+    .card-title {
+      font-weight: 600;
+      font-size: 11pt;
+      margin-bottom: 8px;
+      color: var(--gray-900);
+    }
+
+    /* ── CODE BLOCKS ── */
+    pre {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8.5pt;
+      background: var(--gray-900);
+      color: #e2e8f0;
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      overflow-x: auto;
+      line-height: 1.55;
+      margin: 14px 0;
+    }
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8.5pt;
+      background: var(--gray-100);
+      color: var(--primary);
+      padding: 2px 5px;
+      border-radius: 4px;
+    }
+    pre code { background: none; color: inherit; padding: 0; }
+
+    .token-keyword  { color: #93c5fd; }
+    .token-string   { color: #86efac; }
+    .token-comment  { color: #6b7280; font-style: italic; }
+    .token-number   { color: #fcd34d; }
+    .token-func     { color: #f9a8d4; }
+    .token-class    { color: #67e8f9; }
+    .token-var      { color: #e2e8f0; }
+
+    /* ── FLOW DIAGRAMS ── */
+    .flow {
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin: 16px 0;
+      background: #fafcff;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8.5pt;
+      color: var(--gray-800);
+      line-height: 1.7;
+      white-space: pre;
+    }
+
+    /* ── TABLES ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 10pt;
+    }
+    th {
+      background: var(--primary);
+      color: #fff;
+      font-weight: 600;
+      padding: 10px 14px;
+      text-align: left;
+      font-size: 9.5pt;
+    }
+    td {
+      padding: 9px 14px;
+      border-bottom: 1px solid var(--gray-200);
+      vertical-align: top;
+    }
+    tr:nth-child(even) td { background: var(--gray-50); }
+    tr:last-child td { border-bottom: none; }
+    .td-code { font-family: 'JetBrains Mono', monospace; font-size: 8.5pt; color: var(--primary); }
+    .td-file { font-family: 'JetBrains Mono', monospace; font-size: 8pt; color: var(--gray-600); }
+
+    /* ── BADGES ── */
+    .badge {
+      display: inline-block;
+      padding: 2px 9px;
+      border-radius: 12px;
+      font-size: 8pt;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .badge-blue   { background: #dbeafe; color: #1d4ed8; }
+    .badge-green  { background: #dcfce7; color: #15803d; }
+    .badge-red    { background: #fee2e2; color: #b91c1c; }
+    .badge-yellow { background: #fef3c7; color: #92400e; }
+    .badge-gray   { background: #f1f5f9; color: #475569; }
+
+    /* ── STATUS CHIPS ── */
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 12px 0;
+    }
+    .status-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--gray-200);
+      border-radius: 6px;
+      padding: 7px 12px;
+      font-size: 9.5pt;
+    }
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* ── STEPS ── */
+    .steps { margin: 14px 0; }
+    .step {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 14px;
+      align-items: flex-start;
+    }
+    .step-num {
+      background: var(--primary);
+      color: #fff;
+      font-weight: 700;
+      font-size: 9pt;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .step-content { flex: 1; }
+    .step-content strong { color: var(--gray-900); }
+
+    /* ── CALLOUT ── */
+    .callout {
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      margin: 16px 0;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .callout-info    { background: #eff6ff; border: 1px solid #bfdbfe; }
+    .callout-warning { background: #fffbeb; border: 1px solid #fde68a; }
+    .callout-danger  { background: #fef2f2; border: 1px solid #fecaca; }
+    .callout-success { background: #f0fdf4; border: 1px solid #bbf7d0; }
+    .callout-icon { font-size: 14pt; flex-shrink: 0; margin-top: 1px; }
+    .callout-body { font-size: 10pt; }
+    .callout-body strong { display: block; margin-bottom: 4px; }
+
+    /* ── TWO COLUMNS ── */
+    .cols-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 14px 0; }
+    .cols-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin: 14px 0; }
+
+    /* ── PAGE BREAKS ── */
+    .page-break { page-break-before: always; }
+    .section { margin-bottom: 52px; }
+
+    /* ── PRINT ── */
+    @media print {
+      a { text-decoration: none; color: inherit; }
+      .flow { font-size: 7.5pt; }
+      pre  { font-size: 7.5pt; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════
+     COVER
+═══════════════════════════════════════════════════ -->
+<div class="cover">
+  <div class="cover-badge">Documentación Técnica Interna</div>
+  <h1>Gestión de <span>Stock</span><br>del Sistema</h1>
+  <div class="cover-subtitle">etiquecosas-API &nbsp;·&nbsp; Backend Laravel</div>
+  <div class="cover-divider"></div>
+  <div class="cover-meta">
+    <div class="cover-meta-item">
+      <div class="label">Proyecto</div>
+      <div class="value">etiquecosas-API</div>
+    </div>
+    <div class="cover-meta-item">
+      <div class="label">Rama</div>
+      <div class="value">stock-movement</div>
+    </div>
+    <div class="cover-meta-item">
+      <div class="label">Fecha</div>
+      <div class="value">Mayo 2026</div>
+    </div>
+    <div class="cover-meta-item">
+      <div class="label">Framework</div>
+      <div class="value">Laravel (PHP)</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     TABLE OF CONTENTS
+═══════════════════════════════════════════════════ -->
+<div class="page toc-page">
+  <div class="toc-title">Índice</div>
+
+  <div class="toc-group-label">Fundamentos</div>
+  <div class="toc-section">
+    <div class="toc-row"><span class="toc-num">1</span><span class="toc-label">Estructura de Datos del Stock</span><span class="toc-dots"></span><span class="toc-page-num">3</span></div>
+    <div class="toc-row"><span class="toc-num">2</span><span class="toc-label">Estados de una Venta</span><span class="toc-dots"></span><span class="toc-page-num">3</span></div>
+    <div class="toc-row"><span class="toc-num">3</span><span class="toc-label">Canales de Venta</span><span class="toc-dots"></span><span class="toc-page-num">4</span></div>
+  </div>
+
+  <div class="toc-group-label">Servicios Principales</div>
+  <div class="toc-section">
+    <div class="toc-row"><span class="toc-num">4</span><span class="toc-label">StockService – Validación, Descuento y Restauración</span><span class="toc-dots"></span><span class="toc-page-num">4</span></div>
+    <div class="toc-row"><span class="toc-num">5</span><span class="toc-label">StockAlertService – Sistema de Alertas</span><span class="toc-dots"></span><span class="toc-page-num">6</span></div>
+    <div class="toc-row"><span class="toc-num">6</span><span class="toc-label">StockMovement – Auditoría de Movimientos</span><span class="toc-dots"></span><span class="toc-page-num">7</span></div>
+  </div>
+
+  <div class="toc-group-label">Flujos de Venta</div>
+  <div class="toc-section">
+    <div class="toc-row"><span class="toc-num">7</span><span class="toc-label">Flujo 1: Venta Online con MercadoPago</span><span class="toc-dots"></span><span class="toc-page-num">8</span></div>
+    <div class="toc-row"><span class="toc-num">8</span><span class="toc-label">Flujo 2: Venta Local (en tienda)</span><span class="toc-dots"></span><span class="toc-page-num">9</span></div>
+    <div class="toc-row"><span class="toc-num">9</span><span class="toc-label">Flujo 3: Venta Mayorista (Canal 4)</span><span class="toc-dots"></span><span class="toc-page-num">10</span></div>
+    <div class="toc-row"><span class="toc-num">10</span><span class="toc-label">Flujo 4: Aprobación Manual por Admin</span><span class="toc-dots"></span><span class="toc-page-num">10</span></div>
+    <div class="toc-row"><span class="toc-num">11</span><span class="toc-label">Flujo 5: Cancelación y Restauración de Stock</span><span class="toc-dots"></span><span class="toc-page-num">11</span></div>
+  </div>
+
+  <div class="toc-group-label">Referencia</div>
+  <div class="toc-section">
+    <div class="toc-row"><span class="toc-num">12</span><span class="toc-label">Manejo de Errores</span><span class="toc-dots"></span><span class="toc-page-num">11</span></div>
+    <div class="toc-row"><span class="toc-num">13</span><span class="toc-label">Endpoints de API Relacionados</span><span class="toc-dots"></span><span class="toc-page-num">12</span></div>
+    <div class="toc-row"><span class="toc-num">14</span><span class="toc-label">Diagrama de Relaciones</span><span class="toc-dots"></span><span class="toc-page-num">12</span></div>
+    <div class="toc-row"><span class="toc-num">15</span><span class="toc-label">Resumen y Salvaguardas</span><span class="toc-dots"></span><span class="toc-page-num">13</span></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     SECTION 1 – ESTRUCTURA DE DATOS
+═══════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">1</div>
+      <div>
+        <div class="section-title">Estructura de Datos del Stock</div>
+        <div class="section-subtitle">Cómo se almacena el stock en la base de datos</div>
+      </div>
+    </div>
+
+    <p>El stock no se almacena en una tabla independiente por producto. En cambio, cada <code>Product</code> y <code>ProductVariant</code> tiene un campo JSON llamado <code>stock_channels</code> que contiene el stock disponible desglosado por canal de venta.</p>
+
+    <h3>Formato del campo <code>stock_channels</code></h3>
+    <pre><code><span class="token-comment">// Ejemplo de stock_channels en un producto o variante</span>
+<span class="token-var">stock_channels</span> = [
+  {
+    <span class="token-string">"channel"</span>:       <span class="token-number">1</span>,               <span class="token-comment">// ID del canal</span>
+    <span class="token-string">"channel_name"</span>:  <span class="token-string">"Tienda Online"</span>,  <span class="token-comment">// Nombre descriptivo</span>
+    <span class="token-string">"stock_quantity"</span>: <span class="token-number">100</span>,            <span class="token-comment">// Stock disponible actual</span>
+    <span class="token-string">"stock_alert"</span>:    <span class="token-number">10</span>             <span class="token-comment">// Umbral de alerta (envía email)</span>
+  },
+  {
+    <span class="token-string">"channel"</span>:       <span class="token-number">2</span>,
+    <span class="token-string">"channel_name"</span>:  <span class="token-string">"Local Comercial"</span>,
+    <span class="token-string">"stock_quantity"</span>: <span class="token-number">50</span>,
+    <span class="token-string">"stock_alert"</span>:    <span class="token-number">5</span>
+  }
+]</code></pre>
+
+    <div class="cols-2">
+      <div class="card card-primary">
+        <div class="card-title">Product</div>
+        <code>app/Models/Product.php</code><br><br>
+        Campo <code>stock_channels</code> casteado como <code>array</code>. Se usa cuando el producto <strong>no tiene variantes activas</strong>.
+      </div>
+      <div class="card card-primary">
+        <div class="card-title">ProductVariant</div>
+        <code>app/Models/ProductVariant.php</code><br><br>
+        Campo <code>stock_channels</code> casteado como <code>array</code>. Tiene <strong>prioridad sobre el producto</strong> cuando existe y no está vacío.
+      </div>
+    </div>
+
+    <div class="callout callout-info">
+      <div class="callout-icon">ℹ️</div>
+      <div class="callout-body">
+        <strong>Regla de prioridad</strong>
+        Si el <code>ProductVariant</code> tiene <code>stock_channels</code> configurado, ese valor se usa para la validación y descuento. De lo contrario, se usa el del <code>Product</code>. Si ninguno tiene <code>stock_channels</code>, el producto se considera <strong>sin control de stock</strong> y se omite en las validaciones.
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 2 -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">2</div>
+      <div>
+        <div class="section-title">Estados de una Venta</div>
+        <div class="section-subtitle">sale_status_id y su relación con el stock</div>
+      </div>
+    </div>
+
+    <div class="status-row">
+      <div class="status-chip"><div class="status-dot" style="background:#f59e0b"></div><strong>8</strong>&nbsp;Pendiente de pago</div>
+      <div class="status-chip"><div class="status-dot" style="background:#16a34a"></div><strong>1</strong>&nbsp;Aprobada</div>
+      <div class="status-chip"><div class="status-dot" style="background:#dc2626"></div><strong>5</strong>&nbsp;Cancelada</div>
+      <div class="status-chip"><div class="status-dot" style="background:#ef4444"></div><strong>9</strong>&nbsp;Pago rechazado</div>
+    </div>
+
+    <table>
+      <thead>
+        <tr><th>Estado</th><th>ID</th><th>Impacto en Stock</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Pendiente de pago</td><td class="td-code">8</td><td>Sin impacto. Stock no se reserva ni descuenta.</td></tr>
+        <tr><td>Aprobada</td><td class="td-code">1</td><td><span class="badge badge-red">Descuenta stock</span> al momento de transicionar a este estado.</td></tr>
+        <tr><td>Cancelada</td><td class="td-code">5</td><td><span class="badge badge-green">Restaura stock</span> solo si previamente estuvo en estado 1.</td></tr>
+        <tr><td>Pago rechazado</td><td class="td-code">9</td><td>Sin impacto. Stock no fue descontado.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SECTION 3 -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">3</div>
+      <div>
+        <div class="section-title">Canales de Venta</div>
+        <div class="section-subtitle">Cada canal tiene su propio stock independiente</div>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr><th>Canal ID</th><th>Nombre</th><th>Flujo de aprobación</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="td-code">1</td><td>Tienda Online</td><td>Manual o por webhook de MercadoPago</td></tr>
+        <tr><td class="td-code">2</td><td>Local Comercial</td><td>Aprobación inmediata al crear la venta</td></tr>
+        <tr><td class="td-code">4</td><td>Mayorista</td><td>Auto-aprobación al crear, con rollback si no hay stock</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-warning">
+      <div class="callout-icon">⚠️</div>
+      <div class="callout-body">
+        <strong>Stock independiente por canal</strong>
+        Una venta del canal 2 solo descuenta el stock configurado para <code>channel: 2</code>. No afecta el stock de otros canales aunque sea el mismo producto físico.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     SECTION 4 – STOCKSERVICE
+═══════════════════════════════════════════════════ -->
+<div class="page page-break">
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">4</div>
+      <div>
+        <div class="section-title">StockService</div>
+        <div class="section-subtitle">app/Services/StockService.php – Servicio central de gestión de stock</div>
+      </div>
+    </div>
+
+    <p>Clase estática que concentra toda la lógica de validación, descuento y restauración de stock. Todos los cambios de inventario pasan por este servicio.</p>
+
+    <!-- 4.1 validateStock -->
+    <h3>4.1 &nbsp;<code>validateStock(Sale $sale): array</code></h3>
+    <p>Verifica que todos los productos de una venta tengan stock suficiente en el canal correspondiente. <strong>No modifica datos.</strong></p>
+
+    <div class="flow">  ENTRADA: $sale con relaciones products.product y products.variant cargadas
+
+  PARA CADA producto en $sale->products:
+  │
+  ├─ ¿El variant tiene stock_channels?
+  │     SÍ → Usar variant.stock_channels
+  │     NO  → Usar product.stock_channels
+  │
+  ├─ ¿stock_channels está vacío?
+  │     SÍ → SALTAR (sin control de stock)
+  │
+  ├─ Buscar el canal que coincida con $sale->channel_id
+  │
+  └─ ¿stock_quantity < cantidad_solicitada?
+        SÍ → Agregar error al array:
+        │      { product_id, product_variant_id,
+        │        product_name, requested, available }
+        NO → Continuar
+
+  RETORNO: array de errores (vacío = OK)</div>
+
+    <div class="callout callout-success">
+      <div class="callout-icon">✅</div>
+      <div class="callout-body">
+        <strong>Formato de respuesta de error</strong>
+        Cada objeto en el array incluye <code>product_name</code> (con nombre de variante si aplica), la cantidad solicitada y la disponible, para mostrar al usuario un mensaje descriptivo.
+      </div>
+    </div>
+
+    <!-- 4.2 discountStock -->
+    <h3>4.2 &nbsp;<code>discountStock(Sale $sale): void</code></h3>
+    <p>Descuenta el stock al momento de aprobarse una venta. <strong>Siempre se llama después de <code>validateStock()</code>.</strong></p>
+
+    <div class="flow">  PARA CADA producto en $sale->products:
+  │
+  ├─ Determinar fuente de stock (variant o product)
+  │
+  ├─ Recorrer stock_channels por referencia:
+  │     Si channel == $sale->channel_id:
+  │       stock_quantity = max(0, stock_quantity - cantidad)
+  │       (nunca baja de cero)
+  │
+  ├─ Guardar el modelo (variant.save() o product.save())
+  │
+  └─ Registrar movimiento en stock_movements:
+        quantity:  -cantidad  (negativo = salida)
+        note:      "Deducción por confirmación de pedido #ID"
+
+  AL FINALIZAR todos los productos:
+  └─ StockAlertService::checkAndNotify() para cada producto afectado</div>
+
+    <!-- 4.3 restoreStock -->
+    <h3>4.3 &nbsp;<code>restoreStock(Sale $sale): void</code></h3>
+    <p>Revierte un descuento de stock cuando una venta aprobada es cancelada.</p>
+
+    <div class="flow">  PARA CADA producto en $sale->products:
+  │
+  ├─ Determinar fuente de stock (variant o product)
+  │
+  ├─ Recorrer stock_channels por referencia:
+  │     Si channel == $sale->channel_id:
+  │       stock_quantity = stock_quantity + cantidad
+  │       (sin límite superior)
+  │
+  ├─ Guardar el modelo
+  │
+  └─ Registrar movimiento en stock_movements:
+        quantity:  +cantidad  (positivo = ingreso)
+        note:      "Restauración por cancelación de pedido #ID"
+
+  NOTA: NO se ejecutan alertas de stock en restauraciones.</div>
+
+    <div class="callout callout-warning">
+      <div class="callout-icon">⚠️</div>
+      <div class="callout-body">
+        <strong>Diferencia importante entre descuento y restauración</strong>
+        <code>discountStock()</code> dispara alertas de stock bajo. <code>restoreStock()</code> no las dispara, ya que un aumento de stock no requiere notificación.
+      </div>
+    </div>
+
+    <!-- 4.4 recordMovement -->
+    <h3>4.4 &nbsp;<code>recordMovement()</code> (privado)</h3>
+    <p>Registra cada cambio de stock como una entrada en la tabla <code>stock_movements</code>. Envuelto en <code>try/catch</code> para que un fallo de auditoría no interrumpa la operación principal.</p>
+
+    <table>
+      <thead><tr><th>Parámetro</th><th>Tipo</th><th>Descripción</th></tr></thead>
+      <tbody>
+        <tr><td class="td-code">$productId</td><td>int</td><td>ID del producto afectado</td></tr>
+        <tr><td class="td-code">$variantId</td><td>?int</td><td>ID de la variante (null si no aplica)</td></tr>
+        <tr><td class="td-code">$quantity</td><td>int</td><td>Negativo para salidas, positivo para ingresos</td></tr>
+        <tr><td class="td-code">$note</td><td>string</td><td>Razón legible del movimiento</td></tr>
+        <tr><td class="td-code">$saleId</td><td>?int</td><td>ID de la venta relacionada</td></tr>
+        <tr><td class="td-code">$userId</td><td>?int</td><td>Usuario que realizó la acción</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     SECTION 5 – STOCKALERTSERVICE
+═══════════════════════════════════════════════════ -->
+<div class="page page-break">
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">5</div>
+      <div>
+        <div class="section-title">StockAlertService</div>
+        <div class="section-subtitle">app/Services/StockAlertService.php – Notificaciones de stock bajo</div>
+      </div>
+    </div>
+
+    <p>Servicio que evalúa si el stock de un producto cruzó el umbral de alerta y envía un email de notificación al equipo interno.</p>
+
+    <h3>Método <code>checkAndNotify(Product $product)</code></h3>
+
+    <div class="flow">  ENTRADA: Product (recargado con ->fresh())
+
+  Cargar variantes activas (sin soft-delete)
+
+  ¿Tiene variantes activas?
+  │
+  ├─ SÍ → Evaluar cada variant.stock_channels
+  │         PARA CADA canal:
+  │           SI stock_quantity &lt;= stock_alert:
+  │             Agregar alerta { variante, canal, stock_actual, umbral }
+  │
+  └─ NO → Evaluar product.stock_channels
+            PARA CADA canal:
+              SI stock_quantity &lt;= stock_alert:
+                Agregar alerta { producto, canal, stock_actual, umbral }
+
+  ¿Hay alertas?
+  └─ SÍ → Enviar email a info@etiquecosas.com.ar
+           via Mailable: StockAlertMail
+           Log::info() con detalle</div>
+
+    <div class="cols-2">
+      <div class="card card-warning">
+        <div class="card-title">Cuándo se dispara</div>
+        Después de cada llamada a <code>StockService::discountStock()</code>. Es decir, al aprobar cualquier venta.
+      </div>
+      <div class="card">
+        <div class="card-title">Cuándo NO se dispara</div>
+        En <code>restoreStock()</code> (cancelaciones) y en ajustes manuales de stock desde el panel de administración.
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 6 -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">6</div>
+      <div>
+        <div class="section-title">StockMovement – Auditoría</div>
+        <div class="section-subtitle">app/Models/StockMovement.php – Registro inmutable de movimientos</div>
+      </div>
+    </div>
+
+    <p>Tabla de auditoría append-only que registra cada entrada y salida de stock. No tiene <code>updated_at</code> para reforzar su carácter inmutable.</p>
+
+    <h3>Estructura de la tabla <code>stock_movements</code></h3>
+    <table>
+      <thead><tr><th>Campo</th><th>Tipo</th><th>Descripción</th></tr></thead>
+      <tbody>
+        <tr><td class="td-code">id</td><td>PK</td><td>Identificador único</td></tr>
+        <tr><td class="td-code">product_id</td><td>FK → products</td><td>Producto afectado (cascade delete)</td></tr>
+        <tr><td class="td-code">product_variant_id</td><td>FK nullable</td><td>Variante afectada (null on delete)</td></tr>
+        <tr><td class="td-code">quantity</td><td>integer</td><td>Negativo = salida · Positivo = ingreso</td></tr>
+        <tr><td class="td-code">note</td><td>text</td><td>Razón legible del movimiento</td></tr>
+        <tr><td class="td-code">sale_id</td><td>FK nullable</td><td>Venta relacionada (null on delete)</td></tr>
+        <tr><td class="td-code">user_id</td><td>FK nullable</td><td>Usuario responsable (null on delete)</td></tr>
+        <tr><td class="td-code">created_at</td><td>timestamp</td><td>Fecha del movimiento (solo este campo)</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Ejemplos de notas registradas</h3>
+    <div class="cols-2">
+      <div class="card card-danger">
+        <div class="card-title">Salida de stock</div>
+        <code>"Deducción por confirmación de pedido #1042"</code><br><br>
+        quantity: <strong>-3</strong>
+      </div>
+      <div class="card card-success">
+        <div class="card-title">Entrada de stock</div>
+        <code>"Restauración por cancelación de pedido #1042"</code><br><br>
+        quantity: <strong>+3</strong>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     SECTION 7 – FLUJO ONLINE MERCADOPAGO
+═══════════════════════════════════════════════════ -->
+<div class="page page-break">
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">7</div>
+      <div>
+        <div class="section-title">Flujo 1: Venta Online con MercadoPago</div>
+        <div class="section-subtitle">El camino más común para ventas de la tienda online</div>
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <strong>Cliente completa el checkout – <code>POST /v1/sales</code></strong><br>
+          Se crea la venta con <code>sale_status_id = 8</code> (Pendiente de pago). Los productos se vinculan a la venta. <strong>No se valida ni descuenta stock en este paso.</strong>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <strong>Frontend solicita enlace de pago – <code>POST /v1/mercadopago/create-preference</code></strong><br>
+          Se crea la preferencia en MercadoPago y se retorna el <code>init_point</code>. No se valida ni descuenta stock en este paso.
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <strong>Cliente realiza el pago en MercadoPago</strong><br>
+          El cliente es redirigido a la plataforma de MercadoPago. El sistema espera la notificación (webhook).
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <strong>MercadoPago notifica el resultado – <code>POST /mercadopago/webhook</code></strong><br>
+          El webhook verifica que la venta no haya sido aprobada antes (protección contra doble ejecución). Si el pago es <strong>aprobado</strong>: cambia el estado a 1, envía emails, <strong>descuenta stock</strong>, registra movimientos y dispara alertas. Genera PDFs de forma asíncrona. Si es <strong>rechazado</strong>: cambia el estado a 9, sin impacto en stock.
+        </div>
+      </div>
+    </div>
+
+    <div class="flow">  [Cliente]         [API]                    [MercadoPago]        [Stock]
+      │                  │                        │                     │
+      │─ POST /sales ───►│                        │                     │
+      │                  │ Crea venta (status=8)  │                     │
+      │◄─ sale_id ───────│                        │                     │
+      │                  │                        │                     │
+      │─ create-pref ───►│                        │                     │
+      │                  │─ POST /preferences ───►│                     │
+      │◄─ init_point ────│◄─ preference ──────────│                     │
+      │                  │                        │                     │
+      │─ paga ──────────►│(MercadoPago)           │                     │
+      │                  │◄─ webhook (approved) ──│                     │
+      │                  │─ discountStock() ──────┼─────────────────────►│
+      │                  │─ status = 1            │                     │
+      │◄─ email conf. ───│                        │                     │</div>
+
+    <div class="callout callout-danger">
+      <div class="callout-icon">🔒</div>
+      <div class="callout-body">
+        <strong>Protección contra doble aprobación</strong>
+        El webhook verifica con <code>hasBeenApproved()</code> que la venta no tenga historial de estado 1. Esto evita que un webhook duplicado descuente el stock dos veces.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     SECTION 8 – FLUJO VENTA LOCAL
+═══════════════════════════════════════════════════ -->
+<div class="page page-break">
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">8</div>
+      <div>
+        <div class="section-title">Flujo 2: Venta Local (en tienda)</div>
+        <div class="section-subtitle">SaleController@storeLocalSale – Canal 2</div>
+      </div>
+    </div>
+
+    <p>Las ventas locales se aprueban de forma inmediata. La validación y el descuento de stock ocurren en el mismo request de creación. Si el stock falla, la venta es eliminada.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content"><strong>Admin crea la venta – <code>POST /sales/local</code></strong><br>Se crea la venta directamente con <code>sale_status_id = 1</code> (Aprobada) y <code>channel_id = 2</code>.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content"><strong>Validación de stock</strong><br><code>StockService::validateStock($sale)</code>. Si falla, se eliminan los productos y la venta, y se retorna HTTP 422.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content"><strong>Descuento inmediato</strong><br><code>StockService::discountStock($sale)</code>. Se descuenta el stock, se registran movimientos y se verifican alertas.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content"><strong>Registro en historial</strong><br>Se crea un <code>SaleStatusHistory</code> para la transición al estado 1.</div>
+      </div>
+    </div>
+
+    <h3>Actualización de venta local – <code>PUT /sales/local/:id</code></h3>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content"><strong>Restauración del stock anterior</strong><br><code>StockService::restoreStock($sale)</code> para devolver el stock de los productos originales.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content"><strong>Reemplazo de productos</strong><br>Se eliminan los <code>SaleProduct</code> anteriores y se crean los nuevos.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content"><strong>Descuento del nuevo stock</strong><br><code>StockService::discountStock($sale)</code> con los productos actualizados.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 9 -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">9</div>
+      <div>
+        <div class="section-title">Flujo 3: Venta Mayorista (Canal 4)</div>
+        <div class="section-subtitle">SaleController@store con channel_id = 4</div>
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content"><strong>Se crea la venta en estado 8</strong><br>Igual que una venta online estándar.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content"><strong>Auto-aprobación inmediata</strong><br>Por ser canal 4, se llama automáticamente a <code>approveSale()</code> que valida stock y, si todo está bien, descuenta.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content"><strong>Si no hay stock: rollback a estado 8</strong><br>Se captura <code>InsufficientStockException</code>, el estado vuelve a 8 y se retorna error 422. La venta queda registrada pero sin descuento de stock.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 10 -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">10</div>
+      <div>
+        <div class="section-title">Flujo 4: Aprobación Manual por Admin</div>
+        <div class="section-subtitle">SaleController@changeStatusAdmin</div>
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content"><strong>Admin cambia el estado a 1 (Aprobada)</strong><br>El sistema verifica con <code>hasBeenApproved()</code> que la venta no haya sido aprobada antes. Si ya fue aprobada, el request es rechazado.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content"><strong>Validación y descuento</strong><br>Se llama a <code>approveSale()</code> que valida stock y descuenta. Si falla, lanza <code>InsufficientStockException</code> con el detalle.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     SECTION 11 – CANCELACION
+═══════════════════════════════════════════════════ -->
+<div class="page page-break">
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">11</div>
+      <div>
+        <div class="section-title">Flujo 5: Cancelación y Restauración</div>
+        <div class="section-subtitle">Qué pasa cuando una venta aprobada se cancela</div>
+      </div>
+    </div>
+
+    <div class="callout callout-warning">
+      <div class="callout-icon">⚠️</div>
+      <div class="callout-body">
+        <strong>Solo se restaura stock si la venta fue aprobada</strong>
+        Si una venta en estado 8 o 9 se cancela, no se ejecuta ninguna restauración de stock porque nunca se descontó.
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content"><strong>Admin cambia el estado a 5 (Cancelada)</strong><br>El controlador verifica si la venta tiene historial de estado 1 (fue aprobada).</div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content"><strong>Si fue aprobada: restaura stock</strong><br><code>StockService::restoreStock($sale)</code> suma la cantidad de vuelta a cada canal correspondiente.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content"><strong>Registro de movimiento</strong><br>Se registra en <code>stock_movements</code> con cantidad positiva y nota de restauración. No se disparan alertas.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 12 – ERROR HANDLING -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">12</div>
+      <div>
+        <div class="section-title">Manejo de Errores</div>
+        <div class="section-subtitle">InsufficientStockException y respuestas HTTP</div>
+      </div>
+    </div>
+
+    <h3>Clase <code>InsufficientStockException</code></h3>
+    <p>Extiende <code>RuntimeException</code>. Se lanza dentro de <code>approveSale()</code> cuando la validación falla, y es capturada por los controllers para generar la respuesta HTTP adecuada.</p>
+
+    <h3>Respuesta HTTP 422 – Stock insuficiente</h3>
+    <pre><code>{
+  <span class="token-string">"message"</span>: <span class="token-string">"Stock insuficiente para confirmar el pedido"</span>,
+  <span class="token-string">"data"</span>: [
+    {
+      <span class="token-string">"product_id"</span>:         <span class="token-number">42</span>,
+      <span class="token-string">"product_variant_id"</span>: <span class="token-number">7</span>,
+      <span class="token-string">"product_name"</span>:       <span class="token-string">"Etiqueta Tejida - Color Rojo"</span>,
+      <span class="token-string">"requested"</span>:          <span class="token-number">5</span>,
+      <span class="token-string">"available"</span>:          <span class="token-number">2</span>
+    }
+  ]
+}</code></pre>
+
+    <table>
+      <thead><tr><th>Punto de validación</th><th>Archivo</th><th>Qué retorna si falla</th></tr></thead>
+      <tbody>
+        <tr><td>Webhook aprobado</td><td class="td-file">MercadoPagoController@webhook</td><td>Descarta cambio, venta no se aprueba</td></tr>
+        <tr><td>Venta local</td><td class="td-file">SaleController@storeLocalSale</td><td>HTTP 422, venta eliminada (rollback)</td></tr>
+        <tr><td>Venta mayorista</td><td class="td-file">SaleController@store</td><td>HTTP 422, venta queda en estado 8</td></tr>
+        <tr><td>Aprobación admin</td><td class="td-file">SaleController@changeStatusAdmin</td><td>HTTP 422 con detalle por producto</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     SECTION 13 – ENDPOINTS
+═══════════════════════════════════════════════════ -->
+<div class="page page-break">
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">13</div>
+      <div>
+        <div class="section-title">Endpoints de API Relacionados</div>
+        <div class="section-subtitle">routes/api.php – Rutas que interactúan con el stock</div>
+      </div>
+    </div>
+
+    <table>
+      <thead><tr><th>Método</th><th>Ruta</th><th>Controller@método</th><th>Impacto en stock</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="badge badge-blue">POST</span></td>
+          <td class="td-code">/v1/sales</td>
+          <td class="td-file">SaleController@store</td>
+          <td>Solo canal 4: valida y descuenta</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-blue">POST</span></td>
+          <td class="td-code">/v1/mercadopago/create-preference</td>
+          <td class="td-file">MercadoPagoController@createPreference</td>
+          <td>Sin impacto en stock</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-blue">POST</span></td>
+          <td class="td-code">/mercadopago/webhook</td>
+          <td class="td-file">MercadoPagoController@webhook</td>
+          <td><span class="badge badge-red">Descuenta</span> al aprobar</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-blue">POST</span></td>
+          <td class="td-code">/sales/local</td>
+          <td class="td-file">SaleController@storeLocalSale</td>
+          <td><span class="badge badge-red">Valida y descuenta</span> inmediato</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-yellow">PUT</span></td>
+          <td class="td-code">/sales/local/:id</td>
+          <td class="td-file">SaleController@updateLocalSale</td>
+          <td>Restaura anterior, descuenta nuevo</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-yellow">PUT</span></td>
+          <td class="td-code">/sales/change-status-admin/:id</td>
+          <td class="td-file">SaleController@changeStatusAdmin</td>
+          <td>Descuenta (→1) o restaura (→5)</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-blue">GET</span></td>
+          <td class="td-code">/stock-movements</td>
+          <td class="td-file">StockMovementController@index</td>
+          <td>Solo lectura</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-blue">POST</span></td>
+          <td class="td-code">/stock-movements</td>
+          <td class="td-file">StockMovementController@store</td>
+          <td>Ajuste manual de stock</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SECTION 14 – RELACIONES -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">14</div>
+      <div>
+        <div class="section-title">Diagrama de Relaciones</div>
+        <div class="section-subtitle">Modelos y sus vínculos con el sistema de stock</div>
+      </div>
+    </div>
+
+    <div class="flow">  ┌─────────────┐       stock_channels (JSON)
+  │   Product   │──────────────────────────────────┐
+  │             │  hasMany                          │
+  │             │────────────► ProductVariant       │
+  │             │                │  stock_channels  │
+  │             │                │  (prioridad)     │
+  └─────────────┘                │                  │
+       │ hasMany                 │ hasMany           │ checkAndNotify
+       ▼                         ▼                   ▼
+  StockMovement ◄──────── StockMovement        StockAlertService
+  (audit log)                                  (email alertas)
+
+  ┌──────────┐  hasMany  ┌─────────────┐  belongsTo  ┌────────────────┐
+  │   Sale   │──────────►│ SaleProduct │────────────►│ Product        │
+  │          │           │             │             │ ProductVariant │
+  │ channel  │           │ quantity    │             └────────────────┘
+  │ status   │           │ unit_price  │
+  └──────────┘           └─────────────┘
+       │ hasMany
+       ▼
+  SaleStatusHistory
+  (historial de estados)</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     SECTION 15 – RESUMEN
+═══════════════════════════════════════════════════ -->
+<div class="page page-break">
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">15</div>
+      <div>
+        <div class="section-title">Resumen y Salvaguardas</div>
+        <div class="section-subtitle">Principios de diseño del sistema de stock</div>
+      </div>
+    </div>
+
+    <table>
+      <thead><tr><th>Aspecto</th><th>Implementación</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Almacenamiento</strong></td><td>JSON <code>stock_channels</code> en <code>Product</code> y <code>ProductVariant</code>, por canal</td></tr>
+        <tr><td><strong>Validación</strong></td><td><code>StockService::validateStock()</code> – antes de cualquier descuento</td></tr>
+        <tr><td><strong>Descuento</strong></td><td><code>StockService::discountStock()</code> – solo al aprobar</td></tr>
+        <tr><td><strong>Restauración</strong></td><td><code>StockService::restoreStock()</code> – solo al cancelar ventas aprobadas</td></tr>
+        <tr><td><strong>Alertas</strong></td><td><code>StockAlertService::checkAndNotify()</code> – email cuando stock ≤ umbral</td></tr>
+        <tr><td><strong>Auditoría</strong></td><td>Tabla <code>stock_movements</code> – append-only, cada cambio registrado</td></tr>
+        <tr><td><strong>Errores</strong></td><td><code>InsufficientStockException</code> – HTTP 422 con detalle por producto</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Salvaguardas implementadas</h3>
+
+    <div class="cols-2">
+      <div class="card card-success">
+        <div class="card-title">Anti doble-aprobación</div>
+        <code>Sale::hasBeenApproved()</code> consulta el historial de estados. Si ya existe un registro de estado 1, se rechaza la operación. Previene doble descuento de stock por webhooks duplicados.
+      </div>
+      <div class="card card-success">
+        <div class="card-title">Stock nunca negativo</div>
+        <code>max(0, stock_quantity - quantity)</code> garantiza que el stock no baje de cero, incluso si hay inconsistencias en los datos.
+      </div>
+      <div class="card card-success">
+        <div class="card-title">Validar antes de modificar</div>
+        En todos los flujos, <code>validateStock()</code> se ejecuta <strong>antes</strong> de <code>discountStock()</code>. Nunca se descuenta stock sin validar primero.
+      </div>
+      <div class="card card-success">
+        <div class="card-title">Auditoría no bloqueante</div>
+        <code>recordMovement()</code> está envuelto en <code>try/catch</code>. Un fallo al registrar el movimiento no interrumpe la operación de stock principal.
+      </div>
+    </div>
+
+    <div class="callout callout-info" style="margin-top:32px">
+      <div class="callout-icon">📋</div>
+      <div class="callout-body">
+        <strong>Archivos clave del sistema</strong><br>
+        <code>app/Services/StockService.php</code> &nbsp;·&nbsp;
+        <code>app/Services/StockAlertService.php</code> &nbsp;·&nbsp;
+        <code>app/Models/StockMovement.php</code> &nbsp;·&nbsp;
+        <code>app/Exceptions/InsufficientStockException.php</code> &nbsp;·&nbsp;
+        <code>app/Http/Controllers/SaleController.php</code> &nbsp;·&nbsp;
+        <code>app/Http/Controllers/MercadoPagoController.php</code>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PRINT BUTTON -->
+<div style="text-align:center; padding: 32px; background: var(--gray-100); border-top: 1px solid var(--gray-200);">
+  <button onclick="window.print()" style="background: var(--primary); color:#fff; border:none; padding: 12px 32px; border-radius: 8px; font-size: 12pt; font-family: inherit; cursor:pointer; font-weight:600;">
+    Imprimir / Guardar como PDF
+  </button>
+  <p style="margin-top:12px; font-size:9.5pt; color:var(--gray-400)">
+    Ctrl+P → Guardar como PDF · Recomendado: tamaño A4, márgenes mínimos, habilitar gráficos de fondo
+  </p>
+</div>
+
+</body>
+</html>
