@@ -40,6 +40,7 @@ use App\Http\Controllers\FacebookFeedController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CadeteController;
 use App\Http\Controllers\ProductClientExclusionController;
+use App\Http\Controllers\ProductVariantController;
 use App\Http\Controllers\StockMovementController;
 
 // cache
@@ -258,6 +259,10 @@ Route::middleware('jwt.auth')->prefix('products')->group(function () {
     Route::get('/{id}/exclusions', [ProductClientExclusionController::class, 'index']);
     Route::post('/{id}/exclusions', [ProductClientExclusionController::class, 'store']);
     Route::delete('/{id}/exclusions', [ProductClientExclusionController::class, 'destroy']);
+    // Bulk actions sobre variantes
+    Route::post('/{id}/variants/bulk-delete',       [ProductVariantController::class, 'bulkDelete']);
+    Route::post('/{id}/variants/bulk-update-price', [ProductVariantController::class, 'bulkUpdatePrice']);
+    Route::post('/{id}/variants/bulk-update-stock', [ProductVariantController::class, 'bulkUpdateStock']);
 });
 
 // Coupon 

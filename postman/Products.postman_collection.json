@@ -2,7 +2,7 @@
 	"info": {
 		"name": "Products",
 		"_postman_id": "products-col-etiquecosas-2026",
-		"description": "Catálogo de productos. Los endpoints v1/ son públicos. Los endpoints admin requieren JWT. product_status_id: 1=Borrador, 2=Publicado. product_stock_status_id: 1=Existente (sin control), 2=Gestión de Stock, 3=Sin stock. Canales: 1=Web, 2=Instagram, 3=WhatsApp, 4=Mayorista.",
+		"description": "Catálogo de productos. Los endpoints v1/ son públicos. Los endpoints admin requieren JWT. product_status_id: 1=Borrador, 2=Publicado. product_stock_status_id: 1=Existente (sin control), 2=Gestión de Stock, 3=Sin stock. Canales: 1=Web, 2=Local Comercial, 3=MercadoLibre, 4=Mayorista.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"auth": {
@@ -103,7 +103,7 @@
 								{
 									"key": "channel_id",
 									"value": "1",
-									"description": "1=Web, 2=Instagram, 3=WhatsApp, 4=Mayorista",
+									"description": "1=Web, 2=Local Comercial, 3=MercadoLibre, 4=Mayorista",
 									"disabled": true
 								},
 								{
@@ -485,7 +485,7 @@
 								{
 									"key": "channel_id",
 									"value": "1",
-									"description": "1=Web, 2=Instagram, 3=WhatsApp, 4=Mayorista",
+									"description": "1=Web, 2=Local Comercial, 3=MercadoLibre, 4=Mayorista",
 									"disabled": true
 								},
 								{
@@ -1055,6 +1055,101 @@
 					},
 					"description": "Elimina exclusiones de clientes mayoristas de un producto.",
 					"response": []
+				},
+				{
+					"name": "POST products/{id}/variants/bulk-delete",
+					"request": {
+						"auth": { "type": "inherit" },
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"url": {
+							"raw": "{{baseURL}}products/15/variants/bulk-delete",
+							"host": ["{{baseURL}}products/15/variants/bulk-delete"]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"variant_ids\": [1, 2, 3]\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"description": "Elimina (soft delete) las variantes indicadas del producto."
+					},
+					"response": [
+						{
+							"name": "200 - Variantes eliminadas",
+							"status": "OK",
+							"code": 200,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n  \"message\": \"3 variantes eliminadas correctamente\",\n  \"data\": { \"processed\": 3 }\n}"
+						}
+					]
+				},
+				{
+					"name": "POST products/{id}/variants/bulk-update-price",
+					"request": {
+						"auth": { "type": "inherit" },
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"url": {
+							"raw": "{{baseURL}}products/15/variants/bulk-update-price",
+							"host": ["{{baseURL}}products/15/variants/bulk-update-price"]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"variant_ids\": [1, 2, 3],\n  \"type\": \"percentage\",\n  \"operation\": \"increase\",\n  \"value\": 10,\n  \"apply_to_discounted\": false\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"description": "Modifica el precio de las variantes indicadas. type: percentage|fixed. operation: increase|decrease. value: porcentaje o monto fijo. apply_to_discounted: si true aplica también al precio oferta."
+					},
+					"response": [
+						{
+							"name": "200 - Precios actualizados",
+							"status": "OK",
+							"code": 200,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n  \"message\": \"3 variantes actualizadas correctamente\",\n  \"data\": { \"processed\": 3 }\n}"
+						},
+						{
+							"name": "422 - Error de validación",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n  \"message\": \"Error de validacion\",\n  \"errors\": {\n    \"type\": [\"El campo type debe ser percentage o fixed\"]\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "POST products/{id}/variants/bulk-update-stock",
+					"request": {
+						"auth": { "type": "inherit" },
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"url": {
+							"raw": "{{baseURL}}products/15/variants/bulk-update-stock",
+							"host": ["{{baseURL}}products/15/variants/bulk-update-stock"]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"variant_ids\": [1, 2, 3],\n  \"quantity\": 50,\n  \"note\": \"Reposición masiva\",\n  \"channel_id\": null,\n  \"stock_alert\": 10\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"description": "Registra movimientos de stock y/o actualiza alerta para variantes con gestión de stock propia (stock_channels propio). quantity positivo=ingreso, negativo=salida. channel_id null=todos los canales. stock_alert opcional."
+					},
+					"response": [
+						{
+							"name": "200 - Stock actualizado",
+							"status": "OK",
+							"code": 200,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n  \"message\": \"3 variantes procesadas, 1 omitidas (sin gestión de stock propia)\",\n  \"data\": { \"processed\": 3, \"skipped\": 1 }\n}"
+						},
+						{
+							"name": "422 - Error de validación",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n  \"message\": \"Error de validacion\",\n  \"errors\": {\n    \"note\": [\"El campo note es obligatorio cuando quantity está presente\"]\n  }\n}"
+						}
+					]
 				}
 			]
 		}
