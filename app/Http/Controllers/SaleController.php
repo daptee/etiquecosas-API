@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exports\SalesExport;
+use App\Exports\SalesWithClientsExport;
 use App\Exports\WholesaleSalesExport;
 use App\Mail\OrderSummaryMail;
 use App\Mail\OrderSummaryMailTo;
@@ -2116,6 +2117,25 @@ class SaleController extends Controller
 
         $export = new WholesaleSalesExport($from, $to);
         $fileName = 'compras-mayoristas_' . now()->format('Ymd_His') . '.xlsx';
+
+        return Excel::download($export, $fileName);
+    }
+
+    public function exportSalesWithClients(Request $request)
+    {
+        $from = ($request->query('start_date') ?? now()->format('Y-m-d')) . ' 00:00:00';
+        $to = ($request->query('end_date') ?? now()->format('Y-m-d')) . ' 23:59:59';
+
+        // client_type: 'wholesale' => 2, 'retail' => 1, omitido => null (todos)
+        $clientTypeId = null;
+        if ($request->query('client_type') === 'wholesale') {
+            $clientTypeId = 2;
+        } elseif ($request->query('client_type') === 'retail') {
+            $clientTypeId = 1;
+        }
+
+        $export = new SalesWithClientsExport($from, $to, $clientTypeId);
+        $fileName = 'ventas-clientes_' . now()->format('Ymd_His') . '.xlsx';
 
         return Excel::download($export, $fileName);
     }
