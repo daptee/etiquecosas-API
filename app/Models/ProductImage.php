@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Product;
 
 class ProductImage extends Model
 {
@@ -12,10 +11,12 @@ class ProductImage extends Model
         'product_id',
         'img',
         'is_main',
+        'position',
     ];
 
     protected $casts = [
         'is_main' => 'boolean',
+        'position' => 'integer',
     ];
 
     public function product()

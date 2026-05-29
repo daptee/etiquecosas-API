@@ -263,6 +263,8 @@ Route::middleware('jwt.auth')->prefix('products')->group(function () {
     Route::post('/{id}/variants/bulk-delete',       [ProductVariantController::class, 'bulkDelete']);
     Route::post('/{id}/variants/bulk-update-price', [ProductVariantController::class, 'bulkUpdatePrice']);
     Route::post('/{id}/variants/bulk-update-stock', [ProductVariantController::class, 'bulkUpdateStock']);
+    // Reordenar galería de imágenes
+    Route::put('/{id}/images/positions', [ProductController::class, 'updateImagePositions']);
 });
 
 // Coupon 
