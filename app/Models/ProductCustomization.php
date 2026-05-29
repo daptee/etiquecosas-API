@@ -37,7 +37,7 @@ class ProductCustomization extends Model
     public function getIconsAttribute()
     {
         $ids = $this->customization['icons'] ?? [];
-        return PersonalizationIcon::whereIn('id', $ids)->get();
+        return PersonalizationIcon::whereIn('id', $ids)->orderBy('name', 'asc')->get();
     }
 
     public function toArray()
