@@ -1,0 +1,849 @@
+{
+	"info": {
+		"_postman_id": "clients-col-etiquecosas-2026",
+		"name": "Clients",
+		"description": "Gestión de clientes (minoristas y mayoristas). Todos los endpoints requieren JWT.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "baseURL",
+			"value": "https://api.etiquecosaslab.com.ar/api/",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Get Clients",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseURL}}clients",
+					"host": [
+						"{{baseURL}}clients"
+					],
+					"query": [
+						{
+							"key": "quantity",
+							"value": "10",
+							"disabled": true
+						},
+						{
+							"key": "page",
+							"value": "1",
+							"disabled": true
+						},
+						{
+							"key": "search",
+							"value": "Luciana",
+							"description": "Busca en name, lastName, email, cuit",
+							"disabled": true
+						},
+						{
+							"key": "clientTypeId",
+							"value": "1",
+							"description": "1=Minorista, 2=Mayorista",
+							"disabled": true
+						},
+						{
+							"key": "status_id",
+							"value": "1",
+							"description": "Filtra por estado general",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "200 OK",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}clients",
+							"host": [
+								"{{baseURL}}clients"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Clientes obtenidos\",\n  \"data\": [\n    {\n      \"id\": 12,\n      \"name\": \"Luciana\",\n      \"lastName\": \"Martínez\",\n      \"email\": \"luciana.martinez@gmail.com\",\n      \"phone\": \"+54 11 3456-7890\",\n      \"cuit\": null,\n      \"businessName\": null,\n      \"status\": {\n        \"id\": 1,\n        \"name\": \"Activo\"\n      },\n      \"clientType\": {\n        \"id\": 1,\n        \"name\": \"Minorista\"\n      },\n      \"addresses\": [\n        {\n          \"id\": 1,\n          \"name\": \"Casa\",\n          \"address\": \"Av. Corrientes 3421\",\n          \"locality\": {\n            \"id\": 1,\n            \"name\": \"Buenos Aires\"\n          },\n          \"postalCode\": \"1193\"\n        }\n      ],\n      \"wholesales\": []\n    },\n    {\n      \"id\": 8,\n      \"name\": \"Distribuidora\",\n      \"lastName\": \"Del Norte\",\n      \"email\": \"info@distrinorte.com.ar\",\n      \"phone\": \"+54 351 555-0001\",\n      \"cuit\": \"30-71234567-9\",\n      \"businessName\": \"Distribuidora Del Norte SRL\",\n      \"status\": {\n        \"id\": 1,\n        \"name\": \"Activo\"\n      },\n      \"clientType\": {\n        \"id\": 2,\n        \"name\": \"Mayorista\"\n      },\n      \"addresses\": [],\n      \"wholesales\": [\n        {\n          \"id\": 1,\n          \"name\": \"Depósito Central\",\n          \"address\": \"Ruta 9 Km 15\",\n          \"locality\": {\n            \"id\": 5,\n            \"name\": \"Córdoba\"\n          },\n          \"postalCode\": \"5016\"\n        }\n      ]\n    }\n  ],\n  \"metaData\": {\n    \"current_page\": 1,\n    \"last_page\": 1,\n    \"per_page\": 10,\n    \"total\": 2,\n    \"from\": 1,\n    \"to\": 2\n  }\n}"
+				},
+				{
+					"name": "401 Unauthenticated",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}clients",
+							"host": [
+								"{{baseURL}}clients"
+							]
+						}
+					},
+					"status": "Unauthorized",
+					"code": 401,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+				}
+			]
+		},
+		{
+			"name": "Get Client",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseURL}}clients/12",
+					"host": [
+						"{{baseURL}}clients/12"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "200 OK",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}clients/12",
+							"host": [
+								"{{baseURL}}clients/12"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"id\": 12,\n  \"name\": \"Luciana\",\n  \"lastName\": \"Martínez\",\n  \"email\": \"luciana.martinez@gmail.com\",\n  \"phone\": \"+54 11 3456-7890\",\n  \"cuit\": null,\n  \"businessName\": null,\n  \"status\": {\n    \"id\": 1,\n    \"name\": \"Activo\"\n  },\n  \"clientType\": {\n    \"id\": 1,\n    \"name\": \"Minorista\"\n  },\n  \"addresses\": [\n    {\n      \"id\": 1,\n      \"name\": \"Casa\",\n      \"address\": \"Av. Corrientes 3421\",\n      \"locality\": {\n        \"id\": 1,\n        \"name\": \"Buenos Aires\"\n      },\n      \"postalCode\": \"1193\"\n    }\n  ],\n  \"wholesales\": []\n}"
+				},
+				{
+					"name": "404 Not Found",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}clients/12",
+							"host": [
+								"{{baseURL}}clients/12"
+							]
+						}
+					},
+					"status": "Not Found",
+					"code": 404,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Cliente no encontrado\"\n}"
+				},
+				{
+					"name": "401 Unauthenticated",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}clients/12",
+							"host": [
+								"{{baseURL}}clients/12"
+							]
+						}
+					},
+					"status": "Unauthorized",
+					"code": 401,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+				}
+			]
+		},
+		{
+			"name": "Create Client",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"clientTypeId\": 1,\n  \"name\": \"Valentina\",\n  \"lastName\": \"Sánchez\",\n  \"email\": \"valentina.sanchez@gmail.com\",\n  \"password\": \"clave123\",\n  \"phone\": \"+54 11 5678-9012\",\n  \"cuit\": null,\n  \"statusId\": 1,\n  \"businessName\": null,\n  \"address_data\": [\n    {\n      \"name\": \"Casa\",\n      \"address\": \"Av. Santa Fe 2450 Piso 2\",\n      \"localityId\": 1,\n      \"postalCode\": \"1123\",\n      \"observations\": \"Interfono 202\"\n    }\n  ],\n  \"wholesale_data\": []\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseURL}}clients",
+					"host": [
+						"{{baseURL}}clients"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "200 OK - Cliente creado",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"clientTypeId\": 1,\n  \"name\": \"Valentina\",\n  \"lastName\": \"Sánchez\",\n  \"email\": \"valentina.sanchez@gmail.com\",\n  \"password\": \"clave123\",\n  \"phone\": \"+54 11 5678-9012\",\n  \"cuit\": null,\n  \"statusId\": 1,\n  \"businessName\": null,\n  \"address_data\": [\n    {\n      \"name\": \"Casa\",\n      \"address\": \"Av. Santa Fe 2450 Piso 2\",\n      \"localityId\": 1,\n      \"postalCode\": \"1123\",\n      \"observations\": \"Interfono 202\"\n    }\n  ],\n  \"wholesale_data\": []\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}clients",
+							"host": [
+								"{{baseURL}}clients"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Cliente creado\",\n  \"data\": {\n    \"id\": 25\n  }\n}"
+				},
+				{
+					"name": "422 Email duplicado",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}clients",
+							"host": [
+								"{{baseURL}}clients"
+							]
+						}
+					},
+					"status": "Unprocessable Entity",
+					"code": 422,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"email\": [\n      \"El email ya está en uso\"\n    ]\n  }\n}"
+				},
+				{
+					"name": "422 CUIT duplicado",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}clients",
+							"host": [
+								"{{baseURL}}clients"
+							]
+						}
+					},
+					"status": "Unprocessable Entity",
+					"code": 422,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"cuit\": [\n      \"El CUIT ya está registrado\"\n    ]\n  }\n}"
+				},
+				{
+					"name": "422 Campos requeridos faltantes",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}clients",
+							"host": [
+								"{{baseURL}}clients"
+							]
+						}
+					},
+					"status": "Unprocessable Entity",
+					"code": 422,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"clientTypeId\": [\n      \"El campo tipo de cliente es obligatorio\"\n    ],\n    \"name\": [\n      \"El campo nombre es obligatorio\"\n    ],\n    \"lastName\": [\n      \"El campo apellido es obligatorio\"\n    ],\n    \"email\": [\n      \"El campo email es obligatorio\"\n    ]\n  }\n}"
+				},
+				{
+					"name": "401 Unauthenticated",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}clients",
+							"host": [
+								"{{baseURL}}clients"
+							]
+						}
+					},
+					"status": "Unauthorized",
+					"code": 401,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+				}
+			]
+		},
+		{
+			"name": "Update Client",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"name\": \"Luciana\",\n  \"lastName\": \"Martínez\",\n  \"phone\": \"+54 11 3456-7890\",\n  \"statusId\": 1,\n  \"address_data\": [\n    {\n      \"id\": 1,\n      \"name\": \"Casa\",\n      \"address\": \"Av. Corrientes 3421 Piso 5 Dto B\",\n      \"localityId\": 1,\n      \"postalCode\": \"1193\",\n      \"observations\": \"Timbre renovado\"\n    }\n  ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseURL}}clients/12",
+					"host": [
+						"{{baseURL}}clients/12"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "200 OK - Cliente actualizado",
+					"originalRequest": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Luciana\",\n  \"lastName\": \"Martínez\",\n  \"phone\": \"+54 11 3456-7890\",\n  \"statusId\": 1,\n  \"address_data\": [\n    {\n      \"id\": 1,\n      \"name\": \"Casa\",\n      \"address\": \"Av. Corrientes 3421 Piso 5 Dto B\",\n      \"localityId\": 1,\n      \"postalCode\": \"1193\",\n      \"observations\": \"Timbre renovado\"\n    }\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}clients/12",
+							"host": [
+								"{{baseURL}}clients/12"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Cliente actualizado\",\n  \"data\": {\n    \"id\": 12,\n    \"name\": \"Luciana\",\n    \"lastName\": \"Martínez\",\n    \"email\": \"luciana.martinez@gmail.com\",\n    \"phone\": \"+54 11 3456-7890\",\n    \"cuit\": null,\n    \"businessName\": null,\n    \"status\": {\n      \"id\": 1,\n      \"name\": \"Activo\"\n    },\n    \"clientType\": {\n      \"id\": 1,\n      \"name\": \"Minorista\"\n    },\n    \"addresses\": [\n      {\n        \"id\": 1,\n        \"name\": \"Casa\",\n        \"address\": \"Av. Corrientes 3421 Piso 5 Dto B\",\n        \"locality\": {\n          \"id\": 1,\n          \"name\": \"Buenos Aires\"\n        },\n        \"postalCode\": \"1193\",\n        \"observations\": \"Timbre renovado\"\n      }\n    ],\n    \"wholesales\": []\n  }\n}"
+				},
+				{
+					"name": "404 Not Found",
+					"originalRequest": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}clients/12",
+							"host": [
+								"{{baseURL}}clients/12"
+							]
+						}
+					},
+					"status": "Not Found",
+					"code": 404,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Cliente no encontrado\"\n}"
+				},
+				{
+					"name": "422 Email inválido",
+					"originalRequest": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}clients/12",
+							"host": [
+								"{{baseURL}}clients/12"
+							]
+						}
+					},
+					"status": "Unprocessable Entity",
+					"code": 422,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"email\": [\n      \"El campo email debe ser una dirección de correo válida\"\n    ]\n  }\n}"
+				},
+				{
+					"name": "401 Unauthenticated",
+					"originalRequest": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}clients/12",
+							"host": [
+								"{{baseURL}}clients/12"
+							]
+						}
+					},
+					"status": "Unauthorized",
+					"code": 401,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+				}
+			]
+		},
+		{
+			"name": "Delete Client",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseURL}}clients/12",
+					"host": [
+						"{{baseURL}}clients/12"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "200 OK - Cliente eliminado",
+					"originalRequest": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}clients/12",
+							"host": [
+								"{{baseURL}}clients/12"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Cliente eliminado\"\n}"
+				},
+				{
+					"name": "404 Not Found",
+					"originalRequest": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}clients/12",
+							"host": [
+								"{{baseURL}}clients/12"
+							]
+						}
+					},
+					"status": "Not Found",
+					"code": 404,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Cliente no encontrado\"\n}"
+				},
+				{
+					"name": "401 Unauthenticated",
+					"originalRequest": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}clients/12",
+							"host": [
+								"{{baseURL}}clients/12"
+							]
+						}
+					},
+					"status": "Unauthorized",
+					"code": 401,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+				}
+			]
+		},
+		{
+			"name": "Export Wholesale Clients (Excel)",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"description": "Exporta listado de clientes mayoristas a Excel (.xlsx).",
+				"url": {
+					"raw": "{{baseURL}}clients/export/wholesale",
+					"host": [
+						"{{baseURL}}clients/export/wholesale"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "200 OK - Archivo Excel",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}clients/export/wholesale",
+							"host": [
+								"{{baseURL}}clients/export/wholesale"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "text",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+						},
+						{
+							"key": "Content-Disposition",
+							"value": "attachment; filename=\"clientes_mayoristas.xlsx\""
+						}
+					],
+					"body": "(Excel binario)"
+				},
+				{
+					"name": "401 Unauthenticated",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}clients/export/wholesale",
+							"host": [
+								"{{baseURL}}clients/export/wholesale"
+							]
+						}
+					},
+					"status": "Unauthorized",
+					"code": 401,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+				}
+			]
+		}
+	]
+}

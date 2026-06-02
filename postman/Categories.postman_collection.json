@@ -1,0 +1,631 @@
+{
+	"info": {
+		"name": "Categories",
+		"_postman_id": "categories-col-etiquecosas-2026",
+		"description": "Gestión de categorías y subcategorías de productos. Incluye endpoints admin (JWT) y públicos (v1/).",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "baseURL",
+			"value": "https://api.etiquecosaslab.com.ar/api/",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "GET categories (admin)",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}categories",
+					"host": [
+						"{{baseURL}}categories"
+					],
+					"query": [
+						{
+							"key": "quantity",
+							"value": "10",
+							"disabled": true
+						},
+						{
+							"key": "page",
+							"value": "1",
+							"disabled": true
+						},
+						{
+							"key": "search",
+							"value": "etiqueta",
+							"disabled": true
+						},
+						{
+							"key": "statusId",
+							"value": "1",
+							"disabled": true,
+							"description": "1 = Activo, 2 = Inactivo"
+						},
+						{
+							"key": "categoryId",
+							"value": "1",
+							"disabled": true,
+							"description": "Filtrar por categoría padre (subcategorías de esa categoría)"
+						}
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "200 OK",
+					"status": "OK",
+					"code": 200,
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}categories",
+							"host": [
+								"{{baseURL}}categories"
+							]
+						}
+					},
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Categorias obtenidas\",\n  \"data\": [\n    {\n      \"id\": 1,\n      \"name\": \"Etiquetas\",\n      \"img\": \"https://api.etiquecosaslab.com.ar/storage/categories/etiquetas.png\",\n      \"icon\": \"https://api.etiquecosaslab.com.ar/storage/categories/icons/etiquetas-icon.svg\",\n      \"color\": \"#EBA4AB\",\n      \"description\": \"Todo tipo de etiquetas personalizadas para ropa, útiles y más\",\n      \"status_id\": 1,\n      \"is_outstanding\": true,\n      \"is_wholesale\": false,\n      \"parent_category\": null,\n      \"subcategories\": [\n        {\n          \"id\": 4,\n          \"name\": \"Etiquetas Adhesivas\",\n          \"img\": null,\n          \"icon\": null,\n          \"color\": \"#D4848A\",\n          \"description\": null,\n          \"status_id\": 1,\n          \"is_outstanding\": false,\n          \"is_wholesale\": false,\n          \"parent_category\": 1,\n          \"subcategories\": []\n        },\n        {\n          \"id\": 5,\n          \"name\": \"Etiquetas Textiles\",\n          \"img\": null,\n          \"icon\": null,\n          \"color\": \"#C4747A\",\n          \"description\": null,\n          \"status_id\": 1,\n          \"is_outstanding\": false,\n          \"is_wholesale\": false,\n          \"parent_category\": 1,\n          \"subcategories\": []\n        }\n      ]\n    },\n    {\n      \"id\": 2,\n      \"name\": \"Stickers\",\n      \"img\": \"https://api.etiquecosaslab.com.ar/storage/categories/stickers.png\",\n      \"icon\": null,\n      \"color\": \"#347AA7\",\n      \"description\": \"Stickers decorativos y personalizados\",\n      \"status_id\": 1,\n      \"is_outstanding\": true,\n      \"is_wholesale\": false,\n      \"parent_category\": null,\n      \"subcategories\": []\n    },\n    {\n      \"id\": 3,\n      \"name\": \"Sellos\",\n      \"img\": null,\n      \"icon\": null,\n      \"color\": \"#8B7355\",\n      \"description\": null,\n      \"status_id\": 2,\n      \"is_outstanding\": false,\n      \"is_wholesale\": false,\n      \"parent_category\": null,\n      \"subcategories\": []\n    }\n  ],\n  \"metaData\": {\n    \"current_page\": 1,\n    \"last_page\": 1,\n    \"per_page\": 10,\n    \"total\": 3,\n    \"from\": 1,\n    \"to\": 3\n  }\n}"
+				},
+				{
+					"name": "401 Unauthenticated",
+					"status": "Unauthorized",
+					"code": 401,
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}categories",
+							"host": [
+								"{{baseURL}}categories"
+							]
+						}
+					},
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+				}
+			]
+		},
+		{
+			"name": "GET v1/categories (public)",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"description": "Devuelve solo categorías raíz con status_id=1 (activas). No requiere autenticación.",
+				"url": {
+					"raw": "{{baseURL}}v1/categories",
+					"host": [
+						"{{baseURL}}v1/categories"
+					],
+					"query": [
+						{
+							"key": "isWholesale",
+							"value": "false",
+							"disabled": true,
+							"description": "true = solo categorías mayoristas, false = solo minoristas"
+						}
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "200 OK",
+					"status": "OK",
+					"code": 200,
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}v1/categories",
+							"host": [
+								"{{baseURL}}v1/categories"
+							]
+						}
+					},
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "[\n  {\n    \"id\": 1,\n    \"name\": \"Etiquetas\",\n    \"img\": \"https://api.etiquecosaslab.com.ar/storage/categories/etiquetas.png\",\n    \"icon\": \"https://api.etiquecosaslab.com.ar/storage/categories/icons/etiquetas-icon.svg\",\n    \"color\": \"#EBA4AB\",\n    \"subcategories\": [\n      {\n        \"id\": 4,\n        \"name\": \"Etiquetas Adhesivas\"\n      },\n      {\n        \"id\": 5,\n        \"name\": \"Etiquetas Textiles\"\n      }\n    ]\n  },\n  {\n    \"id\": 2,\n    \"name\": \"Stickers\",\n    \"img\": \"https://api.etiquecosaslab.com.ar/storage/categories/stickers.png\",\n    \"icon\": null,\n    \"color\": \"#347AA7\",\n    \"subcategories\": []\n  }\n]"
+				}
+			]
+		},
+		{
+			"name": "POST categories",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"description": "Las imágenes se envían como multipart/form-data. Este ejemplo muestra los campos en JSON para referencia.",
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"name\": \"Cintas Washi\",\n  \"categoryId\": null,\n  \"color\": \"#E74C3C\",\n  \"description\": \"Cintas decorativas washi tape con diseños únicos\",\n  \"statusId\": 1,\n  \"is_outstanding\": true,\n  \"is_wholesale\": false,\n  \"tagId\": null,\n  \"metaData\": null,\n  \"banner\": null\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseURL}}categories",
+					"host": [
+						"{{baseURL}}categories"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "200 OK - Nueva categoría",
+					"status": "OK",
+					"code": 200,
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Cintas Washi\",\n  \"categoryId\": null,\n  \"color\": \"#E74C3C\",\n  \"description\": \"Cintas decorativas washi tape con diseños únicos\",\n  \"statusId\": 1,\n  \"is_outstanding\": true,\n  \"is_wholesale\": false,\n  \"tagId\": null,\n  \"metaData\": null,\n  \"banner\": null\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}categories",
+							"host": [
+								"{{baseURL}}categories"
+							]
+						}
+					},
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Categoría creada\",\n  \"data\": {\n    \"id\": 8,\n    \"name\": \"Cintas Washi\",\n    \"img\": null,\n    \"icon\": null,\n    \"color\": \"#E74C3C\",\n    \"description\": \"Cintas decorativas washi tape con diseños únicos\",\n    \"status_id\": 1,\n    \"is_outstanding\": true,\n    \"is_wholesale\": false,\n    \"parent_category\": null,\n    \"subcategories\": []\n  }\n}"
+				},
+				{
+					"name": "200 OK - Subcategoría",
+					"status": "OK",
+					"code": 200,
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Etiquetas Kraft\",\n  \"categoryId\": 1,\n  \"color\": \"#795548\",\n  \"description\": \"Etiquetas de papel kraft reciclado\",\n  \"statusId\": 1,\n  \"is_outstanding\": false,\n  \"is_wholesale\": false,\n  \"tagId\": null\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}categories",
+							"host": [
+								"{{baseURL}}categories"
+							]
+						}
+					},
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Categoría creada\",\n  \"data\": {\n    \"id\": 9,\n    \"name\": \"Etiquetas Kraft\",\n    \"img\": null,\n    \"icon\": null,\n    \"color\": \"#795548\",\n    \"description\": \"Etiquetas de papel kraft reciclado\",\n    \"status_id\": 1,\n    \"is_outstanding\": false,\n    \"is_wholesale\": false,\n    \"parent_category\": 1,\n    \"subcategories\": []\n  }\n}"
+				},
+				{
+					"name": "422 Nombre requerido",
+					"status": "Unprocessable Entity",
+					"code": 422,
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}categories",
+							"host": [
+								"{{baseURL}}categories"
+							]
+						}
+					},
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"name\": [\n      \"El campo nombre es obligatorio\"\n    ]\n  }\n}"
+				},
+				{
+					"name": "422 StatusId inválido",
+					"status": "Unprocessable Entity",
+					"code": 422,
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Cintas Washi\",\n  \"statusId\": 99\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}categories",
+							"host": [
+								"{{baseURL}}categories"
+							]
+						}
+					},
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"statusId\": [\n      \"El campo estado debe ser 1 o 2\"\n    ]\n  }\n}"
+				},
+				{
+					"name": "401 Unauthenticated",
+					"status": "Unauthorized",
+					"code": 401,
+					"originalRequest": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}categories",
+							"host": [
+								"{{baseURL}}categories"
+							]
+						}
+					},
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+				}
+			]
+		},
+		{
+			"name": "PUT categories/1",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"name\": \"Etiquetas Premium\",\n  \"categoryId\": null,\n  \"color\": \"#C0392B\",\n  \"description\": \"Etiquetas personalizadas premium para productos y packaging\",\n  \"statusId\": 1,\n  \"is_outstanding\": true,\n  \"is_wholesale\": false\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseURL}}categories/1",
+					"host": [
+						"{{baseURL}}categories/1"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "200 OK",
+					"status": "OK",
+					"code": 200,
+					"originalRequest": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Etiquetas Premium\",\n  \"categoryId\": null,\n  \"color\": \"#C0392B\",\n  \"description\": \"Etiquetas personalizadas premium para productos y packaging\",\n  \"statusId\": 1,\n  \"is_outstanding\": true,\n  \"is_wholesale\": false\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}categories/1",
+							"host": [
+								"{{baseURL}}categories/1"
+							]
+						}
+					},
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Categoría actualizada\",\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"Etiquetas Premium\",\n    \"img\": \"https://api.etiquecosaslab.com.ar/storage/categories/etiquetas.png\",\n    \"icon\": \"https://api.etiquecosaslab.com.ar/storage/categories/icons/etiquetas-icon.svg\",\n    \"color\": \"#C0392B\",\n    \"description\": \"Etiquetas personalizadas premium para productos y packaging\",\n    \"status_id\": 1,\n    \"is_outstanding\": true,\n    \"is_wholesale\": false,\n    \"parent_category\": null,\n    \"subcategories\": []\n  }\n}"
+				},
+				{
+					"name": "404 Not Found",
+					"status": "Not Found",
+					"code": 404,
+					"originalRequest": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}categories/999",
+							"host": [
+								"{{baseURL}}categories/999"
+							]
+						}
+					},
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Categoría no encontrada\"\n}"
+				},
+				{
+					"name": "422 Unprocessable Entity",
+					"status": "Unprocessable Entity",
+					"code": 422,
+					"originalRequest": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Etiquetas Premium\",\n  \"statusId\": 99\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}categories/1",
+							"host": [
+								"{{baseURL}}categories/1"
+							]
+						}
+					},
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"statusId\": [\n      \"El campo estado debe ser 1 o 2\"\n    ]\n  }\n}"
+				},
+				{
+					"name": "401 Unauthenticated",
+					"status": "Unauthorized",
+					"code": 401,
+					"originalRequest": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}categories/1",
+							"host": [
+								"{{baseURL}}categories/1"
+							]
+						}
+					},
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+				}
+			]
+		},
+		{
+			"name": "DELETE categories/1",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}categories/1",
+					"host": [
+						"{{baseURL}}categories/1"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "200 OK",
+					"status": "OK",
+					"code": 200,
+					"originalRequest": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}categories/1",
+							"host": [
+								"{{baseURL}}categories/1"
+							]
+						}
+					},
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Categoría eliminada correctamente\",\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"Etiquetas Premium\"\n  }\n}"
+				},
+				{
+					"name": "404 Not Found",
+					"status": "Not Found",
+					"code": 404,
+					"originalRequest": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}categories/999",
+							"host": [
+								"{{baseURL}}categories/999"
+							]
+						}
+					},
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Categoría no encontrada\"\n}"
+				},
+				{
+					"name": "401 Unauthenticated",
+					"status": "Unauthorized",
+					"code": 401,
+					"originalRequest": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}categories/1",
+							"host": [
+								"{{baseURL}}categories/1"
+							]
+						}
+					},
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+				}
+			]
+		}
+	]
+}

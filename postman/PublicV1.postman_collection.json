@@ -1,0 +1,2093 @@
+{
+	"info": {
+		"name": "Public V1",
+		"_postman_id": "public-v1-col-etiquecosas-2026",
+		"description": "Endpoints públicos sin autenticación. Prefijo v1/.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "noauth"
+	},
+	"variable": [
+		{
+			"key": "baseURL",
+			"value": "https://api.etiquecosaslab.com.ar/api/",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Client Login",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"luciana.martinez@gmail.com\",\n  \"password\": \"miPassword123!\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}v1/auth/client-login",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"v1",
+								"auth",
+								"client-login"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK - Login de cliente exitoso",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"token\": \"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL2FwaS5ldGlxdWVjb3Nhc2xhYi5jb20uYXIvYXBpL3YxL2F1dGgvY2xpZW50LWxvZ2luIiwiaWF0IjoxNzc5Mjk5NzE1LCJzdWIiOiIxMiJ9.CLIENT_SIG\",\n  \"client\": {\n    \"id\": 12,\n    \"name\": \"Luciana\",\n    \"lastName\": \"Martínez\",\n    \"email\": \"luciana.martinez@gmail.com\",\n    \"phone\": \"+54 11 3456-7890\",\n    \"client_type\": \"Minorista\",\n    \"client_type_id\": 1,\n    \"is_active\": true,\n    \"created_at\": \"2025-03-15T10:22:00.000000Z\"\n  }\n}",
+							"_postman_previewlanguage": "json",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"luciana.martinez@gmail.com\",\n  \"password\": \"miPassword123!\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseURL}}v1/auth/client-login",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"v1",
+										"auth",
+										"client-login"
+									]
+								}
+							}
+						},
+						{
+							"name": "401 Unauthorized - Credenciales incorrectas",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Credenciales incorrectas\"\n}",
+							"_postman_previewlanguage": "json",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"luciana.martinez@gmail.com\",\n  \"password\": \"wrongpassword\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseURL}}v1/auth/client-login",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"v1",
+										"auth",
+										"client-login"
+									]
+								}
+							}
+						},
+						{
+							"name": "422 Unprocessable Entity - Error de validación",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"email\": [\n      \"El campo email es obligatorio.\"\n    ]\n  }\n}",
+							"_postman_previewlanguage": "json",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"password\": \"miPassword123!\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseURL}}v1/auth/client-login",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"v1",
+										"auth",
+										"client-login"
+									]
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "Client Forgot Password",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"luciana.martinez@gmail.com\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}v1/auth/client-forgot-password",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"v1",
+								"auth",
+								"client-forgot-password"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK - Correo enviado al cliente",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Se ha enviado una nueva contraseña a tu correo electrónico.\"\n}",
+							"_postman_previewlanguage": "json",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"luciana.martinez@gmail.com\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseURL}}v1/auth/client-forgot-password",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"v1",
+										"auth",
+										"client-forgot-password"
+									]
+								}
+							}
+						},
+						{
+							"name": "404 Not Found - Email no registrado",
+							"status": "Not Found",
+							"code": 404,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"No existe una cuenta con ese email\"\n}",
+							"_postman_previewlanguage": "json",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"noexiste@gmail.com\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseURL}}v1/auth/client-forgot-password",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"v1",
+										"auth",
+										"client-forgot-password"
+									]
+								}
+							}
+						},
+						{
+							"name": "422 Unprocessable Entity - Email inválido",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"email\": [\n      \"El campo email debe ser una dirección de correo electrónico válida.\"\n    ]\n  }\n}",
+							"_postman_previewlanguage": "json",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"no-es-un-email\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseURL}}v1/auth/client-forgot-password",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"v1",
+										"auth",
+										"client-forgot-password"
+									]
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "Client Register",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Carlos\",\n  \"lastName\": \"Fernández\",\n  \"email\": \"carlos.fernandez@gmail.com\",\n  \"password\": \"Segura1234!\",\n  \"password_confirmation\": \"Segura1234!\",\n  \"clientTypeId\": 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}v1/auth/register",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"v1",
+								"auth",
+								"register"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "201 Created - Cliente registrado",
+							"status": "Created",
+							"code": 201,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Cliente registrado\",\n  \"data\": {\n    \"id\": 47,\n    \"name\": \"Carlos\",\n    \"lastName\": \"Fernández\",\n    \"email\": \"carlos.fernandez@gmail.com\",\n    \"client_type\": \"Minorista\",\n    \"client_type_id\": 1,\n    \"is_active\": true,\n    \"created_at\": \"2026-05-25T14:30:00.000000Z\"\n  }\n}",
+							"_postman_previewlanguage": "json",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Carlos\",\n  \"lastName\": \"Fernández\",\n  \"email\": \"carlos.fernandez@gmail.com\",\n  \"password\": \"Segura1234!\",\n  \"password_confirmation\": \"Segura1234!\",\n  \"clientTypeId\": 1\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseURL}}v1/auth/register",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"v1",
+										"auth",
+										"register"
+									]
+								}
+							}
+						},
+						{
+							"name": "422 Unprocessable Entity - Email ya registrado",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"email\": [\n      \"El email ya está registrado\"\n    ]\n  }\n}",
+							"_postman_previewlanguage": "json",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Carlos\",\n  \"lastName\": \"Fernández\",\n  \"email\": \"carlos.fernandez@gmail.com\",\n  \"password\": \"Segura1234!\",\n  \"password_confirmation\": \"Segura1234!\",\n  \"clientTypeId\": 1\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseURL}}v1/auth/register",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"v1",
+										"auth",
+										"register"
+									]
+								}
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Categorias",
+			"item": [
+				{
+					"name": "GET v1/categories (public)",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"description": "Devuelve solo categorías raíz con status_id=1 (activas). No requiere autenticación.",
+						"url": {
+							"raw": "{{baseURL}}v1/categories",
+							"host": [
+								"{{baseURL}}v1/categories"
+							],
+							"query": [
+								{
+									"key": "isWholesale",
+									"value": "false",
+									"disabled": true,
+									"description": "true = solo categorías mayoristas, false = solo minoristas"
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK",
+							"status": "OK",
+							"code": 200,
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}v1/categories",
+									"host": [
+										"{{baseURL}}v1/categories"
+									]
+								}
+							},
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "[\n  {\n    \"id\": 1,\n    \"name\": \"Etiquetas\",\n    \"img\": \"https://api.etiquecosaslab.com.ar/storage/categories/etiquetas.png\",\n    \"icon\": \"https://api.etiquecosaslab.com.ar/storage/categories/icons/etiquetas-icon.svg\",\n    \"color\": \"#EBA4AB\",\n    \"subcategories\": [\n      {\n        \"id\": 4,\n        \"name\": \"Etiquetas Adhesivas\"\n      },\n      {\n        \"id\": 5,\n        \"name\": \"Etiquetas Textiles\"\n      }\n    ]\n  },\n  {\n    \"id\": 2,\n    \"name\": \"Stickers\",\n    \"img\": \"https://api.etiquecosaslab.com.ar/storage/categories/stickers.png\",\n    \"icon\": null,\n    \"color\": \"#347AA7\",\n    \"subcategories\": []\n  }\n]"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Cupones",
+			"item": [
+				{
+					"name": "GET v1/coupons",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}v1/coupons",
+							"host": [
+								"{{baseURL}}v1/coupons"
+							]
+						},
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"description": "Lista cupones activos disponibles para el portal web.",
+					"response": []
+				},
+				{
+					"name": "Validate Coupon",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"code\": \"VUELTAALCOLE10\",\n  \"client_id\": null\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}v1/coupons/validate",
+							"host": [
+								"{{baseURL}}v1"
+							],
+							"path": [
+								"coupons",
+								"validate"
+							]
+						},
+						"description": "Valida un cupón antes de aplicarlo. No requiere autenticación."
+					},
+					"response": [
+						{
+							"name": "200 Válido",
+							"originalRequest": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"code\": \"VUELTAALCOLE10\",\n  \"client_id\": null\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseURL}}v1/coupons/validate",
+									"host": [
+										"{{baseURL}}v1"
+									],
+									"path": [
+										"coupons",
+										"validate"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Cupón válido\",\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"Vuelta al Cole 10%\",\n    \"code\": \"VUELTAALCOLE10\",\n    \"type\": \"Porcentaje\",\n    \"value\": 10.00,\n    \"applies_to_shipping\": false,\n    \"applies_to_all_products\": true,\n    \"applies_to_web\": true,\n    \"applies_to_sale_price\": false,\n    \"tiered_discounts_enabled\": false,\n    \"tiered_discounts\": null,\n    \"flash_enabled\": false,\n    \"categories\": [],\n    \"products\": []\n  },\n  \"metaData\": null\n}"
+						},
+						{
+							"name": "400 Cupón expirado",
+							"originalRequest": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"code\": \"VUELTAALCOLE10\",\n  \"client_id\": null\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseURL}}v1/coupons/validate",
+									"host": [
+										"{{baseURL}}v1"
+									],
+									"path": [
+										"coupons",
+										"validate"
+									]
+								}
+							},
+							"status": "Bad Request",
+							"code": 400,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Cupón vencido o aún no vigente\"\n}"
+						},
+						{
+							"name": "400 Máximo de usos por código",
+							"originalRequest": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"code\": \"MAYO2026\",\n  \"client_id\": null\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseURL}}v1/coupons/validate",
+									"host": [
+										"{{baseURL}}v1"
+									],
+									"path": [
+										"coupons",
+										"validate"
+									]
+								}
+							},
+							"status": "Bad Request",
+							"code": 400,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Este cupón alcanzó el máximo de usos permitidos\"\n}"
+						},
+						{
+							"name": "400 Ya usado el máximo de veces por usuario",
+							"originalRequest": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"code\": \"CUPONNOWEB\",\n  \"client_id\": 5\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseURL}}v1/coupons/validate",
+									"host": [
+										"{{baseURL}}v1"
+									],
+									"path": [
+										"coupons",
+										"validate"
+									]
+								}
+							},
+							"status": "Bad Request",
+							"code": 400,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Ya has usado este cupón el máximo de veces permitidas\"\n}"
+						},
+						{
+							"name": "404 Not Found",
+							"originalRequest": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"coupon_code\": \"INEXISTENTE\",\n  \"subtotal\": 3500\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseURL}}v1/coupons/validate",
+									"host": [
+										"{{baseURL}}v1"
+									],
+									"path": [
+										"coupons",
+										"validate"
+									]
+								}
+							},
+							"status": "Not Found",
+							"code": 404,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Cupón no encontrado\"\n}"
+						},
+						{
+							"name": "422 Code Required",
+							"originalRequest": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"client_id\": null\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseURL}}v1/coupons/validate",
+									"host": [
+										"{{baseURL}}v1"
+									],
+									"path": [
+										"coupons",
+										"validate"
+									]
+								}
+							},
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validacion\",\n  \"errors\": {\n    \"code\": [\"El campo code es obligatorio\"]\n  }\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Productos",
+			"item": [
+				{
+					"name": "GET v1/products",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}v1/products",
+							"host": [
+								"{{baseURL}}v1"
+							],
+							"path": [
+								"products"
+							],
+							"query": [
+								{
+									"key": "search",
+									"value": "etiqueta",
+									"disabled": true
+								},
+								{
+									"key": "status_id",
+									"value": "2",
+									"description": "1=Borrador, 2=Publicado",
+									"disabled": true
+								},
+								{
+									"key": "category_id",
+									"value": "1",
+									"disabled": true
+								},
+								{
+									"key": "stock_status_id",
+									"value": "2",
+									"description": "1=Existente, 2=Gestión de Stock, 3=Sin stock",
+									"disabled": true
+								},
+								{
+									"key": "tag_id",
+									"value": "1",
+									"disabled": true
+								},
+								{
+									"key": "product_type_id",
+									"value": "1",
+									"disabled": true
+								},
+								{
+									"key": "is_feature",
+									"value": "true",
+									"disabled": true
+								},
+								{
+									"key": "is_customizable",
+									"value": "true",
+									"disabled": true
+								},
+								{
+									"key": "is_sale",
+									"value": "true",
+									"disabled": true
+								},
+								{
+									"key": "is_wholesale",
+									"value": "false",
+									"disabled": true
+								},
+								{
+									"key": "channel_id",
+									"value": "1",
+									"description": "1=Web, 2=Instagram, 3=WhatsApp, 4=Mayorista",
+									"disabled": true
+								},
+								{
+									"key": "quantity",
+									"value": "10",
+									"disabled": true
+								},
+								{
+									"key": "page",
+									"value": "1",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - Con resultados",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Productos obtenidos\",\n  \"data\": [\n    {\n      \"id\": 15,\n      \"name\": \"Etiquetas personalizadas para colegios\",\n      \"sku\": \"ETQ-COL-001\",\n      \"slug\": \"etiquetas-personalizadas-para-colegios-12345\",\n      \"price\": 1500.0,\n      \"discounted_price\": 1200.0,\n      \"is_feature\": true,\n      \"is_customizable\": true,\n      \"is_sale\": true,\n      \"is_wholesale\": false,\n      \"stock_channels\": [\n        {\n          \"channel\": 1,\n          \"channel_name\": \"Web\",\n          \"stock_status\": {\n            \"id\": 2,\n            \"name\": \"Gestión de Stock\"\n          },\n          \"stock_quantity\": 75\n        }\n      ],\n      \"status\": {\n        \"id\": 2,\n        \"name\": \"Publicado\"\n      },\n      \"type\": {\n        \"id\": 1,\n        \"name\": \"Producto\"\n      },\n      \"stockStatus\": {\n        \"id\": 2,\n        \"name\": \"Gestión de Stock\"\n      },\n      \"categories\": [\n        {\n          \"id\": 1,\n          \"name\": \"Etiquetas\"\n        }\n      ],\n      \"tag\": {\n        \"id\": 1,\n        \"name\": \"Vuelta al Cole\"\n      },\n      \"images\": [\n        {\n          \"id\": 10,\n          \"img\": \"https://api.etiquecosaslab.com.ar/storage/products/etiquetas-colegios-1.jpg\",\n          \"is_main\": true\n        }\n      ]\n    }\n  ],\n  \"metaData\": {\n    \"current_page\": 1,\n    \"last_page\": 5,\n    \"per_page\": 10,\n    \"total\": 48,\n    \"from\": 1,\n    \"to\": 1\n  }\n}"
+						},
+						{
+							"name": "500 - Error interno",
+							"status": "Internal Server Error",
+							"code": 500,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error interno del servidor\"\n}"
+						}
+					]
+				},
+				{
+					"name": "GET v1/products/featured",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}v1/products/featured",
+							"host": [
+								"{{baseURL}}v1"
+							],
+							"path": [
+								"products",
+								"featured"
+							],
+							"query": [
+								{
+									"key": "quantity",
+									"value": "8",
+									"disabled": true
+								},
+								{
+									"key": "page",
+									"value": "1",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - Productos destacados",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Productos destacados obtenidos\",\n  \"data\": [\n    {\n      \"id\": 15,\n      \"name\": \"Etiquetas personalizadas para colegios\",\n      \"sku\": \"ETQ-COL-001\",\n      \"slug\": \"etiquetas-personalizadas-para-colegios-12345\",\n      \"price\": 1500.0,\n      \"discounted_price\": 1200.0,\n      \"is_feature\": true,\n      \"is_customizable\": true,\n      \"is_sale\": true,\n      \"is_wholesale\": false,\n      \"stock_channels\": [\n        {\n          \"channel\": 1,\n          \"channel_name\": \"Web\",\n          \"stock_status\": {\n            \"id\": 2,\n            \"name\": \"Gestión de Stock\"\n          },\n          \"stock_quantity\": 75\n        }\n      ],\n      \"status\": {\n        \"id\": 2,\n        \"name\": \"Publicado\"\n      },\n      \"type\": {\n        \"id\": 1,\n        \"name\": \"Producto\"\n      },\n      \"stockStatus\": {\n        \"id\": 2,\n        \"name\": \"Gestión de Stock\"\n      },\n      \"categories\": [\n        {\n          \"id\": 1,\n          \"name\": \"Etiquetas\"\n        }\n      ],\n      \"tag\": {\n        \"id\": 1,\n        \"name\": \"Vuelta al Cole\"\n      },\n      \"images\": [\n        {\n          \"id\": 10,\n          \"img\": \"https://api.etiquecosaslab.com.ar/storage/products/etiquetas-colegios-1.jpg\",\n          \"is_main\": true\n        }\n      ]\n    }\n  ],\n  \"metaData\": {\n    \"current_page\": 1,\n    \"last_page\": 1,\n    \"per_page\": 8,\n    \"total\": 6,\n    \"from\": 1,\n    \"to\": 1\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "GET v1/products/best-sellers",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}v1/products/best-sellers",
+							"host": [
+								"{{baseURL}}v1"
+							],
+							"path": [
+								"products",
+								"best-sellers"
+							],
+							"query": [
+								{
+									"key": "quantity",
+									"value": "10",
+									"disabled": true
+								},
+								{
+									"key": "page",
+									"value": "1",
+									"disabled": true
+								},
+								{
+									"key": "search",
+									"value": "etiqueta",
+									"disabled": true
+								},
+								{
+									"key": "category_id",
+									"value": "1",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - Más vendidos",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Productos obtenidos\",\n  \"data\": [\n    {\n      \"id\": 15,\n      \"name\": \"Etiquetas personalizadas para colegios\",\n      \"sku\": \"ETQ-COL-001\",\n      \"slug\": \"etiquetas-personalizadas-para-colegios-12345\",\n      \"price\": 1500.0,\n      \"discounted_price\": 1200.0,\n      \"is_feature\": true,\n      \"is_customizable\": true,\n      \"is_sale\": true,\n      \"is_wholesale\": false,\n      \"stock_channels\": [\n        {\n          \"channel\": 1,\n          \"channel_name\": \"Web\",\n          \"stock_status\": {\n            \"id\": 2,\n            \"name\": \"Gestión de Stock\"\n          },\n          \"stock_quantity\": 75\n        }\n      ],\n      \"status\": {\n        \"id\": 2,\n        \"name\": \"Publicado\"\n      },\n      \"type\": {\n        \"id\": 1,\n        \"name\": \"Producto\"\n      },\n      \"stockStatus\": {\n        \"id\": 2,\n        \"name\": \"Gestión de Stock\"\n      },\n      \"categories\": [\n        {\n          \"id\": 1,\n          \"name\": \"Etiquetas\"\n        }\n      ],\n      \"tag\": {\n        \"id\": 1,\n        \"name\": \"Vuelta al Cole\"\n      },\n      \"images\": [\n        {\n          \"id\": 10,\n          \"img\": \"https://api.etiquecosaslab.com.ar/storage/products/etiquetas-colegios-1.jpg\",\n          \"is_main\": true\n        }\n      ]\n    }\n  ],\n  \"metaData\": {\n    \"current_page\": 1,\n    \"last_page\": 3,\n    \"per_page\": 10,\n    \"total\": 25,\n    \"from\": 1,\n    \"to\": 1\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "GET v1/products/:id",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}v1/products/15",
+							"host": [
+								"{{baseURL}}v1"
+							],
+							"path": [
+								"products",
+								"15"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - Producto encontrado",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"id\": 15,\n  \"name\": \"Etiquetas personalizadas para colegios\",\n  \"sku\": \"ETQ-COL-001\",\n  \"slug\": \"etiquetas-personalizadas-para-colegios-12345\",\n  \"price\": 1500.00,\n  \"discounted_price\": 1200.00,\n  \"discounted_start\": \"2026-03-01\",\n  \"discounted_end\": \"2026-04-30\",\n  \"stock_quantity\": null,\n  \"stock_alert\": 10,\n  \"wholesale_price\": 900.00,\n  \"wholesale_min_amount\": 100,\n  \"is_feature\": true,\n  \"is_customizable\": true,\n  \"is_sale\": true,\n  \"is_wholesale\": false,\n  \"wholesale_hidden\": false,\n  \"product_type_id\": 1,\n  \"product_status_id\": 2,\n  \"product_stock_status_id\": 2,\n  \"type\": {\n    \"id\": 1,\n    \"name\": \"Producto\"\n  },\n  \"status\": {\n    \"id\": 2,\n    \"name\": \"Publicado\"\n  },\n  \"stockStatus\": {\n    \"id\": 2,\n    \"name\": \"Gestión de Stock\"\n  },\n  \"categories\": [\n    {\n      \"id\": 1,\n      \"name\": \"Etiquetas\"\n    },\n    {\n      \"id\": 4,\n      \"name\": \"Etiquetas Adhesivas\"\n    }\n  ],\n  \"attributes\": [\n    {\n      \"id\": 1,\n      \"name\": \"Color\",\n      \"values\": [\n        {\n          \"id\": 1,\n          \"value\": \"Rojo\"\n        },\n        {\n          \"id\": 2,\n          \"value\": \"Azul\"\n        }\n      ]\n    }\n  ],\n  \"tag\": {\n    \"id\": 1,\n    \"name\": \"Vuelta al Cole\"\n  },\n  \"images\": [\n    {\n      \"id\": 10,\n      \"product_id\": 15,\n      \"img\": \"https://api.etiquecosaslab.com.ar/storage/products/etiquetas-colegios-1.jpg\",\n      \"is_main\": true\n    },\n    {\n      \"id\": 11,\n      \"product_id\": 15,\n      \"img\": \"https://api.etiquecosaslab.com.ar/storage/products/etiquetas-colegios-2.jpg\",\n      \"is_main\": false\n    }\n  ],\n  \"costs\": [\n    {\n      \"id\": 5,\n      \"name\": \"Costo de impresión\",\n      \"price\": 400.00\n    }\n  ],\n  \"customization\": {\n    \"fields\": [\n      {\n        \"type\": \"text\",\n        \"label\": \"Nombre del alumno\",\n        \"required\": true\n      }\n    ]\n  },\n  \"wholesales\": [\n    {\n      \"id\": 2,\n      \"product_id\": 15,\n      \"amount\": 100,\n      \"discount\": 20\n    }\n  ],\n  \"stock_channels\": [\n    {\n      \"channel\": 1,\n      \"channel_name\": \"Web\",\n      \"stock_status\": {\n        \"id\": 2,\n        \"name\": \"Gestión de Stock\"\n      },\n      \"stock_quantity\": 75\n    }\n  ],\n  \"variants\": [],\n  \"relatedProducts\": [\n    {\n      \"id\": 20,\n      \"name\": \"Combo escolar etiquetas\",\n      \"slug\": \"combo-escolar-etiquetas\",\n      \"price\": 3500,\n      \"images\": [\n        {\n          \"img\": \"https://api.etiquecosaslab.com.ar/storage/products/combo-escolar.jpg\",\n          \"is_main\": true\n        }\n      ]\n    }\n  ],\n  \"created_at\": \"2025-08-15T10:00:00.000000Z\",\n  \"updated_at\": \"2026-05-20T14:30:00.000000Z\"\n}"
+						},
+						{
+							"name": "404 - No encontrado",
+							"status": "Not Found",
+							"code": 404,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Producto no encontrado\"\n}"
+						}
+					]
+				},
+				{
+					"name": "GET v1/products/slug/:slug",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}v1/products/slug/etiquetas-personalizadas-para-colegios-12345",
+							"host": [
+								"{{baseURL}}v1"
+							],
+							"path": [
+								"products",
+								"slug",
+								"etiquetas-personalizadas-para-colegios-12345"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - Producto encontrado",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"id\": 15,\n  \"name\": \"Etiquetas personalizadas para colegios\",\n  \"sku\": \"ETQ-COL-001\",\n  \"slug\": \"etiquetas-personalizadas-para-colegios-12345\",\n  \"price\": 1500.00,\n  \"discounted_price\": 1200.00,\n  \"discounted_start\": \"2026-03-01\",\n  \"discounted_end\": \"2026-04-30\",\n  \"stock_quantity\": null,\n  \"stock_alert\": 10,\n  \"wholesale_price\": 900.00,\n  \"wholesale_min_amount\": 100,\n  \"is_feature\": true,\n  \"is_customizable\": true,\n  \"is_sale\": true,\n  \"is_wholesale\": false,\n  \"wholesale_hidden\": false,\n  \"product_type_id\": 1,\n  \"product_status_id\": 2,\n  \"product_stock_status_id\": 2,\n  \"type\": {\n    \"id\": 1,\n    \"name\": \"Producto\"\n  },\n  \"status\": {\n    \"id\": 2,\n    \"name\": \"Publicado\"\n  },\n  \"stockStatus\": {\n    \"id\": 2,\n    \"name\": \"Gestión de Stock\"\n  },\n  \"categories\": [\n    {\n      \"id\": 1,\n      \"name\": \"Etiquetas\"\n    },\n    {\n      \"id\": 4,\n      \"name\": \"Etiquetas Adhesivas\"\n    }\n  ],\n  \"attributes\": [\n    {\n      \"id\": 1,\n      \"name\": \"Color\",\n      \"values\": [\n        {\n          \"id\": 1,\n          \"value\": \"Rojo\"\n        },\n        {\n          \"id\": 2,\n          \"value\": \"Azul\"\n        }\n      ]\n    }\n  ],\n  \"tag\": {\n    \"id\": 1,\n    \"name\": \"Vuelta al Cole\"\n  },\n  \"images\": [\n    {\n      \"id\": 10,\n      \"product_id\": 15,\n      \"img\": \"https://api.etiquecosaslab.com.ar/storage/products/etiquetas-colegios-1.jpg\",\n      \"is_main\": true\n    },\n    {\n      \"id\": 11,\n      \"product_id\": 15,\n      \"img\": \"https://api.etiquecosaslab.com.ar/storage/products/etiquetas-colegios-2.jpg\",\n      \"is_main\": false\n    }\n  ],\n  \"costs\": [\n    {\n      \"id\": 5,\n      \"name\": \"Costo de impresión\",\n      \"price\": 400.00\n    }\n  ],\n  \"customization\": {\n    \"fields\": [\n      {\n        \"type\": \"text\",\n        \"label\": \"Nombre del alumno\",\n        \"required\": true\n      }\n    ]\n  },\n  \"wholesales\": [\n    {\n      \"id\": 2,\n      \"product_id\": 15,\n      \"amount\": 100,\n      \"discount\": 20\n    }\n  ],\n  \"stock_channels\": [\n    {\n      \"channel\": 1,\n      \"channel_name\": \"Web\",\n      \"stock_status\": {\n        \"id\": 2,\n        \"name\": \"Gestión de Stock\"\n      },\n      \"stock_quantity\": 75\n    }\n  ],\n  \"variants\": [],\n  \"relatedProducts\": [\n    {\n      \"id\": 20,\n      \"name\": \"Combo escolar etiquetas\",\n      \"slug\": \"combo-escolar-etiquetas\",\n      \"price\": 3500,\n      \"images\": [\n        {\n          \"img\": \"https://api.etiquecosaslab.com.ar/storage/products/combo-escolar.jpg\",\n          \"is_main\": true\n        }\n      ]\n    }\n  ],\n  \"created_at\": \"2025-08-15T10:00:00.000000Z\",\n  \"updated_at\": \"2026-05-20T14:30:00.000000Z\"\n}"
+						},
+						{
+							"name": "404 - No encontrado",
+							"status": "Not Found",
+							"code": 404,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Producto no encontrado\"\n}"
+						}
+					]
+				},
+				{
+					"name": "POST v1/products/consult-price",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id_product\": 15,\n  \"name\": \"María\",\n  \"last_name\": \"González\",\n  \"email\": \"maria.gonzalez@gmail.com\",\n  \"phone\": \"+54 11 4567-8901\",\n  \"amount\": 50,\n  \"text\": \"Necesito saber el precio para un pedido corporativo de 50 unidades\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}v1/products/consult-price",
+							"host": [
+								"{{baseURL}}v1"
+							],
+							"path": [
+								"products",
+								"consult-price"
+							]
+						},
+						"description": "Envía una consulta de precio para un producto. Requiere: id_product, name, last_name, email. Opcionales: phone, amount, text."
+					},
+					"response": [
+						{
+							"name": "200 - Consulta enviada",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Tu consulta fue enviada exitosamente. Te contactaremos en breve.\",\n  \"product\": {\n    \"id\": 15,\n    \"name\": \"Etiquetas personalizadas para colegios\"\n  }\n}"
+						},
+						{
+							"name": "422 - Error de validación",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"email\": [\n      \"El campo email es obligatorio\"\n    ],\n    \"id_product\": [\n      \"El campo id_product es obligatorio\"\n    ],\n    \"name\": [\n      \"El campo name es obligatorio\"\n    ],\n    \"last_name\": [\n      \"El campo last_name es obligatorio\"\n    ]\n  }\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Ventas",
+			"item": [
+				{
+					"name": "GET v1/sales/statuses",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}v1/sales/statuses",
+							"host": [
+								"{{baseURL}}v1"
+							],
+							"path": [
+								"sales",
+								"statuses"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - Estados de pedido",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "[\n  { \"id\": 1, \"name\": \"Aprobado\" },\n  { \"id\": 2, \"name\": \"En producción\" },\n  { \"id\": 3, \"name\": \"Listo\" },\n  { \"id\": 4, \"name\": \"Entregado\" },\n  { \"id\": 5, \"name\": \"Cancelado\" },\n  { \"id\": 6, \"name\": \"Casi listo\" },\n  { \"id\": 7, \"name\": \"Retirado\" },\n  { \"id\": 8, \"name\": \"Pendiente de pago\" },\n  { \"id\": 9, \"name\": \"Pago rechazado\" }\n]"
+						}
+					]
+				},
+				{
+					"name": "GET v1/sales/payment-method",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}v1/sales/payment-method",
+							"host": [
+								"{{baseURL}}v1"
+							],
+							"path": [
+								"sales",
+								"payment-method"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - Métodos de pago",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "[\n  { \"id\": 1, \"name\": \"MercadoPago\" },\n  { \"id\": 2, \"name\": \"Transferencia bancaria\" },\n  { \"id\": 3, \"name\": \"Efectivo\" }\n]"
+						}
+					]
+				},
+				{
+					"name": "GET v1/sales/channel-sale",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}v1/sales/channel-sale",
+							"host": [
+								"{{baseURL}}v1"
+							],
+							"path": [
+								"sales",
+								"channel-sale"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - Canales de venta",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "[\n  { \"id\": 1, \"name\": \"Web\" },\n  { \"id\": 2, \"name\": \"Instagram\" },\n  { \"id\": 3, \"name\": \"WhatsApp\" },\n  { \"id\": 4, \"name\": \"Mayorista\" }\n]"
+						}
+					]
+				},
+				{
+					"name": "GET v1/sales/:id",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}v1/sales/142",
+							"host": [
+								"{{baseURL}}v1"
+							],
+							"path": [
+								"sales",
+								"142"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - Pedido encontrado",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"id\": 142,\n  \"client_id\": 12,\n  \"channel_id\": 1,\n  \"shipping_method_id\": 3,\n  \"sale_status_id\": 1,\n  \"user_id\": null,\n  \"cadete_id\": null,\n  \"address\": \"Av. Corrientes 3421 Piso 5 Dto B\",\n  \"locality_id\": 1,\n  \"postal_code\": \"1193\",\n  \"subtotal\": 4500.00,\n  \"shipping_cost\": 850.00,\n  \"discount_amount\": 450.00,\n  \"total\": 4900.00,\n  \"customer_notes\": \"Por favor envolver para regalo\",\n  \"internal_comments\": null,\n  \"created_at\": \"2026-05-25T14:30:00.000000Z\",\n  \"updated_at\": \"2026-05-25T14:30:00.000000Z\",\n  \"client\": {\n    \"id\": 12,\n    \"name\": \"Luciana\",\n    \"lastName\": \"Martínez\",\n    \"email\": \"luciana.martinez@gmail.com\",\n    \"phone\": \"+54 11 3456-7890\"\n  },\n  \"channel\": {\n    \"id\": 1,\n    \"name\": \"Web\"\n  },\n  \"products\": [\n    {\n      \"id\": 201,\n      \"product_id\": 15,\n      \"variant_id\": null,\n      \"quantity\": 3,\n      \"unit_price\": 1500.00,\n      \"comment\": null,\n      \"customization_data\": {\n        \"fields\": [\n          {\n            \"label\": \"Nombre\",\n            \"value\": \"Sofía\"\n          }\n        ]\n      },\n      \"product\": {\n        \"id\": 15,\n        \"name\": \"Etiquetas personalizadas para colegios\",\n        \"sku\": \"ETQ-COL-001\"\n      },\n      \"variant\": null\n    }\n  ],\n  \"status\": {\n    \"id\": 1,\n    \"name\": \"Aprobado\"\n  },\n  \"statusHistory\": [\n    {\n      \"id\": 301,\n      \"sale_id\": 142,\n      \"sale_status_id\": 8,\n      \"date\": \"2026-05-25T14:30:00.000000Z\"\n    },\n    {\n      \"id\": 302,\n      \"sale_id\": 142,\n      \"sale_status_id\": 1,\n      \"date\": \"2026-05-25T14:31:00.000000Z\"\n    }\n  ],\n  \"shippingMethod\": {\n    \"id\": 3,\n    \"name\": \"Envío Estándar\",\n    \"price\": 850.00\n  },\n  \"locality\": {\n    \"id\": 1,\n    \"name\": \"Buenos Aires\"\n  },\n  \"coupons\": [\n    {\n      \"id\": 5,\n      \"code\": \"VUELTAALCOLE10\",\n      \"discount_amount\": 450.00\n    }\n  ]\n}"
+						},
+						{
+							"name": "404 - No encontrado",
+							"status": "Not Found",
+							"code": 404,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Pedido no encontrado\"\n}"
+						}
+					]
+				},
+				{
+					"name": "POST v1/sales",
+					"description": "Crea un pedido desde el canal web. Si el cliente no existe se crea automáticamente. Si hay stock insuficiente retorna 422 con detalle por producto.",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"client_mail\": \"luciana.martinez@gmail.com\",\n  \"client_name\": \"Luciana\",\n  \"client_lastname\": \"Martínez\",\n  \"client_phone\": \"+54 11 3456-7890\",\n  \"client_locality_id\": 1,\n  \"channel_id\": 1,\n  \"shipping_address\": \"Av. Corrientes 3421 Piso 5 Dto B\",\n  \"shipping_locality_id\": 1,\n  \"shipping_postal_code\": \"1193\",\n  \"shipping_save\": true,\n  \"shipping_method_id\": 3,\n  \"subtotal\": 4500.00,\n  \"shipping_cost\": 850.00,\n  \"sale_status_id\": 8,\n  \"customer_notes\": \"Por favor envolver para regalo\",\n  \"coupon_code\": \"VUELTAALCOLE10\",\n  \"discount_amount\": 450.00,\n  \"products\": [\n    {\n      \"product_id\": 15,\n      \"variant_id\": null,\n      \"quantity\": 3,\n      \"unit_price\": 1500.00,\n      \"comment\": null,\n      \"customization_data\": \"{\\\"fields\\\":[{\\\"label\\\":\\\"Nombre\\\",\\\"value\\\":\\\"Sofía\\\"}]}\"\n    }\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}v1/sales",
+							"host": [
+								"{{baseURL}}v1"
+							],
+							"path": [
+								"sales"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - Pedido creado",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Pedido creado\",\n  \"data\": {\n    \"id\": 142,\n    \"client_id\": 12,\n    \"channel_id\": 1,\n    \"shipping_method_id\": 3,\n    \"sale_status_id\": 1,\n    \"user_id\": null,\n    \"cadete_id\": null,\n    \"address\": \"Av. Corrientes 3421 Piso 5 Dto B\",\n    \"locality_id\": 1,\n    \"postal_code\": \"1193\",\n    \"subtotal\": 4500.00,\n    \"shipping_cost\": 850.00,\n    \"discount_amount\": 450.00,\n    \"total\": 4900.00,\n    \"customer_notes\": \"Por favor envolver para regalo\",\n    \"internal_comments\": null,\n    \"created_at\": \"2026-05-25T14:30:00.000000Z\",\n    \"updated_at\": \"2026-05-25T14:30:00.000000Z\",\n    \"client\": {\n      \"id\": 12,\n      \"name\": \"Luciana\",\n      \"lastName\": \"Martínez\",\n      \"email\": \"luciana.martinez@gmail.com\",\n      \"phone\": \"+54 11 3456-7890\"\n    },\n    \"channel\": { \"id\": 1, \"name\": \"Web\" },\n    \"products\": [\n      {\n        \"id\": 201,\n        \"product_id\": 15,\n        \"variant_id\": null,\n        \"quantity\": 3,\n        \"unit_price\": 1500.00,\n        \"comment\": null,\n        \"customization_data\": { \"fields\": [{ \"label\": \"Nombre\", \"value\": \"Sofía\" }] },\n        \"product\": { \"id\": 15, \"name\": \"Etiquetas personalizadas para colegios\", \"sku\": \"ETQ-COL-001\" },\n        \"variant\": null\n      }\n    ],\n    \"status\": { \"id\": 1, \"name\": \"Aprobado\" },\n    \"statusHistory\": [\n      { \"id\": 301, \"sale_id\": 142, \"sale_status_id\": 8, \"date\": \"2026-05-25T14:30:00.000000Z\" },\n      { \"id\": 302, \"sale_id\": 142, \"sale_status_id\": 1, \"date\": \"2026-05-25T14:31:00.000000Z\" }\n    ],\n    \"shippingMethod\": { \"id\": 3, \"name\": \"Envío Estándar\", \"price\": 850.00 },\n    \"locality\": { \"id\": 1, \"name\": \"Buenos Aires\" },\n    \"coupons\": [{ \"id\": 5, \"code\": \"VUELTAALCOLE10\", \"discount_amount\": 450.00 }]\n  }\n}"
+						},
+						{
+							"name": "422 - Stock insuficiente",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Stock insuficiente para completar el pedido\",\n  \"errors\": [\n    {\n      \"product_id\": 15,\n      \"product_name\": \"Etiquetas personalizadas para colegios\",\n      \"product_variant_id\": null,\n      \"requested\": 3,\n      \"available\": 1\n    }\n  ]\n}"
+						},
+						{
+							"name": "422 - Error de validación",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"products\": [\"El campo productos es obligatorio\"],\n    \"shipping_method_id\": [\"El campo método de envío es obligatorio\"],\n    \"client_mail\": [\"El campo email del cliente es obligatorio\"],\n    \"subtotal\": [\"El campo subtotal es obligatorio\"],\n    \"shipping_cost\": [\"El campo costo de envío es obligatorio\"],\n    \"sale_status_id\": [\"El campo estado del pedido es obligatorio\"],\n    \"channel_id\": [\"El campo canal es obligatorio\"]\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "PUT v1/sales/change-status/:id",
+					"description": "Cambia el estado del pedido desde el portal del cliente. Al pasar a estado 5 (Cancelado) se restaura el stock si el pedido había sido aprobado.",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"sale_status_id\": 5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}v1/sales/change-status/142",
+							"host": [
+								"{{baseURL}}v1"
+							],
+							"path": [
+								"sales",
+								"change-status",
+								"142"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - Estado actualizado",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Estado actualizado\",\n  \"data\": {\n    \"id\": 142,\n    \"client_id\": 12,\n    \"channel_id\": 1,\n    \"shipping_method_id\": 3,\n    \"sale_status_id\": 5,\n    \"user_id\": null,\n    \"cadete_id\": null,\n    \"address\": \"Av. Corrientes 3421 Piso 5 Dto B\",\n    \"locality_id\": 1,\n    \"postal_code\": \"1193\",\n    \"subtotal\": 4500.00,\n    \"shipping_cost\": 850.00,\n    \"discount_amount\": 450.00,\n    \"total\": 4900.00,\n    \"customer_notes\": \"Por favor envolver para regalo\",\n    \"internal_comments\": null,\n    \"status\": { \"id\": 5, \"name\": \"Cancelado\" },\n    \"updated_at\": \"2026-05-25T15:00:00.000000Z\"\n  }\n}"
+						},
+						{
+							"name": "422 - Error de validación",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"sale_status_id\": [\"El campo sale_status_id es obligatorio\"]\n  }\n}"
+						},
+						{
+							"name": "404 - No encontrado",
+							"status": "Not Found",
+							"code": 404,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Pedido no encontrado\"\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Envios",
+			"item": [
+				{
+					"name": "List Shipping Zones (Public)",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}v1/shipping-zones",
+							"host": [
+								"{{baseURL}}v1"
+							],
+							"path": [
+								"shipping-zones"
+							],
+							"query": [
+								{
+									"key": "quantity",
+									"value": "10",
+									"disabled": true
+								},
+								{
+									"key": "page",
+									"value": "1",
+									"disabled": true
+								},
+								{
+									"key": "search",
+									"value": "CABA",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "[\n  {\n    \"id\": 1,\n    \"name\": \"CABA\",\n    \"postal_codes\": [\"1000\",\"1001\",\"1002\",\"1004\",\"1005\"],\n    \"status\": {\"id\": 1, \"name\": \"Activo\"},\n    \"options\": [\n      {\"id\": 1, \"name\": \"Retiro en local\", \"price\": 0},\n      {\"id\": 2, \"name\": \"Envío Estándar\", \"price\": 850}\n    ]\n  },\n  {\n    \"id\": 2,\n    \"name\": \"GBA Zona Norte\",\n    \"postal_codes\": [\"1600\",\"1609\",\"1618\",\"1636\"],\n    \"status\": {\"id\": 1, \"name\": \"Activo\"},\n    \"options\": [\n      {\"id\": 3, \"name\": \"Envío GBA Norte\", \"price\": 1200}\n    ]\n  }\n]",
+							"_postman_previewlanguage": "json"
+						}
+					]
+				},
+				{
+					"name": "Get Shipping Zone (Public)",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}v1/shipping-zones/1",
+							"host": [
+								"{{baseURL}}v1"
+							],
+							"path": [
+								"shipping-zones",
+								"1"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"id\": 1,\n  \"name\": \"CABA\",\n  \"postal_codes\": [\"1000\",\"1001\",\"1002\"],\n  \"status\": {\"id\": 1, \"name\": \"Activo\"},\n  \"options\": [\n    {\"id\": 1, \"name\": \"Retiro en local\", \"price\": 0},\n    {\"id\": 2, \"name\": \"Envío Estándar\", \"price\": 850}\n  ]\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "404 Not Found",
+							"status": "Not Found",
+							"code": 404,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Zona no encontrada\"\n}",
+							"_postman_previewlanguage": "json"
+						}
+					]
+				},
+				{
+					"name": "List Shipping Options (Public)",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}v1/shipping-options",
+							"host": [
+								"{{baseURL}}v1"
+							],
+							"path": [
+								"shipping-options"
+							],
+							"query": [
+								{
+									"key": "quantity",
+									"value": "10",
+									"disabled": true
+								},
+								{
+									"key": "page",
+									"value": "1",
+									"disabled": true
+								},
+								{
+									"key": "zone_id",
+									"value": "1",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "[\n  {\"id\": 1, \"name\": \"Retiro en local\", \"price\": 0, \"options_order\": 1, \"zone\": {\"id\": 1, \"name\": \"CABA\"}, \"status\": {\"id\": 1, \"name\": \"Activo\"}},\n  {\"id\": 2, \"name\": \"Envío Estándar\", \"price\": 850, \"options_order\": 2, \"zone\": {\"id\": 1, \"name\": \"CABA\"}, \"status\": {\"id\": 1, \"name\": \"Activo\"}},\n  {\"id\": 3, \"name\": \"Envío Express\", \"price\": 1500, \"options_order\": 3, \"zone\": {\"id\": 1, \"name\": \"CABA\"}, \"status\": {\"id\": 1, \"name\": \"Activo\"}}\n]",
+							"_postman_previewlanguage": "json"
+						}
+					]
+				},
+				{
+					"name": "Get Shipping Option (Public)",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}v1/shipping-options/2",
+							"host": [
+								"{{baseURL}}v1"
+							],
+							"path": [
+								"shipping-options",
+								"2"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"id\": 2,\n  \"name\": \"Envío Estándar\",\n  \"price\": 850,\n  \"options_order\": 2,\n  \"zone\": {\"id\": 1, \"name\": \"CABA\"},\n  \"status\": {\"id\": 1, \"name\": \"Activo\"}\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "404 Not Found",
+							"status": "Not Found",
+							"code": 404,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Opción de envío no encontrada\"\n}",
+							"_postman_previewlanguage": "json"
+						}
+					]
+				},
+				{
+					"name": "List Shipping Config (Public)",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}v1/shipping-config",
+							"host": [
+								"{{baseURL}}v1"
+							],
+							"path": [
+								"shipping-config"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "[\n  {\n    \"id\": 1,\n    \"data\": {\n      \"free_shipping_threshold\": 15000,\n      \"enabled\": true,\n      \"message\": \"¡Envío gratis en compras mayores a $15.000!\"\n    },\n    \"created_at\": \"2025-06-01T00:00:00.000000Z\"\n  }\n]",
+							"_postman_previewlanguage": "json"
+						}
+					]
+				},
+				{
+					"name": "Get Shipping Config (Public)",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}v1/shipping-config/1",
+							"host": [
+								"{{baseURL}}v1"
+							],
+							"path": [
+								"shipping-config",
+								"1"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"id\": 1,\n  \"data\": {\n    \"free_shipping_threshold\": 15000,\n    \"enabled\": true,\n    \"message\": \"¡Envío gratis en compras mayores a $15.000!\"\n  },\n  \"created_at\": \"2025-06-01T00:00:00.000000Z\"\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "404 Not Found",
+							"status": "Not Found",
+							"code": 404,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Configuración no encontrada\"\n}",
+							"_postman_previewlanguage": "json"
+						}
+					]
+				},
+				{
+					"name": "Get Provinces",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"description": "Lista provincias con sus localidades. Usado para selección de dirección de envío.",
+						"url": {
+							"raw": "{{baseURL}}v1/provinces",
+							"host": [
+								"{{baseURL}}v1"
+							],
+							"path": [
+								"provinces"
+							],
+							"query": [
+								{
+									"key": "quantity",
+									"value": "24",
+									"disabled": true
+								},
+								{
+									"key": "page",
+									"value": "1",
+									"disabled": true
+								},
+								{
+									"key": "search",
+									"value": "Buenos",
+									"disabled": true
+								},
+								{
+									"key": "province_id",
+									"value": "1",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"data\": [\n    {\n      \"id\": 1,\n      \"name\": \"Buenos Aires\",\n      \"localities\": [\n        {\"id\": 1, \"name\": \"Ciudad Autónoma de Buenos Aires\", \"postal_code\": \"1000\"},\n        {\"id\": 2, \"name\": \"La Plata\", \"postal_code\": \"1900\"},\n        {\"id\": 3, \"name\": \"Mar del Plata\", \"postal_code\": \"7600\"}\n      ]\n    },\n    {\n      \"id\": 2,\n      \"name\": \"Córdoba\",\n      \"localities\": [\n        {\"id\": 4, \"name\": \"Córdoba Capital\", \"postal_code\": \"5000\"},\n        {\"id\": 5, \"name\": \"Villa Carlos Paz\", \"postal_code\": \"5152\"}\n      ]\n    },\n    {\n      \"id\": 3,\n      \"name\": \"Santa Fe\",\n      \"localities\": [\n        {\"id\": 6, \"name\": \"Rosario\", \"postal_code\": \"2000\"},\n        {\"id\": 7, \"name\": \"Santa Fe Capital\", \"postal_code\": \"3000\"}\n      ]\n    }\n  ]\n}",
+							"_postman_previewlanguage": "json"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "MercadoPago",
+			"description": "Creacion de preferencia de pago y callbacks. No requieren autenticacion.",
+			"item": [
+				{
+					"name": "POST v1/mercadopago/create-preference",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}v1/mercadopago/create-preference",
+							"host": [
+								"{{baseURL}}v1/mercadopago/create-preference"
+							]
+						},
+						"auth": {
+							"type": "noauth"
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"sale_id\": 142\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"description": "Crea preferencia de pago para el pedido en status 8.",
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Contacto",
+			"description": "Formulario de contacto publico. Envia email a info@etiquecosas.com.ar. No requiere autenticacion.",
+			"item": [
+				{
+					"name": "POST v1/contact",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}v1/contact",
+							"host": [
+								"{{baseURL}}v1/contact"
+							]
+						},
+						"auth": {
+							"type": "noauth"
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre\": \"Juan Perez\",\n  \"email\": \"juan@mail.com\",\n  \"telefono\": \"1122334455\",\n  \"motivo\": \"Consulta sobre pedido\",\n  \"comentarios\": \"Queria saber el estado de mi pedido #142\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"description": "Envia el formulario de contacto. Todos los campos son obligatorios.",
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Contenido",
+			"description": "Contenido del sitio: home, general, instructivos y customer services. No requieren autenticacion.",
+			"item": [
+				{
+					"name": "GET v1/home-content",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}v1/home-content",
+							"host": [
+								"{{baseURL}}v1/home-content"
+							]
+						},
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"description": "Contenido de la pagina principal.",
+					"response": []
+				},
+				{
+					"name": "GET v1/general-content",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}v1/general-content",
+							"host": [
+								"{{baseURL}}v1/general-content"
+							]
+						},
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"description": "Contenido general del sitio.",
+					"response": []
+				},
+				{
+					"name": "GET v1/instructives",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}v1/instructives",
+							"host": [
+								"{{baseURL}}v1/instructives"
+							]
+						},
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"description": "Lista instructivos activos.",
+					"response": []
+				},
+				{
+					"name": "GET v1/customer-services",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}v1/customer-services",
+							"host": [
+								"{{baseURL}}v1/customer-services"
+							]
+						},
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"description": "Lista customer services activos.",
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Meta Catalog",
+			"description": "Feed RSS/XML de productos para Meta/Facebook Ads. No requiere autenticacion.",
+			"item": [
+				{
+					"name": "GET meta-catalog",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}meta-catalog",
+							"host": [
+								"{{baseURL}}meta-catalog"
+							]
+						},
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"description": "Genera y retorna el feed XML de productos para el catalogo de Meta/Facebook. Tambien guarda el archivo en public/feed-facebook.xml.",
+					"response": []
+				}
+			]
+		}
+	]
+}

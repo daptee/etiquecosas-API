@@ -1,0 +1,143 @@
+{
+	"info": {
+		"name": "MercadoPago",
+		"_postman_id": "mercadopago-col-etiquecosas-2026",
+		"description": "Integracion con MercadoPago. createPreference: crea preferencia de pago (requiere JWT cliente, sale en status 8). webhook: recibe notificaciones de MP (sin auth), aprueba/rechaza pedido, descuenta stock y genera PDFs. success/failure/pending: callbacks de retorno del checkout (sin auth).",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "noauth"
+	},
+	"variable": [
+		{
+			"key": "baseURL",
+			"value": "https://api.etiquecosaslab.com.ar/api/",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "POST v1/mercadopago/create-preference",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{baseURL}}v1/mercadopago/create-preference",
+					"host": [
+						"{{baseURL}}v1/mercadopago/create-preference"
+					]
+				},
+				"auth": {
+					"type": "noauth"
+				},
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"sale_id\": 142\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				}
+			},
+			"description": "Crea una preferencia de pago en MercadoPago para el pedido indicado. El pedido debe estar en status 8 (Pendiente de pago). Retorna init_point para redirigir al checkout.",
+			"response": []
+		},
+		{
+			"name": "POST mercadopago/webhook",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{baseURL}}mercadopago/webhook",
+					"host": [
+						"{{baseURL}}mercadopago/webhook"
+					]
+				},
+				"auth": {
+					"type": "noauth"
+				},
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"type\": \"payment\",\n  \"data\": {\n    \"id\": \"123456789\"\n  }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				}
+			},
+			"description": "Webhook que recibe notificaciones de MercadoPago. Sin autenticacion. Si el pago es aprobado: cambia status a 1, descuenta stock, envia emails y genera PDFs. Si es rechazado: status 9.",
+			"response": []
+		},
+		{
+			"name": "GET mercadopago/success",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}mercadopago/success",
+					"host": [
+						"{{baseURL}}mercadopago/success"
+					]
+				},
+				"auth": {
+					"type": "noauth"
+				}
+			},
+			"description": "Callback de retorno exitoso desde el checkout de MP. Retorna los query params de MercadoPago.",
+			"response": []
+		},
+		{
+			"name": "GET mercadopago/failure",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}mercadopago/failure",
+					"host": [
+						"{{baseURL}}mercadopago/failure"
+					]
+				},
+				"auth": {
+					"type": "noauth"
+				}
+			},
+			"description": "Callback de retorno fallido desde el checkout de MP.",
+			"response": []
+		},
+		{
+			"name": "GET mercadopago/pending",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}mercadopago/pending",
+					"host": [
+						"{{baseURL}}mercadopago/pending"
+					]
+				},
+				"auth": {
+					"type": "noauth"
+				}
+			},
+			"description": "Callback de retorno pendiente desde el checkout de MP.",
+			"response": []
+		}
+	]
+}

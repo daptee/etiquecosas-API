@@ -29,6 +29,7 @@ use App\Services\CintaCoserService;
 use App\Services\CintaPlancharService;
 use App\Services\EtiquetaService;
 use App\Services\SelloService;
+use App\Exceptions\InsufficientStockException;
 use App\Services\StockService;
 use App\Traits\ApiResponse;
 use App\Traits\FindObject;
@@ -489,7 +490,13 @@ class SaleController extends Controller
             $sale->sale_status_id = 1;
             $sale->save();
             Log::channel('meta_capi')->info('[store mayorista] Venta aprobada automáticamente → disparando CAPI', ['sale_id' => $sale->id]);
-            $this->approveSale($sale);
+            try {
+                $this->approveSale($sale);
+            } catch (InsufficientStockException $e) {
+                $sale->sale_status_id = 8; // volver a pendiente de pago
+                $sale->save();
+                return $this->error('Stock insuficiente para confirmar el pedido', 422, $e->getErrors());
+            }
         }
 
         $this->logAudit(Auth::user() ?? null, 'Add Sale', $request->all(), $sale);
@@ -621,9 +628,26 @@ class SaleController extends Controller
             ]);
         }
 
+        if ($sale->sale_status_id == 5) { // estado "Cancelado"
+            if ($sale->hasBeenApproved()) {
+                StockService::restoreStock($sale);
+            }
+            SaleStatusHistory::create([
+                'sale_id' => $sale->id,
+                'sale_status_id' => 5,
+                'date' => Carbon::now(),
+            ]);
+        }
+
         if ($sale->sale_status_id == 1 && $saleStatusOld != 1) {
             Log::channel('meta_capi')->info('[changeStatus] Venta aprobada → disparando CAPI', ['sale_id' => $sale->id]);
-            $this->approveSale($sale);
+            try {
+                $this->approveSale($sale);
+            } catch (InsufficientStockException $e) {
+                $sale->sale_status_id = $saleStatusOld;
+                $sale->save();
+                return $this->error('Stock insuficiente para confirmar el pedido', 422, $e->getErrors());
+            }
         }
 
         $sale->load(['products.variant', 'statusHistory']);
@@ -634,6 +658,13 @@ class SaleController extends Controller
 
     private function approveSale(Sale $sale): void
     {
+        // Validar stock antes de cualquier efecto secundario
+        $sale->load(['products.product', 'products.variant']);
+        $stockErrors = StockService::validateStock($sale);
+        if (!empty($stockErrors)) {
+            throw new InsufficientStockException($stockErrors);
+        }
+
         SaleStatusHistory::create([
             'sale_id' => $sale->id,
             'sale_status_id' => 1,
@@ -882,7 +913,22 @@ class SaleController extends Controller
             Mail::to($sale->client->email)->send(new OrderRetiredMail($sale));
         }
 
+        if ($sale->sale_status_id == 5) { // estado "Cancelado"
+            if ($sale->hasBeenApproved()) {
+                StockService::restoreStock($sale);
+            }
+        }
+
         if ($sale->sale_status_id == 1 && $saleStatusOld != 1) {
+            // Validar stock antes de proceder con la aprobación
+            $sale->load(['products.product', 'products.variant']);
+            $stockErrors = StockService::validateStock($sale);
+            if (!empty($stockErrors)) {
+                $sale->sale_status_id = $saleStatusOld;
+                $sale->save();
+                return $this->error('Stock insuficiente para confirmar el pedido', 422, $stockErrors);
+            }
+
             Log::channel('meta_capi')->info('[changeStatusAdmin] Venta aprobada → disparando CAPI', ['sale_id' => $sale->id]);
             $this->sendMetaCapiPurchaseEvent($sale);
 
@@ -1492,7 +1538,15 @@ class SaleController extends Controller
         foreach ($productsData as $product) {
             $sale->products()->create($product);
         };
-        
+
+        $sale->load(['products.product', 'products.variant']);
+        $stockErrors = StockService::validateStock($sale);
+        if (!empty($stockErrors)) {
+            $sale->products()->delete();
+            $sale->delete();
+            return $this->error('Stock insuficiente para confirmar el pedido', 422, $stockErrors);
+        }
+
         StockService::discountStock($sale);
 
         // Guardar historial de estado

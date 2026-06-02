@@ -1,0 +1,467 @@
+{
+	"info": {
+		"name": "Costs",
+		"_postman_id": "costs-col-etiquecosas-2026",
+		"description": "Gestión de costos de producción con historial de precios. Al actualizar el precio se crea un nuevo registro histórico. statusId: 1=Activo, 2=Inactivo. Todos los endpoints requieren JWT.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "baseURL",
+			"value": "https://api.etiquecosaslab.com.ar/api/"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "List Costs",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}costs",
+					"host": [
+						"{{baseURL}}costs"
+					],
+					"query": [
+						{
+							"key": "quantity",
+							"value": "10",
+							"disabled": true
+						},
+						{
+							"key": "page",
+							"value": "1",
+							"disabled": true
+						},
+						{
+							"key": "search",
+							"value": "papel",
+							"description": "busca en name",
+							"disabled": true
+						},
+						{
+							"key": "statusId",
+							"value": "1",
+							"description": "1=Activo, 2=Inactivo",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "200 OK",
+					"status": "OK",
+					"code": 200,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Costos obtenidos\",\n  \"data\": [\n    {\n      \"id\": 1,\n      \"name\": \"Papel Bond 90g\",\n      \"price\": \"1250.00\",\n      \"status_id\": 1\n    },\n    {\n      \"id\": 2,\n      \"name\": \"Vinilo Adhesivo Transparente\",\n      \"price\": \"3400.00\",\n      \"status_id\": 1\n    },\n    {\n      \"id\": 3,\n      \"name\": \"Tinta UV\",\n      \"price\": \"8750.50\",\n      \"status_id\": 1\n    },\n    {\n      \"id\": 4,\n      \"name\": \"Laminado Mate\",\n      \"price\": \"2100.00\",\n      \"status_id\": 2\n    },\n    {\n      \"id\": 5,\n      \"name\": \"Papel Kraft 80g\",\n      \"price\": \"980.00\",\n      \"status_id\": 1\n    }\n  ],\n  \"metaData\": {\n    \"current_page\": 1,\n    \"last_page\": 1,\n    \"per_page\": 10,\n    \"total\": 5,\n    \"from\": 1,\n    \"to\": 5\n  }\n}",
+					"_postman_previewlanguage": "json"
+				},
+				{
+					"name": "401 Unauthorized",
+					"status": "Unauthorized",
+					"code": 401,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Unauthenticated.\"\n}",
+					"_postman_previewlanguage": "json"
+				}
+			]
+		},
+		{
+			"name": "Get Cost",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}costs/1",
+					"host": [
+						"{{baseURL}}costs"
+					],
+					"path": [
+						"1"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "200 OK - Full History",
+					"status": "OK",
+					"code": 200,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Detalles del costo obtenidos\",\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"Papel Bond 90g\",\n    \"price\": \"1250.00\",\n    \"status_id\": 1,\n    \"prices\": [\n      {\n        \"id\": 5,\n        \"cost_id\": 1,\n        \"price\": \"1250.00\",\n        \"created_at\": \"2025-05-20T10:15:00.000000Z\"\n      },\n      {\n        \"id\": 3,\n        \"cost_id\": 1,\n        \"price\": \"1100.00\",\n        \"created_at\": \"2025-03-10T08:30:00.000000Z\"\n      },\n      {\n        \"id\": 1,\n        \"cost_id\": 1,\n        \"price\": \"950.00\",\n        \"created_at\": \"2025-01-05T09:00:00.000000Z\"\n      }\n    ]\n  },\n  \"metaData\": null\n}",
+					"_postman_previewlanguage": "json"
+				},
+				{
+					"name": "200 OK - Minimal History",
+					"status": "OK",
+					"code": 200,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Detalles del costo obtenidos\",\n  \"data\": {\n    \"id\": 5,\n    \"name\": \"Papel Kraft 80g\",\n    \"price\": \"980.00\",\n    \"status_id\": 1,\n    \"prices\": [\n      {\n        \"id\": 8,\n        \"cost_id\": 5,\n        \"price\": \"980.00\",\n        \"created_at\": \"2025-04-01T11:00:00.000000Z\"\n      }\n    ]\n  },\n  \"metaData\": null\n}",
+					"_postman_previewlanguage": "json"
+				},
+				{
+					"name": "404 Not Found",
+					"status": "Not Found",
+					"code": 404,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Costo no encontrado\"\n}",
+					"_postman_previewlanguage": "json"
+				},
+				{
+					"name": "401 Unauthorized",
+					"status": "Unauthorized",
+					"code": 401,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Unauthenticated.\"\n}",
+					"_postman_previewlanguage": "json"
+				}
+			]
+		},
+		{
+			"name": "Create Cost",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"name\": \"Cartulina Perlada 300g\",\n  \"price\": 4200,\n  \"statusId\": 1\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseURL}}costs",
+					"host": [
+						"{{baseURL}}costs"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "200 OK - Created",
+					"status": "OK",
+					"code": 200,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Costo creado\",\n  \"data\": {\n    \"id\": 6,\n    \"name\": \"Cartulina Perlada 300g\",\n    \"price\": \"4200.00\",\n    \"status_id\": 1\n  },\n  \"metaData\": null\n}",
+					"_postman_previewlanguage": "json"
+				},
+				{
+					"name": "422 Validation Error - Nombre requerido",
+					"status": "Unprocessable Entity",
+					"code": 422,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"name\": [\"El campo nombre es obligatorio\"]\n  }\n}",
+					"_postman_previewlanguage": "json"
+				},
+				{
+					"name": "422 Validation Error - Nombre duplicado",
+					"status": "Unprocessable Entity",
+					"code": 422,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"name\": [\"Ya existe un costo con ese nombre\"]\n  }\n}",
+					"_postman_previewlanguage": "json"
+				},
+				{
+					"name": "422 Validation Error - Precio requerido",
+					"status": "Unprocessable Entity",
+					"code": 422,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"price\": [\"El campo precio es obligatorio\"]\n  }\n}",
+					"_postman_previewlanguage": "json"
+				},
+				{
+					"name": "422 Validation Error - Precio inválido (no numérico)",
+					"status": "Unprocessable Entity",
+					"code": 422,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"price\": [\"El campo precio debe ser un número\"]\n  }\n}",
+					"_postman_previewlanguage": "json"
+				},
+				{
+					"name": "422 Validation Error - Precio negativo",
+					"status": "Unprocessable Entity",
+					"code": 422,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"price\": [\"El campo precio debe ser mayor o igual a 0\"]\n  }\n}",
+					"_postman_previewlanguage": "json"
+				},
+				{
+					"name": "422 Validation Error - statusId inválido",
+					"status": "Unprocessable Entity",
+					"code": 422,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"statusId\": [\"El campo estado debe ser 1 o 2\"]\n  }\n}",
+					"_postman_previewlanguage": "json"
+				},
+				{
+					"name": "401 Unauthorized",
+					"status": "Unauthorized",
+					"code": 401,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Unauthenticated.\"\n}",
+					"_postman_previewlanguage": "json"
+				}
+			]
+		},
+		{
+			"name": "Update Cost",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"name\": \"Papel Bond 90g\",\n  \"price\": 1350,\n  \"statusId\": 1\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseURL}}costs/1",
+					"host": [
+						"{{baseURL}}costs"
+					],
+					"path": [
+						"1"
+					]
+				},
+				"description": "Al cambiar el precio se crea un nuevo registro en el historial y se actualiza en todos los productos que usan este costo."
+			},
+			"response": [
+				{
+					"name": "200 OK - Precio cambiado",
+					"status": "OK",
+					"code": 200,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Costo actualizado. Se actualizaron los precios de 3 productos.\",\n  \"data\": {\n    \"cost\": {\n      \"id\": 1,\n      \"name\": \"Papel Bond 90g\",\n      \"price\": \"1350.00\",\n      \"status_id\": 1\n    },\n    \"products_updated\": 3\n  },\n  \"metaData\": null\n}",
+					"_postman_previewlanguage": "json"
+				},
+				{
+					"name": "200 OK - Solo estado cambiado",
+					"status": "OK",
+					"code": 200,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Costo actualizado\",\n  \"data\": {\n    \"id\": 4,\n    \"name\": \"Laminado Mate\",\n    \"price\": \"2100.00\",\n    \"status_id\": 1\n  },\n  \"metaData\": null\n}",
+					"_postman_previewlanguage": "json"
+				},
+				{
+					"name": "404 Not Found",
+					"status": "Not Found",
+					"code": 404,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Costo no encontrado\"\n}",
+					"_postman_previewlanguage": "json"
+				},
+				{
+					"name": "422 Validation Error - Nombre duplicado",
+					"status": "Unprocessable Entity",
+					"code": 422,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"name\": [\"Ya existe un costo con ese nombre\"]\n  }\n}",
+					"_postman_previewlanguage": "json"
+				},
+				{
+					"name": "422 Validation Error - Precio negativo",
+					"status": "Unprocessable Entity",
+					"code": 422,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"price\": [\"El campo precio debe ser mayor o igual a 0\"]\n  }\n}",
+					"_postman_previewlanguage": "json"
+				},
+				{
+					"name": "401 Unauthorized",
+					"status": "Unauthorized",
+					"code": 401,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Unauthenticated.\"\n}",
+					"_postman_previewlanguage": "json"
+				}
+			]
+		},
+		{
+			"name": "Delete Cost",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}costs/1",
+					"host": [
+						"{{baseURL}}costs"
+					],
+					"path": [
+						"1"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "200 OK - Deleted",
+					"status": "OK",
+					"code": 200,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Costo eliminado\",\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"Papel Bond 90g\",\n    \"price\": \"1350.00\",\n    \"status_id\": 1\n  },\n  \"metaData\": null\n}",
+					"_postman_previewlanguage": "json"
+				},
+				{
+					"name": "404 Not Found",
+					"status": "Not Found",
+					"code": 404,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Costo no encontrado\"\n}",
+					"_postman_previewlanguage": "json"
+				},
+				{
+					"name": "401 Unauthorized",
+					"status": "Unauthorized",
+					"code": 401,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Unauthenticated.\"\n}",
+					"_postman_previewlanguage": "json"
+				}
+			]
+		}
+	]
+}

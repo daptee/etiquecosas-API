@@ -1,0 +1,61 @@
+{
+	"info": {
+		"name": "Cadete",
+		"_postman_id": "cadete-col-etiquecosas-2026",
+		"description": "Endpoints para operaciones del cadete (profile_id=4) y admins. markAsDelivered: marca un pedido como entregado (status 4), captura nombre y DNI del receptor, envia email al cliente y notificacion interna. Requiere JWT con perfil admin (1) o cadete (4).",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "baseURL",
+			"value": "https://api.etiquecosaslab.com.ar/api/",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "POST cadete/deliver/{saleId}",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{baseURL}}cadete/deliver/142",
+					"host": [
+						"{{baseURL}}cadete/deliver/142"
+					]
+				},
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"receiver_name\": \"Maria Lopez\",\n  \"receiver_dni\": \"30123456\",\n  \"receiver_observations\": \"Entregado en porteria\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				}
+			},
+			"description": "Marca el pedido como entregado (status 4). Solo admin o el cadete asignado al pedido. Captura nombre, DNI y observaciones del receptor. Envia emails al cliente y al equipo.",
+			"response": []
+		}
+	]
+}

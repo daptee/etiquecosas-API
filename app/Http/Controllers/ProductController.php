@@ -529,6 +529,7 @@ class ProductController extends Controller
             'customization' => 'nullable|json',
             'images' => 'nullable|array',
             'images.*.img' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'images.*.position' => 'nullable|integer|min:0',
             'main_image_index' => 'nullable|integer|min:0',
         ];
 
@@ -759,6 +760,7 @@ class ProductController extends Controller
                         'product_id' => $product->id,
                         'img' => $imageName,
                         'is_main' => ((int) $request->input('main_image_index') === $index) ? 1 : 0,
+                        'position' => $index,
                     ]);
                 }
             }
@@ -1084,6 +1086,7 @@ class ProductController extends Controller
             'images' => 'nullable|array',
             'images.*.id' => 'nullable|integer|exists:product_images,id',
             'images.*.img' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'images.*.position' => 'nullable|integer|min:0',
             'main_image_index' => 'nullable|integer|min:0',
         ];
 
@@ -1557,7 +1560,7 @@ class ProductController extends Controller
                         if ($image->img && Storage::disk('public_uploads')->exists($image->img)) {
                             Storage::disk('public_uploads')->delete($image->img);
                         }
-                        $image->update(['img' => $filename]);
+                        $image->update(['img' => $filename, 'position' => $index]);
                         $incomingImageIds[] = $imageId;
                     }
                 } else {
@@ -1566,12 +1569,14 @@ class ProductController extends Controller
                         'product_id' => $product->id,
                         'img' => $filename,
                         'is_main' => 0,
+                        'position' => $index,
                     ]);
                     $incomingImageIds[] = $newImage->id;
                     $imageId = $newImage->id; // para marcar como principal
                 }
             } elseif ($imageId && in_array($imageId, $currentImageIds)) {
-                // No hay archivo nuevo, conservar la imagen existente
+                // No hay archivo nuevo, conservar la imagen existente y actualizar su posición
+                ProductImage::where('id', $imageId)->update(['position' => $index]);
                 $incomingImageIds[] = $imageId;
             }
 
@@ -1601,6 +1606,31 @@ class ProductController extends Controller
 
         Log::info('Final image IDs kept:', $incomingImageIds);
         Log::info('Deleted image IDs:', $imagesToDelete);
+    }
+
+    public function updateImagePositions(Request $request, string $productId)
+    {
+        $product = $this->findObject(Product::class, $productId);
+
+        $validator = Validator::make($request->all(), [
+            'positions' => 'required|array|min:1',
+            'positions.*.id' => 'required|integer|exists:product_images,id',
+            'positions.*.position' => 'required|integer|min:0',
+        ]);
+
+        if ($validator->fails()) {
+            $this->logAudit(Auth::user(), 'Update Image Positions', $request->all(), $validator->errors());
+            return $this->validationError($validator->errors());
+        }
+
+        foreach ($request->positions as $item) {
+            ProductImage::where('id', $item['id'])
+                ->where('product_id', $productId)
+                ->update(['position' => $item['position']]);
+        }
+
+        $this->logAudit(Auth::user(), 'Update Image Positions', $request->all(), 'Success');
+        return $this->success(null, 'Posiciones de imágenes actualizadas correctamente');
     }
 
 

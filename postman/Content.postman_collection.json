@@ -1,0 +1,617 @@
+{
+	"info": {
+		"name": "Content",
+		"_postman_id": "content-col-etiquecosas-2026",
+		"description": "Gestion de contenido del sitio web: Home Content (bloques con imagenes), General Content (datos globales), Instructivos (tutoriales con posicion drag&drop) y Customer Services (servicios con pasos y archivos). Los endpoints GET v1/ son publicos. Los admin requieren JWT.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "baseURL",
+			"value": "https://api.etiquecosaslab.com.ar/api/",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Home Content",
+			"description": "Contenido de la pagina principal. Registro unico. Admite bloques con imagenes. GET publico (v1/). POST y PUT requieren JWT.",
+			"item": [
+				{
+					"name": "GET v1/home-content",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}v1/home-content",
+							"host": [
+								"{{baseURL}}v1/home-content"
+							]
+						},
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"description": "Retorna el contenido de la home. Publico, sin autenticacion.",
+					"response": []
+				},
+				{
+					"name": "GET home-content (admin)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}home-content",
+							"host": [
+								"{{baseURL}}home-content"
+							]
+						}
+					},
+					"description": "Retorna el contenido de la home (admin). Requiere JWT.",
+					"response": []
+				},
+				{
+					"name": "POST home-content",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}home-content",
+							"host": [
+								"{{baseURL}}home-content"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"content\": \"{\\\"blocks\\\": [{\\\"title\\\": \\\"Bloque 1\\\", \\\"images\\\": []}]}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"description": "Crea el contenido de la home (solo una vez). Si ya existe retorna 400. content es un JSON serializado como string. Requiere JWT.",
+					"response": []
+				},
+				{
+					"name": "POST home-content/update",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}home-content/update",
+							"host": [
+								"{{baseURL}}home-content/update"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"content\": \"{\\\"blocks\\\": [{\\\"title\\\": \\\"Bloque actualizado\\\", \\\"images\\\": []}]}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"description": "Actualiza el contenido de la home. Acepta multipart/form-data para subir imagenes por bloque (key: block_{index}_image_{index}). Requiere JWT.",
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "General Content",
+			"description": "Contenido general del sitio (datos globales: redes, contacto, etc.). Registro unico. GET publico (v1/). POST y PUT requieren JWT.",
+			"item": [
+				{
+					"name": "GET v1/general-content",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}v1/general-content",
+							"host": [
+								"{{baseURL}}v1/general-content"
+							]
+						},
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"description": "Retorna el contenido general del sitio. Publico, sin autenticacion.",
+					"response": []
+				},
+				{
+					"name": "GET general-content (admin)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}general-content",
+							"host": [
+								"{{baseURL}}general-content"
+							]
+						}
+					},
+					"description": "Retorna el contenido general (admin). Requiere JWT.",
+					"response": []
+				},
+				{
+					"name": "POST general-content",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}general-content",
+							"host": [
+								"{{baseURL}}general-content"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"content\": {\n    \"phone\": \"1122334455\",\n    \"instagram\": \"@etiquecosas\",\n    \"email\": \"info@etiquecosas.com.ar\"\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"description": "Crea el contenido general (solo una vez). Si ya existe retorna 400. content puede ser objeto JSON o string JSON. Requiere JWT.",
+					"response": []
+				},
+				{
+					"name": "PUT general-content",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}general-content",
+							"host": [
+								"{{baseURL}}general-content"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"content\": {\n    \"phone\": \"1133445566\",\n    \"instagram\": \"@etiquecosas\",\n    \"email\": \"info@etiquecosas.com.ar\"\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"description": "Actualiza el contenido general. Requiere JWT.",
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Instructivos",
+			"description": "Tutoriales/instructivos del sitio con orden por posicion (drag & drop). status_id: 1=Activo, 2=Inactivo. GET activos publico (v1/). CRUD y cambio de estado/posicion requieren JWT.",
+			"item": [
+				{
+					"name": "GET v1/instructives (publico)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}v1/instructives",
+							"host": [
+								"{{baseURL}}v1/instructives"
+							],
+							"query": [
+								{
+									"key": "quantity",
+									"value": "10",
+									"description": "Resultados por pagina (default: 10)",
+									"disabled": true
+								},
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Pagina",
+									"disabled": true
+								}
+							]
+						},
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"description": "Lista instructivos activos paginados, ordenados por posicion. Publico.",
+					"response": []
+				},
+				{
+					"name": "GET instructives (admin)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}instructives",
+							"host": [
+								"{{baseURL}}instructives"
+							],
+							"query": [
+								{
+									"key": "quantity",
+									"value": "15",
+									"description": "Resultados por pagina",
+									"disabled": true
+								},
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Pagina",
+									"disabled": true
+								},
+								{
+									"key": "search",
+									"value": "colegio",
+									"description": "Buscar por nombre/descripcion",
+									"disabled": true
+								},
+								{
+									"key": "status",
+									"value": "1",
+									"description": "Filtrar por status_id",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"description": "Lista todos los instructivos con filtros. Si no se pasa quantity retorna todos. Requiere JWT.",
+					"response": []
+				},
+				{
+					"name": "POST instructives",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}instructives",
+							"host": [
+								"{{baseURL}}instructives"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Como personalizar etiquetas\",\n  \"description\": \"Guia paso a paso para personalizar\",\n  \"link\": \"https://www.youtube.com/watch?v=xxx\",\n  \"status_id\": 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"description": "Crea un instructivo. La posicion se asigna automaticamente (ultima + 1). Requiere JWT.",
+					"response": []
+				},
+				{
+					"name": "PUT instructives/{id}",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}instructives/1",
+							"host": [
+								"{{baseURL}}instructives/1"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Como personalizar etiquetas v2\",\n  \"description\": \"Guia actualizada\",\n  \"link\": \"https://www.youtube.com/watch?v=yyy\",\n  \"status_id\": 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"description": "Actualiza un instructivo por ID. Requiere JWT.",
+					"response": []
+				},
+				{
+					"name": "PUT instructives/update-positions",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}instructives/update-positions",
+							"host": [
+								"{{baseURL}}instructives/update-positions"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"positions\": [\n    {\"id\": 1, \"position\": 0},\n    {\"id\": 2, \"position\": 1},\n    {\"id\": 3, \"position\": 2}\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"description": "Actualiza el orden de todos los instructivos (drag & drop). Requiere JWT.",
+					"response": []
+				},
+				{
+					"name": "PUT instructives/{id}/change-status",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}instructives/1/change-status",
+							"host": [
+								"{{baseURL}}instructives/1/change-status"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status_id\": 2\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"description": "Cambia el estado de un instructivo. status_id: 1=Activo, 2=Inactivo. Requiere JWT.",
+					"response": []
+				},
+				{
+					"name": "DELETE instructives/{id}",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}instructives/1",
+							"host": [
+								"{{baseURL}}instructives/1"
+							]
+						}
+					},
+					"description": "Elimina (soft delete) un instructivo por ID. Requiere JWT.",
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Customer Services",
+			"description": "Servicios de atencion al cliente con pasos detallados (step_number, title, description, icon, image_1, image_2). Acepta multipart/form-data para subir archivos. GET activos publico (v1/). CRUD y cambio de estado requieren JWT.",
+			"item": [
+				{
+					"name": "GET v1/customer-services (publico)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}v1/customer-services",
+							"host": [
+								"{{baseURL}}v1/customer-services"
+							],
+							"query": [
+								{
+									"key": "quantity",
+									"value": "10",
+									"description": "Resultados por pagina (default: 10)",
+									"disabled": true
+								},
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Pagina",
+									"disabled": true
+								}
+							]
+						},
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"description": "Lista customer services activos paginados. Incluye steps. Publico.",
+					"response": []
+				},
+				{
+					"name": "GET customer-services (admin)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}customer-services",
+							"host": [
+								"{{baseURL}}customer-services"
+							],
+							"query": [
+								{
+									"key": "quantity",
+									"value": "15",
+									"description": "Resultados por pagina",
+									"disabled": true
+								},
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Pagina",
+									"disabled": true
+								},
+								{
+									"key": "search",
+									"value": "etiqueta",
+									"description": "Buscar por nombre",
+									"disabled": true
+								},
+								{
+									"key": "status",
+									"value": "1",
+									"description": "Filtrar por status_id",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"description": "Lista todos los customer services con filtros. Incluye steps. Requiere JWT.",
+					"response": []
+				},
+				{
+					"name": "POST customer-services",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}customer-services",
+							"host": [
+								"{{baseURL}}customer-services"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Como hacer un pedido\",\n  \"status_id\": 1,\n  \"steps\": [\n    {\"step_number\": 1, \"title\": \"Elegir producto\", \"description\": \"Navega el catalogo\"},\n    {\"step_number\": 2, \"title\": \"Personalizar\", \"description\": \"Elige color e icono\"}\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"description": "Crea un customer service con sus pasos. Acepta multipart/form-data. Archivos: icon (servicio), step_{i}_icon, step_{i}_image_1, step_{i}_image_2. Requiere JWT.",
+					"response": []
+				},
+				{
+					"name": "POST customer-services/{id} (update)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}customer-services/1",
+							"host": [
+								"{{baseURL}}customer-services/1"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Como hacer un pedido v2\",\n  \"status_id\": 1,\n  \"steps\": [\n    {\"step_number\": 1, \"title\": \"Elegir producto\", \"description\": \"Navega el catalogo actualizado\"}\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"description": "Actualiza un customer service y reemplaza todos sus pasos. Acepta multipart/form-data. Requiere JWT.",
+					"response": []
+				},
+				{
+					"name": "PUT customer-services/{id}/change-status",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}customer-services/1/change-status",
+							"host": [
+								"{{baseURL}}customer-services/1/change-status"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status_id\": 2\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"description": "Cambia el estado de un customer service. status_id: 1=Activo, 2=Inactivo. Requiere JWT.",
+					"response": []
+				},
+				{
+					"name": "DELETE customer-services/{id}",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}customer-services/1",
+							"host": [
+								"{{baseURL}}customer-services/1"
+							]
+						}
+					},
+					"description": "Elimina (soft delete) un customer service y borra sus archivos del storage. Requiere JWT.",
+					"response": []
+				}
+			]
+		}
+	]
+}

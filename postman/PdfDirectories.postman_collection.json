@@ -1,0 +1,126 @@
+{
+	"info": {
+		"name": "PDF Directories",
+		"_postman_id": "pdf-directories-col-etiquecosas-2026",
+		"description": "Gestion de directorios de PDF generados al aprobar pedidos. Listado de carpetas por fecha, PDFs por fecha, descarga ZIP y descarga individual. profile_id 1=Admin (ve todo), profile_id 2=Disenador (solo sus carpetas). Formato de fecha en URL: dd-mm-yyyy. Todos los endpoints requieren JWT.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "baseURL",
+			"value": "https://api.etiquecosaslab.com.ar/api/",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "GET pdf-directories",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}pdf-directories",
+					"host": [
+						"{{baseURL}}pdf-directories"
+					],
+					"query": [
+						{
+							"key": "start_date",
+							"value": "2026-05-01",
+							"description": "Fecha inicio (YYYY-MM-DD)",
+							"disabled": true
+						},
+						{
+							"key": "end_date",
+							"value": "2026-05-31",
+							"description": "Fecha fin (YYYY-MM-DD)",
+							"disabled": true
+						},
+						{
+							"key": "user_id",
+							"value": "2",
+							"description": "Solo para admin: filtrar por disenador",
+							"disabled": true
+						},
+						{
+							"key": "per_page",
+							"value": "15",
+							"description": "Resultados por pagina (default: 15)",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"description": "Lista carpetas de PDF paginadas por fecha (mas reciente primero). Admin ve todo; disenador solo sus carpetas.",
+			"response": []
+		},
+		{
+			"name": "GET pdf-directories/{fecha}",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}pdf-directories/26-05-2026",
+					"host": [
+						"{{baseURL}}pdf-directories/26-05-2026"
+					],
+					"query": [
+						{
+							"key": "user_id",
+							"value": "2",
+							"description": "Solo para admin",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"description": "Retorna todos los PDFs de una fecha en formato dd-mm-yyyy. Incluye pdfs_pedidos y extras (cintas, bandas, sellos).",
+			"response": []
+		},
+		{
+			"name": "GET pdf-directories/{fecha}/download-zip",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}pdf-directories/26-05-2026/download-zip",
+					"host": [
+						"{{baseURL}}pdf-directories/26-05-2026/download-zip"
+					]
+				}
+			},
+			"description": "Descarga un ZIP con todos los PDFs de la fecha indicada. Organiza en sub-carpetas: pedidos/, cintas_coser/, cintas_planchar/, bandas/, sellos/.",
+			"response": []
+		},
+		{
+			"name": "GET pdf-directories/{fecha}/download/{nombrePdf}",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}pdf-directories/26-05-2026/download/142-etiquetas.pdf",
+					"host": [
+						"{{baseURL}}pdf-directories/26-05-2026/download/142-etiquetas.pdf"
+					]
+				}
+			},
+			"description": "Descarga un PDF individual por nombre. El disenador solo puede descargar PDFs de pedidos que tenga asignados.",
+			"response": []
+		}
+	]
+}

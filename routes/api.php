@@ -40,6 +40,8 @@ use App\Http\Controllers\FacebookFeedController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CadeteController;
 use App\Http\Controllers\ProductClientExclusionController;
+use App\Http\Controllers\ProductVariantController;
+use App\Http\Controllers\StockMovementController;
 
 // cache
 Route::get('/clear-cache', [CacheController::class, 'clearCache'])->name('clearCache');
@@ -257,6 +259,12 @@ Route::middleware('jwt.auth')->prefix('products')->group(function () {
     Route::get('/{id}/exclusions', [ProductClientExclusionController::class, 'index']);
     Route::post('/{id}/exclusions', [ProductClientExclusionController::class, 'store']);
     Route::delete('/{id}/exclusions', [ProductClientExclusionController::class, 'destroy']);
+    // Bulk actions sobre variantes
+    Route::post('/{id}/variants/bulk-delete',       [ProductVariantController::class, 'bulkDelete']);
+    Route::post('/{id}/variants/bulk-update-price', [ProductVariantController::class, 'bulkUpdatePrice']);
+    Route::post('/{id}/variants/bulk-update-stock', [ProductVariantController::class, 'bulkUpdateStock']);
+    // Reordenar galería de imágenes
+    Route::put('/{id}/images/positions', [ProductController::class, 'updateImagePositions']);
 });
 
 // Coupon 
@@ -396,4 +404,10 @@ Route::middleware('auth:client')->prefix('web')->group(function () {
     Route::get('wholesales', [ClientWholesaleController::class, 'index']);
     Route::post('wholesales', [ClientWholesaleController::class, 'store']);
     Route::put('wholesales/{id}', [ClientWholesaleController::class, 'update']);
+});
+
+// Stock Movements
+Route::middleware('jwt.auth')->prefix('stock-movements')->group(function () {
+    Route::get('/',  [StockMovementController::class, 'index']);
+    Route::post('/', [StockMovementController::class, 'store']);
 });

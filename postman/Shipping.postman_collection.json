@@ -1,0 +1,1334 @@
+{
+	"info": {
+		"name": "Shipping",
+		"_postman_id": "shipping-col-etiquecosas-2026",
+		"description": "Gestión de zonas y opciones de envío. Los endpoints v1/ son públicos. Los admin requieren JWT. status_id: 1=Activo, 2=Inactivo.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "baseURL",
+			"value": "https://api.etiquecosaslab.com.ar/api/"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Zonas de Envío",
+			"item": [
+				{
+					"name": "List Shipping Zones (Public)",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}v1/shipping-zones",
+							"host": [
+								"{{baseURL}}v1"
+							],
+							"path": [
+								"shipping-zones"
+							],
+							"query": [
+								{
+									"key": "quantity",
+									"value": "10",
+									"disabled": true
+								},
+								{
+									"key": "page",
+									"value": "1",
+									"disabled": true
+								},
+								{
+									"key": "search",
+									"value": "CABA",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "[\n  {\n    \"id\": 1,\n    \"name\": \"CABA\",\n    \"postal_codes\": [\"1000\",\"1001\",\"1002\",\"1004\",\"1005\"],\n    \"status\": {\"id\": 1, \"name\": \"Activo\"},\n    \"options\": [\n      {\"id\": 1, \"name\": \"Retiro en local\", \"price\": 0},\n      {\"id\": 2, \"name\": \"Envío Estándar\", \"price\": 850}\n    ]\n  },\n  {\n    \"id\": 2,\n    \"name\": \"GBA Zona Norte\",\n    \"postal_codes\": [\"1600\",\"1609\",\"1618\",\"1636\"],\n    \"status\": {\"id\": 1, \"name\": \"Activo\"},\n    \"options\": [\n      {\"id\": 3, \"name\": \"Envío GBA Norte\", \"price\": 1200}\n    ]\n  }\n]",
+							"_postman_previewlanguage": "json"
+						}
+					]
+				},
+				{
+					"name": "Get Shipping Zone (Public)",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}v1/shipping-zones/1",
+							"host": [
+								"{{baseURL}}v1"
+							],
+							"path": [
+								"shipping-zones",
+								"1"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"id\": 1,\n  \"name\": \"CABA\",\n  \"postal_codes\": [\"1000\",\"1001\",\"1002\"],\n  \"status\": {\"id\": 1, \"name\": \"Activo\"},\n  \"options\": [\n    {\"id\": 1, \"name\": \"Retiro en local\", \"price\": 0},\n    {\"id\": 2, \"name\": \"Envío Estándar\", \"price\": 850}\n  ]\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "404 Not Found",
+							"status": "Not Found",
+							"code": 404,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Zona no encontrada\"\n}",
+							"_postman_previewlanguage": "json"
+						}
+					]
+				},
+				{
+					"name": "List Shipping Zones (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}shipping-zones",
+							"host": [
+								"{{baseURL}}shipping-zones"
+							],
+							"query": [
+								{
+									"key": "quantity",
+									"value": "10",
+									"disabled": true
+								},
+								{
+									"key": "page",
+									"value": "1",
+									"disabled": true
+								},
+								{
+									"key": "search",
+									"value": "CABA",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "[\n  {\n    \"id\": 1,\n    \"name\": \"CABA\",\n    \"postal_codes\": [\"1000\",\"1001\",\"1002\",\"1004\",\"1005\"],\n    \"status\": {\"id\": 1, \"name\": \"Activo\"},\n    \"options\": [\n      {\"id\": 1, \"name\": \"Retiro en local\", \"price\": 0},\n      {\"id\": 2, \"name\": \"Envío Estándar\", \"price\": 850}\n    ]\n  },\n  {\n    \"id\": 2,\n    \"name\": \"GBA Zona Norte\",\n    \"postal_codes\": [\"1600\",\"1609\",\"1618\",\"1636\"],\n    \"status\": {\"id\": 1, \"name\": \"Activo\"},\n    \"options\": [\n      {\"id\": 3, \"name\": \"Envío GBA Norte\", \"price\": 1200}\n    ]\n  },\n  {\n    \"id\": 3,\n    \"name\": \"Interior Argentina\",\n    \"postal_codes\": [],\n    \"status\": {\"id\": 2, \"name\": \"Inactivo\"},\n    \"options\": []\n  }\n]",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "401 Unauthorized",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}",
+							"_postman_previewlanguage": "json"
+						}
+					]
+				},
+				{
+					"name": "Get Shipping Zone (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}shipping-zones/1",
+							"host": [
+								"{{baseURL}}shipping-zones"
+							],
+							"path": [
+								"1"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"id\": 1,\n  \"name\": \"CABA\",\n  \"postal_codes\": [\"1000\",\"1001\",\"1002\",\"1004\",\"1005\"],\n  \"status\": {\"id\": 1, \"name\": \"Activo\"},\n  \"options\": [\n    {\"id\": 1, \"name\": \"Retiro en local\", \"price\": 0},\n    {\"id\": 2, \"name\": \"Envío Estándar\", \"price\": 850}\n  ]\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "404 Not Found",
+							"status": "Not Found",
+							"code": 404,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Zona no encontrada\"\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "401 Unauthorized",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}",
+							"_postman_previewlanguage": "json"
+						}
+					]
+				},
+				{
+					"name": "Create Shipping Zone",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Interior Argentina\",\n  \"postal_codes\": [\"2000\",\"3000\",\"4000\",\"5000\"],\n  \"status_id\": 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}shipping-zones",
+							"host": [
+								"{{baseURL}}shipping-zones"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK - Created",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Zona creada\",\n  \"data\": {\n    \"id\": 3,\n    \"name\": \"Interior Argentina\",\n    \"postal_codes\": [\"2000\",\"3000\",\"4000\",\"5000\"],\n    \"status\": {\"id\": 1, \"name\": \"Activo\"},\n    \"options\": []\n  }\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "422 Validation Error - Nombre requerido",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"name\": [\"El campo nombre es obligatorio\"]\n  }\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "422 Validation Error - Nombre duplicado",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"name\": [\"Ya existe una zona con ese nombre\"]\n  }\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "422 Validation Error - Status requerido",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"status_id\": [\"El campo estado es obligatorio\"]\n  }\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "401 Unauthorized",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}",
+							"_postman_previewlanguage": "json"
+						}
+					]
+				},
+				{
+					"name": "Update Shipping Zone",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"CABA\",\n  \"postal_codes\": [\"1000\",\"1001\",\"1002\",\"1004\",\"1005\",\"1006\",\"1007\"],\n  \"status_id\": 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}shipping-zones/1",
+							"host": [
+								"{{baseURL}}shipping-zones"
+							],
+							"path": [
+								"1"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK - Updated",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Zona actualizada\",\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"CABA\",\n    \"postal_codes\": [\"1000\",\"1001\",\"1002\",\"1004\",\"1005\",\"1006\",\"1007\"],\n    \"status\": {\"id\": 1, \"name\": \"Activo\"}\n  }\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "404 Not Found",
+							"status": "Not Found",
+							"code": 404,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Zona no encontrada\"\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "422 Validation Error - Nombre duplicado",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"name\": [\"Ya existe una zona con ese nombre\"]\n  }\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "401 Unauthorized",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}",
+							"_postman_previewlanguage": "json"
+						}
+					]
+				},
+				{
+					"name": "Delete Shipping Zone",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}shipping-zones/1",
+							"host": [
+								"{{baseURL}}shipping-zones"
+							],
+							"path": [
+								"1"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK - Deleted",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Zona eliminada\"\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "404 Not Found",
+							"status": "Not Found",
+							"code": 404,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Zona no encontrada\"\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "401 Unauthorized",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}",
+							"_postman_previewlanguage": "json"
+						}
+					]
+				},
+				{
+					"name": "Toggle Zone Status",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}shipping-zones/1/toggle-status",
+							"host": [
+								"{{baseURL}}shipping-zones"
+							],
+							"path": [
+								"1",
+								"toggle-status"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK - Desactivado",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Estado actualizado\",\n  \"zone\": {\n    \"id\": 1,\n    \"name\": \"CABA\",\n    \"status\": {\"id\": 2, \"name\": \"Inactivo\"}\n  }\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "200 OK - Activado",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Estado actualizado\",\n  \"zone\": {\n    \"id\": 1,\n    \"name\": \"CABA\",\n    \"status\": {\"id\": 1, \"name\": \"Activo\"}\n  }\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "404 Not Found",
+							"status": "Not Found",
+							"code": 404,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Zona no encontrada\"\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "401 Unauthorized",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}",
+							"_postman_previewlanguage": "json"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Opciones de Envío",
+			"item": [
+				{
+					"name": "List Shipping Options (Public)",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}v1/shipping-options",
+							"host": [
+								"{{baseURL}}v1"
+							],
+							"path": [
+								"shipping-options"
+							],
+							"query": [
+								{
+									"key": "quantity",
+									"value": "10",
+									"disabled": true
+								},
+								{
+									"key": "page",
+									"value": "1",
+									"disabled": true
+								},
+								{
+									"key": "zone_id",
+									"value": "1",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "[\n  {\"id\": 1, \"name\": \"Retiro en local\", \"price\": 0, \"options_order\": 1, \"zone\": {\"id\": 1, \"name\": \"CABA\"}, \"status\": {\"id\": 1, \"name\": \"Activo\"}},\n  {\"id\": 2, \"name\": \"Envío Estándar\", \"price\": 850, \"options_order\": 2, \"zone\": {\"id\": 1, \"name\": \"CABA\"}, \"status\": {\"id\": 1, \"name\": \"Activo\"}},\n  {\"id\": 3, \"name\": \"Envío Express\", \"price\": 1500, \"options_order\": 3, \"zone\": {\"id\": 1, \"name\": \"CABA\"}, \"status\": {\"id\": 1, \"name\": \"Activo\"}}\n]",
+							"_postman_previewlanguage": "json"
+						}
+					]
+				},
+				{
+					"name": "Get Shipping Option (Public)",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}v1/shipping-options/2",
+							"host": [
+								"{{baseURL}}v1"
+							],
+							"path": [
+								"shipping-options",
+								"2"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"id\": 2,\n  \"name\": \"Envío Estándar\",\n  \"price\": 850,\n  \"options_order\": 2,\n  \"zone\": {\"id\": 1, \"name\": \"CABA\"},\n  \"status\": {\"id\": 1, \"name\": \"Activo\"}\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "404 Not Found",
+							"status": "Not Found",
+							"code": 404,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Opción de envío no encontrada\"\n}",
+							"_postman_previewlanguage": "json"
+						}
+					]
+				},
+				{
+					"name": "List Shipping Options (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}shipping-options",
+							"host": [
+								"{{baseURL}}shipping-options"
+							],
+							"query": [
+								{
+									"key": "quantity",
+									"value": "10",
+									"disabled": true
+								},
+								{
+									"key": "page",
+									"value": "1",
+									"disabled": true
+								},
+								{
+									"key": "search",
+									"value": "Express",
+									"disabled": true
+								},
+								{
+									"key": "zone_id",
+									"value": "1",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "[\n  {\"id\": 1, \"name\": \"Retiro en local\", \"price\": 0, \"options_order\": 1, \"zone\": {\"id\": 1, \"name\": \"CABA\"}, \"status\": {\"id\": 1, \"name\": \"Activo\"}},\n  {\"id\": 2, \"name\": \"Envío Estándar\", \"price\": 850, \"options_order\": 2, \"zone\": {\"id\": 1, \"name\": \"CABA\"}, \"status\": {\"id\": 1, \"name\": \"Activo\"}},\n  {\"id\": 3, \"name\": \"Envío Express\", \"price\": 1500, \"options_order\": 3, \"zone\": {\"id\": 1, \"name\": \"CABA\"}, \"status\": {\"id\": 2, \"name\": \"Inactivo\"}},\n  {\"id\": 4, \"name\": \"Envío GBA Norte\", \"price\": 1200, \"options_order\": 1, \"zone\": {\"id\": 2, \"name\": \"GBA Zona Norte\"}, \"status\": {\"id\": 1, \"name\": \"Activo\"}}\n]",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "401 Unauthorized",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}",
+							"_postman_previewlanguage": "json"
+						}
+					]
+				},
+				{
+					"name": "Get Shipping Option (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}shipping-options/2",
+							"host": [
+								"{{baseURL}}shipping-options"
+							],
+							"path": [
+								"2"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"id\": 2,\n  \"name\": \"Envío Estándar\",\n  \"price\": 850,\n  \"options_order\": 2,\n  \"zone\": {\"id\": 1, \"name\": \"CABA\"},\n  \"status\": {\"id\": 1, \"name\": \"Activo\"}\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "401 Unauthorized",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}",
+							"_postman_previewlanguage": "json"
+						}
+					]
+				},
+				{
+					"name": "Create Shipping Option",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"zone_id\": 1,\n  \"name\": \"Envío Same Day\",\n  \"price\": 2500,\n  \"status_id\": 1,\n  \"options_order\": 4\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}shipping-options",
+							"host": [
+								"{{baseURL}}shipping-options"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK - Created",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Opción creada\",\n  \"data\": {\n    \"id\": 11,\n    \"name\": \"Envío Same Day\",\n    \"price\": 2500,\n    \"options_order\": 4,\n    \"zone\": {\"id\": 1, \"name\": \"CABA\"},\n    \"status\": {\"id\": 1, \"name\": \"Activo\"}\n  }\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "422 Validation Error - Nombre duplicado por zona",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"name\": [\"Ya existe una opción con ese nombre en esta zona\"]\n  }\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "422 Validation Error - Campos requeridos",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"zone_id\": [\"El campo zone_id es obligatorio\"],\n    \"name\": [\"El campo nombre es obligatorio\"],\n    \"price\": [\"El campo precio es obligatorio\"],\n    \"options_order\": [\"El campo orden es obligatorio\"]\n  }\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "401 Unauthorized",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}",
+							"_postman_previewlanguage": "json"
+						}
+					]
+				},
+				{
+					"name": "Update Shipping Option",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"zone_id\": 1,\n  \"name\": \"Envío Estándar\",\n  \"price\": 950,\n  \"status_id\": 1,\n  \"options_order\": 2\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}shipping-options/2",
+							"host": [
+								"{{baseURL}}shipping-options"
+							],
+							"path": [
+								"2"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK - Updated",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Opción actualizada\",\n  \"data\": {\n    \"id\": 2,\n    \"name\": \"Envío Estándar\",\n    \"price\": 950,\n    \"options_order\": 2,\n    \"zone\": {\"id\": 1, \"name\": \"CABA\"},\n    \"status\": {\"id\": 1, \"name\": \"Activo\"}\n  }\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "404 Not Found",
+							"status": "Not Found",
+							"code": 404,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Opción de envío no encontrada\"\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "422 Validation Error - Precio negativo",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"price\": [\"El campo precio debe ser mayor o igual a 0\"]\n  }\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "401 Unauthorized",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}",
+							"_postman_previewlanguage": "json"
+						}
+					]
+				},
+				{
+					"name": "Delete Shipping Option",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}shipping-options/2",
+							"host": [
+								"{{baseURL}}shipping-options"
+							],
+							"path": [
+								"2"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK - Deleted",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Opción eliminada\"\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "404 Not Found",
+							"status": "Not Found",
+							"code": 404,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Opción de envío no encontrada\"\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "401 Unauthorized",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}",
+							"_postman_previewlanguage": "json"
+						}
+					]
+				},
+				{
+					"name": "Toggle Option Status",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}shipping-options/2/toggle-status",
+							"host": [
+								"{{baseURL}}shipping-options"
+							],
+							"path": [
+								"2",
+								"toggle-status"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK - Desactivado",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Estado actualizado\",\n  \"option\": {\n    \"id\": 2,\n    \"name\": \"Envío Estándar\",\n    \"status\": {\"id\": 2, \"name\": \"Inactivo\"}\n  }\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "404 Not Found",
+							"status": "Not Found",
+							"code": 404,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Opción de envío no encontrada\"\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "401 Unauthorized",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}",
+							"_postman_previewlanguage": "json"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Configuración de Envío",
+			"item": [
+				{
+					"name": "List Shipping Config (Public)",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}v1/shipping-config",
+							"host": [
+								"{{baseURL}}v1"
+							],
+							"path": [
+								"shipping-config"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "[\n  {\n    \"id\": 1,\n    \"data\": {\n      \"free_shipping_threshold\": 15000,\n      \"enabled\": true,\n      \"message\": \"¡Envío gratis en compras mayores a $15.000!\"\n    },\n    \"created_at\": \"2025-06-01T00:00:00.000000Z\"\n  }\n]",
+							"_postman_previewlanguage": "json"
+						}
+					]
+				},
+				{
+					"name": "Get Shipping Config (Public)",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}v1/shipping-config/1",
+							"host": [
+								"{{baseURL}}v1"
+							],
+							"path": [
+								"shipping-config",
+								"1"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"id\": 1,\n  \"data\": {\n    \"free_shipping_threshold\": 15000,\n    \"enabled\": true,\n    \"message\": \"¡Envío gratis en compras mayores a $15.000!\"\n  },\n  \"created_at\": \"2025-06-01T00:00:00.000000Z\"\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "404 Not Found",
+							"status": "Not Found",
+							"code": 404,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Configuración no encontrada\"\n}",
+							"_postman_previewlanguage": "json"
+						}
+					]
+				},
+				{
+					"name": "List Shipping Config (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}shipping-config",
+							"host": [
+								"{{baseURL}}shipping-config"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "[\n  {\n    \"id\": 1,\n    \"data\": {\n      \"free_shipping_threshold\": 15000,\n      \"enabled\": true,\n      \"message\": \"¡Envío gratis en compras mayores a $15.000!\"\n    },\n    \"created_at\": \"2025-06-01T00:00:00.000000Z\"\n  }\n]",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "401 Unauthorized",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}",
+							"_postman_previewlanguage": "json"
+						}
+					]
+				},
+				{
+					"name": "Get Shipping Config (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}shipping-config/1",
+							"host": [
+								"{{baseURL}}shipping-config"
+							],
+							"path": [
+								"1"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"id\": 1,\n  \"data\": {\n    \"free_shipping_threshold\": 15000,\n    \"enabled\": true,\n    \"message\": \"¡Envío gratis en compras mayores a $15.000!\"\n  },\n  \"created_at\": \"2025-06-01T00:00:00.000000Z\"\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "401 Unauthorized",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}",
+							"_postman_previewlanguage": "json"
+						}
+					]
+				},
+				{
+					"name": "Update Shipping Config",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"data\": {\n    \"free_shipping_threshold\": 20000,\n    \"enabled\": true,\n    \"message\": \"¡Envío gratis en compras mayores a $20.000!\"\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}shipping-config/1",
+							"host": [
+								"{{baseURL}}shipping-config"
+							],
+							"path": [
+								"1"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 OK - Updated",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Configuración actualizada\",\n  \"data\": {\n    \"id\": 1,\n    \"data\": {\n      \"free_shipping_threshold\": 20000,\n      \"enabled\": true,\n      \"message\": \"¡Envío gratis en compras mayores a $20.000!\"\n    },\n    \"created_at\": \"2025-06-01T00:00:00.000000Z\"\n  }\n}",
+							"_postman_previewlanguage": "json"
+						},
+						{
+							"name": "401 Unauthorized",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}",
+							"_postman_previewlanguage": "json"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Get Provinces",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"description": "Lista provincias con sus localidades. Usado para selección de dirección de envío.",
+				"url": {
+					"raw": "{{baseURL}}v1/provinces",
+					"host": [
+						"{{baseURL}}v1"
+					],
+					"path": [
+						"provinces"
+					],
+					"query": [
+						{
+							"key": "quantity",
+							"value": "24",
+							"disabled": true
+						},
+						{
+							"key": "page",
+							"value": "1",
+							"disabled": true
+						},
+						{
+							"key": "search",
+							"value": "Buenos",
+							"disabled": true
+						},
+						{
+							"key": "province_id",
+							"value": "1",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "200 OK",
+					"status": "OK",
+					"code": 200,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"data\": [\n    {\n      \"id\": 1,\n      \"name\": \"Buenos Aires\",\n      \"localities\": [\n        {\"id\": 1, \"name\": \"Ciudad Autónoma de Buenos Aires\", \"postal_code\": \"1000\"},\n        {\"id\": 2, \"name\": \"La Plata\", \"postal_code\": \"1900\"},\n        {\"id\": 3, \"name\": \"Mar del Plata\", \"postal_code\": \"7600\"}\n      ]\n    },\n    {\n      \"id\": 2,\n      \"name\": \"Córdoba\",\n      \"localities\": [\n        {\"id\": 4, \"name\": \"Córdoba Capital\", \"postal_code\": \"5000\"},\n        {\"id\": 5, \"name\": \"Villa Carlos Paz\", \"postal_code\": \"5152\"}\n      ]\n    },\n    {\n      \"id\": 3,\n      \"name\": \"Santa Fe\",\n      \"localities\": [\n        {\"id\": 6, \"name\": \"Rosario\", \"postal_code\": \"2000\"},\n        {\"id\": 7, \"name\": \"Santa Fe Capital\", \"postal_code\": \"3000\"}\n      ]\n    }\n  ]\n}",
+					"_postman_previewlanguage": "json"
+				}
+			]
+		}
+	]
+}
