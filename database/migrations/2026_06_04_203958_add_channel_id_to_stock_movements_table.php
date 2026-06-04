@@ -9,11 +9,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('stock_movements', function (Blueprint $table) {
-            $table->foreignId('channel_id')
-                  ->nullable()
-                  ->after('sale_id')
-                  ->constrained('channels')
-                  ->nullOnDelete();
+            $table->bigInteger('channel_id')->nullable()->after('sale_id');
+            $table->foreign('channel_id')->references('id')->on('channels')->nullOnDelete();
         });
     }
 
