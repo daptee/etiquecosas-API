@@ -100,12 +100,13 @@ class StockService
             }
 
             self::recordMovement(
-                productId: $product->id,
-                variantId: $usesVariantStock ? $variant->id : null,
-                quantity:  -$quantity,
-                note:      "Deducción por confirmación de pedido #{$sale->id}",
-                saleId:    $sale->id,
-                userId:    null
+                productId:  $product->id,
+                variantId:  $usesVariantStock ? $variant->id : null,
+                quantity:   -$quantity,
+                note:       "Deducción por confirmación de pedido #{$sale->id}",
+                saleId:     $sale->id,
+                userId:     null,
+                channelId:  $channelId
             );
 
             $affectedProductIds[$product->id] = $product;
@@ -154,12 +155,13 @@ class StockService
             }
 
             self::recordMovement(
-                productId: $product->id,
-                variantId: $usesVariantStock ? $variant->id : null,
-                quantity:  +$quantity,
-                note:      "Restauración por cancelación de pedido #{$sale->id}",
-                saleId:    $sale->id,
-                userId:    null
+                productId:  $product->id,
+                variantId:  $usesVariantStock ? $variant->id : null,
+                quantity:   +$quantity,
+                note:       "Restauración por cancelación de pedido #{$sale->id}",
+                saleId:     $sale->id,
+                userId:     null,
+                channelId:  $channelId
             );
         }
     }
@@ -174,7 +176,8 @@ class StockService
         int    $quantity,
         string $note,
         ?int   $saleId = null,
-        ?int   $userId = null
+        ?int   $userId = null,
+        ?int   $channelId = null
     ): void {
         try {
             StockMovement::create([
@@ -184,6 +187,7 @@ class StockService
                 'note'               => $note,
                 'sale_id'            => $saleId,
                 'user_id'            => $userId,
+                'channel_id'         => $channelId,
             ]);
         } catch (\Exception $e) {
             Log::error('StockService: Error al registrar movimiento de stock', [

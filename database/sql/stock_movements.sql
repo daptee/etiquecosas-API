@@ -6,6 +6,7 @@ CREATE TABLE stock_movements (
     note TEXT NOT NULL,
     user_id BIGINT UNSIGNED NULL,
     sale_id BIGINT NULL,
+    channel_id BIGINT UNSIGNED NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_stock_movements_product
@@ -18,5 +19,8 @@ CREATE TABLE stock_movements (
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
 
     CONSTRAINT fk_stock_movements_sale
-        FOREIGN KEY (sale_id) REFERENCES sales(id) ON DELETE SET NULL
+        FOREIGN KEY (sale_id) REFERENCES sales(id) ON DELETE SET NULL,
+
+    CONSTRAINT fk_stock_movements_channel
+        FOREIGN KEY (channel_id) REFERENCES channels(id) ON DELETE SET NULL
 );

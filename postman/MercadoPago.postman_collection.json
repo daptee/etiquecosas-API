@@ -51,7 +51,68 @@
 				}
 			},
 			"description": "Crea una preferencia de pago en MercadoPago para el pedido indicado. El pedido debe estar en status 8 (Pendiente de pago). Retorna init_point para redirigir al checkout.",
-			"response": []
+			"response": [
+				{
+					"name": "200 - Preferencia creada",
+					"status": "OK",
+					"code": 200,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Preferencia creada\",\n  \"data\": {\n    \"preference_id\": \"1088548843-abcd1234-5678-90ab-cdef12345678\",\n    \"init_point\": \"https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=1088548843-abcd1234\",\n    \"sandbox_init_point\": \"https://sandbox.mercadopago.com.ar/checkout/v1/redirect?pref_id=1088548843-abcd1234\"\n  }\n}"
+				},
+				{
+					"name": "400 - Pedido no esta en estado pendiente de pago",
+					"status": "Bad Request",
+					"code": 400,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"El pedido no esta en estado pendiente de pago\"\n}"
+				},
+				{
+					"name": "422 - Error de validacion",
+					"status": "Unprocessable Entity",
+					"code": 422,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Error de validacion\",\n  \"errors\": {\n    \"sale_id\": [\n      \"El campo sale_id es obligatorio\"\n    ]\n  }\n}"
+				},
+				{
+					"name": "404 - No encontrado",
+					"status": "Not Found",
+					"code": 404,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Pedido no encontrado\"\n}"
+				},
+				{
+					"name": "401 - No autenticado",
+					"status": "Unauthorized",
+					"code": 401,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+				}
+			]
 		},
 		{
 			"name": "POST mercadopago/webhook",
@@ -83,7 +144,44 @@
 				}
 			},
 			"description": "Webhook que recibe notificaciones de MercadoPago. Sin autenticacion. Si el pago es aprobado: cambia status a 1, descuenta stock, envia emails y genera PDFs. Si es rechazado: status 9.",
-			"response": []
+			"response": [
+				{
+					"name": "200 - Webhook procesado (pago aprobado)",
+					"status": "OK",
+					"code": 200,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Pago aprobado. Pedido actualizado a estado Aprobado.\",\n  \"sale_id\": 142,\n  \"sale_status_id\": 1\n}"
+				},
+				{
+					"name": "200 - Webhook procesado (pago rechazado)",
+					"status": "OK",
+					"code": 200,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Pago rechazado. Pedido actualizado a estado Pago rechazado.\",\n  \"sale_id\": 142,\n  \"sale_status_id\": 9\n}"
+				},
+				{
+					"name": "200 - Evento ignorado (no es de tipo payment)",
+					"status": "OK",
+					"code": 200,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Evento ignorado\"\n}"
+				}
+			]
 		},
 		{
 			"name": "GET mercadopago/success",
@@ -101,7 +199,20 @@
 				}
 			},
 			"description": "Callback de retorno exitoso desde el checkout de MP. Retorna los query params de MercadoPago.",
-			"response": []
+			"response": [
+				{
+					"name": "200 - Retorno exitoso de checkout",
+					"status": "OK",
+					"code": 200,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"status\": \"approved\",\n  \"payment_id\": \"123456789\",\n  \"external_reference\": \"142\",\n  \"collection_status\": \"approved\"\n}"
+				}
+			]
 		},
 		{
 			"name": "GET mercadopago/failure",
@@ -119,7 +230,20 @@
 				}
 			},
 			"description": "Callback de retorno fallido desde el checkout de MP.",
-			"response": []
+			"response": [
+				{
+					"name": "200 - Retorno fallido de checkout",
+					"status": "OK",
+					"code": 200,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"status\": \"rejected\",\n  \"payment_id\": \"123456789\",\n  \"external_reference\": \"142\",\n  \"collection_status\": \"rejected\"\n}"
+				}
+			]
 		},
 		{
 			"name": "GET mercadopago/pending",
@@ -137,7 +261,20 @@
 				}
 			},
 			"description": "Callback de retorno pendiente desde el checkout de MP.",
-			"response": []
+			"response": [
+				{
+					"name": "200 - Retorno pendiente de checkout",
+					"status": "OK",
+					"code": 200,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"status\": \"pending\",\n  \"payment_id\": \"123456789\",\n  \"external_reference\": \"142\",\n  \"collection_status\": \"pending\"\n}"
+				}
+			]
 		}
 	]
 }

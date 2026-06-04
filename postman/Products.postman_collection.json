@@ -923,7 +923,44 @@
 						}
 					},
 					"description": "Asigna multiples categorias a multiples productos en un solo request.",
-					"response": []
+					"response": [
+						{
+							"name": "200 - Categorias asignadas",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Categorias asignadas a 3 productos\",\n  \"data\": {\n    \"product_ids\": [\n      10,\n      11,\n      12\n    ],\n    \"category_ids\": [\n      2,\n      3\n    ],\n    \"processed\": 3\n  }\n}"
+						},
+						{
+							"name": "422 - Error de validacion",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validacion\",\n  \"errors\": {\n    \"product_ids\": [\n      \"El campo product_ids es obligatorio\"\n    ],\n    \"category_ids\": [\n      \"El campo category_ids es obligatorio\"\n    ]\n  }\n}"
+						},
+						{
+							"name": "401 - No autenticado",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
 				},
 				{
 					"name": "POST products/apply-text-template",
@@ -952,7 +989,44 @@
 						}
 					},
 					"description": "Aplica una plantilla de texto a multiples productos.",
-					"response": []
+					"response": [
+						{
+							"name": "200 - Plantilla aplicada",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Plantilla aplicada a 2 productos\",\n  \"data\": {\n    \"product_ids\": [\n      10,\n      11\n    ],\n    \"template_id\": 1,\n    \"processed\": 2\n  }\n}"
+						},
+						{
+							"name": "422 - Error de validacion",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validacion\",\n  \"errors\": {\n    \"product_ids\": [\n      \"El campo product_ids es obligatorio\"\n    ],\n    \"template_id\": [\n      \"El campo template_id es obligatorio\"\n    ]\n  }\n}"
+						},
+						{
+							"name": "401 - No autenticado",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
 				},
 				{
 					"name": "POST products/{id} (update)",
@@ -981,7 +1055,56 @@
 						}
 					},
 					"description": "Actualiza un producto. Usa POST con _method=PUT para soportar multipart/form-data con imagenes.",
-					"response": []
+					"response": [
+						{
+							"name": "200 - Producto actualizado",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Producto actualizado\",\n  \"data\": {\n    \"id\": 15,\n    \"name\": \"Etiquetas personalizadas\",\n    \"updated_at\": \"2026-05-26T10:00:00.000000Z\"\n  }\n}"
+						},
+						{
+							"name": "422 - Error de validacion",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validacion\",\n  \"errors\": {\n    \"name\": [\n      \"El campo nombre es obligatorio\"\n    ]\n  }\n}"
+						},
+						{
+							"name": "404 - No encontrado",
+							"status": "Not Found",
+							"code": 404,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Producto no encontrado\"\n}"
+						},
+						{
+							"name": "401 - No autenticado",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
 				},
 				{
 					"name": "GET products/{id}/exclusions",
@@ -996,7 +1119,44 @@
 						}
 					},
 					"description": "Lista los clientes mayoristas excluidos de ver/comprar este producto.",
-					"response": []
+					"response": [
+						{
+							"name": "200 - Exclusiones del producto",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Exclusiones obtenidas\",\n  \"data\": [\n    {\n      \"id\": 3,\n      \"name\": \"Distribuidora Sur\",\n      \"email\": \"distrsur@mail.com\",\n      \"client_type_id\": 2\n    },\n    {\n      \"id\": 7,\n      \"name\": \"Mayorista Norte\",\n      \"email\": \"norte@mail.com\",\n      \"client_type_id\": 2\n    }\n  ]\n}"
+						},
+						{
+							"name": "404 - No encontrado",
+							"status": "Not Found",
+							"code": 404,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Producto no encontrado\"\n}"
+						},
+						{
+							"name": "401 - No autenticado",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
 				},
 				{
 					"name": "POST products/{id}/exclusions",
@@ -1025,7 +1185,56 @@
 						}
 					},
 					"description": "Excluye clientes mayoristas de un producto mayorista. Valida que sean clientes tipo mayorista.",
-					"response": []
+					"response": [
+						{
+							"name": "200 - Producto actualizado",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Producto actualizado\",\n  \"data\": {\n    \"id\": 15,\n    \"name\": \"Etiquetas personalizadas\",\n    \"updated_at\": \"2026-05-26T10:00:00.000000Z\"\n  }\n}"
+						},
+						{
+							"name": "422 - Error de validacion",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validacion\",\n  \"errors\": {\n    \"name\": [\n      \"El campo nombre es obligatorio\"\n    ]\n  }\n}"
+						},
+						{
+							"name": "404 - No encontrado",
+							"status": "Not Found",
+							"code": 404,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Producto no encontrado\"\n}"
+						},
+						{
+							"name": "401 - No autenticado",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
 				},
 				{
 					"name": "DELETE products/{id}/exclusions",
@@ -1054,22 +1263,72 @@
 						}
 					},
 					"description": "Elimina exclusiones de clientes mayoristas de un producto.",
-					"response": []
+					"response": [
+						{
+							"name": "200 - Exclusiones eliminadas",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Exclusiones eliminadas\",\n  \"data\": {\n    \"product_id\": 15,\n    \"removed_client_ids\": [\n      3,\n      7\n    ]\n  }\n}"
+						},
+						{
+							"name": "404 - No encontrado",
+							"status": "Not Found",
+							"code": 404,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Producto no encontrado\"\n}"
+						},
+						{
+							"name": "401 - No autenticado",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
 				},
 				{
 					"name": "POST products/{id}/variants/bulk-delete",
 					"request": {
-						"auth": { "type": "inherit" },
+						"auth": {
+							"type": "inherit"
+						},
 						"method": "POST",
-						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
 						"url": {
 							"raw": "{{baseURL}}products/15/variants/bulk-delete",
-							"host": ["{{baseURL}}products/15/variants/bulk-delete"]
+							"host": [
+								"{{baseURL}}products/15/variants/bulk-delete"
+							]
 						},
 						"body": {
 							"mode": "raw",
 							"raw": "{\n  \"variant_ids\": [1, 2, 3]\n}",
-							"options": { "raw": { "language": "json" } }
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
 						},
 						"description": "Elimina (soft delete) las variantes indicadas del producto."
 					},
@@ -1078,7 +1337,12 @@
 							"name": "200 - Variantes eliminadas",
 							"status": "OK",
 							"code": 200,
-							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
 							"body": "{\n  \"message\": \"3 variantes eliminadas correctamente\",\n  \"data\": { \"processed\": 3 }\n}"
 						}
 					]
@@ -1086,17 +1350,30 @@
 				{
 					"name": "POST products/{id}/variants/bulk-update-price",
 					"request": {
-						"auth": { "type": "inherit" },
+						"auth": {
+							"type": "inherit"
+						},
 						"method": "POST",
-						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
 						"url": {
 							"raw": "{{baseURL}}products/15/variants/bulk-update-price",
-							"host": ["{{baseURL}}products/15/variants/bulk-update-price"]
+							"host": [
+								"{{baseURL}}products/15/variants/bulk-update-price"
+							]
 						},
 						"body": {
 							"mode": "raw",
 							"raw": "{\n  \"variant_ids\": [1, 2, 3],\n  \"type\": \"percentage\",\n  \"operation\": \"increase\",\n  \"value\": 10,\n  \"apply_to_discounted\": false\n}",
-							"options": { "raw": { "language": "json" } }
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
 						},
 						"description": "Modifica el precio de las variantes indicadas. type: percentage|fixed. operation: increase|decrease. value: porcentaje o monto fijo. apply_to_discounted: si true aplica también al precio oferta."
 					},
@@ -1105,14 +1382,24 @@
 							"name": "200 - Precios actualizados",
 							"status": "OK",
 							"code": 200,
-							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
 							"body": "{\n  \"message\": \"3 variantes actualizadas correctamente\",\n  \"data\": { \"processed\": 3 }\n}"
 						},
 						{
 							"name": "422 - Error de validación",
 							"status": "Unprocessable Entity",
 							"code": 422,
-							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
 							"body": "{\n  \"message\": \"Error de validacion\",\n  \"errors\": {\n    \"type\": [\"El campo type debe ser percentage o fixed\"]\n  }\n}"
 						}
 					]
@@ -1120,17 +1407,30 @@
 				{
 					"name": "POST products/{id}/variants/bulk-update-stock",
 					"request": {
-						"auth": { "type": "inherit" },
+						"auth": {
+							"type": "inherit"
+						},
 						"method": "POST",
-						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
 						"url": {
 							"raw": "{{baseURL}}products/15/variants/bulk-update-stock",
-							"host": ["{{baseURL}}products/15/variants/bulk-update-stock"]
+							"host": [
+								"{{baseURL}}products/15/variants/bulk-update-stock"
+							]
 						},
 						"body": {
 							"mode": "raw",
 							"raw": "{\n  \"variant_ids\": [1, 2, 3],\n  \"quantity\": 50,\n  \"note\": \"Reposición masiva\",\n  \"channel_id\": null,\n  \"stock_alert\": 10\n}",
-							"options": { "raw": { "language": "json" } }
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
 						},
 						"description": "Registra movimientos de stock y/o actualiza alerta para variantes con gestión de stock propia (stock_channels propio). quantity positivo=ingreso, negativo=salida. channel_id null=todos los canales. stock_alert opcional."
 					},
@@ -1139,14 +1439,24 @@
 							"name": "200 - Stock actualizado",
 							"status": "OK",
 							"code": 200,
-							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
 							"body": "{\n  \"message\": \"3 variantes procesadas, 1 omitidas (sin gestión de stock propia)\",\n  \"data\": { \"processed\": 3, \"skipped\": 1 }\n}"
 						},
 						{
 							"name": "422 - Error de validación",
 							"status": "Unprocessable Entity",
 							"code": 422,
-							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
 							"body": "{\n  \"message\": \"Error de validacion\",\n  \"errors\": {\n    \"note\": [\"El campo note es obligatorio cuando quantity está presente\"]\n  }\n}"
 						}
 					]
@@ -1154,18 +1464,36 @@
 				{
 					"name": "PUT products/{id}/images/positions",
 					"request": {
-						"auth": { "type": "inherit" },
+						"auth": {
+							"type": "inherit"
+						},
 						"method": "PUT",
-						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
 						"url": {
 							"raw": "{{baseURL}}products/15/images/positions",
-							"host": ["{{baseURL}}"],
-							"path": ["products", "15", "images", "positions"]
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"products",
+								"15",
+								"images",
+								"positions"
+							]
 						},
 						"body": {
 							"mode": "raw",
 							"raw": "{\n  \"positions\": [\n    { \"id\": 10, \"position\": 0 },\n    { \"id\": 12, \"position\": 1 },\n    { \"id\": 11, \"position\": 2 }\n  ]\n}",
-							"options": { "raw": { "language": "json" } }
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
 						},
 						"description": "Reordena las imágenes de la galería de un producto sin re-subir archivos. Enviar el array completo de imágenes con su nuevo orden (position 0-based). Las imágenes se retornarán ordenadas por position ASC en todos los endpoints de producto."
 					},
@@ -1174,28 +1502,48 @@
 							"name": "200 - Posiciones actualizadas",
 							"status": "OK",
 							"code": 200,
-							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
 							"body": "{\n  \"message\": \"Posiciones de imágenes actualizadas correctamente\",\n  \"data\": null\n}"
 						},
 						{
 							"name": "422 - Error de validación",
 							"status": "Unprocessable Entity",
 							"code": 422,
-							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
 							"body": "{\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"positions\": [\"El campo positions es obligatorio\"],\n    \"positions.0.id\": [\"El campo positions.0.id debe existir en product_images\"],\n    \"positions.0.position\": [\"El campo positions.0.position es obligatorio\"]\n  }\n}"
 						},
 						{
 							"name": "404 - Producto no encontrado",
 							"status": "Not Found",
 							"code": 404,
-							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
 							"body": "{\n  \"message\": \"Producto no encontrado\"\n}"
 						},
 						{
 							"name": "401 - No autenticado",
 							"status": "Unauthorized",
 							"code": 401,
-							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
 							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
 						}
 					]

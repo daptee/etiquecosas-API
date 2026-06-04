@@ -27,6 +27,7 @@ class StockMovementController extends Controller
                 'variant:id,product_id,variant',
                 'user:id,name,email',
                 'sale:id,sale_status_id',
+                'channel:id,name',
             ])
             ->orderBy('created_at', 'desc');
 
@@ -48,6 +49,10 @@ class StockMovementController extends Controller
 
         if ($request->filled('date_to')) {
             $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        if ($request->filled('channel_id')) {
+            $query->where('channel_id', $request->channel_id);
         }
 
         $perPage = $request->query('quantity', 50);
@@ -105,6 +110,9 @@ class StockMovementController extends Controller
             }
 
             $variant->stock_channels = $stockChannels;
+            if ($channelId === null) {
+                $variant->stock_quantity = array_sum(array_column($stockChannels, 'stock_quantity'));
+            }
             $variant->save();
         } else {
             $stockChannels = $product->stock_channels ?? [];
@@ -124,6 +132,9 @@ class StockMovementController extends Controller
             }
 
             $product->stock_channels = $stockChannels;
+            if ($channelId === null) {
+                $product->stock_quantity = array_sum(array_column($stockChannels, 'stock_quantity'));
+            }
             $product->save();
         }
 
@@ -134,6 +145,7 @@ class StockMovementController extends Controller
             'note'               => $request->note,
             'user_id'            => Auth::id(),
             'sale_id'            => null,
+            'channel_id'         => $channelId,
         ]);
 
         $this->logAudit(Auth::user(), 'Manual Stock Movement', $request->all(), $movement);

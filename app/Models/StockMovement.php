@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Channel;
 
 class StockMovement extends Model
 {
@@ -18,6 +19,7 @@ class StockMovement extends Model
         'note',
         'user_id',
         'sale_id',
+        'channel_id',
     ];
 
     protected $casts = [
@@ -50,5 +52,10 @@ class StockMovement extends Model
     public function sale()
     {
         return $this->belongsTo(Sale::class, 'sale_id');
+    }
+
+    public function channel()
+    {
+        return $this->belongsTo(Channel::class, 'channel_id');
     }
 }
