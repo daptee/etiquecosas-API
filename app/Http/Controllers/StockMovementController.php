@@ -94,9 +94,10 @@ class StockMovementController extends Controller
 
         if ($usesVariantStock) {
             if ($channelId === null) {
-                // Las variantes no tienen stock_quantity propio; el stock general es del producto padre
-                $product->stock_quantity = max(0, ($product->stock_quantity ?? 0) + $quantity);
-                $product->save();
+                $variantData = $variant->variant ?? [];
+                $variantData['stock_quantity'] = max(0, ($variantData['stock_quantity'] ?? 0) + $quantity);
+                $variant->variant = $variantData;
+                $variant->save();
             } else {
                 $stockChannels = $variant->stock_channels;
                 $updated = false;
