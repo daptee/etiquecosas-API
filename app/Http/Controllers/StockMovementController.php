@@ -27,6 +27,7 @@ class StockMovementController extends Controller
                 'variant:id,product_id,variant',
                 'user:id,name,email',
                 'sale:id,sale_status_id',
+                'channel:id,name',
             ])
             ->orderBy('created_at', 'desc');
 
@@ -48,6 +49,10 @@ class StockMovementController extends Controller
 
         if ($request->filled('date_to')) {
             $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        if ($request->filled('channel_id')) {
+            $query->where('channel_id', $request->channel_id);
         }
 
         $perPage = $request->query('quantity', 50);
@@ -88,42 +93,53 @@ class StockMovementController extends Controller
         $usesVariantStock = $variant && !empty($variant->stock_channels);
 
         if ($usesVariantStock) {
-            $stockChannels = $variant->stock_channels;
-            $updated = false;
+            if ($channelId === null) {
+                $variantData = $variant->variant ?? [];
+                $variantData['stock_quantity'] = max(0, ($variantData['stock_quantity'] ?? 0) + $quantity);
+                $variant->variant = $variantData;
+                $variant->save();
+            } else {
+                $stockChannels = $variant->stock_channels;
+                $updated = false;
 
-            foreach ($stockChannels as &$channel) {
-                if ($channelId === null || $channel['channel'] == $channelId) {
-                    $channel['stock_quantity'] = max(0, ($channel['stock_quantity'] ?? 0) + $quantity);
-                    $updated = true;
-                    if ($channelId !== null) break;
+                foreach ($stockChannels as &$channel) {
+                    if ($channel['channel'] == $channelId) {
+                        $channel['stock_quantity'] = max(0, ($channel['stock_quantity'] ?? 0) + $quantity);
+                        $updated = true;
+                        break;
+                    }
                 }
-            }
-            unset($channel);
+                unset($channel);
 
-            if (!$updated && $channelId !== null) {
-                return $this->error('El canal especificado no existe en el stock de esta variante', 422);
-            }
+                if (!$updated) {
+                    return $this->error('El canal especificado no existe en el stock de esta variante', 422);
+                }
 
-            $variant->stock_channels = $stockChannels;
-            $variant->save();
+                $variant->stock_channels = $stockChannels;
+                $variant->save();
+            }
         } else {
-            $stockChannels = $product->stock_channels ?? [];
-            $updated = false;
+            if ($channelId === null) {
+                $product->stock_quantity = max(0, ($product->stock_quantity ?? 0) + $quantity);
+            } else {
+                $stockChannels = $product->stock_channels ?? [];
+                $updated = false;
 
-            foreach ($stockChannels as &$channel) {
-                if ($channelId === null || $channel['channel'] == $channelId) {
-                    $channel['stock_quantity'] = max(0, ($channel['stock_quantity'] ?? 0) + $quantity);
-                    $updated = true;
-                    if ($channelId !== null) break;
+                foreach ($stockChannels as &$channel) {
+                    if ($channel['channel'] == $channelId) {
+                        $channel['stock_quantity'] = max(0, ($channel['stock_quantity'] ?? 0) + $quantity);
+                        $updated = true;
+                        break;
+                    }
                 }
-            }
-            unset($channel);
+                unset($channel);
 
-            if (!$updated && $channelId !== null) {
-                return $this->error('El canal especificado no existe en el stock de este producto', 422);
-            }
+                if (!$updated) {
+                    return $this->error('El canal especificado no existe en el stock de este producto', 422);
+                }
 
-            $product->stock_channels = $stockChannels;
+                $product->stock_channels = $stockChannels;
+            }
             $product->save();
         }
 
@@ -134,6 +150,7 @@ class StockMovementController extends Controller
             'note'               => $request->note,
             'user_id'            => Auth::id(),
             'sale_id'            => null,
+            'channel_id'         => $channelId,
         ]);
 
         $this->logAudit(Auth::user(), 'Manual Stock Movement', $request->all(), $movement);

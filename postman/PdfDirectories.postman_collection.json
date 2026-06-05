@@ -67,7 +67,32 @@
 				}
 			},
 			"description": "Lista carpetas de PDF paginadas por fecha (mas reciente primero). Admin ve todo; disenador solo sus carpetas.",
-			"response": []
+			"response": [
+				{
+					"name": "200 - Lista de carpetas de PDF",
+					"status": "OK",
+					"code": 200,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Directorios obtenidos\",\n  \"data\": [\n    {\n      \"date\": \"26-05-2026\",\n      \"date_formatted\": \"26/05/2026\",\n      \"total_pdfs\": 12,\n      \"user\": {\n        \"id\": 2,\n        \"name\": \"Maria\",\n        \"lastName\": \"Lopez\"\n      }\n    },\n    {\n      \"date\": \"25-05-2026\",\n      \"date_formatted\": \"25/05/2026\",\n      \"total_pdfs\": 8,\n      \"user\": {\n        \"id\": 2,\n        \"name\": \"Maria\",\n        \"lastName\": \"Lopez\"\n      }\n    }\n  ],\n  \"metaData\": {\n    \"current_page\": 1,\n    \"last_page\": 3,\n    \"per_page\": 15,\n    \"total\": 42\n  }\n}"
+				},
+				{
+					"name": "401 - No autenticado",
+					"status": "Unauthorized",
+					"code": 401,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+				}
+			]
 		},
 		{
 			"name": "GET pdf-directories/{fecha}",
@@ -90,7 +115,44 @@
 				}
 			},
 			"description": "Retorna todos los PDFs de una fecha en formato dd-mm-yyyy. Incluye pdfs_pedidos y extras (cintas, bandas, sellos).",
-			"response": []
+			"response": [
+				{
+					"name": "200 - PDFs de la fecha",
+					"status": "OK",
+					"code": 200,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"PDFs obtenidos\",\n  \"data\": {\n    \"date\": \"26-05-2026\",\n    \"pdfs_pedidos\": [\n      {\n        \"name\": \"142-etiquetas.pdf\",\n        \"sale_id\": 142,\n        \"size\": \"245KB\"\n      },\n      {\n        \"name\": \"143-stickers.pdf\",\n        \"sale_id\": 143,\n        \"size\": \"189KB\"\n      }\n    ],\n    \"extras\": {\n      \"cintas_coser\": [],\n      \"cintas_planchar\": [\n        {\n          \"name\": \"cintas-26052026.pdf\",\n          \"size\": \"120KB\"\n        }\n      ],\n      \"bandas\": [],\n      \"sellos\": []\n    }\n  }\n}"
+				},
+				{
+					"name": "404 - No encontrado",
+					"status": "Not Found",
+					"code": 404,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Directorio no encontrado\"\n}"
+				},
+				{
+					"name": "401 - No autenticado",
+					"status": "Unauthorized",
+					"code": 401,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+				}
+			]
 		},
 		{
 			"name": "GET pdf-directories/{fecha}/download-zip",
@@ -105,7 +167,48 @@
 				}
 			},
 			"description": "Descarga un ZIP con todos los PDFs de la fecha indicada. Organiza en sub-carpetas: pedidos/, cintas_coser/, cintas_planchar/, bandas/, sellos/.",
-			"response": []
+			"response": [
+				{
+					"name": "200 - ZIP descargado",
+					"status": "OK",
+					"code": 200,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/zip"
+						},
+						{
+							"key": "Content-Disposition",
+							"value": "attachment; filename=pdfs-26-05-2026.zip"
+						}
+					],
+					"body": "(ZIP binario con sub-carpetas: pedidos/, cintas_coser/, cintas_planchar/, bandas/, sellos/)"
+				},
+				{
+					"name": "404 - No encontrado",
+					"status": "Not Found",
+					"code": 404,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Directorio no encontrado\"\n}"
+				},
+				{
+					"name": "401 - No autenticado",
+					"status": "Unauthorized",
+					"code": 401,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+				}
+			]
 		},
 		{
 			"name": "GET pdf-directories/{fecha}/download/{nombrePdf}",
@@ -120,7 +223,60 @@
 				}
 			},
 			"description": "Descarga un PDF individual por nombre. El disenador solo puede descargar PDFs de pedidos que tenga asignados.",
-			"response": []
+			"response": [
+				{
+					"name": "200 - PDF individual descargado",
+					"status": "OK",
+					"code": 200,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/pdf"
+						},
+						{
+							"key": "Content-Disposition",
+							"value": "attachment; filename=142-etiquetas.pdf"
+						}
+					],
+					"body": "(PDF binario)"
+				},
+				{
+					"name": "403 - Sin permiso (el disenador no tiene acceso a este PDF)",
+					"status": "Forbidden",
+					"code": 403,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"No tenes permiso para descargar este PDF\"\n}"
+				},
+				{
+					"name": "404 - No encontrado",
+					"status": "Not Found",
+					"code": 404,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"PDF no encontrado\"\n}"
+				},
+				{
+					"name": "401 - No autenticado",
+					"status": "Unauthorized",
+					"code": 401,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+				}
+			]
 		}
 	]
 }

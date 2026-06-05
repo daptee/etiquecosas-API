@@ -47,7 +47,12 @@ WHERE id IN (
     ) AS tmp
 );
 
--- 5. Eliminar "Sin Stock" de product_stock_statuses
+-- 5. Actualizar stock_status dentro del JSON variant en variantes
+UPDATE product_variants
+SET variant = JSON_SET(variant, '$.stock_status', 2)
+WHERE JSON_EXTRACT(variant, '$.stock_status') = 3;
+
+-- 6. Eliminar "Sin Stock" de product_stock_statuses
 DELETE FROM product_stock_statuses WHERE id = 3;
 
 SET SQL_SAFE_UPDATES = 1;

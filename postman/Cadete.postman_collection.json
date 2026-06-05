@@ -55,7 +55,68 @@
 				}
 			},
 			"description": "Marca el pedido como entregado (status 4). Solo admin o el cadete asignado al pedido. Captura nombre, DNI y observaciones del receptor. Envia emails al cliente y al equipo.",
-			"response": []
+			"response": [
+				{
+					"name": "200 - Entrega registrada",
+					"status": "OK",
+					"code": 200,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Entrega registrada correctamente\",\n  \"data\": {\n    \"id\": 142,\n    \"sale_status_id\": 4,\n    \"status\": {\n      \"id\": 4,\n      \"name\": \"Entregado\"\n    },\n    \"receiver_name\": \"Maria Lopez\",\n    \"receiver_dni\": \"30123456\",\n    \"receiver_observations\": \"Entregado en porteria\",\n    \"updated_at\": \"2026-05-26T14:00:00.000000Z\"\n  }\n}"
+				},
+				{
+					"name": "403 - Sin permiso (no es el cadete asignado)",
+					"status": "Forbidden",
+					"code": 403,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"No tenes permiso para marcar este pedido como entregado\"\n}"
+				},
+				{
+					"name": "422 - Error de validacion",
+					"status": "Unprocessable Entity",
+					"code": 422,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Error de validacion\",\n  \"errors\": {\n    \"receiver_name\": [\n      \"El campo nombre del receptor es obligatorio\"\n    ],\n    \"receiver_dni\": [\n      \"El campo DNI del receptor es obligatorio\"\n    ]\n  }\n}"
+				},
+				{
+					"name": "404 - No encontrado",
+					"status": "Not Found",
+					"code": 404,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Pedido no encontrado\"\n}"
+				},
+				{
+					"name": "401 - No autenticado",
+					"status": "Unauthorized",
+					"code": 401,
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+				}
+			]
 		}
 	]
 }

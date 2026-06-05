@@ -1276,7 +1276,32 @@
 						}
 					},
 					"description": "Estadisticas del dashboard de ventas.",
-					"response": []
+					"response": [
+						{
+							"name": "200 - Estadisticas del dashboard",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Estadisticas obtenidas\",\n  \"data\": {\n    \"total_sales\": 52,\n    \"sales_by_status\": [\n      {\n        \"sale_status_id\": 1,\n        \"name\": \"Aprobado\",\n        \"count\": 10\n      },\n      {\n        \"sale_status_id\": 2,\n        \"name\": \"En produccion\",\n        \"count\": 15\n      },\n      {\n        \"sale_status_id\": 3,\n        \"name\": \"Listo\",\n        \"count\": 8\n      },\n      {\n        \"sale_status_id\": 4,\n        \"name\": \"Entregado\",\n        \"count\": 12\n      },\n      {\n        \"sale_status_id\": 5,\n        \"name\": \"Cancelado\",\n        \"count\": 3\n      },\n      {\n        \"sale_status_id\": 8,\n        \"name\": \"Pendiente de pago\",\n        \"count\": 4\n      }\n    ],\n    \"sales_by_channel\": [\n      {\n        \"channel_id\": 1,\n        \"name\": \"Web\",\n        \"count\": 30\n      },\n      {\n        \"channel_id\": 2,\n        \"name\": \"Instagram\",\n        \"count\": 10\n      },\n      {\n        \"channel_id\": 3,\n        \"name\": \"WhatsApp\",\n        \"count\": 8\n      },\n      {\n        \"channel_id\": 4,\n        \"name\": \"Mayorista\",\n        \"count\": 4\n      }\n    ],\n    \"revenue_this_month\": 245000.0,\n    \"pending_payments\": 4\n  }\n}"
+						},
+						{
+							"name": "401 - No autenticado",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
 				},
 				{
 					"name": "GET sales/export/wholesale",
@@ -1303,7 +1328,36 @@
 						}
 					},
 					"description": "Exporta pedidos mayoristas a Excel por rango de fechas.",
-					"response": []
+					"response": [
+						{
+							"name": "200 - Excel mayorista exportado",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+								},
+								{
+									"key": "Content-Disposition",
+									"value": "attachment; filename=pedidos_mayoristas_2026-05.xlsx"
+								}
+							],
+							"body": "(Excel binario)"
+						},
+						{
+							"name": "401 - No autenticado",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
 				},
 				{
 					"name": "PUT sales/change-status-admin/{id}",
@@ -1332,7 +1386,56 @@
 						}
 					},
 					"description": "Cambia el estado de un pedido (admin). Al pasar a 1 (Aprobado) descuenta stock. Al pasar a 5 (Cancelado) restaura stock si fue aprobado.",
-					"response": []
+					"response": [
+						{
+							"name": "200 - Estado actualizado",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Estado actualizado\",\n  \"data\": {\n    \"id\": 142,\n    \"sale_status_id\": 1,\n    \"status\": {\n      \"id\": 1,\n      \"name\": \"Aprobado\"\n    },\n    \"updated_at\": \"2026-05-26T10:00:00.000000Z\"\n  }\n}"
+						},
+						{
+							"name": "422 - Stock insuficiente al aprobar",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"No se pudo aprobar el pedido. Stock insuficiente.\",\n  \"errors\": [\n    {\n      \"product_id\": 15,\n      \"product_name\": \"Etiquetas personalizadas para colegios\",\n      \"product_variant_id\": null,\n      \"requested\": 3,\n      \"available\": 0\n    }\n  ]\n}"
+						},
+						{
+							"name": "404 - No encontrado",
+							"status": "Not Found",
+							"code": 404,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Pedido no encontrado\"\n}"
+						},
+						{
+							"name": "401 - No autenticado",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
 				},
 				{
 					"name": "PUT sales/assign-user/{id}",
@@ -1361,7 +1464,56 @@
 						}
 					},
 					"description": "Asigna un usuario operador al pedido.",
-					"response": []
+					"response": [
+						{
+							"name": "200 - Usuario asignado",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Usuario asignado\",\n  \"data\": {\n    \"id\": 142,\n    \"user_id\": 2,\n    \"user\": {\n      \"id\": 2,\n      \"name\": \"Maria\",\n      \"lastName\": \"Lopez\"\n    },\n    \"updated_at\": \"2026-05-26T09:15:00.000000Z\"\n  }\n}"
+						},
+						{
+							"name": "422 - Error de validacion",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validacion\",\n  \"errors\": {\n    \"user_id\": [\n      \"El campo user_id es obligatorio\"\n    ]\n  }\n}"
+						},
+						{
+							"name": "404 - No encontrado",
+							"status": "Not Found",
+							"code": 404,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Pedido no encontrado\"\n}"
+						},
+						{
+							"name": "401 - No autenticado",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
 				},
 				{
 					"name": "PUT sales/assign-user-sale-multiple",
@@ -1390,7 +1542,44 @@
 						}
 					},
 					"description": "Asigna un usuario a multiples pedidos.",
-					"response": []
+					"response": [
+						{
+							"name": "200 - Usuario asignado a multiples pedidos",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Usuario asignado a 3 pedidos\",\n  \"data\": {\n    \"user_id\": 2,\n    \"sale_ids\": [\n      140,\n      141,\n      142\n    ],\n    \"processed\": 3\n  }\n}"
+						},
+						{
+							"name": "422 - Error de validacion",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validacion\",\n  \"errors\": {\n    \"user_id\": [\n      \"El campo user_id es obligatorio\"\n    ],\n    \"sale_ids\": [\n      \"El campo sale_ids es obligatorio\"\n    ]\n  }\n}"
+						},
+						{
+							"name": "401 - No autenticado",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
 				},
 				{
 					"name": "PUT sales/assign-cadete/{id}",
@@ -1419,7 +1608,56 @@
 						}
 					},
 					"description": "Asigna un cadete al pedido.",
-					"response": []
+					"response": [
+						{
+							"name": "200 - Cadete asignado",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Cadete asignado\",\n  \"data\": {\n    \"id\": 142,\n    \"cadete_id\": 5,\n    \"cadete\": {\n      \"id\": 5,\n      \"name\": \"Diego\",\n      \"lastName\": \"Ramirez\"\n    },\n    \"updated_at\": \"2026-05-26T09:20:00.000000Z\"\n  }\n}"
+						},
+						{
+							"name": "422 - Error de validacion",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validacion\",\n  \"errors\": {\n    \"cadete_id\": [\n      \"El campo cadete_id es obligatorio\"\n    ]\n  }\n}"
+						},
+						{
+							"name": "404 - No encontrado",
+							"status": "Not Found",
+							"code": 404,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Pedido no encontrado\"\n}"
+						},
+						{
+							"name": "401 - No autenticado",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
 				},
 				{
 					"name": "PUT sales/assign-cadete-multiple",
@@ -1448,7 +1686,44 @@
 						}
 					},
 					"description": "Asigna un cadete a multiples pedidos.",
-					"response": []
+					"response": [
+						{
+							"name": "200 - Cadete asignado a multiples pedidos",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Cadete asignado a 3 pedidos\",\n  \"data\": {\n    \"cadete_id\": 5,\n    \"sale_ids\": [\n      140,\n      141,\n      142\n    ],\n    \"processed\": 3\n  }\n}"
+						},
+						{
+							"name": "422 - Error de validacion",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validacion\",\n  \"errors\": {\n    \"cadete_id\": [\n      \"El campo cadete_id es obligatorio\"\n    ],\n    \"sale_ids\": [\n      \"El campo sale_ids es obligatorio\"\n    ]\n  }\n}"
+						},
+						{
+							"name": "401 - No autenticado",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
 				},
 				{
 					"name": "PUT sales/receiver-data/{id}",
@@ -1477,7 +1752,56 @@
 						}
 					},
 					"description": "Actualiza los datos del receptor del pedido.",
-					"response": []
+					"response": [
+						{
+							"name": "200 - Datos del receptor actualizados",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Datos del receptor actualizados\",\n  \"data\": {\n    \"id\": 142,\n    \"receiver_name\": \"Maria Lopez\",\n    \"receiver_dni\": \"30123456\",\n    \"updated_at\": \"2026-05-26T10:30:00.000000Z\"\n  }\n}"
+						},
+						{
+							"name": "422 - Error de validacion",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validacion\",\n  \"errors\": {\n    \"receiver_name\": [\n      \"El campo nombre del receptor es obligatorio\"\n    ],\n    \"receiver_dni\": [\n      \"El campo DNI del receptor es obligatorio\"\n    ]\n  }\n}"
+						},
+						{
+							"name": "404 - No encontrado",
+							"status": "Not Found",
+							"code": 404,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Pedido no encontrado\"\n}"
+						},
+						{
+							"name": "401 - No autenticado",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
 				},
 				{
 					"name": "PUT sales/internal_comments/{id}",
@@ -1506,7 +1830,44 @@
 						}
 					},
 					"description": "Actualiza el comentario interno del pedido (solo visible para el equipo).",
-					"response": []
+					"response": [
+						{
+							"name": "200 - Comentario interno actualizado",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Comentario interno actualizado\",\n  \"data\": {\n    \"id\": 142,\n    \"internal_comments\": \"Revisar direccion de entrega\",\n    \"updated_at\": \"2026-05-26T10:45:00.000000Z\"\n  }\n}"
+						},
+						{
+							"name": "404 - No encontrado",
+							"status": "Not Found",
+							"code": 404,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Pedido no encontrado\"\n}"
+						},
+						{
+							"name": "401 - No autenticado",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
 				},
 				{
 					"name": "PUT sales/customer_notes/{id}",
@@ -1535,7 +1896,44 @@
 						}
 					},
 					"description": "Actualiza las notas del cliente en el pedido.",
-					"response": []
+					"response": [
+						{
+							"name": "200 - Notas del cliente actualizadas",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Notas del cliente actualizadas\",\n  \"data\": {\n    \"id\": 142,\n    \"customer_notes\": \"Sin mani por favor\",\n    \"updated_at\": \"2026-05-26T10:50:00.000000Z\"\n  }\n}"
+						},
+						{
+							"name": "404 - No encontrado",
+							"status": "Not Found",
+							"code": 404,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Pedido no encontrado\"\n}"
+						},
+						{
+							"name": "401 - No autenticado",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
 				},
 				{
 					"name": "PUT sales/client-data/{id}",
@@ -1564,7 +1962,56 @@
 						}
 					},
 					"description": "Actualiza los datos del cliente en el pedido.",
-					"response": []
+					"response": [
+						{
+							"name": "200 - Datos del cliente actualizados",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Datos del cliente actualizados\",\n  \"data\": {\n    \"id\": 142,\n    \"client\": {\n      \"name\": \"Maria\",\n      \"email\": \"maria@mail.com\",\n      \"phone\": \"1122334455\"\n    },\n    \"updated_at\": \"2026-05-26T11:00:00.000000Z\"\n  }\n}"
+						},
+						{
+							"name": "422 - Error de validacion",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validacion\",\n  \"errors\": {\n    \"client_email\": [\n      \"El campo email debe ser una direccion de correo valida\"\n    ]\n  }\n}"
+						},
+						{
+							"name": "404 - No encontrado",
+							"status": "Not Found",
+							"code": 404,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Pedido no encontrado\"\n}"
+						},
+						{
+							"name": "401 - No autenticado",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
 				},
 				{
 					"name": "PUT sales/update-client/{id}",
@@ -1593,7 +2040,56 @@
 						}
 					},
 					"description": "Asocia un cliente existente al pedido.",
-					"response": []
+					"response": [
+						{
+							"name": "200 - Cliente actualizado en el pedido",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Cliente actualizado\",\n  \"data\": {\n    \"id\": 142,\n    \"client_id\": 12,\n    \"client\": {\n      \"id\": 12,\n      \"name\": \"Luciana\",\n      \"lastName\": \"Martinez\",\n      \"email\": \"luciana@gmail.com\"\n    },\n    \"updated_at\": \"2026-05-26T11:10:00.000000Z\"\n  }\n}"
+						},
+						{
+							"name": "422 - Error de validacion",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validacion\",\n  \"errors\": {\n    \"client_id\": [\n      \"El campo client_id es obligatorio\"\n    ]\n  }\n}"
+						},
+						{
+							"name": "404 - No encontrado",
+							"status": "Not Found",
+							"code": 404,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Cliente no encontrado\"\n}"
+						},
+						{
+							"name": "401 - No autenticado",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
 				},
 				{
 					"name": "PUT sales/associate/{id}",
@@ -1622,7 +2118,56 @@
 						}
 					},
 					"description": "Asocia dos pedidos entre si.",
-					"response": []
+					"response": [
+						{
+							"name": "200 - Pedidos asociados",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Pedidos asociados\",\n  \"data\": {\n    \"id\": 142,\n    \"associated_sale_id\": 140,\n    \"updated_at\": \"2026-05-26T11:20:00.000000Z\"\n  }\n}"
+						},
+						{
+							"name": "422 - Error de validacion",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validacion\",\n  \"errors\": {\n    \"associated_sale_id\": [\n      \"El campo associated_sale_id es obligatorio\"\n    ]\n  }\n}"
+						},
+						{
+							"name": "404 - No encontrado",
+							"status": "Not Found",
+							"code": 404,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Pedido no encontrado\"\n}"
+						},
+						{
+							"name": "401 - No autenticado",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
 				},
 				{
 					"name": "PUT sales/remove-association/{id}",
@@ -1637,7 +2182,44 @@
 						}
 					},
 					"description": "Elimina la asociacion entre pedidos.",
-					"response": []
+					"response": [
+						{
+							"name": "200 - Asociacion eliminada",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Asociacion eliminada\",\n  \"data\": {\n    \"id\": 142,\n    \"associated_sale_id\": null,\n    \"updated_at\": \"2026-05-26T11:25:00.000000Z\"\n  }\n}"
+						},
+						{
+							"name": "404 - No encontrado",
+							"status": "Not Found",
+							"code": 404,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Pedido no encontrado\"\n}"
+						},
+						{
+							"name": "401 - No autenticado",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
 				},
 				{
 					"name": "POST sales/local",
@@ -1666,7 +2248,56 @@
 						}
 					},
 					"description": "Crea un pedido local (WhatsApp/Instagram) directamente desde el panel admin. Valida stock y descuenta si hay suficiente.",
-					"response": []
+					"response": [
+						{
+							"name": "200 - Pedido local creado",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Pedido creado\",\n  \"data\": {\n    \"id\": 143,\n    \"client_id\": 12,\n    \"channel_id\": 3,\n    \"sale_status_id\": 1,\n    \"subtotal\": 3000.0,\n    \"total\": 3000.0,\n    \"status\": {\n      \"id\": 1,\n      \"name\": \"Aprobado\"\n    },\n    \"created_at\": \"2026-05-26T11:30:00.000000Z\"\n  }\n}"
+						},
+						{
+							"name": "422 - Stock insuficiente",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Stock insuficiente para completar el pedido\",\n  \"errors\": [\n    {\n      \"product_id\": 15,\n      \"requested\": 2,\n      \"available\": 0\n    }\n  ]\n}"
+						},
+						{
+							"name": "422 - Error de validacion",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validacion\",\n  \"errors\": {\n    \"client_id\": [\n      \"El campo client_id es obligatorio\"\n    ],\n    \"channel_id\": [\n      \"El campo channel_id es obligatorio\"\n    ],\n    \"products\": [\n      \"El campo products es obligatorio\"\n    ]\n  }\n}"
+						},
+						{
+							"name": "401 - No autenticado",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
 				},
 				{
 					"name": "PUT sales/local/{id}",
@@ -1695,7 +2326,56 @@
 						}
 					},
 					"description": "Actualiza un pedido local existente.",
-					"response": []
+					"response": [
+						{
+							"name": "200 - Pedido local actualizado",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Pedido actualizado\",\n  \"data\": {\n    \"id\": 142,\n    \"subtotal\": 4500.0,\n    \"total\": 4500.0,\n    \"updated_at\": \"2026-05-26T11:35:00.000000Z\"\n  }\n}"
+						},
+						{
+							"name": "422 - Stock insuficiente",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Stock insuficiente para completar el pedido\",\n  \"errors\": [\n    {\n      \"product_id\": 15,\n      \"requested\": 3,\n      \"available\": 1\n    }\n  ]\n}"
+						},
+						{
+							"name": "404 - No encontrado",
+							"status": "Not Found",
+							"code": 404,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Pedido no encontrado\"\n}"
+						},
+						{
+							"name": "401 - No autenticado",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
 				},
 				{
 					"name": "GET sales/generate-pdf/{id}",
@@ -1710,7 +2390,48 @@
 						}
 					},
 					"description": "Genera y descarga el PDF del pedido.",
-					"response": []
+					"response": [
+						{
+							"name": "200 - PDF generado",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/pdf"
+								},
+								{
+									"key": "Content-Disposition",
+									"value": "attachment; filename=pedido-142.pdf"
+								}
+							],
+							"body": "(PDF binario)"
+						},
+						{
+							"name": "404 - No encontrado",
+							"status": "Not Found",
+							"code": 404,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Pedido no encontrado\"\n}"
+						},
+						{
+							"name": "401 - No autenticado",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
 				},
 				{
 					"name": "POST sales/generate-bulk-pdfs",
@@ -1739,7 +2460,44 @@
 						}
 					},
 					"description": "Genera PDFs en lote para multiples pedidos.",
-					"response": []
+					"response": [
+						{
+							"name": "200 - PDFs generados",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"PDFs generados correctamente\",\n  \"data\": {\n    \"processed\": 3,\n    \"sale_ids\": [\n      140,\n      141,\n      142\n    ]\n  }\n}"
+						},
+						{
+							"name": "422 - Error de validacion",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Error de validacion\",\n  \"errors\": {\n    \"sale_ids\": [\n      \"El campo sale_ids es obligatorio\"\n    ]\n  }\n}"
+						},
+						{
+							"name": "401 - No autenticado",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
 				}
 			]
 		}
