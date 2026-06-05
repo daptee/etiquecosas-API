@@ -51,8 +51,13 @@ class StockMovementController extends Controller
             $query->whereDate('created_at', '<=', $request->date_to);
         }
 
-        if ($request->filled('channel_id')) {
-            $query->where('channel_id', $request->channel_id);
+        if ($request->has('channel_id')) {
+            $channelFilter = $request->channel_id;
+            if ($channelFilter == 0 || $channelFilter === null || $channelFilter === '') {
+                $query->whereNull('channel_id');
+            } else {
+                $query->where('channel_id', $channelFilter);
+            }
         }
 
         $perPage = $request->query('quantity', 50);
