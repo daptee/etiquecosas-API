@@ -93,47 +93,49 @@ class StockMovementController extends Controller
         $usesVariantStock = $variant && !empty($variant->stock_channels);
 
         if ($usesVariantStock) {
-            $stockChannels = $variant->stock_channels;
-            $updated = false;
-
-            foreach ($stockChannels as &$channel) {
-                if ($channelId === null || $channel['channel'] == $channelId) {
-                    $channel['stock_quantity'] = max(0, ($channel['stock_quantity'] ?? 0) + $quantity);
-                    $updated = true;
-                    if ($channelId !== null) break;
-                }
-            }
-            unset($channel);
-
-            if (!$updated && $channelId !== null) {
-                return $this->error('El canal especificado no existe en el stock de esta variante', 422);
-            }
-
-            $variant->stock_channels = $stockChannels;
             if ($channelId === null) {
-                $variant->stock_quantity = array_sum(array_column($stockChannels, 'stock_quantity'));
+                $variant->stock_quantity = max(0, ($variant->stock_quantity ?? 0) + $quantity);
+            } else {
+                $stockChannels = $variant->stock_channels;
+                $updated = false;
+
+                foreach ($stockChannels as &$channel) {
+                    if ($channel['channel'] == $channelId) {
+                        $channel['stock_quantity'] = max(0, ($channel['stock_quantity'] ?? 0) + $quantity);
+                        $updated = true;
+                        break;
+                    }
+                }
+                unset($channel);
+
+                if (!$updated) {
+                    return $this->error('El canal especificado no existe en el stock de esta variante', 422);
+                }
+
+                $variant->stock_channels = $stockChannels;
             }
             $variant->save();
         } else {
-            $stockChannels = $product->stock_channels ?? [];
-            $updated = false;
-
-            foreach ($stockChannels as &$channel) {
-                if ($channelId === null || $channel['channel'] == $channelId) {
-                    $channel['stock_quantity'] = max(0, ($channel['stock_quantity'] ?? 0) + $quantity);
-                    $updated = true;
-                    if ($channelId !== null) break;
-                }
-            }
-            unset($channel);
-
-            if (!$updated && $channelId !== null) {
-                return $this->error('El canal especificado no existe en el stock de este producto', 422);
-            }
-
-            $product->stock_channels = $stockChannels;
             if ($channelId === null) {
-                $product->stock_quantity = array_sum(array_column($stockChannels, 'stock_quantity'));
+                $product->stock_quantity = max(0, ($product->stock_quantity ?? 0) + $quantity);
+            } else {
+                $stockChannels = $product->stock_channels ?? [];
+                $updated = false;
+
+                foreach ($stockChannels as &$channel) {
+                    if ($channel['channel'] == $channelId) {
+                        $channel['stock_quantity'] = max(0, ($channel['stock_quantity'] ?? 0) + $quantity);
+                        $updated = true;
+                        break;
+                    }
+                }
+                unset($channel);
+
+                if (!$updated) {
+                    return $this->error('El canal especificado no existe en el stock de este producto', 422);
+                }
+
+                $product->stock_channels = $stockChannels;
             }
             $product->save();
         }
