@@ -38,6 +38,11 @@ class StockService
                     continue;
                 }
 
+                // stock_status 1 = siempre en stock, no requiere validación de cantidad
+                if (($channel['stock_status'] ?? null) == 1) {
+                    break;
+                }
+
                 $available = (int) ($channel['stock_quantity'] ?? 0);
 
                 if ($available < $quantity) {
