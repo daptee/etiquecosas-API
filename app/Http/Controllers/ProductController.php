@@ -585,6 +585,7 @@ class ProductController extends Controller
             'stock_channels.*.stock_status_name' => 'string|max:100',
             'stock_channels.*.stock_quantity' => 'nullable|integer',
             'stock_channels.*.stock_alert' => 'nullable|integer|min:0',
+            'stock_channels.*.is_heritable' => 'nullable|boolean',
         ];
         $internalValidator = Validator::make($decodedData, $internalJsonRules);
         if ($internalValidator->fails()) {
@@ -1142,6 +1143,7 @@ class ProductController extends Controller
             'stock_channels.*.stock_status_name' => 'string|max:100',
             'stock_channels.*.stock_quantity' => 'nullable|integer',
             'stock_channels.*.stock_alert' => 'nullable|integer|min:0',
+            'stock_channels.*.is_heritable' => 'nullable|boolean',
         ];
         $internalValidator = Validator::make($decodedData, $internalJsonRules);
         if ($internalValidator->fails()) {

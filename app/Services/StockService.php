@@ -43,7 +43,13 @@ class StockService
                     break;
                 }
 
-                $available = (int) ($channel['stock_quantity'] ?? 0);
+                if (!empty($channel['is_heritable'])) {
+                    $available = $usesVariantStock
+                        ? (int) ($variant->variant['stock_quantity'] ?? 0)
+                        : (int) ($product->stock_quantity ?? 0);
+                } else {
+                    $available = (int) ($channel['stock_quantity'] ?? 0);
+                }
 
                 if ($available < $quantity) {
                     $label = $usesVariantStock
@@ -82,25 +88,39 @@ class StockService
 
             if ($usesVariantStock) {
                 $stockChannels = $variant->stock_channels;
+                $channelData   = collect($stockChannels)->firstWhere('channel', $channelId);
 
-                foreach ($stockChannels as &$channel) {
-                    if ($channel['channel'] == $channelId) {
-                        $channel['stock_quantity'] = max(0, ($channel['stock_quantity'] ?? 0) - $quantity);
+                if ($channelData && !empty($channelData['is_heritable'])) {
+                    $variantData = $variant->variant ?? [];
+                    $variantData['stock_quantity'] = max(0, ($variantData['stock_quantity'] ?? 0) - $quantity);
+                    $variant->variant = $variantData;
+                } else {
+                    foreach ($stockChannels as &$channel) {
+                        if ($channel['channel'] == $channelId) {
+                            $channel['stock_quantity'] = max(0, ($channel['stock_quantity'] ?? 0) - $quantity);
+                            break;
+                        }
                     }
+                    unset($channel);
+                    $variant->stock_channels = $stockChannels;
                 }
-
-                $variant->stock_channels = $stockChannels;
                 $variant->save();
             } else {
                 $stockChannels = $product->stock_channels ?? [];
+                $channelData   = collect($stockChannels)->firstWhere('channel', $channelId);
 
-                foreach ($stockChannels as &$channel) {
-                    if ($channel['channel'] == $channelId) {
-                        $channel['stock_quantity'] = max(0, ($channel['stock_quantity'] ?? 0) - $quantity);
+                if ($channelData && !empty($channelData['is_heritable'])) {
+                    $product->stock_quantity = max(0, ($product->stock_quantity ?? 0) - $quantity);
+                } else {
+                    foreach ($stockChannels as &$channel) {
+                        if ($channel['channel'] == $channelId) {
+                            $channel['stock_quantity'] = max(0, ($channel['stock_quantity'] ?? 0) - $quantity);
+                            break;
+                        }
                     }
+                    unset($channel);
+                    $product->stock_channels = $stockChannels;
                 }
-
-                $product->stock_channels = $stockChannels;
                 $product->save();
             }
 
@@ -137,25 +157,39 @@ class StockService
 
             if ($usesVariantStock) {
                 $stockChannels = $variant->stock_channels;
+                $channelData   = collect($stockChannels)->firstWhere('channel', $channelId);
 
-                foreach ($stockChannels as &$channel) {
-                    if ($channel['channel'] == $channelId) {
-                        $channel['stock_quantity'] = ($channel['stock_quantity'] ?? 0) + $quantity;
+                if ($channelData && !empty($channelData['is_heritable'])) {
+                    $variantData = $variant->variant ?? [];
+                    $variantData['stock_quantity'] = ($variantData['stock_quantity'] ?? 0) + $quantity;
+                    $variant->variant = $variantData;
+                } else {
+                    foreach ($stockChannels as &$channel) {
+                        if ($channel['channel'] == $channelId) {
+                            $channel['stock_quantity'] = ($channel['stock_quantity'] ?? 0) + $quantity;
+                            break;
+                        }
                     }
+                    unset($channel);
+                    $variant->stock_channels = $stockChannels;
                 }
-
-                $variant->stock_channels = $stockChannels;
                 $variant->save();
             } else {
                 $stockChannels = $product->stock_channels ?? [];
+                $channelData   = collect($stockChannels)->firstWhere('channel', $channelId);
 
-                foreach ($stockChannels as &$channel) {
-                    if ($channel['channel'] == $channelId) {
-                        $channel['stock_quantity'] = ($channel['stock_quantity'] ?? 0) + $quantity;
+                if ($channelData && !empty($channelData['is_heritable'])) {
+                    $product->stock_quantity = ($product->stock_quantity ?? 0) + $quantity;
+                } else {
+                    foreach ($stockChannels as &$channel) {
+                        if ($channel['channel'] == $channelId) {
+                            $channel['stock_quantity'] = ($channel['stock_quantity'] ?? 0) + $quantity;
+                            break;
+                        }
                     }
+                    unset($channel);
+                    $product->stock_channels = $stockChannels;
                 }
-
-                $product->stock_channels = $stockChannels;
                 $product->save();
             }
 
