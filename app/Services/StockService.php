@@ -24,47 +24,24 @@ class StockService
             $quantity  = $productOrder->quantity;
             $channelId = $sale->channel_id;
 
-            $usesVariantStock = $variant && !empty($variant->stock_channels);
-            $stockChannels    = $usesVariantStock
-                ? ($variant->stock_channels ?? [])
-                : ($product->stock_channels ?? []);
+            $stock = self::resolveStock($product, $variant, $channelId);
 
-            if (empty($stockChannels)) {
-                continue; // Sin control de stock para este producto
+            if ($stock === null || $stock['always_in_stock']) {
+                continue;
             }
 
-            foreach ($stockChannels as $channel) {
-                if ($channel['channel'] != $channelId) {
-                    continue;
-                }
+            if ($stock['available'] < $quantity) {
+                $label = $variant
+                    ? ($product->name . ' - ' . ($variant->variant['name'] ?? 'Variante #' . $variant->id))
+                    : $product->name;
 
-                // stock_status 1 = siempre en stock, no requiere validación de cantidad
-                if (($channel['stock_status'] ?? null) == 1) {
-                    break;
-                }
-
-                if (!empty($channel['is_heritable'])) {
-                    $available = $usesVariantStock
-                        ? (int) ($variant->variant['stock_quantity'] ?? 0)
-                        : (int) ($product->stock_quantity ?? 0);
-                } else {
-                    $available = (int) ($channel['stock_quantity'] ?? 0);
-                }
-
-                if ($available < $quantity) {
-                    $label = $usesVariantStock
-                        ? ($product->name . ' - ' . ($variant->variant['name'] ?? 'Variante #' . $variant->id))
-                        : $product->name;
-
-                    $errors[] = [
-                        'product_id'         => $product->id,
-                        'product_variant_id' => $usesVariantStock ? $variant->id : null,
-                        'product_name'       => $label,
-                        'requested'          => $quantity,
-                        'available'          => $available,
-                    ];
-                }
-                break;
+                $errors[] = [
+                    'product_id'         => $product->id,
+                    'product_variant_id' => $variant ? $variant->id : null,
+                    'product_name'       => $label,
+                    'requested'          => $quantity,
+                    'available'          => $stock['available'],
+                ];
             }
         }
 
@@ -84,49 +61,14 @@ class StockService
             $quantity  = $productOrder->quantity;
             $channelId = $sale->channel_id;
 
-            $usesVariantStock = $variant && !empty($variant->stock_channels);
-
-            if ($usesVariantStock) {
-                $stockChannels = $variant->stock_channels;
-                $channelData   = collect($stockChannels)->firstWhere('channel', $channelId);
-
-                if ($channelData && !empty($channelData['is_heritable'])) {
-                    $variantData = $variant->variant ?? [];
-                    $variantData['stock_quantity'] = max(0, ($variantData['stock_quantity'] ?? 0) - $quantity);
-                    $variant->variant = $variantData;
-                } else {
-                    foreach ($stockChannels as &$channel) {
-                        if ($channel['channel'] == $channelId) {
-                            $channel['stock_quantity'] = max(0, ($channel['stock_quantity'] ?? 0) - $quantity);
-                            break;
-                        }
-                    }
-                    unset($channel);
-                    $variant->stock_channels = $stockChannels;
-                }
-                $variant->save();
-            } else {
-                $stockChannels = $product->stock_channels ?? [];
-                $channelData   = collect($stockChannels)->firstWhere('channel', $channelId);
-
-                if ($channelData && !empty($channelData['is_heritable'])) {
-                    $product->stock_quantity = max(0, ($product->stock_quantity ?? 0) - $quantity);
-                } else {
-                    foreach ($stockChannels as &$channel) {
-                        if ($channel['channel'] == $channelId) {
-                            $channel['stock_quantity'] = max(0, ($channel['stock_quantity'] ?? 0) - $quantity);
-                            break;
-                        }
-                    }
-                    unset($channel);
-                    $product->stock_channels = $stockChannels;
-                }
-                $product->save();
+            $stock = self::resolveStock($product, $variant, $channelId);
+            if ($stock !== null && !$stock['always_in_stock']) {
+                self::applyStockChange($product, $variant, $channelId, -$quantity, $stock['source']);
             }
 
             self::recordMovement(
                 productId:  $product->id,
-                variantId:  $usesVariantStock ? $variant->id : null,
+                variantId:  $variant ? $variant->id : null,
                 quantity:   -$quantity,
                 note:       "Deducción por confirmación de pedido #{$sale->id}",
                 saleId:     $sale->id,
@@ -153,55 +95,137 @@ class StockService
             $quantity  = $productOrder->quantity;
             $channelId = $sale->channel_id;
 
-            $usesVariantStock = $variant && !empty($variant->stock_channels);
-
-            if ($usesVariantStock) {
-                $stockChannels = $variant->stock_channels;
-                $channelData   = collect($stockChannels)->firstWhere('channel', $channelId);
-
-                if ($channelData && !empty($channelData['is_heritable'])) {
-                    $variantData = $variant->variant ?? [];
-                    $variantData['stock_quantity'] = ($variantData['stock_quantity'] ?? 0) + $quantity;
-                    $variant->variant = $variantData;
-                } else {
-                    foreach ($stockChannels as &$channel) {
-                        if ($channel['channel'] == $channelId) {
-                            $channel['stock_quantity'] = ($channel['stock_quantity'] ?? 0) + $quantity;
-                            break;
-                        }
-                    }
-                    unset($channel);
-                    $variant->stock_channels = $stockChannels;
-                }
-                $variant->save();
-            } else {
-                $stockChannels = $product->stock_channels ?? [];
-                $channelData   = collect($stockChannels)->firstWhere('channel', $channelId);
-
-                if ($channelData && !empty($channelData['is_heritable'])) {
-                    $product->stock_quantity = ($product->stock_quantity ?? 0) + $quantity;
-                } else {
-                    foreach ($stockChannels as &$channel) {
-                        if ($channel['channel'] == $channelId) {
-                            $channel['stock_quantity'] = ($channel['stock_quantity'] ?? 0) + $quantity;
-                            break;
-                        }
-                    }
-                    unset($channel);
-                    $product->stock_channels = $stockChannels;
-                }
-                $product->save();
+            $stock = self::resolveStock($product, $variant, $channelId);
+            if ($stock !== null && !$stock['always_in_stock']) {
+                self::applyStockChange($product, $variant, $channelId, +$quantity, $stock['source']);
             }
 
             self::recordMovement(
                 productId:  $product->id,
-                variantId:  $usesVariantStock ? $variant->id : null,
+                variantId:  $variant ? $variant->id : null,
                 quantity:   +$quantity,
                 note:       "Restauración por cancelación de pedido #{$sale->id}",
                 saleId:     $sale->id,
                 userId:     null,
                 channelId:  $channelId
             );
+        }
+    }
+
+    /**
+     * Jerarquía de fuente de stock para una línea de venta:
+     * 1. Canal de variante  2. General de variante  3. Canal de producto  4. General de producto
+     *
+     * Retorna null si no hay control de stock, o un array con:
+     *   - always_in_stock (bool)
+     *   - available (int)
+     *   - source (string): variant_channel | variant_general | product_channel | product_general
+     */
+    public static function resolveStock($product, $variant, int $channelId): ?array
+    {
+        // 1. Canal de variante — si is_heritable: true cae al paso 2
+        if ($variant && !empty($variant->stock_channels)) {
+            $ch = collect($variant->stock_channels)->firstWhere('channel', $channelId);
+            if ($ch) {
+                if (($ch['stock_status'] ?? null) == 1) {
+                    return ['always_in_stock' => true];
+                }
+                if (empty($ch['is_heritable'])) {
+                    return [
+                        'always_in_stock' => false,
+                        'available'       => (int) ($ch['stock_quantity'] ?? 0),
+                        'source'          => 'variant_channel',
+                    ];
+                }
+            }
+        }
+
+        // 2. General de variante — si is_heritable: true cae al paso 3
+        if ($variant) {
+            $variantData = $variant->variant ?? [];
+            if (isset($variantData['stock_quantity']) && $variantData['stock_quantity'] !== null) {
+                if (empty($variantData['is_heritable'])) {
+                    return [
+                        'always_in_stock' => false,
+                        'available'       => (int) $variantData['stock_quantity'],
+                        'source'          => 'variant_general',
+                    ];
+                }
+            }
+        }
+
+        // 3. Canal de producto — si is_heritable: true cae al paso 4
+        if (!empty($product->stock_channels)) {
+            $ch = collect($product->stock_channels)->firstWhere('channel', $channelId);
+            if ($ch) {
+                if (($ch['stock_status'] ?? null) == 1) {
+                    return ['always_in_stock' => true];
+                }
+                if (empty($ch['is_heritable'])) {
+                    return [
+                        'always_in_stock' => false,
+                        'available'       => (int) ($ch['stock_quantity'] ?? 0),
+                        'source'          => 'product_channel',
+                    ];
+                }
+            }
+        }
+
+        // 4. General de producto (piso de la jerarquía)
+        if ($product->stock_quantity !== null) {
+            return [
+                'always_in_stock' => false,
+                'available'       => (int) $product->stock_quantity,
+                'source'          => 'product_general',
+            ];
+        }
+
+        return null; // Sin control de stock
+    }
+
+    /**
+     * Aplica un delta (positivo = ingreso, negativo = egreso) a la fuente correcta.
+     */
+    public static function applyStockChange($product, $variant, int $channelId, int $delta, string $source): void
+    {
+        switch ($source) {
+            case 'variant_channel':
+                $stockChannels = $variant->stock_channels;
+                foreach ($stockChannels as &$ch) {
+                    if ($ch['channel'] == $channelId) {
+                        $ch['stock_quantity'] = max(0, ($ch['stock_quantity'] ?? 0) + $delta);
+                        break;
+                    }
+                }
+                unset($ch);
+                $variant->stock_channels = $stockChannels;
+                $variant->save();
+                break;
+
+            case 'variant_general':
+                $variantData = $variant->variant ?? [];
+                $variantData['stock_quantity'] = max(0, ($variantData['stock_quantity'] ?? 0) + $delta);
+                $variant->variant = $variantData;
+                $variant->save();
+                break;
+
+            case 'product_channel':
+                $stockChannels = $product->stock_channels ?? [];
+                foreach ($stockChannels as &$ch) {
+                    if ($ch['channel'] == $channelId) {
+                        $ch['stock_quantity'] = max(0, ($ch['stock_quantity'] ?? 0) + $delta);
+                        break;
+                    }
+                }
+                unset($ch);
+                $product->stock_channels = $stockChannels;
+                $product->save();
+                break;
+
+            case 'product_general':
+                $product->stock_quantity = max(0, ($product->stock_quantity ?? 0) + $delta);
+                $product->save();
+                break;
         }
     }
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\StockMovement;
+use App\Services\StockService;
 use App\Traits\ApiResponse;
 use App\Traits\Auditable;
 use Illuminate\Http\Request;
@@ -97,61 +98,31 @@ class StockMovementController extends Controller
 
         $usesVariantStock = $variant && !empty($variant->stock_channels);
 
-        if ($usesVariantStock) {
-            if ($channelId === null) {
+        if ($channelId === null) {
+            // Stock general explícito: variante si no es heritable, sino producto
+            if ($usesVariantStock) {
                 $variantData = $variant->variant ?? [];
-                $variantData['stock_quantity'] = max(0, ($variantData['stock_quantity'] ?? 0) + $quantity);
-                $variant->variant = $variantData;
-                $variant->save();
+                $source = !empty($variantData['is_heritable']) ? 'product_general' : 'variant_general';
             } else {
-                $stockChannels = $variant->stock_channels;
-                $channelData   = collect($stockChannels)->firstWhere('channel', $channelId);
-
-                if (!$channelData) {
-                    return $this->error('El canal especificado no existe en el stock de esta variante', 422);
-                }
-
-                if (!empty($channelData['is_heritable'])) {
-                    $variantData = $variant->variant ?? [];
-                    $variantData['stock_quantity'] = max(0, ($variantData['stock_quantity'] ?? 0) + $quantity);
-                    $variant->variant = $variantData;
-                } else {
-                    foreach ($stockChannels as &$channel) {
-                        if ($channel['channel'] == $channelId) {
-                            $channel['stock_quantity'] = max(0, ($channel['stock_quantity'] ?? 0) + $quantity);
-                            break;
-                        }
-                    }
-                    unset($channel);
-                    $variant->stock_channels = $stockChannels;
-                }
-                $variant->save();
+                $source = 'product_general';
             }
+            StockService::applyStockChange($product, $variant, 0, $quantity, $source);
         } else {
-            if ($channelId === null) {
-                $product->stock_quantity = max(0, ($product->stock_quantity ?? 0) + $quantity);
-            } else {
-                $stockChannels = $product->stock_channels ?? [];
-                $channelData   = collect($stockChannels)->firstWhere('channel', $channelId);
+            // Validar que el canal exista en la entidad correcta
+            $stockChannels = $usesVariantStock
+                ? ($variant->stock_channels ?? [])
+                : ($product->stock_channels ?? []);
 
-                if (!$channelData) {
-                    return $this->error('El canal especificado no existe en el stock de este producto', 422);
-                }
-
-                if (!empty($channelData['is_heritable'])) {
-                    $product->stock_quantity = max(0, ($product->stock_quantity ?? 0) + $quantity);
-                } else {
-                    foreach ($stockChannels as &$channel) {
-                        if ($channel['channel'] == $channelId) {
-                            $channel['stock_quantity'] = max(0, ($channel['stock_quantity'] ?? 0) + $quantity);
-                            break;
-                        }
-                    }
-                    unset($channel);
-                    $product->stock_channels = $stockChannels;
-                }
+            if (!collect($stockChannels)->firstWhere('channel', $channelId)) {
+                $entity = $usesVariantStock ? 'variante' : 'producto';
+                return $this->error("El canal especificado no existe en el stock de esta {$entity}", 422);
             }
-            $product->save();
+
+            // Cascade completo via StockService
+            $stock = StockService::resolveStock($product, $variant, $channelId);
+            if ($stock && !$stock['always_in_stock']) {
+                StockService::applyStockChange($product, $variant, $channelId, $quantity, $stock['source']);
+            }
         }
 
         $movement = StockMovement::create([

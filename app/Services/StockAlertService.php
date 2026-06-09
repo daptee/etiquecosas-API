@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Mail\StockAlertMail;
 use App\Models\Product;
+use App\Services\StockService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
@@ -24,38 +25,44 @@ class StockAlertService
         $alerts = [];
 
         if ($activeVariants->isNotEmpty()) {
-            // Evaluar por variante — solo stock_channels, que es lo que descuenta StockService
             foreach ($activeVariants as $variant) {
                 $variantData  = $variant->variant ?? [];
                 $variantLabel = $variantData['name'] ?? ("Variante #" . $variant->id);
 
                 $stockChannels = $variant->stock_channels ?? [];
                 foreach ($stockChannels as $channel) {
-                    $channelStockQty   = isset($channel['stock_quantity']) ? (int) $channel['stock_quantity'] : null;
-                    $channelStockAlert = isset($channel['stock_alert'])    ? (int) $channel['stock_alert']    : null;
+                    $channelStockAlert = isset($channel['stock_alert']) ? (int) $channel['stock_alert'] : null;
+                    if ($channelStockAlert === null) continue;
 
-                    if ($channelStockAlert !== null && $channelStockQty !== null && $channelStockQty <= $channelStockAlert) {
+                    // Resolver stock real respetando is_heritable
+                    $stock = StockService::resolveStock($product, $variant, (int) $channel['channel']);
+                    if ($stock === null || $stock['always_in_stock']) continue;
+
+                    if ($stock['available'] <= $channelStockAlert) {
                         $alerts[] = [
                             'variante'     => $variantLabel,
                             'canal'        => $channel['channel_name'] ?? ('Canal ' . $channel['channel']),
-                            'stock_actual' => $channelStockQty,
+                            'stock_actual' => $stock['available'],
                             'stock_alerta' => $channelStockAlert,
                         ];
                     }
                 }
             }
         } else {
-            // Sin variantes — solo stock_channels, que es lo que descuenta StockService
             $stockChannels = $product->stock_channels ?? [];
             foreach ($stockChannels as $channel) {
-                $channelStockQty   = isset($channel['stock_quantity']) ? (int) $channel['stock_quantity'] : null;
-                $channelStockAlert = isset($channel['stock_alert'])    ? (int) $channel['stock_alert']    : null;
+                $channelStockAlert = isset($channel['stock_alert']) ? (int) $channel['stock_alert'] : null;
+                if ($channelStockAlert === null) continue;
 
-                if ($channelStockAlert !== null && $channelStockQty !== null && $channelStockQty <= $channelStockAlert) {
+                // Resolver stock real respetando is_heritable
+                $stock = StockService::resolveStock($product, null, (int) $channel['channel']);
+                if ($stock === null || $stock['always_in_stock']) continue;
+
+                if ($stock['available'] <= $channelStockAlert) {
                     $alerts[] = [
                         'variante'     => 'General',
                         'canal'        => $channel['channel_name'] ?? ('Canal ' . $channel['channel']),
-                        'stock_actual' => $channelStockQty,
+                        'stock_actual' => $stock['available'],
                         'stock_alerta' => $channelStockAlert,
                     ];
                 }
