@@ -57,6 +57,7 @@ class ProductVariant extends Model
             'wholesale_price' => $this->variant['wholesale_price'] ?? null,
             'wholesale_min_amount' => $this->variant['wholesale_min_amount'] ?? null,
             'order' => $this->variant['order'] ?? null,
+            'is_heritable' => $this->variant['is_heritable'] ?? null,
             'attributesvalues' => $this->attributes_values->map(function ($attr) {
                 return [
                     'id' => $attr->id,
