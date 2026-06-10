@@ -67,13 +67,14 @@ class StockService
             }
 
             self::recordMovement(
-                productId:  $product->id,
-                variantId:  $variant ? $variant->id : null,
-                quantity:   -$quantity,
-                note:       "Deducción por confirmación de pedido #{$sale->id}",
-                saleId:     $sale->id,
-                userId:     null,
-                channelId:  $channelId
+                productId:   $product->id,
+                variantId:   $variant ? $variant->id : null,
+                quantity:    -$quantity,
+                note:        "Deducción por confirmación de pedido #{$sale->id}",
+                saleId:      $sale->id,
+                userId:      null,
+                channelId:   $channelId,
+                stockSource: $stock['source'] ?? null
             );
 
             $affectedProductIds[$product->id] = $product;
@@ -101,13 +102,14 @@ class StockService
             }
 
             self::recordMovement(
-                productId:  $product->id,
-                variantId:  $variant ? $variant->id : null,
-                quantity:   +$quantity,
-                note:       "Restauración por cancelación de pedido #{$sale->id}",
-                saleId:     $sale->id,
-                userId:     null,
-                channelId:  $channelId
+                productId:   $product->id,
+                variantId:   $variant ? $variant->id : null,
+                quantity:    +$quantity,
+                note:        "Restauración por cancelación de pedido #{$sale->id}",
+                saleId:      $sale->id,
+                userId:      null,
+                channelId:   $channelId,
+                stockSource: $stock['source'] ?? null
             );
         }
     }
@@ -234,13 +236,14 @@ class StockService
      * un fallo de logging no interrumpa la operación de stock.
      */
     private static function recordMovement(
-        int    $productId,
-        ?int   $variantId,
-        int    $quantity,
-        string $note,
-        ?int   $saleId = null,
-        ?int   $userId = null,
-        ?int   $channelId = null
+        int     $productId,
+        ?int    $variantId,
+        int     $quantity,
+        string  $note,
+        ?int    $saleId = null,
+        ?int    $userId = null,
+        ?int    $channelId = null,
+        ?string $stockSource = null
     ): void {
         try {
             StockMovement::create([
@@ -251,6 +254,7 @@ class StockService
                 'sale_id'            => $saleId,
                 'user_id'            => $userId,
                 'channel_id'         => $channelId,
+                'stock_source'       => $stockSource,
             ]);
         } catch (\Exception $e) {
             Log::error('StockService: Error al registrar movimiento de stock', [

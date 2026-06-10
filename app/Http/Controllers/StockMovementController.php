@@ -98,15 +98,17 @@ class StockMovementController extends Controller
 
         $usesVariantStock = $variant && !empty($variant->stock_channels);
 
+        $stockSource = null;
+
         if ($channelId === null) {
             // Stock general explícito: variante si no es heritable, sino producto
             if ($usesVariantStock) {
                 $variantData = $variant->variant ?? [];
-                $source = ($variantData['is_heritable'] ?? 0) == 1 ? 'product_general' : 'variant_general';
+                $stockSource = ($variantData['is_heritable'] ?? 0) == 1 ? 'product_general' : 'variant_general';
             } else {
-                $source = 'product_general';
+                $stockSource = 'product_general';
             }
-            StockService::applyStockChange($product, $variant, 0, $quantity, $source);
+            StockService::applyStockChange($product, $variant, 0, $quantity, $stockSource);
         } else {
             // Validar que el canal exista en la entidad correcta
             $stockChannels = $usesVariantStock
@@ -122,6 +124,7 @@ class StockMovementController extends Controller
             $stock = StockService::resolveStock($product, $variant, $channelId);
             if ($stock && !$stock['always_in_stock']) {
                 StockService::applyStockChange($product, $variant, $channelId, $quantity, $stock['source']);
+                $stockSource = $stock['source'];
             }
         }
 
@@ -133,6 +136,7 @@ class StockMovementController extends Controller
             'user_id'            => Auth::id(),
             'sale_id'            => null,
             'channel_id'         => $channelId,
+            'stock_source'       => $stockSource,
         ]);
 
         $this->logAudit(Auth::user(), 'Manual Stock Movement', $request->all(), $movement);

@@ -173,11 +173,13 @@ class ProductVariantController extends Controller
 
             // Registrar movimiento de stock si se envió quantity
             if ($quantity !== null) {
+                $stockSource = null;
+
                 if ($channelId === null) {
                     // Stock general: variante si no es heritable, sino producto
                     $variantData = $variant->variant ?? [];
-                    $source = ($variantData['is_heritable'] ?? 0) == 1 ? 'product_general' : 'variant_general';
-                    StockService::applyStockChange($product, $variant, 0, $quantity, $source);
+                    $stockSource = ($variantData['is_heritable'] ?? 0) == 1 ? 'product_general' : 'variant_general';
+                    StockService::applyStockChange($product, $variant, 0, $quantity, $stockSource);
                 } else {
                     // Canal específico: validar que exista y aplicar cascade
                     $channelData = collect($stockChannels)->firstWhere('channel', $channelId);
@@ -191,6 +193,7 @@ class ProductVariantController extends Controller
                         continue;
                     }
                     StockService::applyStockChange($product, $variant, $channelId, $quantity, $stock['source']);
+                    $stockSource = $stock['source'];
                 }
 
                 StockMovement::create([
@@ -201,6 +204,7 @@ class ProductVariantController extends Controller
                     'user_id'            => Auth::id(),
                     'sale_id'            => null,
                     'channel_id'         => $channelId,
+                    'stock_source'       => $stockSource,
                 ]);
             }
 
