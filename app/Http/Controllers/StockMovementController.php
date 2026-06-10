@@ -102,7 +102,7 @@ class StockMovementController extends Controller
             // Stock general explícito: variante si no es heritable, sino producto
             if ($usesVariantStock) {
                 $variantData = $variant->variant ?? [];
-                $source = !empty($variantData['is_heritable']) ? 'product_general' : 'variant_general';
+                $source = ($variantData['is_heritable'] ?? 0) == 1 ? 'product_general' : 'variant_general';
             } else {
                 $source = 'product_general';
             }

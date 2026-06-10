@@ -176,7 +176,7 @@ class ProductVariantController extends Controller
                 if ($channelId === null) {
                     // Stock general: variante si no es heritable, sino producto
                     $variantData = $variant->variant ?? [];
-                    $source = !empty($variantData['is_heritable']) ? 'product_general' : 'variant_general';
+                    $source = ($variantData['is_heritable'] ?? 0) == 1 ? 'product_general' : 'variant_general';
                     StockService::applyStockChange($product, $variant, 0, $quantity, $source);
                 } else {
                     // Canal específico: validar que exista y aplicar cascade

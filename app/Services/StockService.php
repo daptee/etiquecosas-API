@@ -123,14 +123,14 @@ class StockService
      */
     public static function resolveStock($product, $variant, int $channelId): ?array
     {
-        // 1. Canal de variante — si is_heritable: true cae al paso 2
+        // 1. Canal de variante — si is_heritable: 1 cae al paso 2
         if ($variant && !empty($variant->stock_channels)) {
             $ch = collect($variant->stock_channels)->firstWhere('channel', $channelId);
             if ($ch) {
                 if (($ch['stock_status'] ?? null) == 1) {
                     return ['always_in_stock' => true];
                 }
-                if (empty($ch['is_heritable'])) {
+                if (($ch['is_heritable'] ?? 0) != 1) {
                     return [
                         'always_in_stock' => false,
                         'available'       => (int) ($ch['stock_quantity'] ?? 0),
@@ -140,11 +140,11 @@ class StockService
             }
         }
 
-        // 2. General de variante — si is_heritable: true cae al paso 3
+        // 2. General de variante — si is_heritable: 1 cae al paso 3
         if ($variant) {
             $variantData = $variant->variant ?? [];
             if (isset($variantData['stock_quantity']) && $variantData['stock_quantity'] !== null) {
-                if (empty($variantData['is_heritable'])) {
+                if (($variantData['is_heritable'] ?? 0) != 1) {
                     return [
                         'always_in_stock' => false,
                         'available'       => (int) $variantData['stock_quantity'],
@@ -154,14 +154,14 @@ class StockService
             }
         }
 
-        // 3. Canal de producto — si is_heritable: true cae al paso 4
+        // 3. Canal de producto — si is_heritable: 1 cae al paso 4
         if (!empty($product->stock_channels)) {
             $ch = collect($product->stock_channels)->firstWhere('channel', $channelId);
             if ($ch) {
                 if (($ch['stock_status'] ?? null) == 1) {
                     return ['always_in_stock' => true];
                 }
-                if (empty($ch['is_heritable'])) {
+                if (($ch['is_heritable'] ?? 0) != 1) {
                     return [
                         'always_in_stock' => false,
                         'available'       => (int) ($ch['stock_quantity'] ?? 0),

@@ -519,7 +519,7 @@ class ProductController extends Controller
             'variants.*.stock_status' => 'nullable|integer|exists:product_stock_statuses,id',
             'variants.*.stock_quantity' => 'nullable|integer',
             'variants.*.stock_alert' => 'nullable|integer|min:0',
-            'variants.*.is_heritable' => 'nullable|boolean',
+            'variants.*.is_heritable' => 'nullable|integer|in:0,1',
             'variants.*.wholesale_price' => 'nullable|numeric',
             'variants.*.wholesale_min_amount' => 'nullable|integer|min:0',
             'variants.*.order' => 'nullable|integer|min:0',
@@ -586,7 +586,7 @@ class ProductController extends Controller
             'stock_channels.*.stock_status_name' => 'string|max:100',
             'stock_channels.*.stock_quantity' => 'nullable|integer',
             'stock_channels.*.stock_alert' => 'nullable|integer|min:0',
-            'stock_channels.*.is_heritable' => 'nullable|boolean',
+            'stock_channels.*.is_heritable' => 'nullable|integer|in:0,1',
         ];
         $internalValidator = Validator::make($decodedData, $internalJsonRules);
         if ($internalValidator->fails()) {
@@ -1076,7 +1076,7 @@ class ProductController extends Controller
             'variants.*.stock_status' => 'nullable|integer|exists:product_stock_statuses,id',
             'variants.*.stock_quantity' => 'nullable|integer',
             'variants.*.stock_alert' => 'nullable|integer|min:0',
-            'variants.*.is_heritable' => 'nullable|boolean',
+            'variants.*.is_heritable' => 'nullable|integer|in:0,1',
             'variants.*.wholesale_price' => 'nullable|numeric',
             'variants.*.wholesale_min_amount' => 'nullable|integer|min:0',
             'variants.*.order' => 'nullable|integer|min:0',
@@ -1145,7 +1145,7 @@ class ProductController extends Controller
             'stock_channels.*.stock_status_name' => 'string|max:100',
             'stock_channels.*.stock_quantity' => 'nullable|integer',
             'stock_channels.*.stock_alert' => 'nullable|integer|min:0',
-            'stock_channels.*.is_heritable' => 'nullable|boolean',
+            'stock_channels.*.is_heritable' => 'nullable|integer|in:0,1',
         ];
         $internalValidator = Validator::make($decodedData, $internalJsonRules);
         if ($internalValidator->fails()) {
