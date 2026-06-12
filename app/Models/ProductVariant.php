@@ -38,9 +38,21 @@ class ProductVariant extends Model
         return AttributeValue::whereIn('id', $ids)->with('attribute')->get();
     }
 
+    private static function normalizeStockChannels(?array $channels): ?array
+    {
+        if (!$channels) return $channels;
+        return array_map(function ($ch) {
+            if (isset($ch['is_heritable'])) {
+                $ch['is_heritable'] = (int) $ch['is_heritable'];
+            }
+            return $ch;
+        }, $channels);
+    }
+
     public function toArray()
     {
         $array = parent::toArray();
+        $array['stock_channels'] = self::normalizeStockChannels($this->stock_channels);
 
         $array['variant'] = [
             'sku' => $this->variant['sku'] ?? null,
@@ -57,6 +69,7 @@ class ProductVariant extends Model
             'wholesale_price' => $this->variant['wholesale_price'] ?? null,
             'wholesale_min_amount' => $this->variant['wholesale_min_amount'] ?? null,
             'order' => $this->variant['order'] ?? null,
+            'is_heritable' => isset($this->variant['is_heritable']) ? (int) $this->variant['is_heritable'] : null,
             'attributesvalues' => $this->attributes_values->map(function ($attr) {
                 return [
                     'id' => $attr->id,

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\StockMovement;
+use App\Services\StockService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -172,24 +173,28 @@ class ProductVariantController extends Controller
 
             // Registrar movimiento de stock si se envió quantity
             if ($quantity !== null) {
-                $updated = false;
+                $stockSource = null;
 
-                foreach ($stockChannels as &$channel) {
-                    if ($channelId === null || $channel['channel'] == $channelId) {
-                        $channel['stock_quantity'] = max(0, ($channel['stock_quantity'] ?? 0) + $quantity);
-                        $updated = true;
-                        if ($channelId !== null) break;
+                if ($channelId === null) {
+                    // Stock general: variante si no es heritable, sino producto
+                    $variantData = $variant->variant ?? [];
+                    $stockSource = ($variantData['is_heritable'] ?? 0) == 1 ? 'product_general' : 'variant_general';
+                    StockService::applyStockChange($product, $variant, 0, $quantity, $stockSource);
+                } else {
+                    // Canal específico: validar que exista y aplicar cascade
+                    $channelData = collect($stockChannels)->firstWhere('channel', $channelId);
+                    if (!$channelData) {
+                        $skipped++;
+                        continue;
                     }
+                    $stock = StockService::resolveStock($product, $variant, $channelId);
+                    if (!$stock || $stock['always_in_stock']) {
+                        $skipped++;
+                        continue;
+                    }
+                    StockService::applyStockChange($product, $variant, $channelId, $quantity, $stock['source']);
+                    $stockSource = $stock['source'];
                 }
-                unset($channel);
-
-                if (!$updated) {
-                    $skipped++;
-                    continue;
-                }
-
-                $variant->stock_channels = $stockChannels;
-                $variant->save();
 
                 StockMovement::create([
                     'product_id'         => $product->id,
@@ -198,6 +203,8 @@ class ProductVariantController extends Controller
                     'note'               => $note,
                     'user_id'            => Auth::id(),
                     'sale_id'            => null,
+                    'channel_id'         => $channelId,
+                    'stock_source'       => $stockSource,
                 ]);
             }
 

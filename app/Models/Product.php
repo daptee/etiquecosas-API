@@ -72,6 +72,20 @@ class Product extends Model
         'wholesale_hidden' => 'boolean',
     ];
 
+    public function toArray()
+    {
+        $array = parent::toArray();
+        if (!empty($array['stock_channels'])) {
+            $array['stock_channels'] = array_map(function ($ch) {
+                if (isset($ch['is_heritable'])) {
+                    $ch['is_heritable'] = (int) $ch['is_heritable'];
+                }
+                return $ch;
+            }, $array['stock_channels']);
+        }
+        return $array;
+    }
+
     public function type()
     {
         return $this->belongsTo(ProductType::class, 'product_type_id');

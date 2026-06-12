@@ -7,6 +7,7 @@ CREATE TABLE stock_movements (
     user_id BIGINT UNSIGNED NULL,
     sale_id BIGINT NULL,
     channel_id BIGINT NULL,
+    stock_source VARCHAR(30) NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_stock_movements_product

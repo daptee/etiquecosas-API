@@ -20,6 +20,7 @@ class StockMovement extends Model
         'user_id',
         'sale_id',
         'channel_id',
+        'stock_source',
     ];
 
     protected $casts = [
