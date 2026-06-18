@@ -546,7 +546,9 @@ class ProductController extends Controller
             if ($request->has($field) && is_string($request->input($field))) {
                 $decodedValue = json_decode($request->input($field), true);
                 if (json_last_error() === JSON_ERROR_NONE) {
-                    $decodedData[$field] = $decodedValue;
+                    $decodedData[$field] = is_array($decodedValue)
+                        ? $this->normalizeEmptyStringsToNull($decodedValue)
+                        : $decodedValue;
                 } else {
                     $validator->errors()->add($field, 'El campo ' . $field . ' no es un JSON válido después de la decodificación.');
                     $this->logAudit(Auth::user(), 'Product Validation Fail (JSON Decode Error)', $request->all(), $validator->errors());
@@ -634,6 +636,18 @@ class ProductController extends Controller
         }
 
         return $productData;
+    }
+
+    protected function normalizeEmptyStringsToNull(array $data): array
+    {
+        foreach ($data as $key => $value) {
+            if (is_array($value)) {
+                $data[$key] = $this->normalizeEmptyStringsToNull($value);
+            } elseif ($value === '') {
+                $data[$key] = null;
+            }
+        }
+        return $data;
     }
 
     protected function syncProductRelations(Product $product, Request $request)
@@ -788,7 +802,7 @@ class ProductController extends Controller
                     $decoded = json_decode($variantData['stock_channels'], true);
 
                     if (json_last_error() === JSON_ERROR_NONE) {
-                        $variantData['stock_channels'] = $decoded;
+                        $variantData['stock_channels'] = $this->normalizeEmptyStringsToNull($decoded);
                     } else {
                         Log::error("createProductVariants: Error al decodificar JSON en stock_channels para variante $index: " . json_last_error_msg());
                         throw \Illuminate\Validation\ValidationException::withMessages([
@@ -1106,7 +1120,9 @@ class ProductController extends Controller
             if ($request->has($field) && is_string($request->input($field))) {
                 $decodedValue = json_decode($request->input($field), true);
                 if (json_last_error() === JSON_ERROR_NONE) {
-                    $decodedData[$field] = $decodedValue;
+                    $decodedData[$field] = is_array($decodedValue)
+                        ? $this->normalizeEmptyStringsToNull($decodedValue)
+                        : $decodedValue;
                 } else {
                     $validator->errors()->add($field, 'El campo ' . $field . ' no es un JSON válido después de la decodificación.');
                     $this->logAudit(Auth::user(), 'Product Update Validation Fail (JSON Decode Error)', $request->all(), $validator->errors());
@@ -1318,7 +1334,7 @@ class ProductController extends Controller
                     $decoded = json_decode($variantData['stock_channels'], true);
 
                     if (json_last_error() === JSON_ERROR_NONE) {
-                        $variantData['stock_channels'] = $decoded;
+                        $variantData['stock_channels'] = $this->normalizeEmptyStringsToNull($decoded);
                     } else {
                         Log::error("updateProductVariants: Error al decodificar JSON en stock_channels para variante $index: " . json_last_error_msg());
                         throw \Illuminate\Validation\ValidationException::withMessages([
