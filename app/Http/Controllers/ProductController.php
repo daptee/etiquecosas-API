@@ -506,7 +506,8 @@ class ProductController extends Controller
             'attributes.*.id' => 'required_with:attributes.*|integer|exists:attributes,id',
             'attributes.*.order' => 'nullable|integer',
             'attributes_values' => 'nullable|array',
-            'attributes_values.*' => 'exists:attribute_values,id',
+            'attributes_values.*.id' => 'required|integer|exists:attribute_values,id',
+            'attributes_values.*.metadata_override' => 'nullable|array',
             'variants' => 'nullable|array',
             'variants.*.attributesvalues' => 'nullable|array',
             'variants.*.attributesvalues.*.id' => 'nullable|numeric',
@@ -714,11 +715,8 @@ class ProductController extends Controller
         }
 
         if ($request->has('attributes_values')) {
-            $attributesValues = collect($request->input('attributes_values'))
-                ->filter(fn($id) => is_numeric($id))
-                ->map(fn($id) => (int) $id)
-                ->toArray();
-            $product->attributeValues()->sync($attributesValues);
+            $syncData = $this->buildAttributeValuesSyncData($request->input('attributes_values'));
+            $product->attributeValues()->sync($syncData);
         } else {
             $product->attributeValues()->detach();
         }
@@ -1075,7 +1073,8 @@ class ProductController extends Controller
             'attributes.*.id' => 'required_with:attributes.*|integer|exists:attributes,id',
             'attributes.*.order' => 'nullable|integer',
             'attributes_values' => 'nullable|array',
-            'attributes_values.*' => 'exists:attribute_values,id',
+            'attributes_values.*.id' => 'required|integer|exists:attribute_values,id',
+            'attributes_values.*.metadata_override' => 'nullable|array',
             'variants' => 'nullable|array',
             'variants.*.id' => 'nullable|integer|exists:product_variants,id',
             'variants.*.attributesvalues' => 'nullable|array',
@@ -1298,11 +1297,8 @@ class ProductController extends Controller
         }
 
         if ($request->has('attributes_values')) {
-            $attributesValues = collect($request->input('attributes_values'))
-                ->filter(fn($id) => is_numeric($id))
-                ->map(fn($id) => (int) $id)
-                ->toArray();
-            $product->attributeValues()->sync($attributesValues);
+            $syncData = $this->buildAttributeValuesSyncData($request->input('attributes_values'));
+            $product->attributeValues()->sync($syncData);
         } else {
             $product->attributeValues()->detach();
         }
@@ -2085,5 +2081,71 @@ class ProductController extends Controller
                 ]
             ], 500);
         }
+    }
+
+    /**
+     * Sube imágenes como override de un attribute value para un producto específico.
+     * Almacena el override en el pivot attribute_value_product.metadata_override
+     */
+    public function uploadAttributeValueOverrideImages(Request $request, $productId, $attributeValueId)
+    {
+        $product = $this->findObject(Product::class, $productId);
+        $attributeValue = $this->findObject(\App\Models\AttributeValue::class, $attributeValueId);
+
+        $validator = Validator::make($request->all(), [
+            'images'   => 'required|array|min:1',
+            'images.*' => 'required|file|image|max:5120',
+        ]);
+        if ($validator->fails()) {
+            return $this->validationError($validator->errors());
+        }
+
+        $pivot = $product->attributeValues()->where('attribute_value_id', $attributeValueId)->first();
+        if (!$pivot) {
+            return $this->error('El attribute value no está asociado a este producto', 404);
+        }
+
+        $currentOverride = $pivot->pivot->metadata_override
+            ? json_decode($pivot->pivot->metadata_override, true)
+            : [];
+
+        $images = $currentOverride['images'] ?? [];
+        foreach ($request->file('images') as $file) {
+            $path = 'images/attributes/product-overrides/' . uniqid('po_') . '.' . $file->getClientOriginalExtension();
+            Storage::disk('public_uploads')->put($path, file_get_contents($file));
+            $images[] = $path;
+        }
+
+        $currentOverride['images'] = $images;
+        $product->attributeValues()->updateExistingPivot($attributeValueId, [
+            'metadata_override' => json_encode($currentOverride),
+        ]);
+
+        $this->logAudit(Auth::user(), 'Upload Attribute Value Override Images', [
+            'product_id' => $productId,
+            'attribute_value_id' => $attributeValueId,
+        ], $currentOverride);
+
+        return $this->success($currentOverride, 'Imágenes de override subidas correctamente');
+    }
+
+    /**
+     * Construye el array de sync para attributeValues soportando dos formatos:
+     *   - Nuevo: [{"id": 1, "metadata_override": {...}}, ...]
+     *   - Legacy: [1, 2, 3]  (IDs directos, sin override)
+     */
+    private function buildAttributeValuesSyncData(array $input): array
+    {
+        $syncData = [];
+        foreach ($input as $item) {
+            if (is_array($item) && isset($item['id'])) {
+                $id = (int) $item['id'];
+                $override = isset($item['metadata_override']) ? json_encode($item['metadata_override']) : null;
+                $syncData[$id] = ['metadata_override' => $override];
+            } elseif (is_numeric($item)) {
+                $syncData[(int) $item] = ['metadata_override' => null];
+            }
+        }
+        return $syncData;
     }
 }

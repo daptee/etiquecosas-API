@@ -879,12 +879,16 @@ class SaleController extends Controller
         $sale->sale_status_id = $request->sale_status_id;
         $sale->save();
 
-        // Guardar historial
-        SaleStatusHistory::create([
-            'sale_id' => $sale->id,
-            'sale_status_id' => $request->sale_status_id,
-            'date' => Carbon::now(),
-        ]);
+        // Guardar historial solo para estados que no sean aprobación (status=1).
+        // Para status=1, el historial se guarda DESPUÉS de discountStock para evitar
+        // que hasBeenApproved() devuelva true si los mails o el descuento fallan.
+        if ($request->sale_status_id != 1) {
+            SaleStatusHistory::create([
+                'sale_id' => $sale->id,
+                'sale_status_id' => $request->sale_status_id,
+                'date' => Carbon::now(),
+            ]);
+        }
 
         $sale->load(['client', 'products.product', 'products.variant', 'shippingMethod', 'locality']);
 
@@ -939,6 +943,12 @@ class SaleController extends Controller
             Mail::to($notifyEmail)->send(new OrderSummaryMailTo($sale));
 
             StockService::discountStock($sale);
+
+            SaleStatusHistory::create([
+                'sale_id' => $sale->id,
+                'sale_status_id' => 1,
+                'date' => Carbon::now(),
+            ]);
 
             // Usar la fecha de aprobación (ahora) en lugar de la fecha de creación de la venta
             $fechaAprobacion = Carbon::now();

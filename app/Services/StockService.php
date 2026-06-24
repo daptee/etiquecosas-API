@@ -126,19 +126,22 @@ class StockService
     public static function resolveStock($product, $variant, int $channelId): ?array
     {
         // 1. Canal de variante — si is_heritable: 1 cae al paso 2
+        // El chequeo de always_in_stock solo aplica si is_heritable=0 (la variante gestiona
+        // su propio stock). Si is_heritable=1, se ignora stock_status y se hereda del padre.
         if ($variant && !empty($variant->stock_channels)) {
             $ch = collect($variant->stock_channels)->firstWhere('channel', $channelId);
             if ($ch) {
-                if (($ch['stock_status'] ?? null) == 1) {
-                    return ['always_in_stock' => true];
-                }
                 if (($ch['is_heritable'] ?? 0) != 1) {
+                    if (($ch['stock_status'] ?? null) == 1) {
+                        return ['always_in_stock' => true];
+                    }
                     return [
                         'always_in_stock' => false,
                         'available'       => (int) ($ch['stock_quantity'] ?? 0),
                         'source'          => 'variant_channel',
                     ];
                 }
+                // is_heritable=1 → cae al paso 2 sin importar stock_status
             }
         }
 
@@ -157,19 +160,21 @@ class StockService
         }
 
         // 3. Canal de producto — si is_heritable: 1 cae al paso 4
+        // Misma lógica: always_in_stock solo aplica si is_heritable=0.
         if (!empty($product->stock_channels)) {
             $ch = collect($product->stock_channels)->firstWhere('channel', $channelId);
             if ($ch) {
-                if (($ch['stock_status'] ?? null) == 1) {
-                    return ['always_in_stock' => true];
-                }
                 if (($ch['is_heritable'] ?? 0) != 1) {
+                    if (($ch['stock_status'] ?? null) == 1) {
+                        return ['always_in_stock' => true];
+                    }
                     return [
                         'always_in_stock' => false,
                         'available'       => (int) ($ch['stock_quantity'] ?? 0),
                         'source'          => 'product_channel',
                     ];
                 }
+                // is_heritable=1 → cae al paso 4 sin importar stock_status
             }
         }
 

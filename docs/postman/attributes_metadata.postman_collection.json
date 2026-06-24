@@ -1,0 +1,508 @@
+{
+  "info": {
+    "name": "Etiquecosas — Atributos con Tipo y Metadata",
+    "description": "Colección completa para el sistema de atributos con tipos (image, color, icon, tipo, text), metadata en values y overrides por producto.\n\n**Variables necesarias:**\n- `base_url` → ej: http://localhost:8000/api\n- `token` → JWT obtenido en el login",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8000/api", "type": "string" },
+    { "key": "token",    "value": "TU_JWT_TOKEN_ACA",          "type": "string" }
+  ],
+  "item": [
+
+    {
+      "name": "Atributos",
+      "item": [
+
+        {
+          "name": "Listar atributos",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept",        "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/attributes?search=color&quantity=10&page=1",
+              "host": ["{{base_url}}"],
+              "path": ["attributes"],
+              "query": [
+                { "key": "search",   "value": "color",  "description": "Filtro por nombre (opcional)" },
+                { "key": "quantity", "value": "10",     "description": "Items por página (omitir para traer todos)" },
+                { "key": "page",     "value": "1" }
+              ]
+            },
+            "description": "Devuelve atributos con sus values y el campo `type` y `metadata`."
+          },
+          "response": [
+            {
+              "name": "Respuesta exitosa",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Atributos obtenidos\",\n  \"data\": [\n    {\n      \"id\": 1,\n      \"name\": \"Color\",\n      \"type\": \"color\",\n      \"status_id\": 1,\n      \"values\": [\n        {\n          \"id\": 10,\n          \"value\": \"Rojo\",\n          \"metadata\": {\n            \"colors\": [\"#FF0000\", \"#CC0000\"]\n          },\n          \"attribute_id\": 1\n        },\n        {\n          \"id\": 11,\n          \"value\": \"Azul\",\n          \"metadata\": {\n            \"colors\": [\"#0000FF\"]\n          },\n          \"attribute_id\": 1\n        }\n      ]\n    }\n  ]\n}"
+            }
+          ]
+        },
+
+        {
+          "name": "Crear atributo — tipo color",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/attributes",
+              "host": ["{{base_url}}"],
+              "path": ["attributes"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Color de tela\",\n  \"type\": \"color\",\n  \"statusId\": 1,\n  \"values\": [\n    {\n      \"value\": \"Rojo\",\n      \"statusId\": 1,\n      \"metadata\": {\n        \"colors\": [\"#FF0000\", \"#CC0000\"]\n      }\n    },\n    {\n      \"value\": \"Azul marino\",\n      \"statusId\": 1,\n      \"metadata\": {\n        \"colors\": [\"#001F5B\"]\n      }\n    },\n    {\n      \"value\": \"Bicolor rojo/blanco\",\n      \"statusId\": 1,\n      \"metadata\": {\n        \"colors\": [\"#FF0000\", \"#FFFFFF\"]\n      }\n    }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Crea un atributo de tipo `color`. Cada value puede tener uno o múltiples colores hex en `metadata.colors`."
+          },
+          "response": [
+            {
+              "name": "Creado exitosamente",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Atributo creado\",\n  \"data\": {\n    \"id\": 5,\n    \"name\": \"Color de tela\",\n    \"type\": \"color\",\n    \"status_id\": 1,\n    \"values\": [\n      { \"id\": 20, \"value\": \"Rojo\",           \"metadata\": { \"colors\": [\"#FF0000\", \"#CC0000\"] } },\n      { \"id\": 21, \"value\": \"Azul marino\",    \"metadata\": { \"colors\": [\"#001F5B\"] } },\n      { \"id\": 22, \"value\": \"Bicolor rojo/blanco\", \"metadata\": { \"colors\": [\"#FF0000\", \"#FFFFFF\"] } }\n    ]\n  }\n}"
+            }
+          ]
+        },
+
+        {
+          "name": "Crear atributo — tipo icono",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/attributes",
+              "host": ["{{base_url}}"],
+              "path": ["attributes"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Material\",\n  \"type\": \"icon\",\n  \"statusId\": 1,\n  \"values\": [\n    {\n      \"value\": \"Algodón\",\n      \"metadata\": {\n        \"icons\": [\"icon-cotton\", \"icon-natural\"]\n      }\n    },\n    {\n      \"value\": \"Poliéster\",\n      \"metadata\": {\n        \"icons\": [\"icon-polyester\"]\n      }\n    }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Crea un atributo de tipo `icon`. `metadata.icons` es un array de strings con los nombres/claves de los iconos."
+          },
+          "response": []
+        },
+
+        {
+          "name": "Crear atributo — tipo image (sin imágenes aún)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/attributes",
+              "host": ["{{base_url}}"],
+              "path": ["attributes"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Estampado\",\n  \"type\": \"image\",\n  \"statusId\": 1,\n  \"values\": [\n    { \"value\": \"Floral\",   \"statusId\": 1 },\n    { \"value\": \"Geométrico\", \"statusId\": 1 },\n    { \"value\": \"Liso\",     \"statusId\": 1 }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Crea el atributo de tipo `image`. Las imágenes se suben luego value por value con el endpoint `POST /attributes/values/{id}/images`."
+          },
+          "response": []
+        },
+
+        {
+          "name": "Crear atributo — tipo text",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/attributes",
+              "host": ["{{base_url}}"],
+              "path": ["attributes"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Talle\",\n  \"type\": \"text\",\n  \"statusId\": 1,\n  \"values\": [\n    { \"value\": \"XS\", \"metadata\": { \"texts\": [\"Extra Small\", \"34\"] } },\n    { \"value\": \"S\",  \"metadata\": { \"texts\": [\"Small\", \"36\"] } },\n    { \"value\": \"M\",  \"metadata\": { \"texts\": [\"Medium\", \"38\"] } },\n    { \"value\": \"L\",  \"metadata\": { \"texts\": [\"Large\", \"40\"] } },\n    { \"value\": \"XL\", \"metadata\": { \"texts\": [\"Extra Large\", \"42\"] } }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Atributo tipo `text`. `metadata.texts` puede contener etiquetas alternativas, equivalencias de medidas, etc."
+          },
+          "response": []
+        },
+
+        {
+          "name": "Actualizar atributo",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/attributes/5",
+              "host": ["{{base_url}}"],
+              "path": ["attributes", "5"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Color de tela\",\n  \"type\": \"color\",\n  \"statusId\": 1,\n  \"values\": [\n    {\n      \"id\": 20,\n      \"value\": \"Rojo intenso\",\n      \"metadata\": {\n        \"colors\": [\"#FF0000\", \"#B00000\"]\n      }\n    },\n    {\n      \"id\": 21,\n      \"value\": \"Azul marino\",\n      \"metadata\": {\n        \"colors\": [\"#001F5B\"]\n      }\n    }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Actualiza el atributo y sus values.\n- Values con `id` → se actualizan\n- Values sin `id` → se crean\n- Values existentes ausentes en el payload → se eliminan (y sus imágenes del storage)"
+          },
+          "response": []
+        },
+
+        {
+          "name": "Eliminar atributo",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept",        "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/attributes/5",
+              "host": ["{{base_url}}"],
+              "path": ["attributes", "5"]
+            },
+            "description": "Soft delete del atributo. Elimina también las imágenes del storage de todos sus values."
+          },
+          "response": []
+        }
+
+      ]
+    },
+
+    {
+      "name": "Imágenes de Attribute Values",
+      "item": [
+
+        {
+          "name": "Subir imágenes a un value",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept",        "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/attributes/values/30/images",
+              "host": ["{{base_url}}"],
+              "path": ["attributes", "values", "30", "images"]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "images[]",
+                  "type": "file",
+                  "description": "Primera imagen del value",
+                  "src": []
+                },
+                {
+                  "key": "images[]",
+                  "type": "file",
+                  "description": "Segunda imagen (opcional — se pueden subir N imágenes en un solo request)",
+                  "src": []
+                }
+              ]
+            },
+            "description": "Sube una o múltiples imágenes a un attribute value específico.\n\n- Body: `multipart/form-data`\n- Campo: `images[]` (array de archivos, máx 5MB c/u)\n- Las rutas se agregan al array `metadata.images` del value\n- El value debe existir y pertenecer a un atributo de tipo `image`"
+          },
+          "response": [
+            {
+              "name": "Subida exitosa",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Imágenes subidas correctamente\",\n  \"data\": {\n    \"id\": 30,\n    \"value\": \"Floral\",\n    \"metadata\": {\n      \"images\": [\n        \"images/attributes/values/av_64a1b2c3d4e5f.jpg\",\n        \"images/attributes/values/av_64a1b2c3d4e60.png\"\n      ]\n    },\n    \"attribute_id\": 8\n  }\n}"
+            }
+          ]
+        },
+
+        {
+          "name": "Eliminar una imagen de un value",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/attributes/values/30/images",
+              "host": ["{{base_url}}"],
+              "path": ["attributes", "values", "30", "images"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"image_path\": \"images/attributes/values/av_64a1b2c3d4e5f.jpg\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Elimina una imagen puntual del metadata del value y del storage.\n\n`image_path` debe coincidir exactamente con el path almacenado en `metadata.images`."
+          },
+          "response": [
+            {
+              "name": "Eliminada exitosamente",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Imagen eliminada correctamente\",\n  \"data\": {\n    \"id\": 30,\n    \"value\": \"Floral\",\n    \"metadata\": {\n      \"images\": [\n        \"images/attributes/values/av_64a1b2c3d4e60.png\"\n      ]\n    }\n  }\n}"
+            },
+            {
+              "name": "Imagen no encontrada",
+              "status": "Not Found",
+              "code": 404,
+              "body": "{\n  \"status\": \"error\",\n  \"message\": \"La imagen no existe en este attribute value\"\n}"
+            }
+          ]
+        }
+
+      ]
+    },
+
+    {
+      "name": "Productos — Atributos y Overrides",
+      "item": [
+
+        {
+          "name": "Crear producto con attribute values (nuevo formato)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/products",
+              "host": ["{{base_url}}"],
+              "path": ["products"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Remera básica\",\n  \"sku\": \"REM-001\",\n  \"price\": 5000,\n  \"product_status_id\": 2,\n  \"attributes\": [\n    { \"id\": 1, \"order\": 0 },\n    { \"id\": 3, \"order\": 1 }\n  ],\n  \"attributes_values\": [\n    {\n      \"id\": 10,\n      \"metadata_override\": {\n        \"colors\": [\"#FF6600\"]\n      }\n    },\n    {\n      \"id\": 11\n    },\n    {\n      \"id\": 25,\n      \"metadata_override\": {\n        \"icons\": [\"icon-cotton-organic\"]\n      }\n    }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Asocia attribute values al producto con el **nuevo formato**.\n\nCada elemento de `attributes_values` es un objeto con:\n- `id` (requerido): ID del attribute value\n- `metadata_override` (opcional): reemplaza el metadata por defecto del value **solo para este producto**\n\n**Retrocompatibilidad**: también se aceptan IDs directos `[10, 11, 25]` (sin override)."
+          },
+          "response": []
+        },
+
+        {
+          "name": "Actualizar producto — cambiar override de color",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/products/42",
+              "host": ["{{base_url}}"],
+              "path": ["products", "42"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Remera básica edición verano\",\n  \"product_status_id\": 2,\n  \"attributes_values\": [\n    {\n      \"id\": 10,\n      \"metadata_override\": {\n        \"colors\": [\"#FFD700\", \"#FFA500\"]\n      }\n    },\n    {\n      \"id\": 30,\n      \"metadata_override\": {\n        \"images\": []\n      }\n    }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Actualiza el producto y reemplaza los overrides de attribute values.\n\nPasar `metadata_override: null` (o simplemente no incluirlo) limpia el override y el producto vuelve a usar el metadata por defecto del value."
+          },
+          "response": []
+        },
+
+        {
+          "name": "Subir imágenes de override para un value en un producto",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept",        "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/products/42/attribute-values/30/override-images",
+              "host": ["{{base_url}}"],
+              "path": ["products", "42", "attribute-values", "30", "override-images"]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "images[]",
+                  "type": "file",
+                  "description": "Imagen que reemplaza la imagen por defecto del value para este producto",
+                  "src": []
+                },
+                {
+                  "key": "images[]",
+                  "type": "file",
+                  "description": "Segunda imagen de override (opcional)",
+                  "src": []
+                }
+              ]
+            },
+            "description": "Sube imágenes de override específicas para la combinación **producto + attribute value**.\n\n- Las imágenes se guardan en `images/attributes/product-overrides/`\n- Se almacenan en `attribute_value_product.metadata_override.images`\n- Reemplazan las imágenes por defecto del value **solo para este producto**\n- El attribute value (id=30) debe estar previamente asociado al producto (id=42)"
+          },
+          "response": [
+            {
+              "name": "Override subido exitosamente",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Imágenes de override subidas correctamente\",\n  \"data\": {\n    \"images\": [\n      \"images/attributes/product-overrides/po_64a1b9f2e3d4a.jpg\",\n      \"images/attributes/product-overrides/po_64a1b9f2e3d4b.png\"\n    ]\n  }\n}"
+            },
+            {
+              "name": "Value no asociado al producto",
+              "status": "Not Found",
+              "code": 404,
+              "body": "{\n  \"status\": \"error\",\n  \"message\": \"El attribute value no está asociado a este producto\"\n}"
+            }
+          ]
+        },
+
+        {
+          "name": "Crear producto — retrocompatibilidad (IDs directos)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/products",
+              "host": ["{{base_url}}"],
+              "path": ["products"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Producto sin override\",\n  \"sku\": \"PROD-002\",\n  \"price\": 3000,\n  \"product_status_id\": 2,\n  \"attributes_values\": [10, 11, 25]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "El formato legacy de IDs directos sigue funcionando. En este caso `metadata_override` queda `null` y el producto usa el metadata por defecto de cada value."
+          },
+          "response": []
+        }
+
+      ]
+    },
+
+    {
+      "name": "Referencia rápida — Estructura de metadata",
+      "item": [
+
+        {
+          "name": "[DOC] Tipo: color — metadata esperado",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/attributes",
+              "host": ["{{base_url}}"],
+              "path": ["attributes"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ejemplo color\",\n  \"type\": \"color\",\n  \"values\": [\n    {\n      \"value\": \"Nombre del value\",\n      \"metadata\": {\n        \"colors\": [\"#HEX1\", \"#HEX2\"]\n      }\n    }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "**type: color**\n\n`metadata.colors` → array de códigos HEX. Permite representar bicolores o gradientes.\n\nEjemplos:\n- Rojo → `[\"#FF0000\"]`\n- Bicolor → `[\"#FF0000\", \"#0000FF\"]`"
+          },
+          "response": []
+        },
+
+        {
+          "name": "[DOC] Tipo: icon — metadata esperado",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/attributes",
+              "host": ["{{base_url}}"],
+              "path": ["attributes"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ejemplo icon\",\n  \"type\": \"icon\",\n  \"values\": [\n    {\n      \"value\": \"Nombre del value\",\n      \"metadata\": {\n        \"icons\": [\"nombre-icono-1\", \"nombre-icono-2\"]\n      }\n    }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "**type: icon**\n\n`metadata.icons` → array de strings con los identificadores de iconos (a definir con front). Pueden ser claves de una librería de iconos, nombres de archivos, etc."
+          },
+          "response": []
+        },
+
+        {
+          "name": "[DOC] Tipo: image — flujo completo",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/attributes",
+              "host": ["{{base_url}}"],
+              "path": ["attributes"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ejemplo image\",\n  \"type\": \"image\",\n  \"values\": [\n    { \"value\": \"Estampado A\" },\n    { \"value\": \"Estampado B\" }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "**type: image — flujo recomendado:**\n\n1. `POST /attributes` → crear el atributo con los values (sin imágenes)\n2. Tomar los IDs de cada value de la respuesta\n3. `POST /attributes/values/{id}/images` → subir imágenes por cada value\n4. (Opcional) `POST /products/{pid}/attribute-values/{vid}/override-images` → subir imagen de override para un producto puntual\n\n`metadata.images` es llenado automáticamente por el endpoint de upload."
+          },
+          "response": []
+        },
+
+        {
+          "name": "[DOC] Tipo: text — metadata esperado",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/attributes",
+              "host": ["{{base_url}}"],
+              "path": ["attributes"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ejemplo text\",\n  \"type\": \"text\",\n  \"values\": [\n    {\n      \"value\": \"M\",\n      \"metadata\": {\n        \"texts\": [\"Medium\", \"38\", \"Mediano\"]\n      }\n    }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "**type: text**\n\n`metadata.texts` → array de strings con etiquetas o equivalencias alternativas. Útil para talles con equivalencias internacionales, medidas, nombres largos, etc."
+          },
+          "response": []
+        }
+
+      ]
+    }
+
+  ]
+}

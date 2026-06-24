@@ -14,7 +14,12 @@ class Attribute extends Model
 
     protected $fillable = [
         'name',
+        'type',
         'status_id',
+    ];
+
+    protected $casts = [
+        'type' => 'string',
     ];
 
     public function generalStatus() 
