@@ -14,8 +14,13 @@ class AttributeValue extends Model
 
     protected $fillable = [
         'value',
+        'metadata',
         'status_id',
         'attribute_id',
+    ];
+
+    protected $casts = [
+        'metadata' => 'array',
     ];
 
     public function generalStatus() 

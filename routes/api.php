@@ -158,6 +158,9 @@ Route::middleware('jwt.auth')->prefix('attributes')->group(function () {
     Route::post('/', [AttributeController::class, 'store']);
     Route::put('/{id}', [AttributeController::class, 'update']);
     Route::delete('/{id}', [AttributeController::class, 'delete']);
+    // Imágenes de attribute values
+    Route::post('/values/{id}/images', [AttributeController::class, 'uploadValueImages']);
+    Route::delete('/values/{id}/images', [AttributeController::class, 'deleteValueImage']);
 });
 
 // Cost
@@ -265,6 +268,8 @@ Route::middleware('jwt.auth')->prefix('products')->group(function () {
     Route::post('/{id}/variants/bulk-update-stock', [ProductVariantController::class, 'bulkUpdateStock']);
     // Reordenar galería de imágenes
     Route::put('/{id}/images/positions', [ProductController::class, 'updateImagePositions']);
+    // Override de imágenes de attribute value a nivel producto
+    Route::post('/{productId}/attribute-values/{attributeValueId}/override-images', [ProductController::class, 'uploadAttributeValueOverrideImages']);
 });
 
 // Coupon 

@@ -128,7 +128,7 @@ class Product extends Model
 
     public function attributeValues()
     {
-        return $this->belongsToMany(AttributeValue::class);
+        return $this->belongsToMany(AttributeValue::class)->withPivot('metadata_override');
     }
 
     public function variants()
