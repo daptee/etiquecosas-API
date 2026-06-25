@@ -15,6 +15,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\AttributeController;
+use App\Http\Controllers\TypographyController;
 use App\Http\Controllers\CostController;
 use App\Http\Controllers\ConfigurationTagController;
 use App\Http\Controllers\ProfileController;
@@ -151,6 +152,19 @@ Route::middleware('jwt.auth')->prefix('provinces')->group(function () {
     Route::get('/', [ProvinceController::class, 'index']);
 });
 
+
+// Typography
+Route::middleware('jwt.auth')->prefix('typographies')->group(function () {
+    Route::get('/',                                    [TypographyController::class, 'index']);
+    Route::get('/{id}',                               [TypographyController::class, 'show']);
+    Route::post('/',                                   [TypographyController::class, 'store']);
+    Route::put('/{id}',                               [TypographyController::class, 'update']);
+    Route::patch('/{id}/toggle-status',               [TypographyController::class, 'toggleStatus']);
+    Route::delete('/{id}',                            [TypographyController::class, 'delete']);
+    // Archivos de fuente
+    Route::post('/{id}/files',                        [TypographyController::class, 'uploadFiles']);
+    Route::delete('/{id}/files/{fileId}',             [TypographyController::class, 'deleteFile']);
+});
 
 // Attribute
 Route::middleware('jwt.auth')->prefix('attributes')->group(function () {
