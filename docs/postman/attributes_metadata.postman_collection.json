@@ -1,7 +1,7 @@
 {
   "info": {
-    "name": "Etiquecosas — Atributos con Tipo y Metadata",
-    "description": "Colección completa para el sistema de atributos con tipos (image, color, icon, tipo, text), metadata en values y overrides por producto.\n\n**Variables necesarias:**\n- `base_url` → ej: http://localhost:8000/api\n- `token` → JWT obtenido en el login",
+    "name": "Etiquecosas — Atributos, Tipografías y Metadata",
+    "description": "Colección completa: atributos con tipo y metadata, tipografías (CRUD + archivos de fuente), imágenes de values, overrides por producto y enlace de tipografías a attribute values.\n\n**Variables necesarias:**\n- `base_url` → ej: http://localhost:8000/api\n- `token` → JWT obtenido en el login",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -27,19 +27,19 @@
               "host": ["{{base_url}}"],
               "path": ["attributes"],
               "query": [
-                { "key": "search",   "value": "color",  "description": "Filtro por nombre (opcional)" },
-                { "key": "quantity", "value": "10",     "description": "Items por página (omitir para traer todos)" },
+                { "key": "search",   "value": "color", "description": "Filtro por nombre (opcional)" },
+                { "key": "quantity", "value": "10",    "description": "Items por página (omitir para traer todos)" },
                 { "key": "page",     "value": "1" }
               ]
             },
-            "description": "Devuelve atributos con sus values y el campo `type` y `metadata`."
+            "description": "Devuelve atributos con sus values, el campo `type` y `metadata`."
           },
           "response": [
             {
               "name": "Respuesta exitosa",
               "status": "OK",
               "code": 200,
-              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Atributos obtenidos\",\n  \"data\": [\n    {\n      \"id\": 1,\n      \"name\": \"Color\",\n      \"type\": \"color\",\n      \"status_id\": 1,\n      \"values\": [\n        {\n          \"id\": 10,\n          \"value\": \"Rojo\",\n          \"metadata\": {\n            \"colors\": [\"#FF0000\", \"#CC0000\"]\n          },\n          \"attribute_id\": 1\n        },\n        {\n          \"id\": 11,\n          \"value\": \"Azul\",\n          \"metadata\": {\n            \"colors\": [\"#0000FF\"]\n          },\n          \"attribute_id\": 1\n        }\n      ]\n    }\n  ]\n}"
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Atributos obtenidos\",\n  \"data\": [\n    {\n      \"id\": 1,\n      \"name\": \"Color\",\n      \"type\": \"color\",\n      \"status_id\": 1,\n      \"values\": [\n        {\n          \"id\": 10,\n          \"value\": \"Rojo\",\n          \"metadata\": { \"colors\": [\"#FF0000\", \"#CC0000\"] },\n          \"attribute_id\": 1\n        }\n      ]\n    }\n  ]\n}"
             }
           ]
         },
@@ -53,30 +53,19 @@
               { "key": "Accept",        "value": "application/json" },
               { "key": "Content-Type",  "value": "application/json" }
             ],
-            "url": {
-              "raw": "{{base_url}}/attributes",
-              "host": ["{{base_url}}"],
-              "path": ["attributes"]
-            },
+            "url": { "raw": "{{base_url}}/attributes", "host": ["{{base_url}}"], "path": ["attributes"] },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Color de tela\",\n  \"type\": \"color\",\n  \"statusId\": 1,\n  \"values\": [\n    {\n      \"value\": \"Rojo\",\n      \"statusId\": 1,\n      \"metadata\": {\n        \"colors\": [\"#FF0000\", \"#CC0000\"]\n      }\n    },\n    {\n      \"value\": \"Azul marino\",\n      \"statusId\": 1,\n      \"metadata\": {\n        \"colors\": [\"#001F5B\"]\n      }\n    },\n    {\n      \"value\": \"Bicolor rojo/blanco\",\n      \"statusId\": 1,\n      \"metadata\": {\n        \"colors\": [\"#FF0000\", \"#FFFFFF\"]\n      }\n    }\n  ]\n}",
+              "raw": "{\n  \"name\": \"Color de tela\",\n  \"type\": \"color\",\n  \"statusId\": 1,\n  \"values\": [\n    { \"value\": \"Rojo\",              \"metadata\": { \"colors\": [\"#FF0000\", \"#CC0000\"] } },\n    { \"value\": \"Azul marino\",       \"metadata\": { \"colors\": [\"#001F5B\"] } },\n    { \"value\": \"Bicolor rojo/blanco\", \"metadata\": { \"colors\": [\"#FF0000\", \"#FFFFFF\"] } }\n  ]\n}",
               "options": { "raw": { "language": "json" } }
             },
-            "description": "Crea un atributo de tipo `color`. Cada value puede tener uno o múltiples colores hex en `metadata.colors`."
+            "description": "`metadata.colors` → array de HEX. Permite un color o bicolores."
           },
-          "response": [
-            {
-              "name": "Creado exitosamente",
-              "status": "OK",
-              "code": 200,
-              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Atributo creado\",\n  \"data\": {\n    \"id\": 5,\n    \"name\": \"Color de tela\",\n    \"type\": \"color\",\n    \"status_id\": 1,\n    \"values\": [\n      { \"id\": 20, \"value\": \"Rojo\",           \"metadata\": { \"colors\": [\"#FF0000\", \"#CC0000\"] } },\n      { \"id\": 21, \"value\": \"Azul marino\",    \"metadata\": { \"colors\": [\"#001F5B\"] } },\n      { \"id\": 22, \"value\": \"Bicolor rojo/blanco\", \"metadata\": { \"colors\": [\"#FF0000\", \"#FFFFFF\"] } }\n    ]\n  }\n}"
-            }
-          ]
+          "response": []
         },
 
         {
-          "name": "Crear atributo — tipo icono",
+          "name": "Crear atributo — tipo icon",
           "request": {
             "method": "POST",
             "header": [
@@ -84,17 +73,13 @@
               { "key": "Accept",        "value": "application/json" },
               { "key": "Content-Type",  "value": "application/json" }
             ],
-            "url": {
-              "raw": "{{base_url}}/attributes",
-              "host": ["{{base_url}}"],
-              "path": ["attributes"]
-            },
+            "url": { "raw": "{{base_url}}/attributes", "host": ["{{base_url}}"], "path": ["attributes"] },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Material\",\n  \"type\": \"icon\",\n  \"statusId\": 1,\n  \"values\": [\n    {\n      \"value\": \"Algodón\",\n      \"metadata\": {\n        \"icons\": [\"icon-cotton\", \"icon-natural\"]\n      }\n    },\n    {\n      \"value\": \"Poliéster\",\n      \"metadata\": {\n        \"icons\": [\"icon-polyester\"]\n      }\n    }\n  ]\n}",
+              "raw": "{\n  \"name\": \"Material\",\n  \"type\": \"icon\",\n  \"statusId\": 1,\n  \"values\": [\n    { \"value\": \"Algodón\",   \"metadata\": { \"icons\": [\"icon-cotton\", \"icon-natural\"] } },\n    { \"value\": \"Poliéster\", \"metadata\": { \"icons\": [\"icon-polyester\"] } }\n  ]\n}",
               "options": { "raw": { "language": "json" } }
             },
-            "description": "Crea un atributo de tipo `icon`. `metadata.icons` es un array de strings con los nombres/claves de los iconos."
+            "description": "`metadata.icons` → array de strings con los identificadores de iconos (a definir con front)."
           },
           "response": []
         },
@@ -108,17 +93,13 @@
               { "key": "Accept",        "value": "application/json" },
               { "key": "Content-Type",  "value": "application/json" }
             ],
-            "url": {
-              "raw": "{{base_url}}/attributes",
-              "host": ["{{base_url}}"],
-              "path": ["attributes"]
-            },
+            "url": { "raw": "{{base_url}}/attributes", "host": ["{{base_url}}"], "path": ["attributes"] },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Estampado\",\n  \"type\": \"image\",\n  \"statusId\": 1,\n  \"values\": [\n    { \"value\": \"Floral\",   \"statusId\": 1 },\n    { \"value\": \"Geométrico\", \"statusId\": 1 },\n    { \"value\": \"Liso\",     \"statusId\": 1 }\n  ]\n}",
+              "raw": "{\n  \"name\": \"Estampado\",\n  \"type\": \"image\",\n  \"statusId\": 1,\n  \"values\": [\n    { \"value\": \"Floral\" },\n    { \"value\": \"Geométrico\" },\n    { \"value\": \"Liso\" }\n  ]\n}",
               "options": { "raw": { "language": "json" } }
             },
-            "description": "Crea el atributo de tipo `image`. Las imágenes se suben luego value por value con el endpoint `POST /attributes/values/{id}/images`."
+            "description": "Las imágenes se suben luego value por value con `POST /attributes/values/{id}/images`."
           },
           "response": []
         },
@@ -132,17 +113,13 @@
               { "key": "Accept",        "value": "application/json" },
               { "key": "Content-Type",  "value": "application/json" }
             ],
-            "url": {
-              "raw": "{{base_url}}/attributes",
-              "host": ["{{base_url}}"],
-              "path": ["attributes"]
-            },
+            "url": { "raw": "{{base_url}}/attributes", "host": ["{{base_url}}"], "path": ["attributes"] },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"Talle\",\n  \"type\": \"text\",\n  \"statusId\": 1,\n  \"values\": [\n    { \"value\": \"XS\", \"metadata\": { \"texts\": [\"Extra Small\", \"34\"] } },\n    { \"value\": \"S\",  \"metadata\": { \"texts\": [\"Small\", \"36\"] } },\n    { \"value\": \"M\",  \"metadata\": { \"texts\": [\"Medium\", \"38\"] } },\n    { \"value\": \"L\",  \"metadata\": { \"texts\": [\"Large\", \"40\"] } },\n    { \"value\": \"XL\", \"metadata\": { \"texts\": [\"Extra Large\", \"42\"] } }\n  ]\n}",
               "options": { "raw": { "language": "json" } }
             },
-            "description": "Atributo tipo `text`. `metadata.texts` puede contener etiquetas alternativas, equivalencias de medidas, etc."
+            "description": "`metadata.texts` → etiquetas alternativas, equivalencias de medidas, etc."
           },
           "response": []
         },
@@ -156,19 +133,48 @@
               { "key": "Accept",        "value": "application/json" },
               { "key": "Content-Type",  "value": "application/json" }
             ],
-            "url": {
-              "raw": "{{base_url}}/attributes/5",
-              "host": ["{{base_url}}"],
-              "path": ["attributes", "5"]
-            },
+            "url": { "raw": "{{base_url}}/attributes/5", "host": ["{{base_url}}"], "path": ["attributes", "5"] },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Color de tela\",\n  \"type\": \"color\",\n  \"statusId\": 1,\n  \"values\": [\n    {\n      \"id\": 20,\n      \"value\": \"Rojo intenso\",\n      \"metadata\": {\n        \"colors\": [\"#FF0000\", \"#B00000\"]\n      }\n    },\n    {\n      \"id\": 21,\n      \"value\": \"Azul marino\",\n      \"metadata\": {\n        \"colors\": [\"#001F5B\"]\n      }\n    }\n  ]\n}",
+              "raw": "{\n  \"name\": \"Color de tela\",\n  \"type\": \"color\",\n  \"statusId\": 1,\n  \"values\": [\n    { \"id\": 20, \"value\": \"Rojo intenso\", \"metadata\": { \"colors\": [\"#FF0000\", \"#B00000\"] } },\n    { \"id\": 21, \"value\": \"Azul marino\",  \"metadata\": { \"colors\": [\"#001F5B\"] } }\n  ]\n}",
               "options": { "raw": { "language": "json" } }
             },
-            "description": "Actualiza el atributo y sus values.\n- Values con `id` → se actualizan\n- Values sin `id` → se crean\n- Values existentes ausentes en el payload → se eliminan (y sus imágenes del storage)"
+            "description": "Values con `id` → se actualizan. Sin `id` → se crean. Los ausentes → se eliminan (y sus imágenes del storage)."
           },
           "response": []
+        },
+
+        {
+          "name": "Crear atributo — tipo text con tipografías",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/attributes", "host": ["{{base_url}}"], "path": ["attributes"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Tipografía del producto\",\n  \"type\": \"text\",\n  \"statusId\": 1,\n  \"values\": [\n    {\n      \"value\": \"Serif clásico\",\n      \"statusId\": 1,\n      \"metadata\": {\n        \"typography_ids\": [1, 2]\n      }\n    },\n    {\n      \"value\": \"Sans-serif moderno\",\n      \"statusId\": 1,\n      \"metadata\": {\n        \"typography_ids\": [3]\n      }\n    },\n    {\n      \"value\": \"Caligráfico mixto\",\n      \"statusId\": 1,\n      \"metadata\": {\n        \"typography_ids\": [4, 5],\n        \"texts\": [\"Cursive\", \"Handwritten\"]\n      }\n    }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Crea un atributo cuyos values tienen tipografías asociadas via `metadata.typography_ids`.\n\n- Los IDs deben existir en la tabla `typographies` (validado en el servidor)\n- Se pueden asignar **múltiples tipografías** por value\n- Se puede combinar con otras claves de metadata (`texts`, `colors`, etc.)\n- Las tipografías deben crearse primero en `POST /typographies`"
+          },
+          "response": [
+            {
+              "name": "Creado exitosamente",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Atributo creado\",\n  \"data\": {\n    \"id\": 12,\n    \"name\": \"Tipografía del producto\",\n    \"type\": \"text\",\n    \"status_id\": 1,\n    \"values\": [\n      {\n        \"id\": 40,\n        \"value\": \"Serif clásico\",\n        \"metadata\": {\n          \"typography_ids\": [1, 2]\n        }\n      },\n      {\n        \"id\": 41,\n        \"value\": \"Sans-serif moderno\",\n        \"metadata\": {\n          \"typography_ids\": [3]\n        }\n      },\n      {\n        \"id\": 42,\n        \"value\": \"Caligráfico mixto\",\n        \"metadata\": {\n          \"typography_ids\": [4, 5],\n          \"texts\": [\"Cursive\", \"Handwritten\"]\n        }\n      }\n    ]\n  }\n}"
+            },
+            {
+              "name": "ID de tipografía inexistente",
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "body": "{\n  \"status\": \"error\",\n  \"message\": \"Error de validación\",\n  \"errors\": {\n    \"values.0.metadata.typography_ids.0\": [\"The selected values.0.metadata.typography_ids.0 is invalid.\"]\n  }\n}"
+            }
+          ]
         },
 
         {
@@ -179,12 +185,8 @@
               { "key": "Authorization", "value": "Bearer {{token}}" },
               { "key": "Accept",        "value": "application/json" }
             ],
-            "url": {
-              "raw": "{{base_url}}/attributes/5",
-              "host": ["{{base_url}}"],
-              "path": ["attributes", "5"]
-            },
-            "description": "Soft delete del atributo. Elimina también las imágenes del storage de todos sus values."
+            "url": { "raw": "{{base_url}}/attributes/5", "host": ["{{base_url}}"], "path": ["attributes", "5"] },
+            "description": "Soft delete. Elimina también las imágenes del storage de todos sus values."
           },
           "response": []
         }
@@ -212,28 +214,18 @@
             "body": {
               "mode": "formdata",
               "formdata": [
-                {
-                  "key": "images[]",
-                  "type": "file",
-                  "description": "Primera imagen del value",
-                  "src": []
-                },
-                {
-                  "key": "images[]",
-                  "type": "file",
-                  "description": "Segunda imagen (opcional — se pueden subir N imágenes en un solo request)",
-                  "src": []
-                }
+                { "key": "images[]", "type": "file", "description": "Primera imagen del value", "src": [] },
+                { "key": "images[]", "type": "file", "description": "Segunda imagen (se pueden subir N en un solo request)", "src": [] }
               ]
             },
-            "description": "Sube una o múltiples imágenes a un attribute value específico.\n\n- Body: `multipart/form-data`\n- Campo: `images[]` (array de archivos, máx 5MB c/u)\n- Las rutas se agregan al array `metadata.images` del value\n- El value debe existir y pertenecer a un atributo de tipo `image`"
+            "description": "Sube una o múltiples imágenes a un attribute value.\n\n- `multipart/form-data`, campo `images[]`, máx 5MB c/u\n- Las rutas se agregan a `metadata.images` del value"
           },
           "response": [
             {
               "name": "Subida exitosa",
               "status": "OK",
               "code": 200,
-              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Imágenes subidas correctamente\",\n  \"data\": {\n    \"id\": 30,\n    \"value\": \"Floral\",\n    \"metadata\": {\n      \"images\": [\n        \"images/attributes/values/av_64a1b2c3d4e5f.jpg\",\n        \"images/attributes/values/av_64a1b2c3d4e60.png\"\n      ]\n    },\n    \"attribute_id\": 8\n  }\n}"
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Imágenes subidas correctamente\",\n  \"data\": {\n    \"id\": 30,\n    \"value\": \"Floral\",\n    \"metadata\": {\n      \"images\": [\n        \"images/attributes/values/av_64a1b2c3d4e5f.jpg\",\n        \"images/attributes/values/av_64a1b2c3d4e60.png\"\n      ]\n    }\n  }\n}"
             }
           ]
         },
@@ -257,20 +249,239 @@
               "raw": "{\n  \"image_path\": \"images/attributes/values/av_64a1b2c3d4e5f.jpg\"\n}",
               "options": { "raw": { "language": "json" } }
             },
-            "description": "Elimina una imagen puntual del metadata del value y del storage.\n\n`image_path` debe coincidir exactamente con el path almacenado en `metadata.images`."
+            "description": "`image_path` debe coincidir exactamente con el path en `metadata.images`. Borra el archivo del storage y lo remueve del JSON."
           },
           "response": [
             {
-              "name": "Eliminada exitosamente",
+              "name": "Eliminada",
               "status": "OK",
               "code": 200,
-              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Imagen eliminada correctamente\",\n  \"data\": {\n    \"id\": 30,\n    \"value\": \"Floral\",\n    \"metadata\": {\n      \"images\": [\n        \"images/attributes/values/av_64a1b2c3d4e60.png\"\n      ]\n    }\n  }\n}"
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Imagen eliminada correctamente\",\n  \"data\": { \"id\": 30, \"metadata\": { \"images\": [\"images/attributes/values/av_64a1b2c3d4e60.png\"] } }\n}"
             },
             {
-              "name": "Imagen no encontrada",
+              "name": "No encontrada",
               "status": "Not Found",
               "code": 404,
-              "body": "{\n  \"status\": \"error\",\n  \"message\": \"La imagen no existe en este attribute value\"\n}"
+              "body": "{ \"status\": \"error\", \"message\": \"La imagen no existe en este attribute value\" }"
+            }
+          ]
+        }
+
+      ]
+    },
+
+    {
+      "name": "Tipografías",
+      "item": [
+
+        {
+          "name": "Listar tipografías",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept",        "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/typographies?search=helvetica&statusId=1&quantity=10&page=1",
+              "host": ["{{base_url}}"],
+              "path": ["typographies"],
+              "query": [
+                { "key": "search",   "value": "helvetica", "description": "Filtro por nombre (opcional)" },
+                { "key": "statusId", "value": "1",          "description": "1 = activo, 2 = inactivo (opcional)" },
+                { "key": "quantity", "value": "10",         "description": "Omitir para traer todas sin paginar" },
+                { "key": "page",     "value": "1" }
+              ]
+            },
+            "description": "Devuelve tipografías con sus archivos y estado."
+          },
+          "response": [
+            {
+              "name": "Respuesta exitosa",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Tipografías obtenidas\",\n  \"data\": [\n    {\n      \"id\": 1,\n      \"name\": \"Helvetica Neue\",\n      \"status_id\": 1,\n      \"general_status\": { \"id\": 1, \"name\": \"Activo\" },\n      \"files\": [\n        { \"id\": 1, \"file_name\": \"HelveticaNeue-Regular.ttf\", \"file_type\": \"ttf\", \"file_path\": \"fonts/typographies/1/font_64ab1.ttf\" },\n        { \"id\": 2, \"file_name\": \"HelveticaNeue-Bold.woff2\",  \"file_type\": \"woff2\", \"file_path\": \"fonts/typographies/1/font_64ab2.woff2\" }\n      ]\n    }\n  ]\n}"
+            }
+          ]
+        },
+
+        {
+          "name": "Obtener tipografía por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept",        "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/typographies/1", "host": ["{{base_url}}"], "path": ["typographies", "1"] },
+            "description": "Detalle de una tipografía con todos sus archivos."
+          },
+          "response": []
+        },
+
+        {
+          "name": "Crear tipografía (con archivos)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept",        "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/typographies", "host": ["{{base_url}}"], "path": ["typographies"] },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "name",     "value": "Helvetica Neue", "type": "text", "description": "Requerido. Debe ser único." },
+                { "key": "statusId", "value": "1",              "type": "text", "description": "Opcional. 1 = activo (default), 2 = inactivo" },
+                { "key": "files[]",  "type": "file", "description": ".ttf, .otf, .woff, .woff2 o .eot — máx 10MB por archivo", "src": [] },
+                { "key": "files[]",  "type": "file", "description": "Se pueden subir N archivos en el mismo request (Regular, Bold, Italic...)", "src": [] }
+              ]
+            },
+            "description": "Crea la tipografía con sus archivos en un solo request.\n\n**Extensiones permitidas:** ttf · otf · woff · woff2 · eot\n\n**Alternativa:** crear sin archivos (JSON) y subirlos luego con `POST /typographies/{id}/files`."
+          },
+          "response": [
+            {
+              "name": "Creada",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Tipografía creada\",\n  \"data\": {\n    \"id\": 3,\n    \"name\": \"Helvetica Neue\",\n    \"status_id\": 1,\n    \"files\": [\n      { \"id\": 5, \"file_name\": \"HelveticaNeue-Regular.ttf\", \"file_type\": \"ttf\", \"file_path\": \"fonts/typographies/3/font_64ab3c1.ttf\" }\n    ]\n  }\n}"
+            },
+            {
+              "name": "Extensión no permitida",
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "body": "{ \"status\": \"error\", \"errors\": { \"files\": [\"Extensión no permitida: pdf. Permitidas: ttf, otf, woff, woff2, eot\"] } }"
+            }
+          ]
+        },
+
+        {
+          "name": "Crear tipografía (sin archivos)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/typographies", "host": ["{{base_url}}"], "path": ["typographies"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Arial\",\n  \"statusId\": 1\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Crea la tipografía vacía. Los archivos se agregan luego con `POST /typographies/{id}/files`."
+          },
+          "response": []
+        },
+
+        {
+          "name": "Actualizar tipografía",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/typographies/3", "host": ["{{base_url}}"], "path": ["typographies", "3"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Helvetica Neue v2\",\n  \"statusId\": 1\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Actualiza nombre y/o estado. Para gestionar archivos usar los endpoints de archivos."
+          },
+          "response": []
+        },
+
+        {
+          "name": "Activar / Desactivar tipografía",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept",        "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/typographies/3/toggle-status", "host": ["{{base_url}}"], "path": ["typographies", "3", "toggle-status"] },
+            "description": "Alterna entre activo (1) e inactivo (2) sin body. Si estaba activo → pasa a inactivo, y viceversa."
+          },
+          "response": [
+            {
+              "name": "Desactivada",
+              "status": "OK",
+              "code": 200,
+              "body": "{ \"status\": \"success\", \"message\": \"Estado actualizado\", \"data\": { \"id\": 3, \"status_id\": 2, \"general_status\": { \"name\": \"Inactivo\" } } }"
+            }
+          ]
+        },
+
+        {
+          "name": "Eliminar tipografía",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept",        "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/typographies/3", "host": ["{{base_url}}"], "path": ["typographies", "3"] },
+            "description": "Soft delete. Elimina físicamente los archivos de fuente del storage antes de borrar el registro.\n\n⚠️ Los `typography_ids` en metadata de attribute values quedan huérfanos — el front debe contemplarlo."
+          },
+          "response": []
+        }
+
+      ]
+    },
+
+    {
+      "name": "Archivos de Tipografía",
+      "item": [
+
+        {
+          "name": "Subir archivos a una tipografía",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept",        "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/typographies/3/files", "host": ["{{base_url}}"], "path": ["typographies", "3", "files"] },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "files[]", "type": "file", "description": "TTF, OTF, WOFF, WOFF2 o EOT. Máx 10MB.", "src": [] },
+                { "key": "files[]", "type": "file", "description": "Se pueden subir N variantes en un solo request (Regular, Bold, Italic, Light...)", "src": [] }
+              ]
+            },
+            "description": "Agrega archivos de fuente a una tipografía existente. Útil para sumar variantes o formatos adicionales."
+          },
+          "response": [
+            {
+              "name": "Archivos subidos",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Archivos subidos correctamente\",\n  \"data\": {\n    \"id\": 3,\n    \"name\": \"Helvetica Neue\",\n    \"files\": [\n      { \"id\": 5, \"file_name\": \"HelveticaNeue-Regular.ttf\",  \"file_type\": \"ttf\" },\n      { \"id\": 7, \"file_name\": \"HelveticaNeue-Bold.woff2\",   \"file_type\": \"woff2\" }\n    ]\n  }\n}"
+            }
+          ]
+        },
+
+        {
+          "name": "Eliminar un archivo de tipografía",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept",        "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/typographies/3/files/7", "host": ["{{base_url}}"], "path": ["typographies", "3", "files", "7"] },
+            "description": "Borra el archivo físico del storage y elimina el registro de `typography_files`. No afecta otros archivos de la tipografía."
+          },
+          "response": [
+            {
+              "name": "Eliminado",
+              "status": "OK",
+              "code": 200,
+              "body": "{ \"status\": \"success\", \"message\": \"Archivo eliminado correctamente\", \"data\": null }"
             }
           ]
         }
@@ -291,23 +502,19 @@
               { "key": "Accept",        "value": "application/json" },
               { "key": "Content-Type",  "value": "application/json" }
             ],
-            "url": {
-              "raw": "{{base_url}}/products",
-              "host": ["{{base_url}}"],
-              "path": ["products"]
-            },
+            "url": { "raw": "{{base_url}}/products", "host": ["{{base_url}}"], "path": ["products"] },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Remera básica\",\n  \"sku\": \"REM-001\",\n  \"price\": 5000,\n  \"product_status_id\": 2,\n  \"attributes\": [\n    { \"id\": 1, \"order\": 0 },\n    { \"id\": 3, \"order\": 1 }\n  ],\n  \"attributes_values\": [\n    {\n      \"id\": 10,\n      \"metadata_override\": {\n        \"colors\": [\"#FF6600\"]\n      }\n    },\n    {\n      \"id\": 11\n    },\n    {\n      \"id\": 25,\n      \"metadata_override\": {\n        \"icons\": [\"icon-cotton-organic\"]\n      }\n    }\n  ]\n}",
+              "raw": "{\n  \"name\": \"Remera básica\",\n  \"sku\": \"REM-001\",\n  \"price\": 5000,\n  \"product_status_id\": 2,\n  \"attributes\": [\n    { \"id\": 1, \"order\": 0 },\n    { \"id\": 3, \"order\": 1 }\n  ],\n  \"attributes_values\": [\n    { \"id\": 10, \"metadata_override\": { \"colors\": [\"#FF6600\"] } },\n    { \"id\": 11 },\n    { \"id\": 25, \"metadata_override\": { \"icons\": [\"icon-cotton-organic\"] } }\n  ]\n}",
               "options": { "raw": { "language": "json" } }
             },
-            "description": "Asocia attribute values al producto con el **nuevo formato**.\n\nCada elemento de `attributes_values` es un objeto con:\n- `id` (requerido): ID del attribute value\n- `metadata_override` (opcional): reemplaza el metadata por defecto del value **solo para este producto**\n\n**Retrocompatibilidad**: también se aceptan IDs directos `[10, 11, 25]` (sin override)."
+            "description": "Cada elemento de `attributes_values`:\n- `id` (requerido): ID del attribute value\n- `metadata_override` (opcional): reemplaza el metadata del value **solo para este producto**\n\n**Retrocompat:** también acepta IDs directos `[10, 11, 25]`."
           },
           "response": []
         },
 
         {
-          "name": "Actualizar producto — cambiar override de color",
+          "name": "Actualizar producto — cambiar override",
           "request": {
             "method": "POST",
             "header": [
@@ -315,17 +522,13 @@
               { "key": "Accept",        "value": "application/json" },
               { "key": "Content-Type",  "value": "application/json" }
             ],
-            "url": {
-              "raw": "{{base_url}}/products/42",
-              "host": ["{{base_url}}"],
-              "path": ["products", "42"]
-            },
+            "url": { "raw": "{{base_url}}/products/42", "host": ["{{base_url}}"], "path": ["products", "42"] },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Remera básica edición verano\",\n  \"product_status_id\": 2,\n  \"attributes_values\": [\n    {\n      \"id\": 10,\n      \"metadata_override\": {\n        \"colors\": [\"#FFD700\", \"#FFA500\"]\n      }\n    },\n    {\n      \"id\": 30,\n      \"metadata_override\": {\n        \"images\": []\n      }\n    }\n  ]\n}",
+              "raw": "{\n  \"name\": \"Remera edición verano\",\n  \"product_status_id\": 2,\n  \"attributes_values\": [\n    { \"id\": 10, \"metadata_override\": { \"colors\": [\"#FFD700\", \"#FFA500\"] } },\n    { \"id\": 30, \"metadata_override\": null }\n  ]\n}",
               "options": { "raw": { "language": "json" } }
             },
-            "description": "Actualiza el producto y reemplaza los overrides de attribute values.\n\nPasar `metadata_override: null` (o simplemente no incluirlo) limpia el override y el producto vuelve a usar el metadata por defecto del value."
+            "description": "`metadata_override: null` limpia el override y el producto vuelve a usar el metadata por defecto del value."
           },
           "response": []
         },
@@ -346,34 +549,24 @@
             "body": {
               "mode": "formdata",
               "formdata": [
-                {
-                  "key": "images[]",
-                  "type": "file",
-                  "description": "Imagen que reemplaza la imagen por defecto del value para este producto",
-                  "src": []
-                },
-                {
-                  "key": "images[]",
-                  "type": "file",
-                  "description": "Segunda imagen de override (opcional)",
-                  "src": []
-                }
+                { "key": "images[]", "type": "file", "description": "Imagen que pisa la del value para este producto", "src": [] },
+                { "key": "images[]", "type": "file", "description": "Imagen adicional de override (opcional)", "src": [] }
               ]
             },
-            "description": "Sube imágenes de override específicas para la combinación **producto + attribute value**.\n\n- Las imágenes se guardan en `images/attributes/product-overrides/`\n- Se almacenan en `attribute_value_product.metadata_override.images`\n- Reemplazan las imágenes por defecto del value **solo para este producto**\n- El attribute value (id=30) debe estar previamente asociado al producto (id=42)"
+            "description": "Sube imágenes de override para la combinación **producto + attribute value**.\n\n- Guardadas en `images/attributes/product-overrides/`\n- Persistidas en `attribute_value_product.metadata_override.images`\n- El value debe estar previamente asociado al producto"
           },
           "response": [
             {
-              "name": "Override subido exitosamente",
+              "name": "Override subido",
               "status": "OK",
               "code": 200,
-              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Imágenes de override subidas correctamente\",\n  \"data\": {\n    \"images\": [\n      \"images/attributes/product-overrides/po_64a1b9f2e3d4a.jpg\",\n      \"images/attributes/product-overrides/po_64a1b9f2e3d4b.png\"\n    ]\n  }\n}"
+              "body": "{ \"status\": \"success\", \"message\": \"Imágenes de override subidas correctamente\", \"data\": { \"images\": [\"images/attributes/product-overrides/po_64a1b9.jpg\"] } }"
             },
             {
               "name": "Value no asociado al producto",
               "status": "Not Found",
               "code": 404,
-              "body": "{\n  \"status\": \"error\",\n  \"message\": \"El attribute value no está asociado a este producto\"\n}"
+              "body": "{ \"status\": \"error\", \"message\": \"El attribute value no está asociado a este producto\" }"
             }
           ]
         },
@@ -387,17 +580,13 @@
               { "key": "Accept",        "value": "application/json" },
               { "key": "Content-Type",  "value": "application/json" }
             ],
-            "url": {
-              "raw": "{{base_url}}/products",
-              "host": ["{{base_url}}"],
-              "path": ["products"]
-            },
+            "url": { "raw": "{{base_url}}/products", "host": ["{{base_url}}"], "path": ["products"] },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"Producto sin override\",\n  \"sku\": \"PROD-002\",\n  \"price\": 3000,\n  \"product_status_id\": 2,\n  \"attributes_values\": [10, 11, 25]\n}",
               "options": { "raw": { "language": "json" } }
             },
-            "description": "El formato legacy de IDs directos sigue funcionando. En este caso `metadata_override` queda `null` y el producto usa el metadata por defecto de cada value."
+            "description": "Formato legacy (IDs directos). `metadata_override` queda `null` y el producto usa el metadata por defecto de cada value."
           },
           "response": []
         }
@@ -406,97 +595,62 @@
     },
 
     {
-      "name": "Referencia rápida — Estructura de metadata",
+      "name": "Referencia — Estructura de metadata",
       "item": [
 
         {
-          "name": "[DOC] Tipo: color — metadata esperado",
+          "name": "[DOC] Todas las claves de metadata",
           "request": {
             "method": "POST",
             "header": [
               { "key": "Authorization", "value": "Bearer {{token}}" },
               { "key": "Content-Type",  "value": "application/json" }
             ],
-            "url": {
-              "raw": "{{base_url}}/attributes",
-              "host": ["{{base_url}}"],
-              "path": ["attributes"]
-            },
+            "url": { "raw": "{{base_url}}/attributes", "host": ["{{base_url}}"], "path": ["attributes"] },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Ejemplo color\",\n  \"type\": \"color\",\n  \"values\": [\n    {\n      \"value\": \"Nombre del value\",\n      \"metadata\": {\n        \"colors\": [\"#HEX1\", \"#HEX2\"]\n      }\n    }\n  ]\n}",
+              "raw": "{\n  \"name\": \"Ejemplo metadata completo\",\n  \"type\": \"text\",\n  \"values\": [\n    {\n      \"value\": \"Ejemplo\",\n      \"metadata\": {\n        \"colors\":          [\"#FF0000\", \"#00FF00\"],\n        \"icons\":           [\"icon-star\", \"icon-check\"],\n        \"texts\":           [\"Etiqueta alternativa\", \"Descripción extra\"],\n        \"images\":          [\"images/attributes/values/av_abc.jpg\"],\n        \"typography_ids\": [1, 3]\n      }\n    }\n  ]\n}",
               "options": { "raw": { "language": "json" } }
             },
-            "description": "**type: color**\n\n`metadata.colors` → array de códigos HEX. Permite representar bicolores o gradientes.\n\nEjemplos:\n- Rojo → `[\"#FF0000\"]`\n- Bicolor → `[\"#FF0000\", \"#0000FF\"]`"
+            "description": "Referencia de todas las claves válidas dentro de `metadata`:\n\n| Clave | Tipo | Descripción |\n|---|---|---|\n| `colors` | string[] | Códigos HEX. Permite bicolores. |\n| `icons` | string[] | Claves de iconos (a definir con front). |\n| `texts` | string[] | Etiquetas alternativas, equivalencias, etc. |\n| `images` | string[] | Paths generados por `POST /attributes/values/{id}/images`. |\n| `typography_ids` | int[] | IDs de tipografías de la tabla `typographies`. |\n\nTodas son opcionales y combinables entre sí."
           },
           "response": []
         },
 
         {
-          "name": "[DOC] Tipo: icon — metadata esperado",
+          "name": "[DOC] Enlazar tipografías a un value",
           "request": {
             "method": "POST",
             "header": [
               { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept",        "value": "application/json" },
               { "key": "Content-Type",  "value": "application/json" }
             ],
-            "url": {
-              "raw": "{{base_url}}/attributes",
-              "host": ["{{base_url}}"],
-              "path": ["attributes"]
-            },
+            "url": { "raw": "{{base_url}}/attributes", "host": ["{{base_url}}"], "path": ["attributes"] },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Ejemplo icon\",\n  \"type\": \"icon\",\n  \"values\": [\n    {\n      \"value\": \"Nombre del value\",\n      \"metadata\": {\n        \"icons\": [\"nombre-icono-1\", \"nombre-icono-2\"]\n      }\n    }\n  ]\n}",
+              "raw": "{\n  \"name\": \"Estilo de fuente\",\n  \"type\": \"text\",\n  \"values\": [\n    {\n      \"value\": \"Serif clásico\",\n      \"metadata\": { \"typography_ids\": [1, 2] }\n    },\n    {\n      \"value\": \"Sans-serif moderno\",\n      \"metadata\": { \"typography_ids\": [3] }\n    },\n    {\n      \"value\": \"Caligráfico\",\n      \"metadata\": {\n        \"typography_ids\": [4, 5],\n        \"texts\": [\"Cursive\", \"Handwritten\"]\n      }\n    }\n  ]\n}",
               "options": { "raw": { "language": "json" } }
             },
-            "description": "**type: icon**\n\n`metadata.icons` → array de strings con los identificadores de iconos (a definir con front). Pueden ser claves de una librería de iconos, nombres de archivos, etc."
+            "description": "Se pueden asignar **múltiples tipografías** por value (igual que `colors` o `icons`).\n\nLos IDs deben existir en la tabla `typographies`. Si no existen, el endpoint devuelve 422.\n\nPasar `typography_ids: []` para quitar todas las tipografías de un value."
           },
-          "response": []
+          "response": [
+            {
+              "name": "ID inexistente",
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "body": "{ \"status\": \"error\", \"errors\": { \"values.0.metadata.typography_ids.0\": [\"The selected values.0.metadata.typography_ids.0 is invalid.\"] } }"
+            }
+          ]
         },
 
         {
-          "name": "[DOC] Tipo: image — flujo completo",
+          "name": "[DOC] Flujo completo — tipografía + attribute value",
           "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" },
-              { "key": "Content-Type",  "value": "application/json" }
-            ],
-            "url": {
-              "raw": "{{base_url}}/attributes",
-              "host": ["{{base_url}}"],
-              "path": ["attributes"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Ejemplo image\",\n  \"type\": \"image\",\n  \"values\": [\n    { \"value\": \"Estampado A\" },\n    { \"value\": \"Estampado B\" }\n  ]\n}",
-              "options": { "raw": { "language": "json" } }
-            },
-            "description": "**type: image — flujo recomendado:**\n\n1. `POST /attributes` → crear el atributo con los values (sin imágenes)\n2. Tomar los IDs de cada value de la respuesta\n3. `POST /attributes/values/{id}/images` → subir imágenes por cada value\n4. (Opcional) `POST /products/{pid}/attribute-values/{vid}/override-images` → subir imagen de override para un producto puntual\n\n`metadata.images` es llenado automáticamente por el endpoint de upload."
-          },
-          "response": []
-        },
-
-        {
-          "name": "[DOC] Tipo: text — metadata esperado",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" },
-              { "key": "Content-Type",  "value": "application/json" }
-            ],
-            "url": {
-              "raw": "{{base_url}}/attributes",
-              "host": ["{{base_url}}"],
-              "path": ["attributes"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Ejemplo text\",\n  \"type\": \"text\",\n  \"values\": [\n    {\n      \"value\": \"M\",\n      \"metadata\": {\n        \"texts\": [\"Medium\", \"38\", \"Mediano\"]\n      }\n    }\n  ]\n}",
-              "options": { "raw": { "language": "json" } }
-            },
-            "description": "**type: text**\n\n`metadata.texts` → array de strings con etiquetas o equivalencias alternativas. Útil para talles con equivalencias internacionales, medidas, nombres largos, etc."
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/typographies", "host": ["{{base_url}}"], "path": ["typographies"] },
+            "description": "**Flujo recomendado completo:**\n\n**1. Crear la tipografía con sus variantes**\n```\nPOST /typographies  (multipart)\n  name    = \"Roboto\"\n  files[] = Roboto-Regular.ttf\n  files[] = Roboto-Bold.ttf\n  files[] = Roboto-Regular.woff2\n```\n→ Respuesta: `{ id: 7, ... }`\n\n**2. (Opcional) Agregar más variantes después**\n```\nPOST /typographies/7/files\n  files[] = Roboto-Italic.otf\n```\n\n**3. Crear el atributo usando el ID**\n```\nPOST /attributes\n{\n  \"name\": \"Tipo de letra\",\n  \"type\": \"text\",\n  \"values\": [\n    { \"value\": \"Roboto\", \"metadata\": { \"typography_ids\": [7] } }\n  ]\n}\n```\n\n**4. Asociar al producto con override opcional**\n```\nPOST /products\n{\n  \"attributes_values\": [\n    { \"id\": 55, \"metadata_override\": { \"typography_ids\": [7, 8] } }\n  ]\n}\n```"
           },
           "response": []
         }
