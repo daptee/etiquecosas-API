@@ -54,7 +54,7 @@ class AttributeController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name'                          => 'required|string|max:255|unique:attributes',
-            'type'                          => 'nullable|in:image,color,icon,tipo,text',
+            'type'                          => 'nullable|in:image,color,icon,tipo,text,typography',
             'statusId'                      => 'nullable|in:1,2',
             'values'                        => 'nullable|array',
             'values.*.value'                => 'required|string|max:255',
@@ -100,7 +100,7 @@ class AttributeController extends Controller
 
         $validator = Validator::make($request->all(), [
             'name'                          => 'required|string|max:255|unique:attributes,name,' . $attribute->id,
-            'type'                          => 'nullable|in:image,color,icon,tipo,text',
+            'type'                          => 'nullable|in:image,color,icon,tipo,text,typography',
             'statusId'                      => 'nullable|in:1,2',
             'values'                        => 'nullable|array',
             'values.*.id'                   => 'nullable|integer|exists:attribute_values,id',

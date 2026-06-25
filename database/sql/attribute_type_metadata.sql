@@ -1,6 +1,6 @@
 -- 1. Tipo de atributo en la tabla attributes
 ALTER TABLE `attributes`
-ADD COLUMN `type` ENUM('image', 'color', 'icon', 'tipo', 'text') NOT NULL DEFAULT 'text' AFTER `name`;
+ADD COLUMN `type` ENUM('image', 'color', 'icon', 'tipo', 'text', 'typography') NOT NULL DEFAULT 'text' AFTER `name`;
 
 -- 2. Metadata adicional en attribute_values (colores, iconos, imagenes, etc.)
 ALTER TABLE `attribute_values`
