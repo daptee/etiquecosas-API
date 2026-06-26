@@ -378,19 +378,21 @@
         {
           "name": "Actualizar tipografía",
           "request": {
-            "method": "PUT",
+            "method": "POST",
             "header": [
               { "key": "Authorization", "value": "Bearer {{token}}" },
-              { "key": "Accept",        "value": "application/json" },
-              { "key": "Content-Type",  "value": "application/json" }
+              { "key": "Accept",        "value": "application/json" }
             ],
             "url": { "raw": "{{base_url}}/typographies/3", "host": ["{{base_url}}"], "path": ["typographies", "3"] },
             "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Helvetica Neue v2\",\n  \"statusId\": 1\n}",
-              "options": { "raw": { "language": "json" } }
+              "mode": "formdata",
+              "formdata": [
+                { "key": "name",     "value": "Helvetica Neue v2", "type": "text", "description": "Opcional — omitir para no cambiar el nombre" },
+                { "key": "statusId", "value": "1",                 "type": "text", "description": "Opcional. 1 = activo, 2 = inactivo" },
+                { "key": "files[]",  "type": "file", "description": "Opcional — agrega nuevos archivos en el mismo request (.ttf, .otf, .woff, .woff2, .eot)", "src": [] }
+              ]
             },
-            "description": "Actualiza nombre y/o estado. Para gestionar archivos usar los endpoints de archivos."
+            "description": "Actualiza nombre y/o estado, y opcionalmente sube nuevos archivos en el mismo request.\n\n**Método POST** (no PUT) — PHP no parsea campos en multipart PUT.\n\nTodos los campos son opcionales; solo se actualizan los que se envíen."
           },
           "response": []
         },
