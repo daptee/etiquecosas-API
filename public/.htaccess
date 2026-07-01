@@ -20,6 +20,9 @@
     RewriteCond %{REQUEST_URI} (.+)/$
     RewriteRule ^ %1 [L,R=301]
 
+    # Forzar archivos de fuente por Laravel para que aplique CORS
+    RewriteRule ^fonts/.*\.(ttf|otf|woff|woff2|eot)$ index.php [L]
+
     # Send Requests To Front Controller...
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
