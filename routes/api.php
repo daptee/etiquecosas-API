@@ -94,6 +94,16 @@ Route::prefix('v1')->group(function () {
 
     // Attribute
     Route::get('attributes', [AttributeController::class, 'index']);
+
+    // Typography
+    Route::get('typographies', [TypographyController::class, 'index']);
+
+    // colors
+    Route::get('colors', [PersonalizationColorController::class, 'index']);
+
+    // icons
+    Route::get('icons', [PersonalizationIconController::class, 'index']);
+
     
     // Coupons
     Route::patch('coupons/validate', [CouponController::class, 'validateCoupon']);
