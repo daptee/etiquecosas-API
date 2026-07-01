@@ -18,17 +18,22 @@ class AttributeController extends Controller
 
     public function index(Request $request)
     {
-        $search = $request->query('search');
+        $search   = $request->query('search');
         $statusId = $request->query('statusId');
-        $perPage = $request->query('quantity');
-        $page = $request->query('page', 1);
+        $type     = $request->query('type');
+        $perPage  = $request->query('quantity');
+        $page     = $request->query('page', 1);
         $query = Attribute::with(['values.generalStatus', 'generalStatus']);
         if ($search) {
             $query->where('name', 'like', "%{$search}%");
         }
 
         if ($statusId) {
-            $query->where('statusId', $statusId);
+            $query->where('status_id', $statusId);
+        }
+
+        if ($type) {
+            $query->where('type', $type);
         }
 
         $query->orderBy('name', 'asc');
