@@ -92,6 +92,9 @@ Route::prefix('v1')->group(function () {
     Route::put('sales/change-status/{id}', [SaleController::class, 'changeStatus']);
     Route::post('mercadopago/create-preference', [MercadoPagoController::class, 'createPreference']);
 
+    // Attribute
+    Route::get('attributes', [AttributeController::class, 'index']);
+    
     // Coupons
     Route::patch('coupons/validate', [CouponController::class, 'validateCoupon']);
 
