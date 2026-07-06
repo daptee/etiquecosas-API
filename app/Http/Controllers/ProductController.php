@@ -715,7 +715,7 @@ class ProductController extends Controller
         }
 
         if ($request->has('attributes_values')) {
-            $syncData = $this->buildAttributeValuesSyncData($request->input('attributes_values'));
+            $syncData = $this->buildAttributeValuesSyncData($request->input('attributes_values'), $request->file('attributes_values') ?? []);
             $product->attributeValues()->sync($syncData);
         } else {
             $product->attributeValues()->detach();
@@ -1297,7 +1297,7 @@ class ProductController extends Controller
         }
 
         if ($request->has('attributes_values')) {
-            $syncData = $this->buildAttributeValuesSyncData($request->input('attributes_values'));
+            $syncData = $this->buildAttributeValuesSyncData($request->input('attributes_values'), $request->file('attributes_values') ?? []);
             $product->attributeValues()->sync($syncData);
         } else {
             $product->attributeValues()->detach();
@@ -2130,18 +2130,30 @@ class ProductController extends Controller
     }
 
     /**
-     * Construye el array de sync para attributeValues soportando dos formatos:
-     *   - Nuevo: [{"id": 1, "metadata_override": {...}}, ...]
-     *   - Legacy: [1, 2, 3]  (IDs directos, sin override)
+     * Construye el array de sync para attributeValues soportando:
+     *   - Nuevo:   [{"id": 1, "metadata_override": {...}}, ...]
+     *   - Con img: attributes_values[N][img] = archivo subido
+     *   - Legacy:  [1, 2, 3]  (IDs directos, sin override)
      */
-    private function buildAttributeValuesSyncData(array $input): array
+    private function buildAttributeValuesSyncData(array $input, array $files = []): array
     {
         $syncData = [];
-        foreach ($input as $item) {
+        foreach ($input as $index => $item) {
             if (is_array($item) && isset($item['id'])) {
-                $id = (int) $item['id'];
-                $override = isset($item['metadata_override']) ? json_encode($item['metadata_override']) : null;
-                $syncData[$id] = ['metadata_override' => $override];
+                $id       = (int) $item['id'];
+                $override = isset($item['metadata_override']) ? $item['metadata_override'] : [];
+
+                // Procesar imagen subida en attributes_values[N][img]
+                if (!empty($files[$index]['img'])) {
+                    $file    = $files[$index]['img'];
+                    $path    = 'images/attributes/product-overrides/' . uniqid('po_') . '.' . $file->getClientOriginalExtension();
+                    Storage::disk('public_uploads')->put($path, file_get_contents($file));
+                    $override['images'] = [$path];
+                }
+
+                $syncData[$id] = [
+                    'metadata_override' => !empty($override) ? json_encode($override) : null,
+                ];
             } elseif (is_numeric($item)) {
                 $syncData[(int) $item] = ['metadata_override' => null];
             }
