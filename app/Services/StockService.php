@@ -179,6 +179,9 @@ class StockService
         }
 
         // 4. General de producto (piso de la jerarquía)
+        if ($product->product_stock_status_id == 1) {
+            return ['always_in_stock' => true];
+        }
         if ($product->stock_quantity !== null) {
             return [
                 'always_in_stock' => false,
