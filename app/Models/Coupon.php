@@ -28,6 +28,8 @@ class Coupon extends Model
         'max_use_per_code',
         'coupon_status_id',
         'value',
+        'nxn_buy',
+        'nxn_pay',
         'tiered_discounts_enabled',
         'tiered_discounts',
         'flash_enabled',

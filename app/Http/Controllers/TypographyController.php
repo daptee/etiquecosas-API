@@ -105,18 +105,35 @@ class TypographyController extends Controller
         $typography = $this->findObject(Typography::class, $id);
 
         $validator = Validator::make($request->all(), [
-            'name'     => 'required|string|max:255|unique:typographies,name,' . $typography->id,
+            'name'     => 'nullable|string|max:255|unique:typographies,name,' . $typography->id,
             'statusId' => 'nullable|in:1,2',
+            'files'    => 'nullable|array',
+            'files.*'  => 'file|max:10240',
         ]);
         if ($validator->fails()) {
             $this->logAudit(Auth::user(), 'Update Typography', $request->all(), $validator->errors());
             return $this->validationError($validator->errors());
         }
 
+        if ($request->hasFile('files')) {
+            foreach ($request->file('files') as $file) {
+                $ext = strtolower($file->getClientOriginalExtension());
+                if (!in_array($ext, self::ALLOWED_EXTENSIONS)) {
+                    return $this->validationError([
+                        'files' => ["Extensión no permitida: {$ext}. Permitidas: " . implode(', ', self::ALLOWED_EXTENSIONS)],
+                    ]);
+                }
+            }
+        }
+
         $typography->update([
             'name'      => $request->input('name', $typography->name),
             'status_id' => $request->input('statusId', $typography->status_id),
         ]);
+
+        if ($request->hasFile('files')) {
+            $this->storeFiles($typography, $request->file('files'));
+        }
 
         $typography->load(['files', 'generalStatus']);
         $this->logAudit(Auth::user(), 'Update Typography', $request->all(), $typography);

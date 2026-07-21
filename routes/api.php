@@ -92,6 +92,19 @@ Route::prefix('v1')->group(function () {
     Route::put('sales/change-status/{id}', [SaleController::class, 'changeStatus']);
     Route::post('mercadopago/create-preference', [MercadoPagoController::class, 'createPreference']);
 
+    // Attribute
+    Route::get('attributes', [AttributeController::class, 'index']);
+
+    // Typography
+    Route::get('typographies', [TypographyController::class, 'index']);
+
+    // colors
+    Route::get('colors', [PersonalizationColorController::class, 'index']);
+
+    // icons
+    Route::get('icons', [PersonalizationIconController::class, 'index']);
+
+    
     // Coupons
     Route::patch('coupons/validate', [CouponController::class, 'validateCoupon']);
 
@@ -158,7 +171,7 @@ Route::middleware('jwt.auth')->prefix('typographies')->group(function () {
     Route::get('/',                                    [TypographyController::class, 'index']);
     Route::get('/{id}',                               [TypographyController::class, 'show']);
     Route::post('/',                                   [TypographyController::class, 'store']);
-    Route::put('/{id}',                               [TypographyController::class, 'update']);
+    Route::post('/{id}',                              [TypographyController::class, 'update']);
     Route::patch('/{id}/toggle-status',               [TypographyController::class, 'toggleStatus']);
     Route::delete('/{id}',                            [TypographyController::class, 'delete']);
     // Archivos de fuente

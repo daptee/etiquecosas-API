@@ -45,6 +45,8 @@ class CouponController extends Controller
                 'coupon_status_id',
                 'applies_to_all_products',
                 'value',
+                'nxn_buy',
+                'nxn_pay',
                 'tiered_discounts_enabled',
                 'tiered_discounts',
                 'flash_enabled'
@@ -118,6 +120,8 @@ class CouponController extends Controller
             'coupon_status_id',
             'applies_to_all_products',
             'value',
+            'nxn_buy',
+            'nxn_pay',
             'tiered_discounts_enabled',
             'tiered_discounts',
             'flash_enabled',
@@ -131,173 +135,187 @@ class CouponController extends Controller
     }
 
     public function store(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'code' => 'required|string|max:255|unique:coupons,code',
-            'date_from' => 'required|date',
-            'date_to' => 'required|date|after_or_equal:date_from',
-            'min_amount' => 'required|numeric|min:0',
-            'type' => 'required|in:Fijo,Porcentaje',
-            'applies_to_shipping' => 'boolean',
-            'applies_to_web' => 'boolean',
-            'applies_to_sale_price' => 'boolean',
-            'max_use_per_user' => 'required|integer|min:0',
-            'max_use_per_code' => 'required|integer|min:0',
-            'coupon_status_id' => 'required|exists:coupon_statuses,id',
-            'categories' => 'nullable|array',
-            'categories.*' => 'integer|exists:categories,id',
-            'products' => 'nullable|array',
-            'products.*' => [
-                'integer',
-                'distinct',
-                Rule::in(Product::pluck('id')->toArray()),
-            ],
-            'products_all' => 'nullable|boolean',
-            'value' => 'required|numeric|min:0',
-            'tiered_discounts_enabled' => 'boolean',
-            'tiered_discounts' => 'nullable|array',
-            'tiered_discounts.*.min_quantity' => 'required_with:tiered_discounts|integer|min:1',
-            'tiered_discounts.*.type' => 'required_with:tiered_discounts|in:Fijo,Porcentaje',
-            'tiered_discounts.*.value' => 'required_with:tiered_discounts|numeric|min:0',
-            'flash_enabled' => 'boolean',
-        ]);
+{
+    $validator = Validator::make($request->all(), [
+        'name' => 'required|string|max:255',
+        'code' => 'required|string|max:255|unique:coupons,code',
+        'date_from' => 'required|date',
+        'date_to' => 'required|date|after_or_equal:date_from',
+        'min_amount' => 'required|numeric|min:0',
+        'type' => 'required|in:Fijo,Porcentaje,NxN',
+        'applies_to_shipping' => 'boolean',
+        'applies_to_web' => 'boolean',
+        'applies_to_sale_price' => 'boolean',
+        'max_use_per_user' => 'required|integer|min:0',
+        'max_use_per_code' => 'required|integer|min:0',
+        'coupon_status_id' => 'required|exists:coupon_statuses,id',
+        'categories' => 'nullable|array',
+        'categories.*' => 'integer|exists:categories,id',
+        'products' => 'nullable|array',
+        'products.*' => [
+            'integer',
+            'distinct',
+            Rule::in(Product::pluck('id')->toArray()),
+        ],
+        'products_all' => 'nullable|boolean',
+        'value' => 'required_unless:type,NxN|nullable|numeric|min:0',
+        'nxn_buy' => 'required_if:type,NxN|nullable|integer|min:2',
+        'nxn_pay' => 'required_if:type,NxN|nullable|integer|min:1|lt:nxn_buy',
+        'tiered_discounts_enabled' => 'boolean',
+        'tiered_discounts' => 'nullable|array',
+        'tiered_discounts.*.min_quantity' => 'required_with:tiered_discounts|integer|min:1',
+        'tiered_discounts.*.type' => 'required_with:tiered_discounts|in:Fijo,Porcentaje,NxN',
+        'tiered_discounts.*.value' => 'required_unless:tiered_discounts.*.type,NxN|nullable|numeric|min:0',
+        'tiered_discounts.*.nxn_buy' => 'required_if:tiered_discounts.*.type,NxN|nullable|integer|min:2',
+        'tiered_discounts.*.nxn_pay' => 'required_if:tiered_discounts.*.type,NxN|nullable|integer|min:1|lt:tiered_discounts.*.nxn_buy',
+        'flash_enabled' => 'boolean',
+    ]);
 
-        if ($validator->fails()) {
-            $this->logAudit(Auth::user(), 'Store Coupon', $request->all(), $validator->errors());
-            return $this->validationError($validator->errors());
-        }
-
-        $appliesToAllProducts = $request->input('products_all', false);
-        if ($appliesToAllProducts || (is_array($request->products) && in_array('all', $request->products))) {
-            $appliesToAllProducts = true;
-            $productIds = [];
-        } else {
-            $productIds = $request->products ?? [];
-        }
-
-        $coupon = Coupon::create([
-            'name' => $request->name,
-            'code' => $request->code,
-            'date_from' => $request->date_from,
-            'date_to' => $request->date_to,
-            'min_amount' => $request->min_amount,
-            'type' => $request->type,
-            'applies_to_shipping' => $request->applies_to_shipping ?? false,
-            'applies_to_web' => $request->applies_to_web ?? false,
-            'applies_to_sale_price' => $request->applies_to_sale_price ?? false,
-            'max_use_per_user' => $request->max_use_per_user,
-            'max_use_per_code' => $request->max_use_per_code,
-            'coupon_status_id' => $request->coupon_status_id,
-            'applies_to_all_products' => $appliesToAllProducts,
-            'value' => $request->value,
-            'tiered_discounts_enabled' => $request->tiered_discounts_enabled ?? false,
-            'tiered_discounts' => $request->tiered_discounts ?? null,
-            'flash_enabled' => $request->flash_enabled ?? false,
-        ]);
-
-        if (!empty($request->categories)) {
-            $coupon->categories()->attach($request->categories);
-        }
-
-        if (!$appliesToAllProducts && !empty($productIds)) {
-            $coupon->products()->attach($productIds);
-        }
-
-        $coupon->load('categories:id', 'products:id');
-        $coupon->loadCount('salesMany as sales_count');
-        $this->logAudit(Auth::user(), 'Store Coupon', $request->all(), $coupon);
-
-        return $this->success($coupon, 'Cupon creado', 201);
+    if ($validator->fails()) {
+        $this->logAudit(Auth::user(), 'Store Coupon', $request->all(), $validator->errors());
+        return $this->validationError($validator->errors());
     }
+
+    $appliesToAllProducts = $request->input('products_all', false);
+    if ($appliesToAllProducts || (is_array($request->products) && in_array('all', $request->products))) {
+        $appliesToAllProducts = true;
+        $productIds = [];
+    } else {
+        $productIds = $request->products ?? [];
+    }
+
+    $coupon = Coupon::create([
+        'name' => $request->name,
+        'code' => $request->code,
+        'date_from' => $request->date_from,
+        'date_to' => $request->date_to,
+        'min_amount' => $request->min_amount,
+        'type' => $request->type,
+        'applies_to_shipping' => $request->applies_to_shipping ?? false,
+        'applies_to_web' => $request->applies_to_web ?? false,
+        'applies_to_sale_price' => $request->applies_to_sale_price ?? false,
+        'max_use_per_user' => $request->max_use_per_user,
+        'max_use_per_code' => $request->max_use_per_code,
+        'coupon_status_id' => $request->coupon_status_id,
+        'applies_to_all_products' => $appliesToAllProducts,
+        'value' => $request->type === 'NxN' ? 0 : $request->value,
+        'nxn_buy' => $request->type === 'NxN' ? $request->nxn_buy : null,
+        'nxn_pay' => $request->type === 'NxN' ? $request->nxn_pay : null,
+        'tiered_discounts_enabled' => $request->tiered_discounts_enabled ?? false,
+        'tiered_discounts' => $request->tiered_discounts ?? null,
+        'flash_enabled' => $request->flash_enabled ?? false,
+    ]);
+
+    if (!empty($request->categories)) {
+        $coupon->categories()->attach($request->categories);
+    }
+
+    if (!$appliesToAllProducts && !empty($productIds)) {
+        $coupon->products()->attach($productIds);
+    }
+
+    $coupon->load('categories:id', 'products:id');
+    $coupon->loadCount('salesMany as sales_count');
+    $this->logAudit(Auth::user(), 'Store Coupon', $request->all(), $coupon);
+
+    return $this->success($coupon, 'Cupon creado', 201);
+}
+
 
     public function update(Request $request, $id)
-    {
-        $coupon = $this->findObject(Coupon::class, $id);
+{
+    $coupon = $this->findObject(Coupon::class, $id);
 
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'code' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('coupons', 'code')->ignore($coupon->id),
-            ],
-            'date_from' => 'required|date',
-            'date_to' => 'required|date|after_or_equal:date_from',
-            'min_amount' => 'required|numeric|min:0',
-            'type' => 'required|in:Fijo,Porcentaje',
-            'applies_to_shipping' => 'boolean',
-            'applies_to_web' => 'boolean',
-            'applies_to_sale_price' => 'boolean',
-            'max_use_per_user' => 'required|integer|min:0',
-            'max_use_per_code' => 'required|integer|min:0',
-            'coupon_status_id' => 'required|exists:coupon_statuses,id',
-            'categories' => 'nullable|array',
-            'categories.*' => 'integer|exists:categories,id',
-            'products' => 'nullable|array',
-            'products.*' => [
-                'integer',
-                'distinct',
-                'exists:products,id',
-            ],
-            'products_all' => 'nullable|boolean',
-            'value' => 'required|numeric|min:0',
-            'tiered_discounts_enabled' => 'boolean',
-            'tiered_discounts' => 'nullable|array',
-            'tiered_discounts.*.min_quantity' => 'required_with:tiered_discounts|integer|min:1',
-            'tiered_discounts.*.type' => 'required_with:tiered_discounts|in:Fijo,Porcentaje',
-            'tiered_discounts.*.value' => 'required_with:tiered_discounts|numeric|min:0',
-            'flash_enabled' => 'boolean',
-        ]);
+    $validator = Validator::make($request->all(), [
+        'name' => 'required|string|max:255',
+        'code' => [
+            'required',
+            'string',
+            'max:255',
+            Rule::unique('coupons', 'code')->ignore($coupon->id),
+        ],
+        'date_from' => 'required|date',
+        'date_to' => 'required|date|after_or_equal:date_from',
+        'min_amount' => 'required|numeric|min:0',
+        'type' => 'required|in:Fijo,Porcentaje,NxN',
+        'applies_to_shipping' => 'boolean',
+        'applies_to_web' => 'boolean',
+        'applies_to_sale_price' => 'boolean',
+        'max_use_per_user' => 'required|integer|min:0',
+        'max_use_per_code' => 'required|integer|min:0',
+        'coupon_status_id' => 'required|exists:coupon_statuses,id',
+        'categories' => 'nullable|array',
+        'categories.*' => 'integer|exists:categories,id',
+        'products' => 'nullable|array',
+        'products.*' => [
+            'integer',
+            'distinct',
+            'exists:products,id',
+        ],
+        'products_all' => 'nullable|boolean',
+        'value' => 'required_unless:type,NxN|nullable|numeric|min:0',
+        'nxn_buy' => 'required_if:type,NxN|nullable|integer|min:2',
+        'nxn_pay' => 'required_if:type,NxN|nullable|integer|min:1|lt:nxn_buy',
+        'tiered_discounts_enabled' => 'boolean',
+        'tiered_discounts' => 'nullable|array',
+        'tiered_discounts.*.min_quantity' => 'required_with:tiered_discounts|integer|min:1',
+        'tiered_discounts.*.type' => 'required_with:tiered_discounts|in:Fijo,Porcentaje,NxN',
+        'tiered_discounts.*.value' => 'required_unless:tiered_discounts.*.type,NxN|nullable|numeric|min:0',
+        'tiered_discounts.*.nxn_buy' => 'required_if:tiered_discounts.*.type,NxN|nullable|integer|min:2',
+        'tiered_discounts.*.nxn_pay' => 'required_if:tiered_discounts.*.type,NxN|nullable|integer|min:1|lt:tiered_discounts.*.nxn_buy',
+        'flash_enabled' => 'boolean',
+    ]);
 
-        if ($validator->fails()) {
-            $this->logAudit(Auth::user(), 'Update Coupon', $request->all(), $validator->errors());
-            return $this->validationError($validator->errors());
-        }
-
-        $appliesToAllProducts = $request->input('products_all', false);
-        if ($appliesToAllProducts || (is_array($request->products) && in_array('all', $request->products))) {
-            $appliesToAllProducts = true;
-            $productIdsToSync = [];
-        } else {
-            $productIdsToSync = $request->products ?? [];
-        }
-
-        $coupon->update([
-            'name' => $request->name,
-            'code' => $request->code,
-            'date_from' => $request->date_from,
-            'date_to' => $request->date_to,
-            'min_amount' => $request->min_amount,
-            'type' => $request->type,
-            'applies_to_shipping' => $request->applies_to_shipping ?? false,
-            'applies_to_web' => $request->applies_to_web ?? false,
-            'applies_to_sale_price' => $request->applies_to_sale_price ?? false,
-            'max_use_per_user' => $request->max_use_per_user,
-            'max_use_per_code' => $request->max_use_per_code,
-            'coupon_status_id' => $request->coupon_status_id,
-            'applies_to_all_products' => $appliesToAllProducts,
-            'value' => $request->value,
-            'tiered_discounts_enabled' => $request->tiered_discounts_enabled ?? false,
-            'tiered_discounts' => $request->tiered_discounts ?? null,
-            'flash_enabled' => $request->flash_enabled ?? false,
-        ]);
-
-        $coupon->categories()->sync($request->categories ?? []);
-
-        if ($appliesToAllProducts) {
-            $coupon->products()->detach();
-        } else {
-            $coupon->products()->sync($productIdsToSync);
-        }
-
-        $coupon->load('categories:id', 'products:id');
-        $coupon->loadCount('salesMany as sales_count');
-        $this->logAudit(Auth::user(), 'Update Coupon', $request->all(), $coupon);
-
-        return $this->success($coupon, 'Cupon actualizado');
+    if ($validator->fails()) {
+        $this->logAudit(Auth::user(), 'Update Coupon', $request->all(), $validator->errors());
+        return $this->validationError($validator->errors());
     }
+
+    $appliesToAllProducts = $request->input('products_all', false);
+    if ($appliesToAllProducts || (is_array($request->products) && in_array('all', $request->products))) {
+        $appliesToAllProducts = true;
+        $productIdsToSync = [];
+    } else {
+        $productIdsToSync = $request->products ?? [];
+    }
+
+    $coupon->update([
+        'name' => $request->name,
+        'code' => $request->code,
+        'date_from' => $request->date_from,
+        'date_to' => $request->date_to,
+        'min_amount' => $request->min_amount,
+        'type' => $request->type,
+        'applies_to_shipping' => $request->applies_to_shipping ?? false,
+        'applies_to_web' => $request->applies_to_web ?? false,
+        'applies_to_sale_price' => $request->applies_to_sale_price ?? false,
+        'max_use_per_user' => $request->max_use_per_user,
+        'max_use_per_code' => $request->max_use_per_code,
+        'coupon_status_id' => $request->coupon_status_id,
+        'applies_to_all_products' => $appliesToAllProducts,
+        'value' => $request->type === 'NxN' ? 0 : $request->value,
+        'nxn_buy' => $request->type === 'NxN' ? $request->nxn_buy : null,
+        'nxn_pay' => $request->type === 'NxN' ? $request->nxn_pay : null,
+        'tiered_discounts_enabled' => $request->tiered_discounts_enabled ?? false,
+        'tiered_discounts' => $request->tiered_discounts ?? null,
+        'flash_enabled' => $request->flash_enabled ?? false,
+    ]);
+
+    $coupon->categories()->sync($request->categories ?? []);
+
+    if ($appliesToAllProducts) {
+        $coupon->products()->detach();
+    } else {
+        $coupon->products()->sync($productIdsToSync);
+    }
+
+    $coupon->load('categories:id', 'products:id');
+    $coupon->loadCount('salesMany as sales_count');
+    $this->logAudit(Auth::user(), 'Update Coupon', $request->all(), $coupon);
+
+    return $this->success($coupon, 'Cupon actualizado');
+}
+
 
     public function delete($id)
     {
@@ -362,6 +380,8 @@ class CouponController extends Controller
             'code' => $coupon->code,
             'type' => $coupon->type,
             'value' => $coupon->value,
+            'nxn_buy' => $coupon->nxn_buy,
+            'nxn_pay' => $coupon->nxn_pay,
             'applies_to_shipping' => $coupon->applies_to_shipping,
             'applies_to_all_products' => $coupon->applies_to_all_products,
             'applies_to_web' => $coupon->applies_to_web,

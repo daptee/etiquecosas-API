@@ -18,17 +18,22 @@ class AttributeController extends Controller
 
     public function index(Request $request)
     {
-        $search = $request->query('search');
+        $search   = $request->query('search');
         $statusId = $request->query('statusId');
-        $perPage = $request->query('quantity');
-        $page = $request->query('page', 1);
+        $type     = $request->query('type');
+        $perPage  = $request->query('quantity');
+        $page     = $request->query('page', 1);
         $query = Attribute::with(['values.generalStatus', 'generalStatus']);
         if ($search) {
             $query->where('name', 'like', "%{$search}%");
         }
 
         if ($statusId) {
-            $query->where('statusId', $statusId);
+            $query->where('status_id', $statusId);
+        }
+
+        if ($type) {
+            $query->where('type', $type);
         }
 
         $query->orderBy('name', 'asc');
@@ -60,14 +65,6 @@ class AttributeController extends Controller
             'values.*.value'                => 'required|string|max:255',
             'values.*.statusId'             => 'nullable|in:1,2',
             'values.*.metadata'             => 'nullable|array',
-            'values.*.metadata.colors'      => 'nullable|array',
-            'values.*.metadata.colors.*'    => 'nullable|string|max:50',
-            'values.*.metadata.icons'       => 'nullable|array',
-            'values.*.metadata.icons.*'     => 'nullable|string|max:255',
-            'values.*.metadata.texts'             => 'nullable|array',
-            'values.*.metadata.texts.*'           => 'nullable|string|max:255',
-            'values.*.metadata.typography_ids'    => 'nullable|array',
-            'values.*.metadata.typography_ids.*'  => 'nullable|integer|exists:typographies,id',
         ]);
         if ($validator->fails()) {
             $this->logAudit(Auth::user(), 'Store Attribute', $request->all(), $validator->errors());
@@ -107,14 +104,6 @@ class AttributeController extends Controller
             'values.*.value'                => 'required|string|max:255',
             'values.*.statusId'             => 'nullable|in:1,2',
             'values.*.metadata'             => 'nullable|array',
-            'values.*.metadata.colors'      => 'nullable|array',
-            'values.*.metadata.colors.*'    => 'nullable|string|max:50',
-            'values.*.metadata.icons'       => 'nullable|array',
-            'values.*.metadata.icons.*'     => 'nullable|string|max:255',
-            'values.*.metadata.texts'             => 'nullable|array',
-            'values.*.metadata.texts.*'           => 'nullable|string|max:255',
-            'values.*.metadata.typography_ids'    => 'nullable|array',
-            'values.*.metadata.typography_ids.*'  => 'nullable|integer|exists:typographies,id',
         ]);
 
         if ($validator->fails()) {

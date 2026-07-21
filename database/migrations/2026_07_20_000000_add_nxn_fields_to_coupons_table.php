@@ -6,23 +6,19 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::table('coupons', function (Blueprint $table) {
-            $table->boolean('applies_to_all_products')->default(false)->after('type');
+            // Permitimos nxn_buy (lleva N) y nxn_pay (paga M)
+            $table->unsignedInteger('nxn_buy')->nullable()->after('value');
+            $table->unsignedInteger('nxn_pay')->nullable()->after('nxn_buy');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::table('coupons', function (Blueprint $table) {
-            //
+            $table->dropColumn(['nxn_buy', 'nxn_pay']);
         });
     }
 };
