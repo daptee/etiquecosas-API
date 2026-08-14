@@ -16,6 +16,8 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\AttributeController;
 use App\Http\Controllers\TypographyController;
+use App\Http\Controllers\LabelShapeController;
+use App\Http\Controllers\ProductPdfDesignController;
 use App\Http\Controllers\CostController;
 use App\Http\Controllers\ConfigurationTagController;
 use App\Http\Controllers\ProfileController;
@@ -104,7 +106,13 @@ Route::prefix('v1')->group(function () {
     // icons
     Route::get('icons', [PersonalizationIconController::class, 'index']);
 
-    
+    // label shapes (formas/tamaños de etiqueta del editor de PDFs)
+    Route::get('label-shapes', [LabelShapeController::class, 'index']);
+
+    // product pdf designs (diseños armados desde el editor de PDFs)
+    Route::get('product-pdf-designs', [ProductPdfDesignController::class, 'index']);
+
+
     // Coupons
     Route::patch('coupons/validate', [CouponController::class, 'validateCoupon']);
 
@@ -188,6 +196,27 @@ Route::middleware('jwt.auth')->prefix('attributes')->group(function () {
     // Imágenes de attribute values
     Route::post('/values/{id}/images', [AttributeController::class, 'uploadValueImages']);
     Route::delete('/values/{id}/images', [AttributeController::class, 'deleteValueImage']);
+});
+
+// Label shapes
+Route::middleware('jwt.auth')->prefix('label-shapes')->group(function () {
+    Route::get('/', [LabelShapeController::class, 'index']);
+    Route::get('/{id}', [LabelShapeController::class, 'show']);
+    Route::post('/', [LabelShapeController::class, 'store']);
+    Route::post('/{id}', [LabelShapeController::class, 'update']);
+    Route::patch('/{id}/toggle-status', [LabelShapeController::class, 'toggleStatus']);
+    Route::delete('/{id}', [LabelShapeController::class, 'delete']);
+});
+
+// Product Pdf Designs (editor de PDFs)
+Route::middleware('jwt.auth')->prefix('product-pdf-designs')->group(function () {
+    Route::get('/', [ProductPdfDesignController::class, 'index']);
+    Route::get('/{id}', [ProductPdfDesignController::class, 'show']);
+    Route::post('/', [ProductPdfDesignController::class, 'store']);
+    Route::post('/{id}', [ProductPdfDesignController::class, 'update']);
+    Route::patch('/{id}/toggle-status', [ProductPdfDesignController::class, 'toggleStatus']);
+    Route::delete('/{id}', [ProductPdfDesignController::class, 'delete']);
+    Route::get('/{id}/preview', [ProductPdfDesignController::class, 'preview']);
 });
 
 // Cost

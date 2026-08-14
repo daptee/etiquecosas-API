@@ -2,6 +2,9 @@
 
 namespace App\Services;
 
+use App\Models\PersonalizationIcon;
+use App\Models\ProductPdfDesign;
+use App\Models\Typography;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -281,6 +284,117 @@ class EtiquetaService
         }
 
         return $outputFiles;
+    }
+
+    /**
+     * Genera el/los PDF de etiqueta a partir de un diseño armado desde el editor
+     * del front (product_pdf_designs), en vez de las vistas fijas por temática.
+     * No modifica generarEtiquetas(): es el equivalente para diseños nuevos.
+     */
+    public static function generarEtiquetasDesdeDesign(int $ventaId, ProductPdfDesign $design, $productOrder, array $nombres, $customColor, $customIcon, $fechaCompra = null, array $firstNames = []): array
+    {
+        $outputFiles = [];
+        $fechaCarpeta = $fechaCompra
+            ? Carbon::parse($fechaCompra)->setTimezone('America/Argentina/Buenos_Aires')->format('d-m-Y')
+            : Carbon::now('America/Argentina/Buenos_Aires')->format('d-m-Y');
+        $dirPath = storage_path("app/pdf/planchas/{$fechaCarpeta}");
+        if (!is_dir($dirPath)) mkdir($dirPath, 0755, true);
+
+        $sheet = $design->data['sheet'] ?? ['width_cm' => 18.5, 'height_cm' => 29, 'columns' => 3, 'rows' => 5];
+        $elements = $design->data['elements'] ?? [];
+        $sufijo = self::limpiarNombreArchivo(strtoupper($design->name ?: 'DESIGN'));
+
+        foreach ($nombres as $idx => $nombre) {
+            $resolvedElements = array_map(
+                fn($el) => self::resolverElementoDesign($el, $nombre, $customColor, $customIcon),
+                $elements
+            );
+
+            $plantilla = [
+                'design' => [
+                    'sheet' => $sheet,
+                    'elements' => $resolvedElements,
+                ],
+            ];
+
+            $product_order = (object)[
+                'name' => $nombre,
+                'firstName' => $firstNames[$idx] ?? null,
+                'order' => (object)['id_external' => $ventaId],
+            ];
+
+            $filePath = "{$dirPath}/{$ventaId}-{$productOrder->id}-{$productOrder->product->name}-{$sufijo}-" . ($idx + 1) . ".pdf";
+
+            try {
+                $pdf = Pdf::loadView('tematica.editor.RENDER', compact('plantilla', 'product_order'))->setPaper('a4', 'portrait');
+                $dompdf = $pdf->getDomPDF();
+                $dompdf->getOptions()->setFontDir(public_path('fonts'));
+                $dompdf->getOptions()->setFontCache(storage_path('fonts_cache'));
+                $pdf->save($filePath);
+                $outputFiles[] = $filePath;
+                Log::info("✅ PDF (editor) generado", ['path' => $filePath]);
+            } catch (\Throwable $e) {
+                Log::error("❌ Error generando PDF desde diseño del editor", [
+                    'design_id' => $design->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        return $outputFiles;
+    }
+
+    /**
+     * Resuelve un elemento del JSON del diseño: icono/tipografía reales desde los
+     * catálogos existentes, texto con el nombre del cliente, y overrides del cliente
+     * (color/ícono) SOLO si el elemento fue marcado como editable por el admin.
+     */
+    private static function resolverElementoDesign(array $el, string $nombre, $customColor, $customIcon): array
+    {
+        $type = $el['type'] ?? null;
+        $editable = ($el['editable_by_customer'] ?? false) === true;
+        $field = $el['editable_field'] ?? null;
+
+        if ($type === 'icon') {
+            $iconPath = null;
+
+            if ($editable && $field === 'icon' && $customIcon) {
+                $iconPath = public_path($customIcon);
+            } elseif (!empty($el['icon_id'])) {
+                $icon = PersonalizationIcon::find($el['icon_id']);
+                $iconPath = $icon && $icon->icon ? public_path($icon->icon) : null;
+            }
+
+            $el['resolved_icon_path'] = $iconPath;
+        }
+
+        if ($type === 'text') {
+            $content = $el['content'] ?? '{{customer_name}}';
+            $el['resolved_text'] = str_replace('{{customer_name}}', $nombre, $content);
+
+            $el['resolved_font_family'] = null;
+            $el['resolved_font_files'] = [];
+
+            if (!empty($el['font_id'])) {
+                $typography = Typography::with('files')->find($el['font_id']);
+                if ($typography) {
+                    $el['resolved_font_family'] = $typography->name;
+                    $el['resolved_font_files'] = $typography->files
+                        ->map(fn($file) => public_path($file->file_path))
+                        ->values()
+                        ->all();
+                }
+            }
+        }
+
+        if (in_array($type, ['background', 'text'], true) && $editable && $field === 'color' && $customColor) {
+            $colorValue = is_array($customColor) ? ($customColor[0] ?? null) : $customColor;
+            if ($colorValue) {
+                $el['color'] = ['mode' => 'hex', 'value' => $colorValue];
+            }
+        }
+
+        return $el;
     }
 
     /**
