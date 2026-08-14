@@ -16,6 +16,7 @@ class StockMovement extends Model
         'product_id',
         'product_variant_id',
         'quantity',
+        'stock_before',
         'note',
         'user_id',
         'sale_id',
@@ -24,8 +25,9 @@ class StockMovement extends Model
     ];
 
     protected $casts = [
-        'quantity'   => 'integer',
-        'created_at' => 'datetime',
+        'quantity'     => 'integer',
+        'stock_before' => 'integer',
+        'created_at'   => 'datetime',
     ];
 
     protected static function booted(): void
