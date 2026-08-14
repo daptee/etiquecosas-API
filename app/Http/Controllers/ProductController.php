@@ -383,7 +383,8 @@ class ProductController extends Controller
             'customization',
             'wholesales:id,product_id,amount,discount',
             'relatedProducts' => function ($query) use ($isWholesaleClient) {
-                $query->select('products.id', 'name', 'sku', 'slug', 'price', 'discounted_price', 'discounted_start', 'discounted_end', 'product_type_id', 'product_status_id', 'product_stock_status_id', 'stock_quantity', 'stock_channels', 'is_sale');
+                $query->select('products.id', 'name', 'sku', 'slug', 'price', 'discounted_price', 'discounted_start', 'discounted_end', 'product_type_id', 'product_status_id', 'product_stock_status_id', 'stock_quantity', 'stock_channels', 'is_sale')
+                    ->where('products.product_status_id', 2); // Solo productos publicados
                 if ($isWholesaleClient) {
                     $clientId = auth('client')->user()->id;
                     $query->whereJsonContains('products.stock_channels', ['channel' => 4])
@@ -442,7 +443,8 @@ class ProductController extends Controller
             'customization',
             'wholesales:id,product_id,amount,discount',
             'relatedProducts' => function ($query) use ($isWholesaleClient) {
-                $query->select('products.id', 'name', 'sku', 'slug', 'price', 'discounted_price', 'discounted_start', 'discounted_end', 'product_type_id', 'product_status_id', 'product_stock_status_id', 'stock_quantity', 'stock_channels', 'is_sale');
+                $query->select('products.id', 'name', 'sku', 'slug', 'price', 'discounted_price', 'discounted_start', 'discounted_end', 'product_type_id', 'product_status_id', 'product_stock_status_id', 'stock_quantity', 'stock_channels', 'is_sale')
+                    ->where('products.product_status_id', 2); // Solo productos publicados
                 if ($isWholesaleClient) {
                     $clientId = auth('client')->user()->id;
                     $query->whereJsonContains('products.stock_channels', ['channel' => 4])
