@@ -773,6 +773,7 @@
         <tr><td class="td-code">product_id</td><td>FK → products</td><td>Producto afectado (cascade delete)</td></tr>
         <tr><td class="td-code">product_variant_id</td><td>FK nullable</td><td>Variante afectada (null on delete)</td></tr>
         <tr><td class="td-code">quantity</td><td>integer</td><td>Negativo = salida · Positivo = ingreso</td></tr>
+        <tr><td class="td-code">stock_before</td><td>integer nullable</td><td>Stock disponible inmediatamente antes del movimiento. Null si el producto/variante no tiene control de stock</td></tr>
         <tr><td class="td-code">note</td><td>text</td><td>Razón legible del movimiento</td></tr>
         <tr><td class="td-code">sale_id</td><td>FK nullable</td><td>Venta relacionada (null on delete)</td></tr>
         <tr><td class="td-code">user_id</td><td>FK nullable</td><td>Usuario responsable (null on delete)</td></tr>
@@ -785,12 +786,12 @@
       <div class="card card-danger">
         <div class="card-title">Salida de stock</div>
         <code>"Deducción por confirmación de pedido #1042"</code><br><br>
-        quantity: <strong>-3</strong>
+        quantity: <strong>-3</strong> · stock_before: <strong>10</strong>
       </div>
       <div class="card card-success">
         <div class="card-title">Entrada de stock</div>
         <code>"Restauración por cancelación de pedido #1042"</code><br><br>
-        quantity: <strong>+3</strong>
+        quantity: <strong>+3</strong> · stock_before: <strong>7</strong>
       </div>
     </div>
   </div>

@@ -61,7 +61,9 @@ class StockService
             $quantity  = $productOrder->quantity;
             $channelId = $sale->channel_id;
 
-            $stock = self::resolveStock($product, $variant, $channelId);
+            $stock       = self::resolveStock($product, $variant, $channelId);
+            $stockBefore = ($stock !== null && !$stock['always_in_stock']) ? $stock['available'] : null;
+
             if ($stock !== null && !$stock['always_in_stock']) {
                 self::applyStockChange($product, $variant, $channelId, -$quantity, $stock['source']);
             }
@@ -70,6 +72,7 @@ class StockService
                 productId:   $product->id,
                 variantId:   $variant ? $variant->id : null,
                 quantity:    -$quantity,
+                stockBefore: $stockBefore,
                 note:        "Deducción por confirmación de pedido #{$sale->id}",
                 saleId:      $sale->id,
                 userId:      null,
@@ -96,7 +99,9 @@ class StockService
             $quantity  = $productOrder->quantity;
             $channelId = $sale->channel_id;
 
-            $stock = self::resolveStock($product, $variant, $channelId);
+            $stock       = self::resolveStock($product, $variant, $channelId);
+            $stockBefore = ($stock !== null && !$stock['always_in_stock']) ? $stock['available'] : null;
+
             if ($stock !== null && !$stock['always_in_stock']) {
                 self::applyStockChange($product, $variant, $channelId, +$quantity, $stock['source']);
             }
@@ -105,6 +110,7 @@ class StockService
                 productId:   $product->id,
                 variantId:   $variant ? $variant->id : null,
                 quantity:    +$quantity,
+                stockBefore: $stockBefore,
                 note:        "Restauración por cancelación de pedido #{$sale->id}",
                 saleId:      $sale->id,
                 userId:      null,
@@ -248,6 +254,7 @@ class StockService
         ?int    $variantId,
         int     $quantity,
         string  $note,
+        ?int    $stockBefore = null,
         ?int    $saleId = null,
         ?int    $userId = null,
         ?int    $channelId = null,
@@ -258,6 +265,7 @@ class StockService
                 'product_id'         => $productId,
                 'product_variant_id' => $variantId,
                 'quantity'           => $quantity,
+                'stock_before'       => $stockBefore,
                 'note'               => $note,
                 'sale_id'            => $saleId,
                 'user_id'            => $userId,
