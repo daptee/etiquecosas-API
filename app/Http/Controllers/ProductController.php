@@ -182,6 +182,7 @@ class ProductController extends Controller
                 'wholesale_min_amount',
                 'tag_id',
                 'meta_data',
+                'stock_quantity'
                 'stock_channels',
                 'is_feature',
                 'is_customizable',
