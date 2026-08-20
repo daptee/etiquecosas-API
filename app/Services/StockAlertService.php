@@ -30,40 +30,59 @@ class StockAlertService
                 $variantLabel = $variantData['name'] ?? ("Variante #" . $variant->id);
 
                 $stockChannels = $variant->stock_channels ?? [];
-                foreach ($stockChannels as $channel) {
-                    $channelStockAlert = isset($channel['stock_alert']) ? (int) $channel['stock_alert'] : null;
-                    if ($channelStockAlert === null) continue;
+                $seenGeneral   = false;
 
-                    // Resolver stock real respetando is_heritable
-                    $stock = StockService::resolveStock($product, $variant, (int) $channel['channel']);
-                    if ($stock === null || $stock['always_in_stock']) continue;
+                // Un canal por cada entrada configurada, más un chequeo general
+                // (cubre stock sin canales y canales con is_heritable=1).
+                $channelIds = collect($stockChannels)->pluck('channel')->map(fn($c) => (int) $c)->push(0);
 
-                    if ($stock['available'] <= $channelStockAlert) {
+                foreach ($channelIds->unique() as $channelId) {
+                    $stock = StockService::resolveStock($product, $variant, $channelId);
+                    if ($stock === null || $stock['always_in_stock'] || $stock['stock_alert'] === null) continue;
+
+                    // Los niveles "general" no dependen del canal: evitar alertar duplicado por cada canal heredado.
+                    if ($stock['source'] === 'variant_general') {
+                        if ($seenGeneral) continue;
+                        $seenGeneral = true;
+                    }
+
+                    if ($stock['available'] <= $stock['stock_alert']) {
+                        $channelEntry = collect($stockChannels)->firstWhere('channel', $channelId);
                         $alerts[] = [
                             'variante'     => $variantLabel,
-                            'canal'        => $channel['channel_name'] ?? ('Canal ' . $channel['channel']),
+                            'canal'        => $stock['source'] === 'variant_channel'
+                                ? ($channelEntry['channel_name'] ?? ('Canal ' . $channelId))
+                                : 'General',
                             'stock_actual' => $stock['available'],
-                            'stock_alerta' => $channelStockAlert,
+                            'stock_alerta' => $stock['stock_alert'],
                         ];
                     }
                 }
             }
         } else {
             $stockChannels = $product->stock_channels ?? [];
-            foreach ($stockChannels as $channel) {
-                $channelStockAlert = isset($channel['stock_alert']) ? (int) $channel['stock_alert'] : null;
-                if ($channelStockAlert === null) continue;
+            $seenGeneral   = false;
 
-                // Resolver stock real respetando is_heritable
-                $stock = StockService::resolveStock($product, null, (int) $channel['channel']);
-                if ($stock === null || $stock['always_in_stock']) continue;
+            $channelIds = collect($stockChannels)->pluck('channel')->map(fn($c) => (int) $c)->push(0);
 
-                if ($stock['available'] <= $channelStockAlert) {
+            foreach ($channelIds->unique() as $channelId) {
+                $stock = StockService::resolveStock($product, null, $channelId);
+                if ($stock === null || $stock['always_in_stock'] || $stock['stock_alert'] === null) continue;
+
+                if ($stock['source'] === 'product_general') {
+                    if ($seenGeneral) continue;
+                    $seenGeneral = true;
+                }
+
+                if ($stock['available'] <= $stock['stock_alert']) {
+                    $channelEntry = collect($stockChannels)->firstWhere('channel', $channelId);
                     $alerts[] = [
                         'variante'     => 'General',
-                        'canal'        => $channel['channel_name'] ?? ('Canal ' . $channel['channel']),
+                        'canal'        => $stock['source'] === 'product_channel'
+                            ? ($channelEntry['channel_name'] ?? ('Canal ' . $channelId))
+                            : 'General',
                         'stock_actual' => $stock['available'],
-                        'stock_alerta' => $channelStockAlert,
+                        'stock_alerta' => $stock['stock_alert'],
                     ];
                 }
             }

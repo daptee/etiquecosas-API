@@ -145,6 +145,7 @@ class StockService
                         'always_in_stock' => false,
                         'available'       => (int) ($ch['stock_quantity'] ?? 0),
                         'source'          => 'variant_channel',
+                        'stock_alert'     => isset($ch['stock_alert']) ? (int) $ch['stock_alert'] : null,
                     ];
                 }
                 // is_heritable=1 → cae al paso 2 sin importar stock_status
@@ -160,6 +161,7 @@ class StockService
                         'always_in_stock' => false,
                         'available'       => (int) $variantData['stock_quantity'],
                         'source'          => 'variant_general',
+                        'stock_alert'     => isset($variantData['stock_alert']) ? (int) $variantData['stock_alert'] : null,
                     ];
                 }
             }
@@ -178,6 +180,7 @@ class StockService
                         'always_in_stock' => false,
                         'available'       => (int) ($ch['stock_quantity'] ?? 0),
                         'source'          => 'product_channel',
+                        'stock_alert'     => isset($ch['stock_alert']) ? (int) $ch['stock_alert'] : null,
                     ];
                 }
                 // is_heritable=1 → cae al paso 4 sin importar stock_status
@@ -193,6 +196,7 @@ class StockService
                 'always_in_stock' => false,
                 'available'       => (int) $product->stock_quantity,
                 'source'          => 'product_general',
+                'stock_alert'     => $product->stock_alert !== null ? (int) $product->stock_alert : null,
             ];
         }
 

@@ -214,11 +214,18 @@ class ProductVariantController extends Controller
                 ]);
             }
 
-            // Actualizar alerta de stock si se envió stock_alert
+            // Actualizar alerta de stock si se envió stock_alert.
+            // Se guarda en cada entrada de stock_channels (no en variant.stock_alert),
+            // que es de donde StockAlertService lee el umbral para variantes con stock por canal.
             if ($stockAlert !== null) {
-                $variantData               = $variant->variant;
-                $variantData['stock_alert'] = $stockAlert;
-                $variant->variant          = $variantData;
+                $currentChannels = $variant->stock_channels ?? [];
+                $currentChannels = array_map(function ($ch) use ($stockAlert, $channelId) {
+                    if ($channelId === null || (int) ($ch['channel'] ?? null) === (int) $channelId) {
+                        $ch['stock_alert'] = $stockAlert;
+                    }
+                    return $ch;
+                }, $currentChannels);
+                $variant->stock_channels = $currentChannels;
                 $variant->save();
             }
 
