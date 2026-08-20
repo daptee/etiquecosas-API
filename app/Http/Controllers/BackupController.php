@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Mail\OrderProductionReminderMail;
+use App\Mail\OrderProductionSellerAlertMail;
 use App\Mail\StalledProductionAlertMail;
 use App\Models\Sale;
 use App\Traits\ApiResponse;
@@ -64,11 +65,13 @@ class BackupController extends Controller
     }
 
     /**
-     * Notificar pedidos en producción (5 días)
+     * Notificar pedidos en producción (5 días al cliente, 10 días internamente)
      */
     public function notifyProductionOrders()
     {
         try {
+            $results = [];
+
             // Fecha de hace exactamente 5 días (solo la fecha, sin considerar hora)
             $targetDate = Carbon::now()->subDays(5)->startOfDay();
 
@@ -85,35 +88,35 @@ class BackupController extends Controller
 
             if ($sales->isEmpty()) {
                 Log::info('Notify Production: No se encontraron pedidos con 5 días en producción.');
-                $this->logAudit(null, 'Notify Production Orders', [], ['status' => 'success', 'message' => 'No hay pedidos que cumplan los criterios']);
-                return $this->success(['output' => 'No hay pedidos que cumplan los criterios (5 días en producción).'], 'Verificación completada');
-            }
+                $results[] = 'No hay pedidos que cumplan los criterios (5 días en producción).';
+                $successCount = 0;
+                $failureCount = 0;
+            } else {
+                $successCount = 0;
+                $failureCount = 0;
 
-            $successCount = 0;
-            $failureCount = 0;
-            $results = [];
+                foreach ($sales as $sale) {
+                    try {
+                        // Verificar que el cliente tenga email válido
+                        if (!$sale->client || !$sale->client->email) {
+                            Log::warning("Notify Production: Pedido #{$sale->id} - Cliente sin email válido");
+                            $failureCount++;
+                            $results[] = "Pedido #{$sale->id}: Cliente sin email válido";
+                            continue;
+                        }
 
-            foreach ($sales as $sale) {
-                try {
-                    // Verificar que el cliente tenga email válido
-                    if (!$sale->client || !$sale->client->email) {
-                        Log::warning("Notify Production: Pedido #{$sale->id} - Cliente sin email válido");
+                        // Enviar el correo usando la plantilla de recordatorio
+                        Mail::to($sale->client->email)->send(new OrderProductionReminderMail($sale));
+
+                        Log::info("Notify Production: Correo enviado exitosamente - Pedido #{$sale->id} - Cliente: {$sale->client->email}");
+                        $successCount++;
+                        $results[] = "Pedido #{$sale->id}: Notificación enviada a {$sale->client->email}";
+
+                    } catch (\Exception $e) {
+                        Log::error("Notify Production: Error al enviar correo - Pedido #{$sale->id} - Error: {$e->getMessage()}");
                         $failureCount++;
-                        $results[] = "Pedido #{$sale->id}: Cliente sin email válido";
-                        continue;
+                        $results[] = "Pedido #{$sale->id}: Error - {$e->getMessage()}";
                     }
-
-                    // Enviar el correo usando la plantilla de recordatorio
-                    Mail::to($sale->client->email)->send(new OrderProductionReminderMail($sale));
-
-                    Log::info("Notify Production: Correo enviado exitosamente - Pedido #{$sale->id} - Cliente: {$sale->client->email}");
-                    $successCount++;
-                    $results[] = "Pedido #{$sale->id}: Notificación enviada a {$sale->client->email}";
-
-                } catch (\Exception $e) {
-                    Log::error("Notify Production: Error al enviar correo - Pedido #{$sale->id} - Error: {$e->getMessage()}");
-                    $failureCount++;
-                    $results[] = "Pedido #{$sale->id}: Error - {$e->getMessage()}";
                 }
             }
 
@@ -127,6 +130,11 @@ class BackupController extends Controller
                 'failed' => $failureCount
             ]);
 
+            // Además, avisar internamente a MAIL_NOTIFICATION_TO los pedidos que
+            // cumplen exactamente 10 días en producción.
+            $stalledResult = $this->notifyStalledProductionToInternalMail();
+            $results[] = $stalledResult;
+
             return $this->success([
                 'output' => implode("\n", $results),
                 'summary' => $summary
@@ -135,6 +143,64 @@ class BackupController extends Controller
         } catch (\Exception $e) {
             $this->logAudit(null, 'Notify Production Orders Error', [], $e->getMessage());
             return $this->error('Error al notificar pedidos: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * Avisa internamente a MAIL_NOTIFICATION_TO los pedidos que cumplen
+     * exactamente 10 días (calendario) en producción.
+     */
+    private function notifyStalledProductionToInternalMail(): string
+    {
+        $days = 10;
+        $targetDate = Carbon::now()->subDays($days)->startOfDay();
+
+        $stalledSales = Sale::where('sale_status_id', 2)
+            ->whereHas('statusHistory', function ($query) use ($targetDate) {
+                $query->where('sale_status_id', 2)
+                    ->whereDate('date', '=', $targetDate->toDateString());
+            })
+            ->with(['client', 'products', 'status', 'statusHistory' => function ($query) {
+                $query->where('sale_status_id', 2)->orderBy('date', 'asc');
+            }])
+            ->get();
+
+        if ($stalledSales->isEmpty()) {
+            Log::info("Notify Production: No hay pedidos con {$days} días en producción.");
+            return "No hay pedidos con {$days} días en producción.";
+        }
+
+        $notifyEmail = env('MAIL_NOTIFICATION_TO');
+
+        if (!$notifyEmail) {
+            Log::warning('Notify Production: MAIL_NOTIFICATION_TO no configurado en .env');
+            return "Se encontraron {$stalledSales->count()} pedido(s) con {$days} días en producción, pero MAIL_NOTIFICATION_TO no está configurado.";
+        }
+
+        $stalledSales->each(function ($sale) {
+            $productionHistory = $sale->statusHistory->first();
+            $sale->production_entry_date = $productionHistory
+                ? Carbon::parse($productionHistory->date)->format('d/m/Y H:i')
+                : 'N/A';
+        });
+
+        try {
+            Mail::to($notifyEmail)->send(new OrderProductionSellerAlertMail($stalledSales, $days));
+
+            $salesIds = $stalledSales->pluck('id')->toArray();
+            Log::info("Notify Production: Alerta de {$days} días enviada a {$notifyEmail} - Pedidos: " . implode(', ', $salesIds));
+
+            $this->logAudit(null, 'Notify Production Orders - Internal Alert', [], [
+                'status' => 'success',
+                'days' => $days,
+                'notify_email' => $notifyEmail,
+                'sales_ids' => $salesIds,
+            ]);
+
+            return "Alerta interna enviada a {$notifyEmail} - Pedido(s) con {$days} días en producción: " . implode(', ', $salesIds);
+        } catch (\Exception $e) {
+            Log::error("Notify Production: Error al enviar alerta de {$days} días - {$e->getMessage()}");
+            return "Error al enviar alerta interna de {$days} días: {$e->getMessage()}";
         }
     }
 
