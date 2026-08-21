@@ -11,9 +11,7 @@ class ProductPdfDesign extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'product_id',
         'label_shape_id',
-        'theme_key',
         'name',
         'data',
         'is_published',
@@ -25,11 +23,6 @@ class ProductPdfDesign extends Model
         'is_published' => 'boolean',
     ];
 
-    public function product()
-    {
-        return $this->belongsTo(Product::class);
-    }
-
     public function labelShape()
     {
         return $this->belongsTo(LabelShape::class);
@@ -38,5 +31,21 @@ class ProductPdfDesign extends Model
     public function generalStatus()
     {
         return $this->belongsTo(GeneralStatus::class, 'status_id');
+    }
+
+    /**
+     * Productos que usan este diseño. Cada vínculo tiene su propio theme_key
+     * (la variante/temática que lo selecciona en ese producto puntual).
+     */
+    public function products()
+    {
+        return $this->belongsToMany(Product::class, 'product_pdf_design_products')
+            ->withPivot('id', 'theme_key')
+            ->withTimestamps();
+    }
+
+    public function productLinks()
+    {
+        return $this->hasMany(ProductPdfDesignProduct::class);
     }
 }

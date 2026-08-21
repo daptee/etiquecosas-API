@@ -69,78 +69,103 @@ Base: `/api/label-shapes` (JWT). Lectura pública sin auth: `GET /api/v1/label-s
 
 ---
 
-## 2. Diseños de PDF por producto (`product_pdf_designs`)
+## 2. Diseños de PDF (`product_pdf_designs`)
 
-Un diseño armado en el editor para un producto puntual. **Una fila por diseño-variante** — igual que hoy un producto puede tener varias temáticas seleccionables, acá puede tener varios diseños (uno por variante, o uno único sin variante).
+Un diseño **no pertenece a un solo producto**: es una entidad independiente (una plantilla) que se puede crear sin asignarla a nada todavía, y después vincular a uno o varios productos. El vínculo entre un diseño y un producto vive en una tabla aparte, `product_pdf_design_products`, porque la variante/temática que selecciona ese diseño puede ser distinta en cada producto donde se usa.
 
-### Modelo
+### Modelo — `product_pdf_designs` (el diseño en sí)
 
 | Campo | Tipo | Descripción |
 |---|---|---|
-| `productId` | number | Producto al que pertenece (requerido) |
 | `labelShapeId` | number \| null | Forma/tamaño de etiqueta usada (`label_shapes.id`) |
-| `themeKey` | number \| null | ID de la variante/temática que selecciona este diseño (el mismo id que hoy usan las `attribute_values` de una variante). `null` = diseño único, sin selector |
 | `name` | string | Nombre visible del diseño, ej. "Basquet - Maxi" |
 | `data` | object | **El diseño en sí** (ver esquema abajo) |
-| `isPublished` | boolean | `false` = borrador (el admin lo está editando, no se usa para generar PDFs reales). `true` = se usa en la generación real de la próxima venta |
+| `isPublished` | boolean | `false` = borrador (el admin lo está editando, no se usa para generar PDFs reales aunque ya esté vinculado a productos). `true` = se usa en la generación real de la próxima venta |
 | `statusId` | 1 \| 2 | 1 = activo, 2 = inactivo |
+| `products` | array | (solo lectura, viene incluido en las respuestas) los productos vinculados a este diseño, cada uno con su `pivot.themeKey` y `pivot.id` (el id del vínculo, para poder desvincularlo) |
 
-> Un producto solo puede tener **un** diseño por combinación de `productId` + `themeKey` (incluyendo un único diseño sin `themeKey`).
+Un diseño se puede crear **sin ningún producto vinculado** — sirve como borrador o como plantilla para reutilizar más adelante. No es necesario mandar `productId` al crearlo.
+
+### Modelo — vínculo diseño↔producto (`product_pdf_design_products`)
+
+| Campo | Tipo | Descripción |
+|---|---|---|
+| `productId` | number | Producto que usa este diseño |
+| `themeKey` | number \| null | ID de la variante/temática que, **en ese producto**, selecciona este diseño (el mismo id que hoy usan las `attribute_values` de una variante). `null` = ese producto usa el diseño sin selector de variante |
+
+> Un mismo `productId` + `themeKey` solo puede estar vinculado a **un** diseño a la vez (si ya hay un vínculo con esa combinación, hay que desvincularlo antes de crear otro).
 
 ### Esquema de `data`
 
+`data` es una lista de **páginas** (`pages`). Cada página tiene su propia hoja (`sheet`) y su propia lista de elementos. Un diseño con una sola página es el caso normal (un PDF de una hoja); si se necesita más de una página en el mismo PDF (por ejemplo, más copias de las que entran en una hoja, o combinar más de un layout en un mismo archivo), simplemente se agregan más entradas a `pages` — cada una se renderiza como una página nueva, en el orden en que aparecen en el array.
+
 ```json
 {
-  "sheet": {
-    "width_cm": 18.5,
-    "height_cm": 29,
-    "columns": 3,
-    "rows": 5
-  },
-  "elements": [
+  "pages": [
     {
-      "id": "el-1",
-      "type": "background",
-      "label_shape_id": 12,
-      "x_cm": 0.5,
-      "y_cm": 0.5,
-      "width_cm": 4.4,
-      "height_cm": 2.4,
-      "z_index": 0,
-      "color": { "mode": "cmyk", "value": "0.01,0.25,0.23,0" }
-    },
-    {
-      "id": "el-2",
-      "type": "icon",
-      "icon_id": 34,
-      "x_cm": 0.6,
-      "y_cm": 0.6,
-      "width_cm": 1.2,
-      "height_cm": 1.2,
-      "z_index": 1,
-      "editable_by_customer": true,
-      "editable_field": "icon"
-    },
-    {
-      "id": "el-3",
-      "type": "text",
-      "content": "{{customer_name}}",
-      "x_cm": 2.0,
-      "y_cm": 0.6,
-      "width_cm": 2.2,
-      "height_cm": 1.6,
-      "font_id": 5,
-      "font_size_px": 46,
-      "z_index": 2,
-      "color": { "mode": "hex", "value": "#FFFFFF" },
-      "editable_by_customer": true,
-      "editable_field": "text"
+      "sheet": {
+        "width_cm": 18.5,
+        "height_cm": 29,
+        "columns": 3,
+        "rows": 5
+      },
+      "elements": [
+        {
+          "id": "el-1",
+          "type": "background",
+          "label_shape_id": 12,
+          "x_cm": 0.5,
+          "y_cm": 0.5,
+          "width_cm": 4.4,
+          "height_cm": 2.4,
+          "z_index": 0,
+          "color": { "mode": "cmyk", "value": "0.01,0.25,0.23,0" }
+        },
+        {
+          "id": "el-2",
+          "type": "icon",
+          "icon_id": 34,
+          "x_cm": 0.6,
+          "y_cm": 0.6,
+          "width_cm": 1.2,
+          "height_cm": 1.2,
+          "z_index": 1,
+          "editable_by_customer": true,
+          "editable_field": "icon"
+        },
+        {
+          "id": "el-3",
+          "type": "text",
+          "content": "{{customer_name}}",
+          "x_cm": 2.0,
+          "y_cm": 0.6,
+          "width_cm": 2.2,
+          "height_cm": 1.6,
+          "font_id": 5,
+          "font_size_px": 46,
+          "z_index": 2,
+          "color": { "mode": "hex", "value": "#FFFFFF" },
+          "editable_by_customer": true,
+          "editable_field": "text"
+        }
+      ]
     }
   ]
 }
 ```
 
-#### Campos de cada elemento
+Un diseño de **dos páginas** es simplemente dos entradas en `pages`, cada una con su `sheet` + `elements` (pueden repetir el mismo layout o ser completamente distintos):
+
+```json
+{
+  "pages": [
+    { "sheet": { "width_cm": 18.5, "height_cm": 29 }, "elements": [ /* página 1 */ ] },
+    { "sheet": { "width_cm": 18.5, "height_cm": 29 }, "elements": [ /* página 2 */ ] }
+  ]
+}
+```
+
+#### Campos de cada elemento (dentro de `pages[].elements`)
 
 | Campo | Obligatorio | Descripción |
 |---|---|---|
@@ -171,28 +196,32 @@ Base: `/api/product-pdf-designs` (JWT). Lectura pública sin auth: `GET /api/v1/
 
 | Método | Ruta | Acción |
 |---|---|---|
-| GET | `/product-pdf-designs?productId=123` | Listar (filtra por producto) |
-| GET | `/product-pdf-designs/{id}` | Detalle |
-| POST | `/product-pdf-designs` | Crear |
-| POST | `/product-pdf-designs/{id}` | Actualizar |
+| GET | `/product-pdf-designs?productId=123` | Listar (opcionalmente filtra solo los diseños vinculados a ese producto) |
+| GET | `/product-pdf-designs/{id}` | Detalle (incluye `products` con sus vínculos) |
+| POST | `/product-pdf-designs` | Crear el diseño (sin producto todavía) |
+| POST | `/product-pdf-designs/{id}` | Actualizar el diseño |
 | PATCH | `/product-pdf-designs/{id}/toggle-status` | Activar/desactivar |
-| DELETE | `/product-pdf-designs/{id}` | Eliminar (soft delete) |
+| DELETE | `/product-pdf-designs/{id}` | Eliminar (soft delete; borra en cascada sus vínculos con productos) |
 | GET | `/product-pdf-designs/{id}/preview?name=JUAN` | Genera y devuelve un PDF de muestra con ese diseño |
+| POST | `/product-pdf-designs/{id}/products` | Vincular el diseño a un producto |
+| DELETE | `/product-pdf-designs/{id}/products/{linkId}` | Desvincular (por el id del vínculo, no del producto) |
 
-**POST `/api/product-pdf-designs`**
+**1. Crear el diseño** — `POST /api/product-pdf-designs`
 
 ```json
 {
-  "productId": 12409,
   "labelShapeId": 12,
-  "themeKey": 137,
   "name": "Basquet - Maxi",
   "data": {
-    "sheet": { "width_cm": 18.5, "height_cm": 29, "columns": 3, "rows": 5 },
-    "elements": [
-      { "type": "background", "x_cm": 0.5, "y_cm": 0.5, "width_cm": 4.4, "height_cm": 2.4, "color": { "mode": "hex", "value": "#F5D033" } },
-      { "type": "icon", "icon_id": 34, "x_cm": 0.6, "y_cm": 0.6, "width_cm": 1.2, "height_cm": 1.2 },
-      { "type": "text", "content": "{{customer_name}}", "font_id": 5, "font_size_px": 46, "x_cm": 2, "y_cm": 0.6, "width_cm": 2.2, "height_cm": 1.6, "color": { "mode": "hex", "value": "#FFFFFF" }, "editable_by_customer": true, "editable_field": "text" }
+    "pages": [
+      {
+        "sheet": { "width_cm": 18.5, "height_cm": 29, "columns": 3, "rows": 5 },
+        "elements": [
+          { "type": "background", "x_cm": 0.5, "y_cm": 0.5, "width_cm": 4.4, "height_cm": 2.4, "color": { "mode": "hex", "value": "#F5D033" } },
+          { "type": "icon", "icon_id": 34, "x_cm": 0.6, "y_cm": 0.6, "width_cm": 1.2, "height_cm": 1.2 },
+          { "type": "text", "content": "{{customer_name}}", "font_id": 5, "font_size_px": 46, "x_cm": 2, "y_cm": 0.6, "width_cm": 2.2, "height_cm": 1.6, "color": { "mode": "hex", "value": "#FFFFFF" }, "editable_by_customer": true, "editable_field": "text" }
+        ]
+      }
     ]
   },
   "isPublished": false,
@@ -207,14 +236,12 @@ Respuesta (200):
   "message": "Diseño de PDF creado",
   "data": {
     "id": 1,
-    "productId": 12409,
     "labelShapeId": 12,
-    "themeKey": 137,
     "name": "Basquet - Maxi",
     "data": { "...": "..." },
     "isPublished": false,
     "statusId": 1,
-    "product": { "...": "..." },
+    "products": [],
     "labelShape": { "...": "..." },
     "generalStatus": { "...": "..." }
   },
@@ -222,9 +249,32 @@ Respuesta (200):
 }
 ```
 
-Cuando el admin termina de editar y quiere que ese diseño empiece a usarse en ventas reales, se marca `isPublished: true` (vía `POST /product-pdf-designs/{id}` con `{"isPublished": true}`).
+**2. Vincularlo a uno o más productos** — `POST /api/product-pdf-designs/1/products`
 
-**Preview**: `GET /api/product-pdf-designs/{id}/preview?name=JUAN` devuelve directamente el archivo PDF renderizado (no un JSON), usando el mismo motor que se usa en la generación real — sirve para que el editor muestre "así queda" antes de publicar.
+```json
+{ "productId": 12409, "themeKey": 137 }
+```
+
+Repetir la llamada con otro `productId` para reutilizar el mismo diseño en otro producto (puede llevar un `themeKey` distinto, o ninguno). La respuesta trae el diseño con `products` actualizado:
+
+```json
+{
+  "message": "Producto vinculado al diseño",
+  "data": {
+    "id": 1,
+    "name": "Basquet - Maxi",
+    "products": [
+      { "id": 12409, "name": "...", "pivot": { "id": 1, "themeKey": 137 } }
+    ]
+  }
+}
+```
+
+`pivot.id` es el `linkId` que hay que usar para desvincular: `DELETE /api/product-pdf-designs/1/products/1`.
+
+**3. Publicarlo** — cuando el admin termina de editar y quiere que empiece a usarse en ventas reales: `POST /product-pdf-designs/{id}` con `{"isPublished": true}`. Hasta que no está publicado, el diseño puede estar vinculado a productos pero no se usa para generar PDFs reales.
+
+**Preview**: `GET /api/product-pdf-designs/{id}/preview?name=JUAN` devuelve directamente el archivo PDF renderizado (no un JSON), usando el mismo motor que se usa en la generación real — sirve para que el editor muestre "así queda" antes de publicar. No requiere que el diseño esté vinculado a ningún producto todavía.
 
 ---
 
@@ -244,8 +294,8 @@ El front debe usar los `id` que devuelven estos endpoints para completar `icon_i
 
 Al aprobarse/generarse una venta, por cada producto comprado:
 
-1. Se busca si el producto (y su variante, si tiene) tiene un `product_pdf_designs` con `isPublished: true`.
+1. Se busca en `product_pdf_design_products` un vínculo para ese producto (y esa variante, si tiene) cuyo diseño esté `isPublished: true`.
 2. Si existe → se genera el PDF con el diseño nuevo (reemplazando `{{customer_name}}`, resolviendo íconos/tipografías, aplicando los overrides del cliente solo en los campos marcados como editables).
 3. Si no existe → se sigue generando el PDF exactamente como antes, con `product_pdf` y las vistas por temática.
 
-No hace falta que el front haga nada especial acá: esto pasa automáticamente según si el producto tiene o no un diseño publicado.
+No hace falta que el front haga nada especial acá: esto pasa automáticamente según si el producto tiene o no un vínculo a un diseño publicado.

@@ -219,6 +219,8 @@ Route::middleware('jwt.auth')->prefix('product-pdf-designs')->group(function () 
     Route::patch('/{id}/toggle-status', [ProductPdfDesignController::class, 'toggleStatus']);
     Route::delete('/{id}', [ProductPdfDesignController::class, 'delete']);
     Route::get('/{id}/preview', [ProductPdfDesignController::class, 'preview']);
+    Route::post('/{id}/products', [ProductPdfDesignController::class, 'attachProduct']);
+    Route::delete('/{id}/products/{linkId}', [ProductPdfDesignController::class, 'detachProduct']);
 });
 
 // Cost

@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Models\ProductPdf;
-use App\Models\ProductPdfDesign;
+use App\Models\ProductPdfDesignProduct;
 use Illuminate\Support\Facades\Log;
 
 class ProductPdfResolverService
@@ -28,11 +28,14 @@ class ProductPdfResolverService
         $variant = $productOrder->variant?->variant;
         $tematicaId = $variant['attributesvalues'][0]['id'] ?? null;
 
-        $design = ProductPdfDesign::where('product_id', $productOrder->product_id)
-            ->where('is_published', true)
+        $link = ProductPdfDesignProduct::with('design')
+            ->where('product_id', $productOrder->product_id)
             ->when($variant, fn($q) => $q->where('theme_key', $tematicaId))
             ->when(!$variant, fn($q) => $q->whereNull('theme_key'))
+            ->whereHas('design', fn($q) => $q->where('is_published', true))
             ->first();
+
+        $design = $link?->design;
 
         if ($design) {
             try {

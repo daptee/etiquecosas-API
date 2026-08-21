@@ -300,20 +300,23 @@ class EtiquetaService
         $dirPath = storage_path("app/pdf/planchas/{$fechaCarpeta}");
         if (!is_dir($dirPath)) mkdir($dirPath, 0755, true);
 
-        $sheet = $design->data['sheet'] ?? ['width_cm' => 18.5, 'height_cm' => 29, 'columns' => 3, 'rows' => 5];
-        $elements = $design->data['elements'] ?? [];
+        $pages = self::normalizarPaginasDesign($design->data ?? []);
         $sufijo = self::limpiarNombreArchivo(strtoupper($design->name ?: 'DESIGN'));
 
         foreach ($nombres as $idx => $nombre) {
-            $resolvedElements = array_map(
-                fn($el) => self::resolverElementoDesign($el, $nombre, $customColor, $customIcon),
-                $elements
-            );
+            $resolvedPages = array_map(function ($page) use ($nombre, $customColor, $customIcon) {
+                return [
+                    'sheet' => $page['sheet'] ?? ['width_cm' => 18.5, 'height_cm' => 29],
+                    'elements' => array_map(
+                        fn($el) => self::resolverElementoDesign($el, $nombre, $customColor, $customIcon),
+                        $page['elements'] ?? []
+                    ),
+                ];
+            }, $pages);
 
             $plantilla = [
                 'design' => [
-                    'sheet' => $sheet,
-                    'elements' => $resolvedElements,
+                    'pages' => $resolvedPages,
                 ],
             ];
 
@@ -342,6 +345,28 @@ class EtiquetaService
         }
 
         return $outputFiles;
+    }
+
+    /**
+     * Un diseño puede tener varias páginas (data.pages[]), cada una con su
+     * propia hoja y elementos — se renderizan como páginas del mismo PDF.
+     * Si un diseño viejo todavía tiene el formato de una sola página
+     * (data.sheet/data.elements sueltos), se normaliza a pages[] igual.
+     */
+    private static function normalizarPaginasDesign(array $data): array
+    {
+        if (!empty($data['pages']) && is_array($data['pages'])) {
+            return $data['pages'];
+        }
+
+        if (!empty($data['elements'])) {
+            return [[
+                'sheet' => $data['sheet'] ?? ['width_cm' => 18.5, 'height_cm' => 29],
+                'elements' => $data['elements'],
+            ]];
+        }
+
+        return [];
     }
 
     /**
