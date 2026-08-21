@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AbandonedCartLog;
 use App\Models\Sale;
 use App\Models\SaleProduct;
 use App\Models\SaleStatusHistory;
@@ -306,6 +307,8 @@ class MercadoPagoController extends Controller
                     'sale_status_id' => 1,
                     'date' => Carbon::now(),
                 ]);
+
+                AbandonedCartLog::markConvertedForSale($sale);
 
                 // Enviar evento Purchase a Meta Conversions API
                 Log::channel('meta_capi')->info('[webhook MP] Venta aprobada → disparando CAPI', ['sale_id' => $sale->id]);

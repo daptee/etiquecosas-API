@@ -6,6 +6,7 @@ use App\Http\Controllers\ClientAddressController;
 use App\Http\Controllers\ClientWholesaleController;
 use App\Http\Controllers\MercadoPagoController;
 use App\Http\Controllers\SaleClientController;
+use App\Http\Controllers\AbandonedCartLogController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\ShippingConfigController;
 use App\Http\Controllers\ShippingOptionController;
@@ -52,6 +53,7 @@ Route::get('/run', [BackupController::class, 'createBackup']);
 Route::get('/clean', [BackupController::class, 'cleanOldBackups']);
 Route::get('/notify-production', [BackupController::class, 'notifyProductionOrders']);
 Route::get('/notify-stalled-production', [BackupController::class, 'notifyStalledProduction']);
+Route::get('/process-abandoned-carts', [BackupController::class, 'processAbandonedCarts']);
 
 // Auth
 Route::post('login', [LoginController::class, 'login']);
@@ -361,6 +363,7 @@ Route::middleware('jwt.auth')->prefix('sales')->group(function () {
     Route::put('/local/{id}', [SaleController::class, 'updateLocalSale']);
     Route::get('/generate-pdf/{id}', [SaleController::class, 'generarPdfSale']);
     Route::post('/generate-bulk-pdfs', [SaleController::class, 'generateBulkPdfs']);
+    Route::get('/abandoned-cart-logs', [AbandonedCartLogController::class, 'index']);
 });
 
 // Cadete
