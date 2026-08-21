@@ -12,6 +12,7 @@ use App\Mail\OrderRetiredMail;
 use App\Mail\OrderWithdrawMail;
 use App\Mail\OrderAlmostReadyMail;
 use App\Mail\WelcomeMail;
+use App\Models\AbandonedCartLog;
 use App\Models\Channel;
 use App\Models\Client;
 use App\Models\ClientAddress;
@@ -670,6 +671,8 @@ class SaleController extends Controller
             'date' => Carbon::now(),
         ]);
 
+        AbandonedCartLog::markConvertedForSale($sale);
+
         $this->sendMetaCapiPurchaseEvent($sale);
 
         $sale->load(['client', 'products.product', 'products.variant', 'shippingMethod', 'locality']);
@@ -868,6 +871,8 @@ class SaleController extends Controller
                 $sale->save();
                 return $this->error('Stock insuficiente para confirmar el pedido', 422, $stockErrors);
             }
+
+            AbandonedCartLog::markConvertedForSale($sale);
 
             Log::channel('meta_capi')->info('[changeStatusAdmin] Venta aprobada → disparando CAPI', ['sale_id' => $sale->id]);
             $this->sendMetaCapiPurchaseEvent($sale);

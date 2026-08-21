@@ -13,6 +13,10 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         // $schedule->command('inspire')->hourly();
+        // Nota: este proyecto NO corre `php artisan schedule:run` vía crontab.
+        // Los jobs periódicos se disparan por HTTP (ver BackupController y
+        // las rutas /run, /clean, /notify-production, /process-abandoned-carts
+        // en routes/api.php), gestionadas desde el panel de cron del hosting.
     }
 
     /**

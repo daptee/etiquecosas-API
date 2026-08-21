@@ -102,6 +102,11 @@ class Sale extends Model
         return $this->belongsTo(Coupon::class, 'coupon_id');
     }
 
+    public function abandonedCartLog()
+    {
+        return $this->hasOne(AbandonedCartLog::class);
+    }
+
     public function coupons()
     {
         return $this->belongsToMany(Coupon::class, 'coupon_sale')

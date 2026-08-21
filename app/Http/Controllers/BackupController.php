@@ -65,6 +65,29 @@ class BackupController extends Controller
     }
 
     /**
+     * Procesar el flujo de carritos abandonados (Impacto 1 y 2)
+     */
+    public function processAbandonedCarts()
+    {
+        try {
+            $exitCode = Artisan::call('carts:process-abandoned');
+            $output = Artisan::output();
+
+            if ($exitCode === 0) {
+                $this->logAudit(null, 'Process Abandoned Carts', [], ['status' => 'success', 'output' => $output]);
+                return $this->success(['output' => $output], 'Procesamiento de carritos abandonados completado');
+            }
+
+            $this->logAudit(null, 'Process Abandoned Carts Failed', [], ['status' => 'error', 'output' => $output]);
+            return $this->error('Error al procesar carritos abandonados: ' . $output, 500);
+
+        } catch (\Exception $e) {
+            $this->logAudit(null, 'Process Abandoned Carts Error', [], $e->getMessage());
+            return $this->error('Error al procesar carritos abandonados: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
      * Notificar pedidos en producción (5 días al cliente, 10 días internamente)
      */
     public function notifyProductionOrders()
