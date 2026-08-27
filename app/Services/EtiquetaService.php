@@ -135,7 +135,7 @@ class EtiquetaService
         /**
          * 🟣 CASO 1: PDF PERSONALIZABLE (CON ICONO)
          */
-        if ($customIcon && $customColor) {
+        if ($customIcon && $customColor && !$colorRange) {
             Log::info("🟣 Generando PDF PERSONALIZABLE con icono");
             $views = $getViews($pdf, "PERSONALIZABLE", $urlPdf);
             $customIconPath = public_path($customIcon);
@@ -164,7 +164,7 @@ class EtiquetaService
         /**
          * 🟣 CASO 1B: PDF PERSONALIZABLE SIN ICONO (LISA)
          */
-        if (!$customIcon && $customColor) {
+        if (!$customIcon && $customColor && !$colorRange) {
             Log::info("🟣 Generando PDF PERSONALIZABLE sin icono (lisa)");
             $views = $getViews($pdf, "PERSONALIZABLE SIN ICONO", $urlPdf);
 
