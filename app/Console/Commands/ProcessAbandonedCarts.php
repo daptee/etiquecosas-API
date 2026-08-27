@@ -22,7 +22,8 @@ class ProcessAbandonedCarts extends Command
     protected $signature = 'carts:process-abandoned
         {--wait-minutes=20 : Minutos sin actividad antes de considerar el carrito abandonado}
         {--impact2-days=3 : Días de espera tras el Impacto 1 antes de evaluar el Impacto 2}
-        {--min-amount=100000 : Monto a partir del cual se envía el Impacto 2 con cupón}';
+        {--min-amount=100000 : Monto a partir del cual se envía el Impacto 2 con cupón}
+        {--max-age-days=7 : No procesar ventas pendientes con más de estos días de antigüedad}';
 
     /**
      * The console command description.
@@ -42,17 +43,19 @@ class ProcessAbandonedCarts extends Command
         $waitMinutes = (int) $this->option('wait-minutes');
         $impact2Days = (int) $this->option('impact2-days');
         $minAmount = (float) $this->option('min-amount');
+        $maxAgeDays = (int) $this->option('max-age-days');
 
-        $this->processNewAbandonments($waitMinutes, $minAmount);
+        $this->processNewAbandonments($waitMinutes, $minAmount, $maxAgeDays);
         $this->processImpact2();
 
         return Command::SUCCESS;
     }
 
-    private function processNewAbandonments(int $waitMinutes, float $minAmount): void
+    private function processNewAbandonments(int $waitMinutes, float $minAmount, int $maxAgeDays): void
     {
         $sales = Sale::where('sale_status_id', 8)
             ->where('created_at', '<=', now()->subMinutes($waitMinutes))
+            ->where('created_at', '>=', now()->subDays($maxAgeDays))
             ->whereDoesntHave('abandonedCartLog')
             ->with('client', 'products.product.images')
             ->get();
@@ -92,7 +95,8 @@ class ProcessAbandonedCarts extends Command
     {
         $impact2Days = (int) $this->option('impact2-days');
 
-        $logs = AbandonedCartLog::whereNull('impact_2_sent_at')
+        $logs = AbandonedCartLog::whereNotNull('impact_1_sent_at')
+            ->whereNull('impact_2_sent_at')
             ->whereNull('converted_at')
             ->where('impact_2_eligible', true)
             ->where('abandoned_at', '<=', now()->subDays($impact2Days))
