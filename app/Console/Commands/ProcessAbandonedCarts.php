@@ -54,7 +54,7 @@ class ProcessAbandonedCarts extends Command
         $sales = Sale::where('sale_status_id', 8)
             ->where('created_at', '<=', now()->subMinutes($waitMinutes))
             ->whereDoesntHave('abandonedCartLog')
-            ->with('client')
+            ->with('client', 'products.product.images')
             ->get();
 
         $this->info("Carritos candidatos a abandono: {$sales->count()}");
