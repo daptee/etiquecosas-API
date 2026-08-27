@@ -165,7 +165,7 @@
 
 <body>
   <div class="hoja">
-    <div class="transfer-container" style="{{ $plantilla['isWhite'] ? 'background-color: #CACACA;' : '' }}">
+    <div class="transfer-container" style="{{ ($plantilla['isWhite'] ?? false) ? 'background-color: #CACACA;' : '' }}">
       <div class="transfer-info-container">
         <div class="transfer-stars-conainer">
           <div class="star star1"><img class="star-img" src="{{ $plantilla['images'][0] }}" alt=""></div>
