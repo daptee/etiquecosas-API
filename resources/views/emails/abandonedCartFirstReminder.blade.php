@@ -131,21 +131,19 @@
           <tr>
             <td style="padding:40px 24px; text-align:center; color:#999; font-size:14px;">
               <p style="margin-bottom:16px;">
-                <a href="https://www.instagram.com/etiquecosas" style="margin:0 6px;">
-                  <img width="24" height="24" src="https://api.etiquecosaslab.com.ar/icons/mail/instagram_solid.png" alt="Instagram" style="vertical-align:middle; border:0;">
+                <a href="https://www.instagram.com/etiquecosas" style="margin:0 6px; text-decoration:none; border:0;">
+                  <img width="24" height="24" border="0" src="https://api.etiquecosaslab.com.ar/icons/mail/instagram_solid.png" alt="Instagram" style="vertical-align:middle; border:0;">
                 </a>
-                <a href="https://www.facebook.com/etiquecosas" style="margin:0 6px;">
-                  <img width="24" height="24" src="https://api.etiquecosaslab.com.ar/icons/mail/facebook_solid.png" alt="Facebook" style="vertical-align:middle; border:0;">
+                <a href="https://www.facebook.com/etiquecosas" style="margin:0 6px; text-decoration:none; border:0;">
+                  <img width="24" height="24" border="0" src="https://api.etiquecosaslab.com.ar/icons/mail/facebook_solid.png" alt="Facebook" style="vertical-align:middle; border:0;">
                 </a>
-                <a href="https://www.youtube.com/@etiquecosasok" style="margin:0 6px;">
-                  <img width="24" height="24" src="https://api.etiquecosaslab.com.ar/icons/mail/youtube_solid.png" alt="YouTube" style="vertical-align:middle; border:0;">
+                <a href="https://www.youtube.com/@etiquecosasok" style="margin:0 6px; text-decoration:none; border:0;">
+                  <img width="24" height="24" border="0" src="https://api.etiquecosaslab.com.ar/icons/mail/youtube_solid.png" alt="YouTube" style="vertical-align:middle; border:0;">
                 </a>
               </p>
 
               <p style="margin:8px 0; color:#777;">
-                El uso de nuestro servicio y sitio web está sujeto a nuestros<br>
-                <a href="https://etiquecosas.com.ar/terminos" style="color:#347AA7; text-decoration:none;">Términos de uso</a> y
-                <a href="https://etiquecosas.com.ar/privacidad" style="color:#347AA7; text-decoration:none;">Política de privacidad</a>.
+                El uso de nuestro servicio y sitio web está sujeto a nuestros Términos de uso y Política de privacidad.
               </p>
 
               <p style="margin:12px 0 4px;">
