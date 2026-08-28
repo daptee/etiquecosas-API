@@ -66,7 +66,7 @@
           <tr>
             <td align="center" style="padding:10px;">
               <a href="{{ config('services.front_url') }}" target="_blank"
-                style="display:inline-block; padding:12px 28px; font-size:17px; font-weight:700; color:#ffffff; background-color:#347AA7; border-radius:30px; font-family:'Montserrat', sans-serif;">
+                style="display:inline-block; padding:12px 28px; font-size:17px; font-weight:700; color:#ffffff; background-color:#347AA7; border-radius:30px; font-family:'Montserrat', sans-serif; text-decoration:none;">
                 Terminar mi pedido
               </a>
             </td>
@@ -123,7 +123,7 @@
                       <span style="display:block; font-size:14px; color:#347AA7; font-weight:700;">${{ number_format($discountedTotal,0,',','.') }}</span>
                       <span style="display:block; margin-top:2px; font-size:11px; color:#347AA7; font-weight:700;">{{ $discountPercent }}% OFF (${{ number_format($savings,0,',','.') }} de ahorro)</span>
                       <a href="{{ $productUrl }}" target="_blank"
-                        style="display:inline-block; margin-top:12px; padding:6px 18px; font-size:13px; font-weight:700; color:#ffffff; background-color:#347AA7; border-radius:30px;">
+                        style="display:inline-block; margin-top:12px; padding:6px 18px; font-size:13px; font-weight:700; color:#ffffff; background-color:#347AA7; border-radius:30px; text-decoration:none;">
                         Ver más
                       </a>
                     </td>
