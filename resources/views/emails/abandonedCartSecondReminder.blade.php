@@ -6,118 +6,150 @@
   <meta http-equiv="x-ua-compatible" content="ie=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
-  <title>15% OFF para tu compra</title>
-  <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,500,600,700&display=swap" rel="stylesheet" media="screen">
+  <title>Descuento exclusivo para tu carrito</title>
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700&display=swap" rel="stylesheet" media="screen">
   <style>
+    body { margin: 0; padding: 0; }
     table { border-collapse: collapse; width: 100%; }
-    th, td { padding: 10px; text-align: left; word-wrap: break-word; word-break: break-word; }
-    th { background: #f3f3f3; white-space: nowrap; font-weight: 600; }
-    .muted { color: #666; font-size: 0.9em; }
+    a { text-decoration: none; }
 
     @media (max-width: 600px) {
       .sm-w-full { width: 100% !important; }
-      .sm-px-24 { padding-left: 24px !important; padding-right: 24px !important; }
-      .sm-py-32 { padding-top: 32px !important; padding-bottom: 32px !important; }
+      img { max-width: 100% !important; height: auto !important; }
     }
   </style>
 </head>
 
-<body style="margin: 0; width: 100%; padding: 0; word-break: break-word; -webkit-font-smoothing: antialiased; background-color: #ECEFF1;">
+<body style="margin: 0; width: 100%; padding: 0; word-break: break-word; -webkit-font-smoothing: antialiased; background-color: #ffffff;">
   <div style="font-family: 'Montserrat', sans-serif; mso-line-height-rule: exactly; display:none;">Último aviso: 15% OFF + envío gratis</div>
 
   <table style="width:100%; font-family: Montserrat, -apple-system, 'Segoe UI', sans-serif;" cellpadding="0" cellspacing="0" role="presentation">
     <tr>
-      <td align="center" style="background-color:#ECEFF1;">
-         <table class="sm-w-full" style="width:600px; margin:0 auto;" cellpadding="0" cellspacing="0" role="presentation">
+      <td align="center">
+        <table class="sm-w-full" style="width:600px; margin:0 auto;" cellpadding="0" cellspacing="0" role="presentation">
+
           <!-- LOGO -->
           <tr>
-            <td class="sm-py-32 sm-px-24" style="padding:48px; text-align:center;">
+            <td align="center" style="padding:20px;">
               <a href="{{ config('services.front_url') }}">
-                <img src="https://api.etiquecosaslab.com.ar/icons/mail/etiquecosas_logo-rosa.png" width="180" alt="Etiquecosas" style="max-width:100%; vertical-align:middle; border:0;">
+                <img src="https://api.etiquecosaslab.com.ar/icons/mail/etiquecosas_logo-rosa.png" width="130" alt="Etiquecosas" style="max-width:100%; vertical-align:middle; border:0;">
               </a>
             </td>
           </tr>
 
-          <!-- CONTENIDO -->
+          <!-- SALUDO -->
           <tr>
-            <td align="center" class="sm-px-24" style="border-radius:10px; background-color:#ffffff;">
-              <table style="width:100%;" cellpadding="0" cellspacing="0" role="presentation">
-                <tr>
-                  <td class="sm-px-24" style="padding:48px; text-align:left; font-size:16px; line-height:26px; color:#444;">
+            <td align="center" style="background-color:#347AA7; padding:14px 20px;">
+              <p style="margin:0; font-size:14px; line-height:140%; color:#ffffff; font-weight:700;">
+                ¡{{ $sale->client->name }}!, te dejamos un descuento exclusivo en tu carrito!
+              </p>
+            </td>
+          </tr>
 
-                    <p style="font-size:20px; font-weight:600; margin-bottom:0;">Hola</p>
-                    <p style="font-size:20px; font-weight:700; color:#347AA7; margin-top:0;">
-                      {{ $sale->client->name }} {{ $sale->client->lastname }}
-                    </p>
-                    <p style="font-size:18px; font-weight:600; margin-bottom:16px;">¡Todavía estás a tiempo! ⏳</p>
-                    <p style="margin: 0 0 16px 0;">Tu carrito sigue esperándote y queremos ayudarte a terminarlo. Usá este cupón antes de que se acabe:</p>
+          <!-- BANNERS -->
+          <tr>
+            <td align="center">
+              <a href="{{ config('services.front_url') }}/categorias/combos" target="_blank">
+                <img src="https://app2.dopplerfiles.com/Users/169304/Shared/cinta-info-cuotas-rosa.gif" alt="3 cuotas sin interés sin mínimo de compra · Envío gratis a partir de $95.000" width="600" style="width:100%; max-width:600px; display:block; border:0;">
+              </a>
+            </td>
+          </tr>
+          <tr>
+            <td align="center" style="padding:10px;">
+              <a href="{{ config('services.front_url') }}/categorias/combos" target="_blank">
+                <img src="https://app2.dopplerfiles.com/Users/169304/Shared/Gemini_Generated_Image_diulzfdiulzfdiul.jpg" alt="Etiquecosas" width="580" style="width:100%; max-width:580px; display:block; border:0;">
+              </a>
+            </td>
+          </tr>
 
-                    <!-- Cupón -->
-                    <div style="text-align:center; margin: 24px 0; padding: 20px; border: 2px dashed #EBA4AB; border-radius: 10px; background-color: #FFF8F9;">
-                      <p style="margin:0; font-size:14px; color:#777;">Cupón de descuento</p>
-                      <p style="margin:4px 0; font-size:28px; font-weight:700; color:#EBA4AB; letter-spacing:1px;">{{ $coupon->code }}</p>
-                      <p style="margin:0; font-size:16px; font-weight:600;">15% OFF + envío gratis</p>
-                    </div>
+          <!-- CTA -->
+          <tr>
+            <td align="center" style="padding:10px;">
+              <a href="{{ config('services.front_url') }}" target="_blank"
+                style="display:inline-block; padding:12px 28px; font-size:17px; font-weight:700; color:#ffffff; background-color:#347AA7; border-radius:30px; font-family:'Montserrat', sans-serif;">
+                Terminar mi pedido
+              </a>
+            </td>
+          </tr>
 
-                    <p style="margin: 0 0 16px 0; font-size: 14px; color:#666;">Esta es tu última notificación para completar la compra con este beneficio.</p>
+          <!-- URGENCIA -->
+          <tr>
+            <td align="center" style="padding:16px 24px; font-size:14px; line-height:140%; color:#444;">
+              <p style="margin:0;">¡ÚLTIMA CHANCE DE STOCKEARTE CON {{ (int) $coupon->value }}% OFF USANDO TU CUPÓN!</p>
+            </td>
+          </tr>
 
-                    <!-- Productos -->
-                    <h2 style="margin-top:24px; color:#347AA7; font-size: 16px;">Lo que quedó en tu carrito</h2>
-                    <table>
-                      <thead>
-                        <tr>
-                          <th style="font-size: 14px;">Producto</th>
-                          <th style="font-size: 14px;">Cant.</th>
-                          <th style="font-size: 14px;">Total</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        @foreach($sale->products as $item)
-                          <tr>
-                            <td style="font-size: 14px;">{{ $item->product->name ?? ('ID producto: ' . ($item->product_id ?? '-')) }}</td>
-                            <td style="font-size: 14px; white-space: nowrap;">{{ $item->quantity }}</td>
-                            <td style="font-size: 14px; white-space: nowrap;">${{ number_format((float)$item->unit_price * $item->quantity,0,',','.') }}</td>
-                          </tr>
-                        @endforeach
-                      </tbody>
-                    </table>
+          <!-- CUPON -->
+          <tr>
+            <td align="center" style="padding:0 24px 16px; font-size:14px; line-height:140%; color:#444;">
+              <p style="margin:0 0 6px;">Copiá el código y pegalo en tu checkout</p>
+              <p style="margin:0;">
+                <strong><span style="background-color:#347AA7; color:#f9e4e6; padding:4px 12px; border-radius:4px; font-size:16px; letter-spacing:1px;">{{ $coupon->code }}</span></strong>
+              </p>
+            </td>
+          </tr>
 
-                    <table style="width: 100%; font-size: 16px; border-collapse: collapse; border: 1px solid #e4e0e0; margin-top: 16px;">
-                      <tr>
-                        <td colspan="2" style="background-color: #F4F4F4; padding: 12px 10px; font-weight: bold;">
-                          <table style="width: 100%; border-collapse: collapse;">
-                            <tr>
-                              <td><strong>Total:</strong></td>
-                              <td style="text-align: right;">${{ number_format($sale->total,0,',','.') }}</td>
-                            </tr>
-                          </table>
-                        </td>
-                      </tr>
-                    </table>
+          <!-- PRODUCTOS DEL CARRITO -->
+          @foreach($sale->products as $item)
+            @php
+              $mainImage = optional($item->product)->images
+                ? ($item->product->images->firstWhere('is_main', true) ?? $item->product->images->first())
+                : null;
+              $imageUrl = $mainImage->img ?? null;
+              if ($imageUrl && !str_starts_with($imageUrl, 'http')) {
+                  $imageUrl = 'https://api.etiquecosas.com.ar/public/' . $imageUrl;
+              }
+              $productUrl = $item->product
+                ? config('services.front_url') . '/productos/' . $item->product->slug
+                : config('services.front_url');
+              $lineTotal = (float) $item->unit_price * $item->quantity;
+              $discountPercent = (float) $coupon->value;
+              $discountedTotal = $lineTotal * (1 - $discountPercent / 100);
+              $savings = $lineTotal - $discountedTotal;
+            @endphp
+            <tr>
+              <td style="padding:10px 16px;">
+                <table cellpadding="0" cellspacing="0" role="presentation" style="width:100%; border:1px solid #eee; border-radius:8px;">
+                  <tr>
+                    <td width="40%" style="padding:10px; vertical-align:top;">
+                      @if($imageUrl)
+                        <img src="{{ $imageUrl }}" alt="{{ $item->product->name ?? 'Producto' }}" style="width:100%; max-width:200px; display:block; border:0;">
+                      @endif
+                    </td>
+                    <td width="60%" style="padding:10px; vertical-align:top; font-size:13px; color:#444;">
+                      <span style="display:block; font-weight:700; font-size:13px;">{{ $item->product->name ?? ('ID producto: ' . ($item->product_id ?? '-')) }}</span>
+                      <span style="display:block; margin-top:6px; color:#666;">Cantidad: {{ $item->quantity }}</span>
+                      <span style="display:block; margin-top:6px; font-size:13px; color:#92a9b7; text-decoration:line-through;">${{ number_format($lineTotal,0,',','.') }}</span>
+                      <span style="display:block; font-size:14px; color:#347AA7; font-weight:700;">${{ number_format($discountedTotal,0,',','.') }}</span>
+                      <span style="display:block; margin-top:2px; font-size:11px; color:#347AA7; font-weight:700;">{{ $discountPercent }}% OFF (${{ number_format($savings,0,',','.') }} de ahorro)</span>
+                      <a href="{{ $productUrl }}" target="_blank"
+                        style="display:inline-block; margin-top:12px; padding:6px 18px; font-size:13px; font-weight:700; color:#ffffff; background-color:#347AA7; border-radius:30px;">
+                        Ver más
+                      </a>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          @endforeach
 
-                    <!-- Botón -->
-                    <div style="text-align:center; margin-top:32px;">
-                      <table cellpadding="0" cellspacing="0" role="presentation" align="center">
-                        <tr>
-                          <td style="border-radius:6px; background-color:#EBA4AB; text-align:center; ">
-                            <a href="{{ config('services.front_url') }}"
-                              style="display:inline-block; padding:14px 28px; font-size:16px; font-weight:600; color:#ffffff; text-decoration:none; font-family:'Montserrat', sans-serif;">
-                              APROVECHAR MI DESCUENTO
-                            </a>
-                          </td>
-                        </tr>
-                      </table>
-                    </div>
-
-                  </td>
-                </tr>
-              </table>
+          <!-- BANNER CONTACTO -->
+          <tr>
+            <td align="center" style="padding:10px;">
+              <a href="{{ config('services.front_url') }}" target="_blank">
+                <img src="https://app2.dopplerfiles.com/Users/169304/Shared/WhatsApp_Image_2026-02-28_at_17.57.47.jpeg" alt="Etiquecosas" width="580" style="width:100%; max-width:580px; display:block; border:0;">
+              </a>
             </td>
           </tr>
 
           <!-- FOOTER -->
           <tr>
-            <td style="padding:40px 24px; text-align:center; color:#999; font-size:14px;">
+            <td style="padding:24px 24px 0; text-align:center; color:#999; font-size:11px; line-height:140%;">
+              <p style="margin:0;">Cupón válido únicamente en pedidos a partir de ${{ number_format((float)$coupon->min_amount,0,',','.') }}, una sola vez por usuario. Se aplica un descuento del {{ (int) $coupon->value }}% sobre el valor de la compra.</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:24px 24px 40px; text-align:center; color:#999; font-size:14px;">
               <p style="margin-bottom:16px;">
                 <a href="https://www.instagram.com/etiquecosas" style="margin:0 6px;">
                   <img width="24" height="24" src="https://api.etiquecosaslab.com.ar/icons/mail/instagram_solid.png" alt="Instagram" style="vertical-align:middle; border:0;">
@@ -132,12 +164,12 @@
 
               <p style="margin:8px 0; color:#777;">
                 El uso de nuestro servicio y sitio web está sujeto a nuestros<br>
-                <a href="https://etiquecosas.com.ar/terminos" style="color:#EBA4AB; text-decoration:none;">Términos de uso</a> y
-                <a href="https://etiquecosas.com.ar/privacidad" style="color:#EBA4AB; text-decoration:none;">Política de privacidad</a>.
+                <a href="https://etiquecosas.com.ar/terminos" style="color:#347AA7; text-decoration:none;">Términos de uso</a> y
+                <a href="https://etiquecosas.com.ar/privacidad" style="color:#347AA7; text-decoration:none;">Política de privacidad</a>.
               </p>
 
               <p style="margin:12px 0 4px;">
-                <a href="https://www.etiquecosas.com.ar" style="color:#EBA4AB; font-weight:600; text-decoration:none;">www.etiquecosas.com.ar</a>
+                <a href="https://www.etiquecosas.com.ar" style="color:#347AA7; font-weight:600; text-decoration:none;">www.etiquecosas.com.ar</a>
               </p>
               <p style="font-size:12px; color:#aaa; margin:0;">Desarrollado por <strong>Daptee</strong></p>
             </td>

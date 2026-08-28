@@ -100,7 +100,7 @@ class ProcessAbandonedCarts extends Command
             ->whereNull('converted_at')
             ->where('impact_2_eligible', true)
             ->where('abandoned_at', '<=', now()->subDays($impact2Days))
-            ->with('sale.client')
+            ->with('sale.client', 'sale.products.product.images')
             ->get();
 
         $this->info("Carritos candidatos a Impacto 2: {$logs->count()}");
