@@ -143,7 +143,7 @@
               </p>
 
               <p style="margin:8px 0; color:#777;">
-                El uso de nuestro servicio y sitio web está sujeto a nuestros Términos de uso y Política de privacidad.
+                El uso de nuestro servicio y sitio web está sujeto a nuestros<br>Términos de uso y Política de privacidad.
               </p>
 
               <p style="margin:12px 0 4px;">
