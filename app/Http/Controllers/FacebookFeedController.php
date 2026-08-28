@@ -66,6 +66,10 @@ class FacebookFeedController extends Controller
 
             // Optional: g:condition - Product condition
             $item->addChild('g:condition', 'new', 'http://base.google.com/ns/1.0');
+
+            // g:identifier_exists - Productos personalizados sin GTIN/marca de fábrica
+            // Requerido por Google Merchant Center; Meta lo ignora sin efecto en la pauta
+            $item->addChild('g:identifier_exists', 'no', 'http://base.google.com/ns/1.0');
         }
 
         // Get XML content
