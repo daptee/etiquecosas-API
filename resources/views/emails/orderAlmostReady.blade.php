@@ -71,7 +71,7 @@
                   <a href="https://www.facebook.com/etiquecosas" style="margin:0 6px;">
                     <img width="24" height="24" src="https://api.etiquecosaslab.com.ar/icons/mail/facebook_solid.png" alt="Facebook" style="vertical-align:middle; border:0;">
                   </a>
-                  <a href="https://www.youtube.com/@etiquecosas" style="margin:0 6px;">
+                  <a href="https://www.youtube.com/@etiquecosasok" style="margin:0 6px;">
                     <img width="24" height="24" src="https://api.etiquecosaslab.com.ar/icons/mail/youtube_solid.png" alt="YouTube" style="vertical-align:middle; border:0;">
                   </a>
                 </p>
