@@ -77,7 +77,7 @@ class ProcessAbandonedCarts extends Command
                     'impact_2_eligible' => $sale->total > $minAmount,
                 ]);
 
-                Mail::to($sale->client->email)->send(new AbandonedCartFirstReminderMail($sale));
+                Mail::to($sale->client->email)->send(new AbandonedCartFirstReminderMail($sale, $log->uid));
 
                 $log->update(['impact_1_sent_at' => now()]);
 
@@ -118,7 +118,7 @@ class ProcessAbandonedCarts extends Command
             try {
                 $coupon = $this->getOrCreateCoupon($minAmount);
 
-                Mail::to($sale->client->email)->send(new AbandonedCartSecondReminderMail($sale, $coupon));
+                Mail::to($sale->client->email)->send(new AbandonedCartSecondReminderMail($sale, $coupon, $log->uid));
 
                 $log->update([
                     'coupon_id' => $coupon->id,

@@ -3,11 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class AbandonedCartLog extends Model
 {
     protected $fillable = [
         'sale_id',
+        'uid',
         'client_email',
         'total',
         'abandoned_at',
@@ -26,6 +28,15 @@ class AbandonedCartLog extends Model
         'converted_at' => 'datetime',
         'impact_2_eligible' => 'boolean',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (AbandonedCartLog $log) {
+            if (!$log->uid) {
+                $log->uid = (string) Str::uuid();
+            }
+        });
+    }
 
     public function sale()
     {
