@@ -32,9 +32,15 @@ class StockAlertService
                 $stockChannels = $variant->stock_channels ?? [];
                 $seenGeneral   = false;
 
-                // Un canal por cada entrada configurada, más un chequeo general
-                // (cubre stock sin canales y canales con is_heritable=1).
-                $channelIds = collect($stockChannels)->pluck('channel')->map(fn($c) => (int) $c)->push(0);
+                // Un canal por cada entrada configurada, más un chequeo general.
+                // El chequeo general (channel 0) solo se agrega si la variante NO
+                // gestiona stock por canal: si ya tiene stock_channels configurado,
+                // el nivel general queda sin uso real (ninguna venta cae ahí) y
+                // alertar sobre él genera falsos positivos (ver caso "Combo Navidad").
+                $channelIds = collect($stockChannels)->pluck('channel')->map(fn($c) => (int) $c);
+                if ($channelIds->isEmpty()) {
+                    $channelIds = $channelIds->push(0);
+                }
 
                 foreach ($channelIds->unique() as $channelId) {
                     $stock = StockService::resolveStock($product, $variant, $channelId);
@@ -63,7 +69,12 @@ class StockAlertService
             $stockChannels = $product->stock_channels ?? [];
             $seenGeneral   = false;
 
-            $channelIds = collect($stockChannels)->pluck('channel')->map(fn($c) => (int) $c)->push(0);
+            // Mismo criterio que arriba: el nivel general solo se chequea si el
+            // producto no tiene stock por canal configurado.
+            $channelIds = collect($stockChannels)->pluck('channel')->map(fn($c) => (int) $c);
+            if ($channelIds->isEmpty()) {
+                $channelIds = $channelIds->push(0);
+            }
 
             foreach ($channelIds->unique() as $channelId) {
                 $stock = StockService::resolveStock($product, null, $channelId);
