@@ -13,10 +13,12 @@ class AbandonedCartFirstReminderMail extends Mailable
     use Queueable, SerializesModels;
 
     public $sale;
+    public $cartUid;
 
-    public function __construct($sale)
+    public function __construct($sale, $cartUid)
     {
         $this->sale = $sale;
+        $this->cartUid = $cartUid;
     }
 
     public function envelope(): Envelope
@@ -33,6 +35,7 @@ class AbandonedCartFirstReminderMail extends Mailable
             view: 'emails.abandonedCartFirstReminder',
             with: [
                 'sale' => $this->sale,
+                'cartUid' => $this->cartUid,
             ],
         );
     }

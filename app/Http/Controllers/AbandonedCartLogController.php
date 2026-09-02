@@ -11,6 +11,40 @@ class AbandonedCartLogController extends Controller
 {
     use ApiResponse;
 
+    // 📌 Detalle público del carrito para el link "Ir a mi carrito" de los mails (usado por el front)
+    public function showByUid($uid)
+    {
+        $log = AbandonedCartLog::where('uid', $uid)->first();
+
+        if (!$log) {
+            return $this->error('Carrito no encontrado', 404);
+        }
+
+        $sale = $log->sale;
+
+        if (!$sale) {
+            return $this->error('Carrito no encontrado', 404);
+        }
+
+        if ($sale->sale_status_id != 8) {
+            return $this->error('Este carrito ya no está disponible', 410);
+        }
+
+        $sale->load(['products.product.images', 'products.variant', 'shippingMethod']);
+
+        $data = [
+            'sale_id' => $sale->id,
+            'subtotal' => $sale->subtotal,
+            'shipping_cost' => $sale->shipping_cost,
+            'shipping_method' => $sale->shippingMethod,
+            'total' => $sale->total,
+            'products' => $sale->products,
+            'coupon' => $log->coupon,
+        ];
+
+        return $this->success($data, 'Carrito obtenido correctamente');
+    }
+
     // 📌 Listar carritos abandonados (con filtros de fecha, conversión y mail de origen)
     public function index(Request $request)
     {

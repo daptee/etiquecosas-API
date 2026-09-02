@@ -65,7 +65,7 @@
           <!-- CTA -->
           <tr>
             <td align="center" style="padding:10px;">
-              <a href="{{ config('services.front_url') }}" target="_blank"
+              <a href="{{ config('services.front_url') }}/carrito-recuperado/{{ $cartUid }}" target="_blank"
                 style="display:inline-block; padding:12px 28px; font-size:17px; font-weight:700; color:#ffffff; background-color:#347AA7; border-radius:30px; font-family:'Montserrat', sans-serif; text-decoration:none;">
                 Terminar mi pedido
               </a>

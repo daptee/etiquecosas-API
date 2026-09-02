@@ -91,10 +91,13 @@ Route::prefix('v1')->group(function () {
     Route::get('sales/statuses', [SaleController::class, 'allSaleStatus']);
     Route::get('sales/payment-method', [SaleController::class, 'allPaymentMethod']);
     Route::get('sales/channel-sale', [SaleController::class, 'allChannelSale']);
-    Route::get('sales/{id}', [SaleController::class, 'showRecort']);    
+    Route::get('sales/{id}', [SaleController::class, 'showRecort']);
     Route::post('sales', [SaleController::class, 'store']);
     Route::put('sales/change-status/{id}', [SaleController::class, 'changeStatus']);
     Route::post('mercadopago/create-preference', [MercadoPagoController::class, 'createPreference']);
+
+    // Carrito abandonado (link "Ir a mi carrito" de los mails de recuperación)
+    Route::get('abandoned-cart/{uid}', [AbandonedCartLogController::class, 'showByUid']);
 
     // Attribute
     Route::get('attributes', [AttributeController::class, 'index']);

@@ -56,3 +56,11 @@ SELECT
     1, 0, (SELECT id FROM coupon_statuses WHERE name LIKE '%activ%' LIMIT 1),
     NOW(), NOW()
 WHERE NOT EXISTS (SELECT 1 FROM coupons WHERE code = 'ETIQUECARRITO');
+
+-- ============================================================
+-- UID público para el link "Ir a mi carrito" de los mails
+-- Equivalente en SQL crudo a la migración
+-- database/migrations/2026_09_02_000000_add_uid_to_abandoned_cart_logs_table.php
+-- ============================================================
+ALTER TABLE abandoned_cart_logs
+    ADD COLUMN uid CHAR(36) NULL UNIQUE AFTER sale_id;

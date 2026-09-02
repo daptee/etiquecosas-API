@@ -14,11 +14,13 @@ class AbandonedCartSecondReminderMail extends Mailable
 
     public $sale;
     public $coupon;
+    public $cartUid;
 
-    public function __construct($sale, $coupon)
+    public function __construct($sale, $coupon, $cartUid)
     {
         $this->sale = $sale;
         $this->coupon = $coupon;
+        $this->cartUid = $cartUid;
     }
 
     public function envelope(): Envelope
@@ -36,6 +38,7 @@ class AbandonedCartSecondReminderMail extends Mailable
             with: [
                 'sale' => $this->sale,
                 'coupon' => $this->coupon,
+                'cartUid' => $this->cartUid,
             ],
         );
     }
