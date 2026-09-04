@@ -30,7 +30,7 @@ class AbandonedCartLogController extends Controller
             return $this->error('Este carrito ya no está disponible', 410);
         }
 
-        $sale->load(['products.product.images', 'products.variant', 'shippingMethod']);
+        $sale->load(['products.product.images', 'products.variant', 'shippingMethod', 'client']);
 
         $data = [
             'sale_id' => $sale->id,
@@ -40,6 +40,18 @@ class AbandonedCartLogController extends Controller
             'total' => $sale->total,
             'products' => $sale->products,
             'coupon' => $log->coupon,
+
+            // Datos para que el front pueda recrear la venta (POST /sales) sin
+            // volver a pedirle el formulario de checkout al cliente.
+            'client_mail' => $sale->client->email ?? null,
+            'client_name' => $sale->client->name ?? null,
+            'client_lastname' => $sale->client->lastName ?? null,
+            'client_phone' => $sale->client->phone ?? null,
+            'channel_id' => $sale->channel_id,
+            'shipping_address' => $sale->address,
+            'shipping_locality_id' => $sale->locality_id,
+            'shipping_postal_code' => $sale->postal_code,
+            'customer_notes' => $sale->customer_notes,
         ];
 
         return $this->success($data, 'Carrito obtenido correctamente');
