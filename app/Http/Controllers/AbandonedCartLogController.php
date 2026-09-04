@@ -30,7 +30,7 @@ class AbandonedCartLogController extends Controller
             return $this->error('Este carrito ya no está disponible', 410);
         }
 
-        $sale->load(['products.product.images', 'products.variant', 'shippingMethod', 'coupons']);
+        $sale->load(['products.product.images', 'products.variant', 'shippingMethod', 'client', 'coupons']);
 
         $data = [
             'sale_id' => $sale->id,
