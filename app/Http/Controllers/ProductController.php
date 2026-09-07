@@ -64,7 +64,7 @@ class ProductController extends Controller
                 'categories:id,name',
                 'attributes:id,name,type',
                 'attributeValues:id,value,attribute_id,metadata',
-                'tag:id,name',
+                'tag:id,name,color',
                 'images:id,product_id,img,is_main',
             ]);
         if ($request->has('search')) {
@@ -199,7 +199,7 @@ class ProductController extends Controller
                 'categories:id,name',
                 'attributes:id,name,type',
                 'attributeValues:id,value,attribute_id,metadata',
-                'tag:id,name',
+                'tag:id,name,color',
                 'images:id,product_id,img,is_main',
             ])
             ->where('is_feature', true)
@@ -269,7 +269,7 @@ class ProductController extends Controller
                 'categories:id,name',
                 'attributes:id,name,type',
                 'attributeValues:id,value,attribute_id,metadata',
-                'tag:id,name',
+                'tag:id,name,color',
                 'images:id,product_id,img,is_main',
             ]);
         if ($request->has('search')) {
@@ -378,7 +378,7 @@ class ProductController extends Controller
             'categories:id,name',
             'attributes:id,name,type',
             'attributeValues:id,value,attribute_id,metadata',
-            'tag:id,name',
+            'tag:id,name,color',
             'images:id,product_id,img,is_main',
             'costs:id,name,price',
             'customization',
@@ -395,7 +395,7 @@ class ProductController extends Controller
                 }
             },
             'relatedProducts.images:id,product_id,img,is_main',
-            'relatedProducts.tag:id,name',
+            'relatedProducts.tag:id,name,color',
             'relatedProducts.stockStatus:id,name',
             'variants'
         ])->makeHidden([
@@ -438,7 +438,7 @@ class ProductController extends Controller
             'categories:id,name',
             'attributes:id,name,type',
             'attributeValues:id,value,attribute_id,metadata',
-            'tag:id,name',
+            'tag:id,name,color',
             'images:id,product_id,img,is_main',
             'costs:id,name',
             'customization',
@@ -455,7 +455,7 @@ class ProductController extends Controller
                 }
             },
             'relatedProducts.images:id,product_id,img,is_main',
-            'relatedProducts.tag:id,name',
+            'relatedProducts.tag:id,name,color',
             'relatedProducts.stockStatus:id,name',
             'variants'
         ])->makeHidden([
