@@ -5,12 +5,28 @@
 <style>
 {!! file_get_contents(public_path('css/etiquetas.css')) !!}
 
+/* La hoja del editor debe coincidir 1:1 con la hoja física: sin los
+   márgenes de @page heredados de etiquetas.css (legacy), o (0,0) en el
+   editor queda desplazado respecto al borde real del PDF. */
+@page {
+    margin: 0;
+}
+
 @foreach ($plantilla['design']['pages'] as $page)
     @foreach ($page['elements'] as $el)
         @if (($el['type'] ?? null) === 'text' && !empty($el['resolved_font_family']) && !empty($el['resolved_font_files'][0]))
+            @php
+                $fontPath = str_replace('\\', '/', $el['resolved_font_files'][0]);
+                $fontFormat = match (strtolower(pathinfo($fontPath, PATHINFO_EXTENSION))) {
+                    'otf' => 'opentype',
+                    'woff' => 'woff',
+                    'woff2' => 'woff2',
+                    default => 'truetype',
+                };
+            @endphp
             @font-face {
                 font-family: '{{ $el['resolved_font_family'] }}';
-                src: url('{{ $el['resolved_font_files'][0] }}');
+                src: url('file://{{ $fontPath }}') format('{{ $fontFormat }}');
             }
         @endif
     @endforeach
@@ -21,6 +37,7 @@
 }
 .editor-element {
     position: absolute;
+    overflow: hidden;
 }
 .editor-element p {
     margin: 0;
@@ -52,7 +69,7 @@
 
                     @case('icon')
                         @if (!empty($el['resolved_icon_path']))
-                            <img src="{{ $el['resolved_icon_path'] }}" style="width:100%; height:100%;">
+                            <img src="file://{{ str_replace('\\', '/', $el['resolved_icon_path']) }}" style="width:100%; height:100%;">
                         @endif
                         @break
 
