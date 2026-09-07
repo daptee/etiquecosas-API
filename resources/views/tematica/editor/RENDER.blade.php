@@ -64,7 +64,15 @@
             ">
                 @switch($el['type'] ?? null)
                     @case('background')
-                        <div style="width:100%; height:100%; background: {{ ($el['color']['mode'] ?? 'hex') === 'cmyk' ? 'cmyk(' . $el['color']['value'] . ')' : ($el['color']['value'] ?? '#FFFFFF') }};"></div>
+                        @php
+                            $shapeType = $el['resolved_shape_type'] ?? null;
+                            $borderRadius = match ($shapeType) {
+                                'circle' => '50%',
+                                'rect' => ($el['resolved_shape_corner_radius_cm'] ?? 0) . 'cm',
+                                default => '0',
+                            };
+                        @endphp
+                        <div style="width:100%; height:100%; border-radius: {{ $borderRadius }}; background: {{ ($el['color']['mode'] ?? 'hex') === 'cmyk' ? 'cmyk(' . $el['color']['value'] . ')' : ($el['color']['value'] ?? '#FFFFFF') }};"></div>
                         @break
 
                     @case('icon')

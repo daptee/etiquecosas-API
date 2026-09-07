@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\LabelShape;
 use App\Models\PersonalizationIcon;
 use App\Models\ProductPdfDesign;
 use App\Models\Typography;
@@ -9,9 +10,12 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use setasign\Fpdi\Fpdi;
 
 class EtiquetaService
 {
+    private const CM_TO_PT = 72 / 2.54;
+
     /**
      * 🗑️ Elimina todos los PDFs existentes de un pedido específico
      */
@@ -314,11 +318,14 @@ class EtiquetaService
                 ];
             }, $pages);
 
-            $plantilla = [
-                'design' => [
-                    'pages' => $resolvedPages,
-                ],
-            ];
+            // dompdf fija el tamaño físico del PDF una sola vez para todo el
+            // documento: hojas con sheet.width_cm/height_cm distintos no pueden
+            // convivir en el mismo archivo sin que unas se corten o queden con
+            // márgenes de sobra. Se agrupan por tamaño, se renderiza un PDF
+            // temporal por grupo (cada uno con el tamaño de página exacto de
+            // esa hoja) y se fusionan con FPDI en el único archivo final,
+            // igual que ya hace app/Console/Commands/GenerarEtiquetas.php.
+            $grupos = self::agruparPaginasPorTamano($resolvedPages);
 
             $product_order = (object)[
                 'name' => $nombre,
@@ -327,16 +334,55 @@ class EtiquetaService
             ];
 
             $filePath = "{$dirPath}/{$ventaId}-{$productOrder->id}-{$productOrder->product->name}-{$sufijo}-" . ($idx + 1) . ".pdf";
+            $tmpFiles = [];
 
             try {
-                $pdf = Pdf::loadView('tematica.editor.RENDER', compact('plantilla', 'product_order'))->setPaper('a4', 'portrait');
-                $dompdf = $pdf->getDomPDF();
-                $dompdf->getOptions()->setFontDir(public_path('fonts'));
-                $dompdf->getOptions()->setFontCache(storage_path('fonts_cache'));
-                $pdf->save($filePath);
+                foreach ($grupos as $grupoIdx => $grupo) {
+                    $plantilla = [
+                        'design' => [
+                            'pages' => $grupo['pages'],
+                        ],
+                    ];
+
+                    $widthPt = $grupo['width_cm'] * self::CM_TO_PT;
+                    $heightPt = $grupo['height_cm'] * self::CM_TO_PT;
+
+                    $pdf = Pdf::loadView('tematica.editor.RENDER', compact('plantilla', 'product_order'))
+                        ->setPaper([0, 0, $widthPt, $heightPt]);
+                    $dompdf = $pdf->getDomPDF();
+                    $dompdf->getOptions()->setFontDir(public_path('fonts'));
+                    $dompdf->getOptions()->setFontCache(storage_path('fonts_cache'));
+
+                    $tmpPath = "{$filePath}.tmp{$grupoIdx}.pdf";
+                    $pdf->save($tmpPath);
+                    $tmpFiles[] = $tmpPath;
+                }
+
+                if (count($tmpFiles) === 1) {
+                    rename($tmpFiles[0], $filePath);
+                } else {
+                    $fpdi = new Fpdi();
+                    foreach ($tmpFiles as $tmpFile) {
+                        $pageCount = $fpdi->setSourceFile($tmpFile);
+                        for ($page = 1; $page <= $pageCount; $page++) {
+                            $tplId = $fpdi->importPage($page);
+                            $size = $fpdi->getTemplateSize($tplId);
+                            $fpdi->AddPage($size['orientation'], [$size['width'], $size['height']]);
+                            $fpdi->useTemplate($tplId);
+                        }
+                    }
+                    $fpdi->Output($filePath, 'F');
+                    foreach ($tmpFiles as $tmpFile) {
+                        @unlink($tmpFile);
+                    }
+                }
+
                 $outputFiles[] = $filePath;
                 Log::info("✅ PDF (editor) generado", ['path' => $filePath]);
             } catch (\Throwable $e) {
+                foreach ($tmpFiles as $tmpFile) {
+                    @unlink($tmpFile);
+                }
                 Log::error("❌ Error generando PDF desde diseño del editor", [
                     'design_id' => $design->id,
                     'error' => $e->getMessage(),
@@ -345,6 +391,30 @@ class EtiquetaService
         }
 
         return $outputFiles;
+    }
+
+    /**
+     * Agrupa páginas ya resueltas por tamaño físico de hoja (width_cm/height_cm),
+     * conservando el orden de aparición tanto de los grupos como de las páginas
+     * dentro de cada uno.
+     */
+    private static function agruparPaginasPorTamano(array $resolvedPages): array
+    {
+        $grupos = [];
+
+        foreach ($resolvedPages as $page) {
+            $widthCm = (float) ($page['sheet']['width_cm'] ?? 18.5);
+            $heightCm = (float) ($page['sheet']['height_cm'] ?? 29);
+            $key = round($widthCm, 2) . 'x' . round($heightCm, 2);
+
+            if (!isset($grupos[$key])) {
+                $grupos[$key] = ['width_cm' => $widthCm, 'height_cm' => $heightCm, 'pages' => []];
+            }
+
+            $grupos[$key]['pages'][] = $page;
+        }
+
+        return array_values($grupos);
     }
 
     /**
@@ -391,6 +461,14 @@ class EtiquetaService
             }
 
             $el['resolved_icon_path'] = $iconPath;
+        }
+
+        if ($type === 'background' && !empty($el['label_shape_id'])) {
+            $shape = LabelShape::find($el['label_shape_id']);
+            if ($shape) {
+                $el['resolved_shape_type'] = $shape->shape_type;
+                $el['resolved_shape_corner_radius_cm'] = $shape->data['corner_radius_cm'] ?? 0;
+            }
         }
 
         if ($type === 'text') {
