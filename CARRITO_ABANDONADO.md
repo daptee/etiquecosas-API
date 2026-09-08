@@ -106,9 +106,35 @@ El `uid` no existe. No debería pasar con un link real salido de un mail nuestro
 
 La venta detrás de este `uid` ya no está en estado "Pendiente de pago" — el cliente ya terminó la compra (por este medio o por otro), o la venta se canceló. El front debería mostrar un mensaje tipo "esta compra ya se completó / ya no está disponible" en vez de intentar reconstruir el carrito.
 
+## Completar la compra: crear la venta nueva (no editar la original)
+
+Se decidió que la venta original de un carrito abandonado **nunca se edita ni se le agregan/sacan productos**. Cuando el cliente confirma desde `/carrito-recuperado/{uid}` (aunque haya cambiado algún dato del formulario, o no haya cambiado nada), el front tiene que crear una venta **nueva e independiente** con `POST /v1/sales`, usando los datos que le dio `GET /v1/abandoned-cart/{uid}` (`client_mail`, `client_name`, `client_lastname`, `client_phone`, `channel_id`, `shipping_address`, `shipping_locality_id`, `shipping_postal_code`, `customer_notes`, `products`, etc.) como si fuera un checkout normal.
+
+La única diferencia con un checkout normal: hay que mandar el campo `sale_id` del body de `POST /v1/sales` con el `sale_id` que devolvió el `GET /v1/abandoned-cart/{uid}` (el de la venta original).
+
+```json
+POST /api/v1/sales
+{
+  "client_mail": "...",
+  "client_name": "...",
+  ...
+  "sale_id": 94500,   // 👈 el sale_id de la venta original (carrito abandonado)
+  "products": [ ... ]
+}
+```
+
+**Qué hace el backend con eso, automáticamente:**
+
+- La venta nueva se crea normal (arranca en "Pendiente de pago" o el estado que le mandes, sigue el flujo de siempre — puede terminar aprobada, rechazada, etc.).
+- La venta **original** (`sale_id: 94500` en el ejemplo) pasa de "Pendiente de pago" a un estado nuevo, **"Carrito recuperado"**, y queda asociada a la venta nueva (esto es automático — no hay que llamar a ningún endpoint aparte).
+- Si esa venta original tenía un `abandoned_cart_log` (o sea, si vino de un mail de carrito abandonado), cuando la venta **nueva** se apruebe, ese log se marca como convertido igual — el reporte de carritos abandonados no pierde el dato aunque técnicamente la que se aprobó fue otra venta.
+
+Si el `sale_id` que mandás **no** está en estado "Pendiente de pago" (por ejemplo, ya se había recuperado antes, o ya se había cancelado), el backend simplemente no hace nada con la venta original — la nueva se crea igual, sin quedar asociada. Por eso conviene chequear el 410 del `GET` antes de dejar avanzar al cliente (ver más abajo).
+
 ## Resumen para el front
 
 1. Tomar el `{uid}` de la URL `/carrito-recuperado/{uid}`.
 2. Pegarle a `GET /api/v1/abandoned-cart/{uid}`.
 3. Si es 200 → mostrar los productos del carrito y permitir continuar la compra (y, si viene `coupon`, ofrecer aplicarlo).
 4. Si es 404 o 410 → mostrar un mensaje de que el carrito no está disponible (con un link al sitio para empezar de cero).
+5. Al confirmar, crear la venta con `POST /v1/sales` como un checkout normal, pero **mandando `sale_id` = el `sale_id` que devolvió el GET**. El backend se encarga de todo lo demás (cambiar el estado de la original, asociarla, trackear la conversión).
