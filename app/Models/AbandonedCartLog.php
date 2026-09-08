@@ -50,15 +50,29 @@ class AbandonedCartLog extends Model
 
     public static function markConvertedForSale(Sale $sale): void
     {
-        $log = static::where('sale_id', $sale->id)->whereNull('converted_at')->first();
+        // Si esta venta viene de un carrito recuperado, el abandoned_cart_log
+        // está en la venta original (sale_id apunta hacia arriba en la cadena),
+        // no en esta venta nueva. Se sube por la cadena hasta encontrarlo.
+        $current = $sale;
+        $depth = 0;
 
-        if (!$log) {
-            return;
+        while ($current && $depth < 10) {
+            $log = static::where('sale_id', $current->id)->whereNull('converted_at')->first();
+
+            if ($log) {
+                $log->update([
+                    'converted_at' => now(),
+                    'converted_via' => $log->impact_2_sent_at ? 'impact_2' : 'impact_1',
+                ]);
+                return;
+            }
+
+            if (!$current->sale_id) {
+                return;
+            }
+
+            $current = Sale::find($current->sale_id);
+            $depth++;
         }
-
-        $log->update([
-            'converted_at' => now(),
-            'converted_via' => $log->impact_2_sent_at ? 'impact_2' : 'impact_1',
-        ]);
     }
 }

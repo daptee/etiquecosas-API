@@ -436,6 +436,25 @@ class SaleController extends Controller
             'fb_data' => !empty($fbData) ? $fbData : null,
         ]);
 
+        // Si esta venta reemplaza a un carrito recuperado (todavía "Pendiente de pago"),
+        // la original pasa a "Carrito recuperado" en vez de seguir editándose.
+        if ($request->sale_id) {
+            $parentSale = Sale::find($request->sale_id);
+
+            if ($parentSale && $parentSale->sale_status_id == 8) {
+                $recoveredStatusId = $this->getRecoveredCartStatusId();
+
+                $parentSale->sale_status_id = $recoveredStatusId;
+                $parentSale->save();
+
+                SaleStatusHistory::create([
+                    'sale_id' => $parentSale->id,
+                    'sale_status_id' => $recoveredStatusId,
+                    'date' => Carbon::now(),
+                ]);
+            }
+        }
+
         if ($request->shipping_save) {
             ClientAddress::create([
                 'client_id' => $client->id,
@@ -655,6 +674,17 @@ class SaleController extends Controller
 
         $this->logAudit(Auth::user() ?? null, 'Update Status Sale', $request->all(), $sale);
         return $this->success($sale, 'Estado de venta actualizada correctamente');
+    }
+
+    private function getRecoveredCartStatusId(): int
+    {
+        $status = SaleStatus::where('name', 'Carrito recuperado')->first();
+
+        if (!$status) {
+            $status = SaleStatus::create(['name' => 'Carrito recuperado']);
+        }
+
+        return $status->id;
     }
 
     private function approveSale(Sale $sale): void
