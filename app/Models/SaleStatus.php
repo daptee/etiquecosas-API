@@ -8,4 +8,5 @@ class SaleStatus extends Model
 {
     protected $table = 'sale_status';
     protected $fillable = ['name'];
+    public $timestamps = false;
 }
