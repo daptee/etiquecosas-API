@@ -49,6 +49,28 @@ class ProductVariant extends Model
         }, $channels);
     }
 
+    private function getWildcardAttributesValues()
+    {
+        $wildcardAttributeIds = collect($this->variant['attributesvalues'] ?? [])
+            ->filter(fn($v) => empty($v['id']) && !empty($v['attribute_id']))
+            ->pluck('attribute_id')
+            ->unique()
+            ->values();
+
+        if ($wildcardAttributeIds->isEmpty()) {
+            return collect();
+        }
+
+        return Attribute::whereIn('id', $wildcardAttributeIds)->get()->map(fn($attribute) => [
+            'id' => null,
+            'value' => 'Todos',
+            'attribute' => [
+                'id' => $attribute->id,
+                'name' => $attribute->name,
+            ],
+        ]);
+    }
+
     public function toArray()
     {
         $array = parent::toArray();
@@ -79,7 +101,7 @@ class ProductVariant extends Model
                         'name' => $attr->attribute->name ?? null,
                     ],
                 ];
-            })->toArray(),
+            })->concat($this->getWildcardAttributesValues())->values()->toArray(),
         ];
 
         return $array;

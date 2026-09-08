@@ -86,14 +86,9 @@ class ProductPdfResolverService
             $tematicasGuardadas = $productPdf['data']['tematicas'] ?? [];
             Log::info("Temáticas guardadas en ProductPdf: " . count($tematicasGuardadas));
 
-            if ($variant) {
-                $tematicaId = $variant['attributesvalues'][0]['id'] ?? null;
+            $tematicaId = $variant['attributesvalues'][0]['id'] ?? null;
 
-                if (!$tematicaId) {
-                    Log::warning("No se encontró temática para {$nombreCompleto}, product_order ID: {$productOrder->id}");
-                    return $pdfPaths;
-                }
-
+            if ($variant && $tematicaId) {
                 $tematicaCoincidente = collect($tematicasGuardadas)->firstWhere('id', $tematicaId);
 
                 if ($tematicaCoincidente) {

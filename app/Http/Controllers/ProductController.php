@@ -872,6 +872,12 @@ class ProductController extends Controller
                             $fixedValues[] = [
                                 'id' => $val['id']
                             ];
+                        } elseif (isset($val['attribute_id']) && $val['attribute_id']) {
+                            // Sin id específico: la variante representa "Todos" los valores de este atributo
+                            $fixedValues[] = [
+                                'attribute_id' => (int) $val['attribute_id'],
+                                'id' => null,
+                            ];
                         }
                     }
                 }
@@ -1400,6 +1406,12 @@ class ProductController extends Controller
                         if (isset($val['id']) && $val['id']) {
                             $fixedValues[] = [
                                 'id' => $val['id']
+                            ];
+                        } elseif (isset($val['attribute_id']) && $val['attribute_id']) {
+                            // Sin id específico: la variante representa "Todos" los valores de este atributo
+                            $fixedValues[] = [
+                                'attribute_id' => (int) $val['attribute_id'],
+                                'id' => null,
                             ];
                         }
                     }
