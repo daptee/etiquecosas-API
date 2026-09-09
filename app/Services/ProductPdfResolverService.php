@@ -26,7 +26,7 @@ class ProductPdfResolverService
         $fecha
     ): array {
         $variant = $productOrder->variant?->variant;
-        $tematicaId = $variant['attributesvalues'][0]['id'] ?? null;
+        $tematicaId = $productOrder->resolved_attributes_values->first()['id'] ?? null;
 
         $link = ProductPdfDesignProduct::with('design')
             ->where('product_id', $productOrder->product_id)
@@ -60,7 +60,7 @@ class ProductPdfResolverService
             }
         }
 
-        return self::resolveLegacy($ventaId, $productOrder, $variant, $nombreCompleto, $form, $customColor, $customIcon, $fecha);
+        return self::resolveLegacy($ventaId, $productOrder, $variant, $tematicaId, $nombreCompleto, $form, $customColor, $customIcon, $fecha);
     }
 
     /**
@@ -70,6 +70,7 @@ class ProductPdfResolverService
         int $ventaId,
         $productOrder,
         $variant,
+        $tematicaId,
         string $nombreCompleto,
         array $form,
         $customColor,
@@ -85,8 +86,6 @@ class ProductPdfResolverService
 
             $tematicasGuardadas = $productPdf['data']['tematicas'] ?? [];
             Log::info("Temáticas guardadas en ProductPdf: " . count($tematicasGuardadas));
-
-            $tematicaId = $variant['attributesvalues'][0]['id'] ?? null;
 
             if ($variant && $tematicaId) {
                 $tematicaCoincidente = collect($tematicasGuardadas)->firstWhere('id', $tematicaId);

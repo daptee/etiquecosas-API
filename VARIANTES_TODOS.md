@@ -87,3 +87,31 @@ Con variantes comodín, esa lógica de matching en el front tiene que actualizar
 
 Ejemplo: si el producto tiene 2 atributos (Color: 3 valores, Talle: 3 valores) y existe una única variante con `attributesvalues: [{id: null, attribute: {id: 1}}, {id: null, attribute: {id: 2}}]`, esa variante debe ser la que se use sin importar qué Color/Talle elija el cliente (siempre que el producto no tenga *otra* variante más específica que sí matchee esa combinación puntual — si conviven variantes puntuales y comodín para el mismo producto, priorizar la puntual si existe).
 
+---
+
+## ⚠️ Obligatorio al hacer checkout: `selected_attributes`
+
+Como solo existe **una fila real** de `ProductVariant` para todas las combinaciones cubiertas por el comodín, el `variant_id` que se manda al crear la venta **es el mismo sin importar qué Color/Talle haya elegido el cliente**. Si el front no manda nada más, la venta queda sin registro de cuál combinación puntual se compró realmente (temáticas de PDF, colores de banda, emails de resumen, etc. van a mostrar "Todos" en vez del valor real).
+
+Por eso, **cada vez que el `variant_id` elegido tenga algún atributo comodín (`id: null`)**, hay que mandar también, en la misma línea de producto de la venta, qué valor concreto se seleccionó para ese atributo:
+
+```
+products[0][product_id]        123
+products[0][variant_id]        456
+products[0][quantity]          1
+products[0][unit_price]        10890
+products[0][selected_attributes][0][attribute_id]         1
+products[0][selected_attributes][0][attribute_value_id]   15
+products[0][selected_attributes][1][attribute_id]         2
+products[0][selected_attributes][1][attribute_value_id]   28
+```
+
+- Una entrada de `selected_attributes` por cada atributo comodín de la variante elegida (`attribute_id` = el que viene en `attributesvalues[].attribute.id` con `id: null`; `attribute_value_id` = el id puntual que el cliente eligió en la web, de entre los valores reales de ese atributo).
+- Si un atributo de la variante **no** es comodín (ya viene con `id` puntual), no hace falta mandar nada para ese atributo en `selected_attributes` — ya está resuelto por el `variant_id`.
+- Aplica a los 3 endpoints de creación/edición de venta: `POST /sales` (checkout), y los de venta local (`store-local-sale` / `update-local-sale`).
+- **Es opcional a nivel validación** (si no se manda, la venta igual se crea) pero funcionalmente necesario: sin esto, todo lo que se genere después para esa venta (PDF de etiqueta, resumen por email, bandas) va a mostrar/usar "Todos" en vez de la elección real del cliente. Tratarlo como obligatorio en el front siempre que la variante elegida tenga algún atributo comodín.
+
+### Qué devuelve la venta después
+
+En las respuestas de venta que incluyan la línea de producto (`SaleProduct` / `products` de una `Sale`), el mismo criterio de resolución (puntual → tal cual; comodín con selección → el valor elegido; comodín sin selección → `"Todos"`) está disponible vía el accessor `resolved_attributes_values` de cada línea — mismo shape que `variant.attributesvalues`: `[{ id, value, attribute: { id, name } }]`.
+
