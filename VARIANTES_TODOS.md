@@ -1,117 +1,63 @@
-# Variante comodín ("Todos") en atributos de producto
+# Edición masiva de variantes ("Todos")
 
 ## Descripción
 
-Hasta ahora, cuando el admin agregaba un atributo a una variante vía `variants[X][attributes][0][attribute_id]`, el backend **explotaba automáticamente** esa variante en una por cada valor posible del atributo (producto cartesiano). Si un producto tenía 2 atributos con 3 valores cada uno, terminaban generándose 9 variantes reales en `product_variants`, aunque precio/stock/etc. fueran iguales para todas.
+Cuando un producto tiene atributos con varios valores (ej. Color: 3 valores, Talle: 3 valores), el sistema arma **una `ProductVariant` real por cada combinación posible** (3×3 = 9 variantes). Esto no cambió — sigue siendo así, y es necesario porque el storefront resuelve la variante comprada comparando la selección puntual del cliente contra estas 9 filas reales.
 
-Esta funcionalidad nueva agrega una forma alternativa de cargar una variante: marcarla como **comodín ("Todos")** para uno o más atributos, sin explotarla. El resultado es **una sola variante** que en la respuesta de la API aparece con el valor `"Todos"` en vez de un valor puntual, para cada atributo marcado así.
+Lo que sí es nuevo es una forma de **editar en un solo paso** los campos que comparten todas esas variantes (precio, stock, descuentos, etc.), en vez de tener que entrar variante por variante a cambiarlos a mano. A esto lo llamamos edición "Todos": se manda **un solo** ítem en `variants[]` marcando los atributos con `attributes[X][attribute_id]` (sin fijar un valor puntual) y el backend:
 
-Regla clave: esto es un **modo alternativo**, no reemplaza nada. La explosión automática con `attributes[X][attribute_id]` sigue funcionando exactamente igual que antes, para cuando sí se necesita precio/stock diferenciado por combinación.
+1. Genera todas las combinaciones reales de esos atributos (igual que siempre).
+2. Para cada combinación, si **ya existe** una variante de ese producto con exactamente esos valores de atributo, la **actualiza** (precio, stock, descuentos, etc. — los campos que mandaste en el ítem).
+3. Si la combinación **no existe todavía**, la crea (igual que la explosión de siempre).
+4. **No pisa los datos que tienen que ser únicos por variante** al actualizar: `sku`, `name` e imagen (`img`) de cada variante existente se mantienen tal cual estaban, aunque el ítem "Todos" no los mande o mande otra cosa.
 
----
+## Cómo se manda
 
-## Cómo pedir "Todos" para un atributo en una variante
-
-En vez de usar la key `attributes` (que dispara la explosión), se usa `attributesvalues`, pero **sin mandar `id`**, solo `attribute_id`:
+Exactamente igual que la explosión de toda la vida — **no hay ningún campo nuevo**:
 
 ```
-variants[0][attributesvalues][0][attribute_id]   1
-```
-
-Esa entrada significa: "esta variante aplica a **todos** los valores del atributo 1".
-
-### Ejemplos
-
-**Un solo atributo comodín** (ej. Color → Todos):
-```
-variants[0][attributesvalues][0][attribute_id]   1
-variants[0][price]                               10890
-variants[0][stock_quantity]                      5
+variants[0][attributes][0][attribute_id]   1     // Color: aplica a sus 3 valores
+variants[0][attributes][1][attribute_id]   2     // Talle: aplica a sus 3 valores
+variants[0][price]                         10890
+variants[0][stock_quantity]                5
+variants[0][stock_status]                  1
 ...
 ```
-→ genera **1 variante**, con `attributesvalues: [{ id: null, value: "Todos", attribute: { id: 1, name: "Color" } }]`.
 
-**Dos atributos comodín a la vez** (ej. Color → Todos, Talle → Todos):
+No se manda `variants[0][id]` (no tiene sentido: un solo id no puede representar 9 variantes). El backend detecta que es una edición masiva porque `attributes` generó **más de una combinación**.
+
+### Qué pasa con cada combinación resultante
+
+- **Si el producto ya tenía una variante con esa combinación exacta de Color+Talle** → se actualiza: precio, stock, descuentos, `stock_channels`, `order`, etc. cambian al valor que mandaste en el ítem. **`sku`, `name` e `img` de esa variante NO se tocan** — quedan como estaban.
+- **Si no existía** → se crea una variante nueva para esa combinación, con todos los campos del ítem (acá sí, como es una fila nueva, el `sku`/`name` que hayas mandado se usa tal cual — igual que la explosión de siempre en alta).
+
+### Ejemplo
+
+Producto con Color (Rojo, Azul, Verde) y Talle (S, M) → 6 variantes reales. Las 6 ya existen, cada una con su propio sku (`ROJ-S`, `ROJ-M`, `AZU-S`, etc.) cargado a mano en algún momento.
+
+Mandás:
 ```
-variants[0][attributesvalues][0][attribute_id]   1
-variants[0][attributesvalues][1][attribute_id]   2
-```
-→ genera **1 variante**, con `attributesvalues` conteniendo un `"Todos"` por cada atributo (Color y Talle).
-
-**Mezclar un valor fijo con un comodín** (ej. Color = Rojo puntual, Talle = Todos):
-```
-variants[0][attributesvalues][0][id]             15
-variants[0][attributesvalues][1][attribute_id]   2
-```
-→ genera **1 variante** con `attributesvalues: [{id: 15, value: "Rojo", ...}, {id: null, value: "Todos", attribute: {id: 2, name: "Talle"}}]`.
-
-### Importante
-
-- **No mandar `attributes[X][attribute_id]`** para el/los atributo(s) que quieras como comodín. Si mandás `attributes` junto con `attributesvalues` para el mismo atributo, `attributes` va a explotar en combinaciones y el comodín se va a pegar como fijo a cada una de esas combinaciones — no es lo que se busca.
-- Cada entrada de `attributesvalues` es o bien `{ id: <attribute_value_id> }` (valor puntual, comportamiento de siempre) o bien `{ attribute_id: <id> }` sin `id` (comodín "Todos" para ese atributo). No mandar ambos (`id` e `attribute_id`) en la misma entrada — si `id` viene con valor, gana ese camino y se ignora el comodín.
-- El campo `attributes` (a nivel producto, fuera de `variants`) que sincroniza qué atributos tiene el producto **no cambia** — sigue mandándose igual.
-
----
-
-## Qué devuelve la API
-
-En la respuesta de un `ProductVariant`, cada elemento de `variant.attributesvalues` ahora puede ser:
-
-**Valor puntual (como siempre):**
-```json
-{
-  "id": 15,
-  "value": "Rojo",
-  "attribute": { "id": 1, "name": "Color" }
-}
+variants[0][attributes][0][attribute_id]   1   // Color
+variants[0][attributes][1][attribute_id]   2   // Talle
+variants[0][price]                         12000
+variants[0][stock_status]                  1
 ```
 
-**Comodín "Todos":**
-```json
-{
-  "id": null,
-  "value": "Todos",
-  "attribute": { "id": 2, "name": "Talle" }
-}
-```
+Resultado: las 6 variantes existentes pasan a tener `price: 12000` y `stock_status: 1`, pero cada una conserva su propio `sku` (`ROJ-S`, `ROJ-M`, etc.) y su propia imagen. No se crea ninguna variante nueva porque las 6 combinaciones ya existían.
 
-El front debe distinguir estos dos casos por `id === null` (no por el texto `"Todos"`, que podría cambiar). Cuando `id` es `null`, esa variante aplica a **cualquier** valor de ese `attribute.id` para ese producto.
+### Mezclando "Todos" en un atributo con un valor fijo en otro
 
----
-
-## Impacto en selección de variante en el storefront
-
-**Este backend no resuelve "qué variante corresponde a la selección del cliente"** — esa lógica hoy vive en el front, comparando `attribute_value_id`s elegidos contra el listado completo de variantes del producto (`GET` de producto ya trae todas con sus `attributesvalues`).
-
-Con variantes comodín, esa lógica de matching en el front tiene que actualizarse: al buscar la variante que matchea la selección del usuario, un atributo con `id: null` (Todos) en la variante **matchea cualquier valor elegido** para ese `attribute.id`, no requiere que el valor elegido coincida con nada puntual.
-
-Ejemplo: si el producto tiene 2 atributos (Color: 3 valores, Talle: 3 valores) y existe una única variante con `attributesvalues: [{id: null, attribute: {id: 1}}, {id: null, attribute: {id: 2}}]`, esa variante debe ser la que se use sin importar qué Color/Talle elija el cliente (siempre que el producto no tenga *otra* variante más específica que sí matchee esa combinación puntual — si conviven variantes puntuales y comodín para el mismo producto, priorizar la puntual si existe).
-
----
-
-## ⚠️ Obligatorio al hacer checkout: `selected_attributes`
-
-Como solo existe **una fila real** de `ProductVariant` para todas las combinaciones cubiertas por el comodín, el `variant_id` que se manda al crear la venta **es el mismo sin importar qué Color/Talle haya elegido el cliente**. Si el front no manda nada más, la venta queda sin registro de cuál combinación puntual se compró realmente (temáticas de PDF, colores de banda, emails de resumen, etc. van a mostrar "Todos" en vez del valor real).
-
-Por eso, **cada vez que el `variant_id` elegido tenga algún atributo comodín (`id: null`)**, hay que mandar también, en la misma línea de producto de la venta, qué valor concreto se seleccionó para ese atributo:
+Se puede combinar `attributes` (explota) con `attributesvalues` (fija un valor concreto para todas las combinaciones), igual que siempre:
 
 ```
-products[0][product_id]        123
-products[0][variant_id]        456
-products[0][quantity]          1
-products[0][unit_price]        10890
-products[0][selected_attributes][0][attribute_id]         1
-products[0][selected_attributes][0][attribute_value_id]   15
-products[0][selected_attributes][1][attribute_id]         2
-products[0][selected_attributes][1][attribute_value_id]   28
+variants[0][attributes][0][attribute_id]        1    // Color: todos sus valores
+variants[0][attributesvalues][0][id]            28   // Talle = M, fijo, para todas
 ```
 
-- Una entrada de `selected_attributes` por cada atributo comodín de la variante elegida (`attribute_id` = el que viene en `attributesvalues[].attribute.id` con `id: null`; `attribute_value_id` = el id puntual que el cliente eligió en la web, de entre los valores reales de ese atributo).
-- Si un atributo de la variante **no** es comodín (ya viene con `id` puntual), no hace falta mandar nada para ese atributo en `selected_attributes` — ya está resuelto por el `variant_id`.
-- Aplica a los 3 endpoints de creación/edición de venta: `POST /sales` (checkout), y los de venta local (`store-local-sale` / `update-local-sale`).
-- **Es opcional a nivel validación** (si no se manda, la venta igual se crea) pero funcionalmente necesario: sin esto, todo lo que se genere después para esa venta (PDF de etiqueta, resumen por email, bandas) va a mostrar/usar "Todos" en vez de la elección real del cliente. Tratarlo como obligatorio en el front siempre que la variante elegida tenga algún atributo comodín.
+Esto afecta solo a las variantes Color×Talle=M existentes (o las crea si falta alguna), dejando intactas las de otros talles.
 
-### Qué devuelve la venta después
+## Qué NO cambia
 
-En las respuestas de venta que incluyan la línea de producto (`SaleProduct` / `products` de una `Sale`), el mismo criterio de resolución (puntual → tal cual; comodín con selección → el valor elegido; comodín sin selección → `"Todos"`) está disponible vía el accessor `resolved_attributes_values` de cada línea — mismo shape que `variant.attributesvalues`: `[{ id, value, attribute: { id, name } }]`.
-
+- El storefront sigue viendo y comprando variantes reales de siempre — no hay ningún concepto de "variante comodín" ni de valores `"Todos"` en las respuestas de la API. Cada variante devuelta trae sus valores puntuales de atributo, como siempre.
+- El checkout (`POST /sales`) no necesita mandar nada adicional — el `variant_id` que ya usa el front identifica la combinación exacta comprada, sin ambigüedad.
+- Una edición normal (un solo `variants[X]` sin `attributes`, con o sin `id`) funciona exactamente igual que antes — la edición masiva solo se activa cuando `attributes` genera más de una combinación.

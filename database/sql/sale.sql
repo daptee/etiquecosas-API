@@ -68,7 +68,6 @@ CREATE TABLE sales_products (
     product_id BIGINT UNSIGNED NOT NULL,
     variant_id BIGINT UNSIGNED NULL,
     customization_data JSON NULL, -- customización hecha por el cliente
-    selected_attributes JSON NULL, -- valor concreto elegido por el cliente cuando la variante es "Todos" (comodín) en algún atributo
     quantity INT NOT NULL DEFAULT 1,
     unit_price DECIMAL(12,2) NOT NULL,
     comment TEXT NULL, -- comentarios del cliente

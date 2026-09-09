@@ -872,12 +872,6 @@ class ProductController extends Controller
                             $fixedValues[] = [
                                 'id' => $val['id']
                             ];
-                        } elseif (isset($val['attribute_id']) && $val['attribute_id']) {
-                            // Sin id específico: la variante representa "Todos" los valores de este atributo
-                            $fixedValues[] = [
-                                'attribute_id' => (int) $val['attribute_id'],
-                                'id' => null,
-                            ];
                         }
                     }
                 }
@@ -1326,6 +1320,11 @@ class ProductController extends Controller
         if ($request->has('variants') && is_array($request->input('variants'))) {
             $variantsArray = $request->input('variants');
 
+            // Snapshot de las variantes ya existentes del producto, para poder matchear
+            // por combinación de atributos cuando se edita vía "Todos" (explosión con más
+            // de una combinación) en vez de por id explícito.
+            $existingVariants = $product->variants()->get();
+
             foreach ($variantsArray as $index => $variantData) {
                 if (!is_array($variantData)) {
                     Log::error("updateProductVariants: Variant data at index $index is not an array: " . json_encode($variantData));
@@ -1407,12 +1406,6 @@ class ProductController extends Controller
                             $fixedValues[] = [
                                 'id' => $val['id']
                             ];
-                        } elseif (isset($val['attribute_id']) && $val['attribute_id']) {
-                            // Sin id específico: la variante representa "Todos" los valores de este atributo
-                            $fixedValues[] = [
-                                'attribute_id' => (int) $val['attribute_id'],
-                                'id' => null,
-                            ];
                         }
                     }
                 }
@@ -1472,11 +1465,31 @@ class ProductController extends Controller
                     $imagePath = null;
                     $variant = null;
 
-                    if (!empty($variantData['id'])) {
-                        // 🔹 Update
-                        $variant = ProductVariant::find($variantData['id']);
+                    // Edición masiva ("Todos"): más de una combinación generada a partir de
+                    // `attributes`. En ese caso no tiene sentido usar `variantData['id']` (un
+                    // solo id no puede representar N variantes) — en cambio, cada combinación
+                    // se matchea contra una variante existente del producto por su combinación
+                    // real de attribute_values, para actualizarla en vez de crear una nueva.
+                    $isBulkEdit = count($combinations) > 1;
 
-                        if (!empty($variantData['delete_img']) && $variantData['delete_img']) {
+                    if ($isBulkEdit) {
+                        $valueIds = collect($variantDataCopy['attributesvalues'])
+                            ->pluck('id')->filter()->map(fn($id) => (int) $id)->sort()->values()->all();
+                        $variant = $this->findVariantByAttributeCombination($existingVariants, $valueIds);
+                    } elseif (!empty($variantData['id'])) {
+                        $variant = ProductVariant::find($variantData['id']);
+                    }
+
+                    if ($variant) {
+                        // 🔹 Update
+                        if ($isBulkEdit) {
+                            // No pisar los datos que deben ser únicos por variante (sku, nombre,
+                            // imagen): el resto de la variante (precio, stock, etc.) sí se
+                            // actualiza igual para todas las variantes que matcheen la combinación.
+                            $variantDataCopy['sku'] = $variant->variant['sku'] ?? null;
+                            $variantDataCopy['name'] = $variant->variant['name'] ?? null;
+                            $imagePath = $variant->img;
+                        } elseif (!empty($variantData['delete_img']) && $variantData['delete_img']) {
                             // 🔹 Solo borrar si se pidió explícitamente eliminar
                             if ($variant->img && Storage::disk('public_uploads')->exists($variant->img)) {
                                 Storage::disk('public_uploads')->delete($variant->img);
@@ -1497,8 +1510,8 @@ class ProductController extends Controller
 
                         $variant->update([
                             'variant' => $variantDataCopy,
-                            'sku' => $variantData['sku'] ?? null,
-                            'name' => $variantData['name'] ?? null,
+                            'sku' => $variantDataCopy['sku'] ?? null,
+                            'name' => $variantDataCopy['name'] ?? null,
                             'price' => $variantData['price'] ?? null,
                             'discounted_price' => $variantData['discounted_price'] ?? null,
                             'discounted_start' => $variantData['discounted_start'] ?? null,
@@ -1536,6 +1549,11 @@ class ProductController extends Controller
                             'stock_channels' => $variantData['stock_channels'] ?? null,
                             'img' => $imagePath,
                         ]);
+
+                        // La variante recién creada pasa a estar disponible para que otra
+                        // combinación de esta misma request la matchee (evita duplicados si
+                        // el mismo combo aparece más de una vez).
+                        $existingVariants->push($variant);
                     }
 
                     $variantDbIds[] = $variant->id;
@@ -1557,6 +1575,29 @@ class ProductController extends Controller
         return $variantDbIds;
     }
 
+    /**
+     * Busca, entre las variantes ya existentes de un producto, la que tiene exactamente
+     * la misma combinación de attribute_values que la pasada por parámetro. Se usa para
+     * la edición masiva ("Todos"): en vez de crear variantes nuevas, actualiza las que ya
+     * matchean cada combinación real.
+     */
+    private function findVariantByAttributeCombination($existingVariants, array $valueIds): ?ProductVariant
+    {
+        if (empty($valueIds)) {
+            return null;
+        }
+
+        foreach ($existingVariants as $existing) {
+            $existingIds = collect($existing->variant['attributesvalues'] ?? [])
+                ->pluck('id')->filter()->map(fn($id) => (int) $id)->sort()->values()->all();
+
+            if ($existingIds === $valueIds) {
+                return $existing;
+            }
+        }
+
+        return null;
+    }
 
     protected function updateProductImages(Product $product, Request $request)
     {
