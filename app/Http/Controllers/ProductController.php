@@ -881,6 +881,13 @@ class ProductController extends Controller
                             $fixedValues[] = [
                                 'id' => $val['id']
                             ];
+                        } elseif (isset($val['attribute_id']) && $val['attribute_id']) {
+                            // Formato viejo (ya no soportado): attributesvalues con attribute_id
+                            // y sin id, pensado para la variante comodín que se dio de baja.
+                            // Para "Todos" ahora hay que usar variants[X][attributes][Y][attribute_id].
+                            throw \Illuminate\Validation\ValidationException::withMessages([
+                                "variants.$index.attributesvalues" => ["Formato inválido: para \"Todos\" en un atributo hay que mandarlo en variants[$index][attributes][][attribute_id], no en attributesvalues. attributesvalues solo acepta valores puntuales con \"id\"."],
+                            ]);
                         }
                     }
                 }
@@ -1428,6 +1435,13 @@ class ProductController extends Controller
                             $fixedValues[] = [
                                 'id' => $val['id']
                             ];
+                        } elseif (isset($val['attribute_id']) && $val['attribute_id']) {
+                            // Formato viejo (ya no soportado): attributesvalues con attribute_id
+                            // y sin id, pensado para la variante comodín que se dio de baja.
+                            // Para "Todos" ahora hay que usar variants[X][attributes][Y][attribute_id].
+                            throw \Illuminate\Validation\ValidationException::withMessages([
+                                "variants.$index.attributesvalues" => ["Formato inválido: para \"Todos\" en un atributo hay que mandarlo en variants[$index][attributes][][attribute_id], no en attributesvalues. attributesvalues solo acepta valores puntuales con \"id\"."],
+                            ]);
                         }
                     }
                 }
