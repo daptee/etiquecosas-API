@@ -6,10 +6,18 @@ Cuando un producto tiene atributos con varios valores (ej. Color: 3 valores, Tal
 
 Lo que sí es nuevo es una forma de **editar en un solo paso** los campos que comparten todas esas variantes (precio, stock, descuentos, etc.), en vez de tener que entrar variante por variante a cambiarlos a mano. A esto lo llamamos edición "Todos": se manda **un solo** ítem en `variants[]` marcando los atributos con `attributes[X][attribute_id]` (sin fijar un valor puntual) y el backend:
 
-1. Genera todas las combinaciones reales de esos atributos (igual que siempre).
+1. Genera todas las combinaciones reales de los valores que **el producto tiene seleccionados** para esos atributos (igual que siempre) — ver más abajo, esto es importante.
 2. Para cada combinación, si **ya existe** una variante de ese producto con exactamente esos valores de atributo, la **actualiza** (precio, stock, descuentos, etc. — los campos que mandaste en el ítem).
 3. Si la combinación **no existe todavía**, la crea (igual que la explosión de siempre).
 4. **No pisa los datos que tienen que ser únicos por variante** al actualizar: `sku`, `name` e imagen (`img`) de cada variante existente se mantienen tal cual estaban, aunque el ítem "Todos" no los mande o mande otra cosa.
+
+### ⚠️ "Todos" usa los valores del producto, no todos los del sistema
+
+`attributes[X][attribute_id]` expande **únicamente a los `AttributeValue` que el producto tiene asociados** para ese atributo (el `attributes_values` que se sincroniza a nivel producto, fuera de `variants` — ver `syncProductRelations`/`syncProductUpdateRelations`). **No** trae todos los valores que existan para ese atributo en el resto del catálogo.
+
+Ejemplo: el atributo "Color" puede tener 10 valores en todo el sistema, pero si este producto en particular solo tiene asociados Rojo, Azul y Verde (vía `attributes_values` del producto), "Todos" para Color genera combinaciones únicamente con esos 3 — nunca con los otros 7 que existen para otros productos.
+
+Por eso, para que la edición "Todos" tenga algo con qué armar combinaciones, el producto ya tiene que tener sincronizados sus `attributes_values` para ese atributo (normalmente se mandan en el mismo request, y se procesan antes que los `variants`). Si el producto no tiene ningún valor asociado a ese atributo, ese atributo simplemente no aporta combinaciones (se ignora, no da error).
 
 ## Cómo se manda
 
@@ -55,6 +63,27 @@ variants[0][attributesvalues][0][id]            28   // Talle = M, fijo, para to
 ```
 
 Esto afecta solo a las variantes Color×Talle=M existentes (o las crea si falta alguna), dejando intactas las de otros talles.
+
+## Cómo identificar en el front qué variantes vinieron de una carga "Todos"
+
+Cada variante devuelta por la API trae un campo nuevo, `variant.is_bulk_todos` (booleano):
+
+```json
+{
+  "id": 4212,
+  "img": "...",
+  "variant": {
+    "sku": "ROJ-S",
+    "is_bulk_todos": true,
+    ...
+  }
+}
+```
+
+- `true`: la última vez que se guardó esta variante fue a través de una edición masiva "Todos" (ya sea porque se creó así, o porque una edición "Todos" posterior la matcheó y actualizó).
+- `false`: la última vez que se guardó fue con una edición puntual de esa variante (mandándola individualmente, con o sin `id`, sin usar `attributes` para explotar).
+
+Importante: **este flag refleja el último tipo de guardado, no un origen permanente**. Si el admin abre la grilla completa de variantes y la guarda (aunque no cambie nada a mano), cada fila se manda como un ítem individual — eso también cuenta como edición puntual y apaga el flag de todas. Sirve para saber "¿esto se tocó por última vez vía Todos?", no para taggear de forma indeleble el origen histórico de la variante.
 
 ## Qué NO cambia
 

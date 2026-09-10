@@ -850,12 +850,14 @@ class ProductController extends Controller
                 // 🔹 Recolectar grupos de valores para combinaciones
                 $attrGroups = [];
 
-                // 1️⃣ Attributes → traer TODOS los values y armar grupo
+                // 1️⃣ Attributes → traer los values que el producto tiene seleccionados
+                // para ese atributo (no todos los que existan globalmente) y armar grupo
                 if (!empty($variantData['attributes'])) {
                     foreach ($variantData['attributes'] as $attr) {
                         if (isset($attr['attribute_id']) && $attr['attribute_id']) {
-                            $allValues = AttributeValue::where('attribute_id', $attr['attribute_id'])
-                                ->pluck('id')
+                            $allValues = $product->attributeValues()
+                                ->where('attribute_values.attribute_id', $attr['attribute_id'])
+                                ->pluck('attribute_values.id')
                                 ->toArray();
                             if (!empty($allValues)) {
                                 $attrGroups[] = $allValues;
@@ -909,6 +911,11 @@ class ProductController extends Controller
                     }
 
                     unset($variantDataCopy['attributes']); // No se guarda directamente
+
+                    // Marca si esta variante se generó por una carga masiva "Todos"
+                    // (más de una combinación a partir de `attributes`), para que el
+                    // front pueda identificarlas.
+                    $variantDataCopy['is_bulk_todos'] = count($combinations) > 1;
 
                     // Guardar imagen
                     $imagePath = null;
@@ -1383,13 +1390,15 @@ class ProductController extends Controller
                     ]);
                 }
 
-                // 🔹 Recolectar grupos para combinaciones
+                // 🔹 Recolectar grupos para combinaciones: solo los values que el producto
+                // tiene seleccionados para ese atributo, no todos los que existan globalmente
                 $attrGroups = [];
                 if (!empty($variantData['attributes'])) {
                     foreach ($variantData['attributes'] as $attr) {
                         if (isset($attr['attribute_id']) && $attr['attribute_id']) {
-                            $allValues = AttributeValue::where('attribute_id', $attr['attribute_id'])
-                                ->pluck('id')
+                            $allValues = $product->attributeValues()
+                                ->where('attribute_values.attribute_id', $attr['attribute_id'])
+                                ->pluck('attribute_values.id')
                                 ->toArray();
                             if (!empty($allValues)) {
                                 $attrGroups[] = $allValues;
@@ -1444,6 +1453,11 @@ class ProductController extends Controller
 
                     // Eliminar attributes
                     unset($variantDataCopy['attributes']);
+
+                    // Marca si esta variante se tocó por una carga masiva "Todos" (más de
+                    // una combinación a partir de `attributes`), para que el front pueda
+                    // identificarlas. Una edición individual posterior limpia la marca.
+                    $variantDataCopy['is_bulk_todos'] = count($combinations) > 1;
 
                     // Calcular porcentajes de la variante
                     $priceService = new ProductPriceService();
