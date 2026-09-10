@@ -1346,6 +1346,14 @@ class ProductController extends Controller
             // de una combinación) en vez de por id explícito.
             $existingVariants = $product->variants()->get();
 
+            // Si algún ítem del request es una edición masiva "Todos", el array de
+            // variantes ya NO representa el estado completo del producto (por diseño,
+            // "Todos" no obliga a enumerar cada variante existente) — se desactiva la
+            // limpieza de "lo que no vino se borra" para no eliminar combinaciones
+            // fuera del alcance de esa edición (ej. Talle=M para todos los colores no
+            // debe borrar las variantes de Talle=S/L que no se mencionaron).
+            $anyBulkEdit = false;
+
             foreach ($variantsArray as $index => $variantData) {
                 if (!is_array($variantData)) {
                     Log::error("updateProductVariants: Variant data at index $index is not an array: " . json_encode($variantData));
@@ -1512,6 +1520,9 @@ class ProductController extends Controller
                     // se matchea contra una variante existente del producto por su combinación
                     // real de attribute_values, para actualizarla en vez de crear una nueva.
                     $isBulkEdit = count($combinations) > 1;
+                    if ($isBulkEdit) {
+                        $anyBulkEdit = true;
+                    }
 
                     if ($isBulkEdit) {
                         $valueIds = collect($variantDataCopy['attributesvalues'])
@@ -1601,16 +1612,21 @@ class ProductController extends Controller
                 }
             }
 
-            // 🔹 Eliminar las variantes que no llegaron en el request
-            $product->variants()
-                ->whereNotIn('id', $variantDbIds)
-                ->get()
-                ->each(function ($variant) {
-                    if ($variant->img && Storage::disk('public_uploads')->exists($variant->img)) {
-                        Storage::disk('public_uploads')->delete($variant->img);
-                    }
-                    $variant->delete();
-                });
+            // 🔹 Eliminar las variantes que no llegaron en el request — solo si NINGÚN
+            // ítem fue una edición masiva "Todos". Con "Todos" de por medio, el array no
+            // representa el estado completo del producto, así que no se borra nada que
+            // haya quedado fuera del alcance de esa edición.
+            if (!$anyBulkEdit) {
+                $product->variants()
+                    ->whereNotIn('id', $variantDbIds)
+                    ->get()
+                    ->each(function ($variant) {
+                        if ($variant->img && Storage::disk('public_uploads')->exists($variant->img)) {
+                            Storage::disk('public_uploads')->delete($variant->img);
+                        }
+                        $variant->delete();
+                    });
+            }
         }
 
         return $variantDbIds;

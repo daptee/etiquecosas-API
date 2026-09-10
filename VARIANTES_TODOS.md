@@ -41,7 +41,7 @@ Endpoint: `POST /products` (alta) o `POST /products/{id}` (edición), campo `var
 
 ### 2.1 Reemplazo completo, no parche
 
-**`variants[]` es el estado completo deseado, no una lista de cambios.** Cada vez que mandás este campo:
+**`variants[]` es el estado completo deseado, no una lista de cambios — siempre que NO haya ningún ítem "Todos" en el request** (sección 3, punto 4 tiene el detalle de esa excepción). Cada vez que mandás este campo:
 - Toda variante existente cuyo `id` **no** venga en el array se **elimina**.
 - Toda variante cuyo `id` **sí** venga se actualiza con **exactamente** lo que mandaste para ella — no solo el campo que cambiaste, todos.
 
@@ -114,6 +114,7 @@ variants[0][stock_quantity]                5
    - **Si ya existe una variante de ese producto con exactamente esos 2 valores de atributo** → la **actualiza**: `price`, `stock_status`, `stock_quantity`, `discounted_price`, `wholesale_price`, `stock_channels`, `order`, etc. pasan a ser los que mandaste en el ítem.
    - **Si no existe** → la **crea**, con todos los campos del ítem (acá el `sku` que hayas mandado, si mandaste alguno, se usa tal cual — es una fila nueva).
 3. **Nunca pisa `sku`, `name` ni `img` de una variante que ya existía** — esos quedan exactamente como estaban, aunque el ítem "Todos" no los mande o mande otra cosa. Es la única excepción a la regla de "reemplazo completo" de la sección 2.1 — a propósito, porque estos son datos que tienen que seguir siendo únicos por variante.
+4. **Las variantes que quedan fuera de esta edición (otras combinaciones que el producto ya tenía, no cubiertas por este "Todos") no se tocan ni se borran**, aunque no vengan mencionadas en el request. Esta es la segunda excepción a la regla de "reemplazo completo" de 2.1: esa regla dice "lo que no mandás se borra", pero **eso solo aplica cuando el request NO usa "Todos"**. En cuanto hay una edición masiva de por medio, el array deja de representar el estado completo del producto — por diseño, justamente para no obligar a enumerar cada variante existente. Ver el ejemplo de 3.4.
 
 ### 3.3 Ejemplo completo
 
@@ -139,7 +140,7 @@ variants[0][attributesvalues][0][id]            21   // Talle = M, fijo
 variants[0][price]                              15000
 ```
 
-Esto genera/actualiza **solo 3 combinaciones** (Rojo-M, Azul-M, Verde-M) — las variantes de Talle S y Talle L **no se tocan**.
+Esto genera/actualiza **solo 3 combinaciones** (Rojo-M, Azul-M, Verde-M). Las 6 variantes de Talle S y Talle L **siguen existiendo exactamente igual que antes** — no se tocan, y (esto es lo importante) **tampoco se borran** por no venir mencionadas en el request. Probado explícitamente: producto con 9 variantes, se manda un "Todos" parcial que solo cubre 3, y las otras 6 se verifican intactas después del save (mismo id, mismo precio).
 
 ### 3.5 Formato viejo — ya NO se soporta
 
