@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Mail\ProductInquiryMail;
+use App\Models\Attribute;
 use App\Models\AttributeValue;
 use App\Models\Product;
 use App\Models\ProductVariant;
@@ -859,9 +860,15 @@ class ProductController extends Controller
                                 ->where('attribute_values.attribute_id', $attr['attribute_id'])
                                 ->pluck('attribute_values.id')
                                 ->toArray();
-                            if (!empty($allValues)) {
-                                $attrGroups[] = $allValues;
+
+                            if (empty($allValues)) {
+                                $attributeName = Attribute::find($attr['attribute_id'])->name ?? "ID {$attr['attribute_id']}";
+                                throw \Illuminate\Validation\ValidationException::withMessages([
+                                    "variants.$index.attributes" => ["El producto no tiene valores asociados para el atributo \"$attributeName\". Asociá primero sus attribute_values al producto antes de usar \"Todos\" con ese atributo."],
+                                ]);
                             }
+
+                            $attrGroups[] = $allValues;
                         }
                     }
                 }
@@ -1400,9 +1407,15 @@ class ProductController extends Controller
                                 ->where('attribute_values.attribute_id', $attr['attribute_id'])
                                 ->pluck('attribute_values.id')
                                 ->toArray();
-                            if (!empty($allValues)) {
-                                $attrGroups[] = $allValues;
+
+                            if (empty($allValues)) {
+                                $attributeName = Attribute::find($attr['attribute_id'])->name ?? "ID {$attr['attribute_id']}";
+                                throw \Illuminate\Validation\ValidationException::withMessages([
+                                    "variants.$index.attributes" => ["El producto no tiene valores asociados para el atributo \"$attributeName\". Asociá primero sus attribute_values al producto antes de usar \"Todos\" con ese atributo."],
+                                ]);
                             }
+
+                            $attrGroups[] = $allValues;
                         }
                     }
                 }

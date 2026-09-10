@@ -17,7 +17,11 @@ Lo que sí es nuevo es una forma de **editar en un solo paso** los campos que co
 
 Ejemplo: el atributo "Color" puede tener 10 valores en todo el sistema, pero si este producto en particular solo tiene asociados Rojo, Azul y Verde (vía `attributes_values` del producto), "Todos" para Color genera combinaciones únicamente con esos 3 — nunca con los otros 7 que existen para otros productos.
 
-Por eso, para que la edición "Todos" tenga algo con qué armar combinaciones, el producto ya tiene que tener sincronizados sus `attributes_values` para ese atributo (normalmente se mandan en el mismo request, y se procesan antes que los `variants`). Si el producto no tiene ningún valor asociado a ese atributo, ese atributo simplemente no aporta combinaciones (se ignora, no da error).
+Por eso, para que la edición "Todos" tenga algo con qué armar combinaciones, el producto ya tiene que tener sincronizados sus `attributes_values` para ese atributo (normalmente se mandan en el mismo request, y se procesan antes que los `variants`).
+
+**Si el producto no tiene ningún valor asociado a ese atributo, el request falla con un 422** (`variants.X.attributes: "El producto no tiene valores asociados para el atributo \"...\""`) — no se genera nada a medias. Esto es a propósito: antes fallaba en silencio (el atributo sin valores quedaba afuera y las variantes se creaban igual, pero con un atributo de menos), lo cual era mucho peor porque no se notaba hasta mirar el resultado.
+
+Ojo con esto si el mismo request que manda `variants` con "Todos" **también** manda `attributes_values` a nivel producto: como ese campo hace `sync()` (reemplaza todo lo que había), si en esa request solo van los valores de un atributo y no los del otro, el otro atributo se queda sin valores en ese mismo golpe — y ahí "Todos" para ese atributo va a fallar. Mandá siempre el set completo de `attributes_values` (todos los atributos del producto, no solo el que estás tocando) en el mismo request que dispara "Todos".
 
 ## Cómo se manda
 
