@@ -30,7 +30,7 @@ class AbandonedCartLogController extends Controller
             return $this->error('Este carrito ya no está disponible', 410);
         }
 
-        $sale->load(['products.product.images', 'products.variant', 'shippingMethod', 'client']);
+        $sale->load(['products.product.images', 'products.variant', 'shippingMethod', 'client', 'coupons']);
 
         $data = [
             'sale_id' => $sale->id,
@@ -39,6 +39,9 @@ class AbandonedCartLogController extends Controller
             'shipping_method' => $sale->shippingMethod,
             'total' => $sale->total,
             'products' => $sale->products,
+            // Cupones que el cliente ya tenía aplicados en el carrito antes de abandonarlo.
+            'coupons' => $sale->coupons,
+            // Cupón exclusivo de recuperación (ETIQUECARRITO) ofrecido en el Impacto 2, si corresponde.
             'coupon' => $log->coupon,
 
             // Datos para que el front pueda recrear la venta (POST /sales) sin
