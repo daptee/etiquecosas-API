@@ -162,68 +162,21 @@ class BandaService
     {
         $colores = [];
 
-        // Acceder a la variante - puede ser un objeto o ya estar serializado
-        $variantModel = $productOrder->variant;
-
-        if (!$variantModel) {
+        if (!$productOrder->variant) {
             Log::warning("BandaService: No hay variante en productOrder", [
                 'product_order_id' => $productOrder->id
             ]);
             return $colores;
         }
 
-        // El campo 'variant' es un JSON que contiene attributesvalues
-        // Puede venir como array (si ya fue casteado) o necesitar decodificacion
-        $variantData = $variantModel->variant;
-
-        if (is_string($variantData)) {
-            $variantData = json_decode($variantData, true);
-        }
-
-        if (!$variantData) {
-            Log::warning("BandaService: variant data vacio", [
-                'product_order_id' => $productOrder->id
-            ]);
-            return $colores;
-        }
-
-        // Obtener attributesvalues del JSON de la variante
-        $attributesvaluesRaw = $variantData['attributesvalues'] ?? [];
-
-        // Verificar si los attributesvalues tienen datos completos o solo IDs
-        // Si solo tienen 'id' sin 'value' o 'attribute', necesitamos cargar de la BD
-        $needsLoad = empty($attributesvaluesRaw);
-        if (!$needsLoad && isset($attributesvaluesRaw[0])) {
-            // Verificar si el primer elemento tiene solo 'id' o es un numero
-            $firstItem = $attributesvaluesRaw[0];
-            if (is_numeric($firstItem) || (is_array($firstItem) && !isset($firstItem['value']))) {
-                $needsLoad = true;
-            }
-        }
-
-        if ($needsLoad) {
-            // Usar el accessor que carga los datos completos desde la BD
-            $attributesCollection = $variantModel->attributes_values;
-            if ($attributesCollection && $attributesCollection->count() > 0) {
-                $attributesvalues = $attributesCollection->map(function($attr) {
-                    return [
-                        'value' => $attr->value,
-                        'attribute' => [
-                            'name' => $attr->attribute->name ?? ''
-                        ]
-                    ];
-                })->toArray();
-            } else {
-                $attributesvalues = [];
-            }
-        } else {
-            $attributesvalues = $attributesvaluesRaw;
-        }
+        // Valores reales de atributo de esta línea de venta: si algún atributo es
+        // comodín ("Todos") en la variante, se resuelve contra lo que el cliente
+        // eligió (selected_attributes), degradando a "Todos" si no hay selección.
+        $attributesvalues = $productOrder->resolved_attributes_values;
 
         Log::info("BandaService: attributesvalues procesados", [
             'product_order_id' => $productOrder->id,
-            'needsLoad' => $needsLoad,
-            'attributesvalues' => $attributesvalues
+            'attributesvalues' => $attributesvalues->toArray(),
         ]);
 
         // Buscar los atributos de color
