@@ -338,6 +338,9 @@ class SaleController extends Controller
             'products.*.unit_price' => 'required|numeric|min:0',
             'products.*.comment' => 'nullable|string',
             'products.*.customization_data' => 'nullable|json',
+            'products.*.selected_attributes' => 'nullable|array',
+            'products.*.selected_attributes.*.attribute_id' => 'nullable|integer|exists:attributes,id',
+            'products.*.selected_attributes.*.attribute_value_id' => 'nullable|integer|exists:attribute_values,id',
         ];
 
         $validator = Validator::make($request->all(), $rules);
@@ -1389,6 +1392,9 @@ class SaleController extends Controller
             'products.*.unit_price' => 'required|numeric|min:0',
             'products.*.comment' => 'nullable|string',
             'products.*.customization_data' => 'nullable|json',
+            'products.*.selected_attributes' => 'nullable|array',
+            'products.*.selected_attributes.*.attribute_id' => 'nullable|integer|exists:attributes,id',
+            'products.*.selected_attributes.*.attribute_value_id' => 'nullable|integer|exists:attribute_values,id',
             'discount_percent' => 'nullable|numeric|min:0|max:100',
             'payment_method_id' => 'required|integer|exists:payment_methods,id',
             'customer_notes' => 'nullable|string',
@@ -1425,6 +1431,7 @@ class SaleController extends Controller
                 'unit_price' => $unitPrice,
                 'comment' => $productInput['comment'] ?? null,
                 'customization_data' => $productInput['customization_data'] ?? null,
+                'selected_attributes' => $productInput['selected_attributes'] ?? null,
             ];
         }
 
@@ -1490,6 +1497,9 @@ class SaleController extends Controller
             'products.*.product_id' => 'required_with:products|integer|exists:products,id',
             'products.*.variant_id' => 'nullable|integer|exists:product_variants,id',
             'products.*.quantity' => 'required_with:products|integer|min:1',
+            'products.*.selected_attributes' => 'nullable|array',
+            'products.*.selected_attributes.*.attribute_id' => 'nullable|integer|exists:attributes,id',
+            'products.*.selected_attributes.*.attribute_value_id' => 'nullable|integer|exists:attribute_values,id',
             'discount_percent' => 'nullable|numeric|min:0|max:100',
             'payment_method_id' => 'nullable|integer|exists:payment_methods,id',
             'customer_notes' => 'nullable|string',
@@ -1538,6 +1548,7 @@ class SaleController extends Controller
                     'total_price' => $lineTotal,
                     'comment' => $productInput['comment'] ?? null,
                     'customization_data' => $productInput['customization_data'] ?? null,
+                    'selected_attributes' => $productInput['selected_attributes'] ?? null,
                 ]);
             };
         }
