@@ -77,7 +77,19 @@ GET /api/v1/abandoned-cart/{uid}
         }
       }
     ],
-    "coupon": null
+    "coupons": [
+      { "id": 4, "code": "ETIQUEVIP", "type": "Porcentaje", "value": "10.00", "pivot": { "discount_amount": "5948.80" } }
+    ],
+    "coupon": null,
+    "client_mail": "lorena.terraneo@gmail.com",
+    "client_name": "Lorena",
+    "client_lastname": "Terraneo",
+    "client_phone": "3584265710",
+    "channel_id": 1,
+    "shipping_address": "Rosario de Santa Fe 101. 2 B. Torre 1. Bosque chico",
+    "shipping_locality_id": 790,
+    "shipping_postal_code": "5800",
+    "customer_notes": null
   },
   "metaData": null
 }
@@ -88,7 +100,9 @@ GET /api/v1/abandoned-cart/{uid}
 - `products` es un array con un item por cada producto agregado al carrito (mismo shape que devuelve el resto de la API para líneas de venta: `product` trae el producto completo, `variant` la variante elegida si corresponde).
 - `customization_data` viene como **string JSON** (no como objeto) — hay que hacer `JSON.parse()`. Contiene la personalización cargada por el cliente (nombre, color, ícono, etc., según el producto).
 - Las imágenes (`product.images[].img`, `variant.img`) son **rutas relativas**, no URLs completas. Hay que armarlas como `https://api.etiquecosas.com.ar/public/{img}` (mismo criterio que ya usan en el resto del sitio para imágenes de producto).
-- `coupon`: si este carrito ya recibió el segundo mail (con el cupón de descuento `ETIQUECARRITO`), viene el objeto del cupón (`code`, `type`, `value`, etc.). Si todavía no le tocó ese mail, viene `null`. Si viene, el front puede mostrarlo prellenado o auto-aplicarlo en el checkout.
+- `coupons` (array): los cupones que el cliente **ya tenía aplicados** en el carrito antes de abandonarlo (puede venir vacío `[]` si no había ninguno). Si viene alguno, el front lo tiene que reaplicar al recrear la venta.
+- `coupon` (objeto, no array): el cupón **exclusivo de recuperación** (`ETIQUECARRITO`) — distinto de los anteriores. Viene solo si este carrito ya recibió el segundo mail (Impacto 2, con el 15% off). Si todavía no le tocó ese mail, viene `null`.
+- `client_mail`, `client_name`, `client_lastname`, `client_phone`, `channel_id`, `shipping_address`, `shipping_locality_id`, `shipping_postal_code`, `customer_notes`: datos para recrear la venta sin pedirle el formulario de nuevo al cliente — ver la sección de abajo.
 
 ### Respuesta — Carrito no encontrado (404)
 
