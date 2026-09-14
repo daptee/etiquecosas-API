@@ -141,6 +141,8 @@ Antes de crear/editar una variante comodín, el backend chequea que **ninguna va
 
 Solución: eliminar o reasignar esa variante puntual antes de crear el comodín. (La dirección inversa — crear una variante puntual que caiga dentro de un comodín ya existente — no está bloqueada.)
 
+**No hace falta hacerlo en 2 pasos.** Si en el mismo `POST /products/{id}` sacás del array las variantes puntuales que estaban en conflicto (simplemente no las mandás, sin necesidad de un delete previo) y en ese mismo request creás el comodín que las reemplaza, funciona en un solo guardado — el backend sabe que esas puntuales se van a borrar por esta misma request (por full-replace, sección 2) y no las cuenta como conflicto. El error 422 solo aparece si la variante puntual en conflicto **se sigue mandando** (con su `id`) en el mismo request que el comodín que la solapa.
+
 ### 3.5 Formato viejo — ya NO se soporta
 
 ```

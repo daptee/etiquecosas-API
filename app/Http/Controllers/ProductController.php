@@ -987,7 +987,7 @@ class ProductController extends Controller
      * producto cartesiano de los valores disponibles + los fijos, y busca una
      * variante existente cuya combinación exacta matchee alguna de esas.
      */
-    private function findOverlappingPunctualVariant(Product $product, array $availableAttributes, array $fixedValues, $excludeVariantId = null)
+    private function findOverlappingPunctualVariant(Product $product, array $availableAttributes, array $fixedValues, array $excludeVariantIds = [])
     {
         $groups = array_map(fn($a) => $a['available_value_ids'], $availableAttributes);
         $fixedIds = collect($fixedValues)->pluck('id')->map(fn($id) => (int) $id)->all();
@@ -1003,8 +1003,10 @@ class ProductController extends Controller
             $combinations = $tmp;
         }
 
+        $excludeVariantIds = array_filter(array_map('intval', $excludeVariantIds));
+
         $existingVariants = $product->variants()
-            ->when($excludeVariantId, fn($q) => $q->where('id', '!=', $excludeVariantId))
+            ->when(!empty($excludeVariantIds), fn($q) => $q->whereNotIn('id', $excludeVariantIds))
             ->get();
 
         foreach ($combinations as $combination) {
@@ -1387,6 +1389,17 @@ class ProductController extends Controller
         if ($request->has('variants') && is_array($request->input('variants'))) {
             $variantsArray = $request->input('variants');
 
+            // Variantes existentes que este mismo request va a eliminar (no vienen
+            // mencionadas por id en ningún ítem de `variants[]`) — no cuentan como
+            // conflicto para la validación de solapamiento de "Todos", porque van a
+            // dejar de existir apenas termine de procesarse este mismo save.
+            $explicitIds = collect($variantsArray)
+                ->pluck('id')->filter()->map(fn($id) => (int) $id)->values()->all();
+            $idsBeingRemoved = $product->variants()
+                ->whereNotIn('id', $explicitIds ?: [0])
+                ->pluck('id')
+                ->all();
+
             foreach ($variantsArray as $index => $variantData) {
                 if (!is_array($variantData)) {
                     Log::error("updateProductVariants: Variant data at index $index is not an array: " . json_encode($variantData));
@@ -1453,10 +1466,13 @@ class ProductController extends Controller
                 $availableAttributes = $this->collectAvailableAttributes($product, $variantData, $index);
 
                 // 🔹 Si hay atributos "Todos", que no se solape con una variante puntual
-                // ya existente dentro de ese rango (excluyendo la propia variante si se
-                // está editando una que ya es comodín).
+                // ya existente dentro de ese rango. Se excluyen: la propia variante (si se
+                // está editando una que ya es comodín) y las que este mismo request va a
+                // borrar por no venir mencionadas (ej. sacar 4 variantes puntuales del
+                // formulario y crear el comodín que las reemplaza, en el mismo guardado).
                 if (!empty($availableAttributes)) {
-                    $conflict = $this->findOverlappingPunctualVariant($product, $availableAttributes, $fixedValues, $variantData['id'] ?? null);
+                    $excludeIds = array_merge([$variantData['id'] ?? null], $idsBeingRemoved);
+                    $conflict = $this->findOverlappingPunctualVariant($product, $availableAttributes, $fixedValues, $excludeIds);
                     if ($conflict) {
                         throw \Illuminate\Validation\ValidationException::withMessages([
                             "variants.$index" => ["Ya existe una variante puntual (ID {$conflict->id}) dentro del rango de esta edición \"Todos\". Eliminá o editá esa variante puntual antes de crear el comodín."],
