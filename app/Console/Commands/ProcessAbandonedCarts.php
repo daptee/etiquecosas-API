@@ -22,7 +22,7 @@ class ProcessAbandonedCarts extends Command
     protected $signature = 'carts:process-abandoned
         {--wait-minutes=20 : Minutos sin actividad antes de considerar el carrito abandonado}
         {--impact2-days=3 : Días de espera tras el Impacto 1 antes de evaluar el Impacto 2}
-        {--min-amount=100000 : Monto a partir del cual se envía el Impacto 2 con cupón}
+        {--min-amount=5000 : Monto a partir del cual se envía el Impacto 2 con cupón}
         {--max-age-days=7 : No procesar ventas pendientes con más de estos días de antigüedad}';
 
     /**
