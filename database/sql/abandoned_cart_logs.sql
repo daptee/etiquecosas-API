@@ -50,7 +50,7 @@ INSERT INTO coupons (
     created_at, updated_at
 )
 SELECT
-    'Recuperación de carrito abandonado', 'ETIQUECARRITO', NOW(), DATE_ADD(NOW(), INTERVAL 5 YEAR), 100000, 15,
+    'Recuperación de carrito abandonado', 'ETIQUECARRITO', NOW(), DATE_ADD(NOW(), INTERVAL 5 YEAR), 5000, 15,
     0, 1, 0, 0,
     'Porcentaje', 1, 1,
     1, 0, (SELECT id FROM coupon_statuses WHERE name LIKE '%activ%' LIMIT 1),
