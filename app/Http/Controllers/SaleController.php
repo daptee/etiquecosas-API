@@ -415,6 +415,43 @@ class SaleController extends Controller
             'client_ip_address' => $request->ip(),
         ], fn($v) => $v !== null);
 
+        // 🔒 Evitar ventas duplicadas por doble click / reintento del checkout:
+        // si el mismo cliente ya creó una venta idéntica (mismo carrito y total)
+        // hace pocos segundos, devolvemos esa venta en vez de crear una nueva.
+        $productsSignature = collect($request->products)
+            ->map(fn($p) => ($p['product_id'] ?? '') . ':' . ($p['variant_id'] ?? '') . ':' . ($p['quantity'] ?? ''))
+            ->sort()
+            ->implode('|');
+
+        $duplicateWindowSeconds = 30;
+
+        $possibleDuplicate = Sale::where('client_id', $client->id)
+            ->where('channel_id', $request->channel_id)
+            ->where('total', $total)
+            ->where('sale_status_id', $request->sale_status_id)
+            ->when($request->sale_id, function ($query) use ($request) {
+                $query->where('sale_id', $request->sale_id);
+            }, function ($query) {
+                $query->whereNull('sale_id');
+            })
+            ->where('created_at', '>=', Carbon::now()->subSeconds($duplicateWindowSeconds))
+            ->with('products')
+            ->orderByDesc('id')
+            ->first();
+
+        if ($possibleDuplicate) {
+            $duplicateSignature = $possibleDuplicate->products
+                ->map(fn($p) => $p->product_id . ':' . ($p->variant_id ?? '') . ':' . $p->quantity)
+                ->sort()
+                ->implode('|');
+
+            if ($duplicateSignature === $productsSignature) {
+                $possibleDuplicate->load(['client', 'products.product', 'products.variant', 'shippingMethod', 'locality', 'coupons']);
+                $this->logAudit(Auth::user() ?? null, 'Duplicate Sale Prevented', $request->all(), $possibleDuplicate);
+                return $this->success($possibleDuplicate, 'Venta creada correctamente');
+            }
+        }
+
         $sale = Sale::create([
             'client_id' => $client->id,
             'channel_id' => $request->channel_id,
