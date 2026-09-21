@@ -38,6 +38,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
@@ -455,93 +456,101 @@ class SaleController extends Controller
             }
         }
 
-        $sale = Sale::create([
-            'client_id' => $client->id,
-            'channel_id' => $request->channel_id,
-            'external_id' => $request->external_id,
-            'address' => $request->shipping_address, // 👈 se llena
-            'locality_id' => $request->shipping_locality_id,
-            'postal_code' => $request->shipping_postal_code,
-            'client_shipping_id' => $request->client_shipping_id,
-            'subtotal' => $request->subtotal,
-            'discount_amount' => 0,
-            'total' => $total,
-            'shipping_cost' => $request->shipping_cost,
-            'shipping_method_id' => $request->shipping_method_id,
-            'payment_method_id' => 1,
-            'customer_notes' => $request->customer_notes,
-            'internal_comments' => $request->internal_comments,
-            'sale_status_id' => $request->sale_status_id,
-            'sale_id' => $request->sale_id,
-            'fb_data' => !empty($fbData) ? $fbData : null,
-        ]);
+        // 🔒 Todo esto tiene que ser atómico: si algo falla a mitad de camino
+        // (ej. un insert de producto), no puede quedar una venta a medio crear.
+        // Una venta "huérfana" sin productos rompe además la detección de
+        // duplicados de arriba (su firma de productos queda vacía y nunca
+        // matchea el reintento del checkout), generando ventas repetidas.
+        $sale = DB::transaction(function () use ($request, $client, $total, $fbData) {
+            $sale = Sale::create([
+                'client_id' => $client->id,
+                'channel_id' => $request->channel_id,
+                'external_id' => $request->external_id,
+                'address' => $request->shipping_address, // 👈 se llena
+                'locality_id' => $request->shipping_locality_id,
+                'postal_code' => $request->shipping_postal_code,
+                'client_shipping_id' => $request->client_shipping_id,
+                'subtotal' => $request->subtotal,
+                'discount_amount' => 0,
+                'total' => $total,
+                'shipping_cost' => $request->shipping_cost,
+                'shipping_method_id' => $request->shipping_method_id,
+                'payment_method_id' => 1,
+                'customer_notes' => $request->customer_notes,
+                'internal_comments' => $request->internal_comments,
+                'sale_status_id' => $request->sale_status_id,
+                'sale_id' => $request->sale_id,
+                'fb_data' => !empty($fbData) ? $fbData : null,
+            ]);
 
-        // Si esta venta reemplaza a un carrito recuperado (todavía "Pendiente de pago"),
-        // la original pasa a "Carrito recuperado" en vez de seguir editándose.
-        if ($request->sale_id) {
-            $parentSale = Sale::find($request->sale_id);
+            // Si esta venta reemplaza a un carrito recuperado (todavía "Pendiente de pago"),
+            // la original pasa a "Carrito recuperado" en vez de seguir editándose.
+            if ($request->sale_id) {
+                $parentSale = Sale::find($request->sale_id);
 
-            if ($parentSale && $parentSale->sale_status_id == 8) {
-                $recoveredStatusId = $this->getRecoveredCartStatusId();
+                if ($parentSale && $parentSale->sale_status_id == 8) {
+                    $recoveredStatusId = $this->getRecoveredCartStatusId();
 
-                $parentSale->sale_status_id = $recoveredStatusId;
-                $parentSale->save();
+                    $parentSale->sale_status_id = $recoveredStatusId;
+                    $parentSale->save();
 
-                SaleStatusHistory::create([
-                    'sale_id' => $parentSale->id,
-                    'sale_status_id' => $recoveredStatusId,
-                    'date' => Carbon::now(),
+                    SaleStatusHistory::create([
+                        'sale_id' => $parentSale->id,
+                        'sale_status_id' => $recoveredStatusId,
+                        'date' => Carbon::now(),
+                    ]);
+                }
+            }
+
+            if ($request->shipping_save) {
+                ClientAddress::create([
+                    'client_id' => $client->id,
+                    'address' => $request->shipping_address,
+                    'locality_id' => $request->shipping_locality_id ?? null,
+                    'postal_code' => $request->shipping_postal_code ?? null,
                 ]);
             }
-        }
 
-        if ($request->shipping_save) {
-            ClientAddress::create([
-                'client_id' => $client->id,
-                'address' => $request->shipping_address,
-                'locality_id' => $request->shipping_locality_id ?? null,
-                'postal_code' => $request->shipping_postal_code ?? null,
-            ]);
-        }
+            $totalDiscount = 0;
 
-        $totalDiscount = 0;
-
-        if ($request->coupons) {
-            foreach ($request->coupons as $c) {
-                $coupon = Coupon::where('code', $c['coupon_code'])->first();
+            if ($request->coupons) {
+                foreach ($request->coupons as $c) {
+                    $coupon = Coupon::where('code', $c['coupon_code'])->first();
+                    if ($coupon) {
+                        $couponDiscount = $c['discount_amount'];
+                        $sale->coupons()->attach($coupon->id, ['discount_amount' => $couponDiscount]);
+                        $totalDiscount += $couponDiscount;
+                    }
+                }
+            } elseif ($request->coupon_code) {
+                $coupon = Coupon::where('code', $request->coupon_code)->first();
                 if ($coupon) {
-                    $couponDiscount = $c['discount_amount'];
+                    $couponDiscount = $request->discount_amount ?? 0;
                     $sale->coupons()->attach($coupon->id, ['discount_amount' => $couponDiscount]);
                     $totalDiscount += $couponDiscount;
                 }
             }
-        } elseif ($request->coupon_code) {
-            $coupon = Coupon::where('code', $request->coupon_code)->first();
-            if ($coupon) {
-                $couponDiscount = $request->discount_amount ?? 0;
-                $sale->coupons()->attach($coupon->id, ['discount_amount' => $couponDiscount]);
-                $totalDiscount += $couponDiscount;
+
+            if ($totalDiscount > 0) {
+                $sale->discount_amount = $totalDiscount;
+                $sale->total = $sale->subtotal + $sale->shipping_cost - $totalDiscount;
+                $sale->save();
             }
-        }
 
-        if ($totalDiscount > 0) {
-            $sale->discount_amount = $totalDiscount;
-            $sale->total = $sale->subtotal + $sale->shipping_cost - $totalDiscount;
-            $sale->save();
-        }
+            // Guardar historial de estado
+            SaleStatusHistory::create([
+                'sale_id' => $sale->id,
+                'sale_status_id' => $sale->sale_status_id,
+                'date' => Carbon::now(),
+            ]);
 
+            // Guardar productos de la venta
+            foreach ($request->products as $product) {
+                $sale->products()->create($product);
+            }
 
-        // Guardar historial de estado
-        SaleStatusHistory::create([
-            'sale_id' => $sale->id,
-            'sale_status_id' => $sale->sale_status_id,
-            'date' => Carbon::now(),
-        ]);
-
-        // Guardar productos de la venta
-        foreach ($request->products as $product) {
-            $sale->products()->create($product);
-        }
+            return $sale;
+        });
 
         $sale->load(['client', 'products.product', 'products.variant', 'shippingMethod', 'locality', 'coupons']);
 
