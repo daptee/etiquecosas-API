@@ -38,6 +38,34 @@ class ProductVariant extends Model
         return AttributeValue::whereIn('id', $ids)->with('attribute')->get();
     }
 
+    /**
+     * Atributos "Todos" (comodín) de esta variante: por cada uno, el atributo y la
+     * lista completa de valores disponibles que el producto tiene asociados.
+     */
+    public function getAvailableAttributesResolvedAttribute()
+    {
+        $entries = collect($this->variant['available_attributes'] ?? []);
+        if ($entries->isEmpty()) {
+            return collect();
+        }
+
+        $attributeIds = $entries->pluck('attribute_id');
+        $attributes = Attribute::whereIn('id', $attributeIds)->get()->keyBy('id');
+
+        return $entries->map(function ($entry) use ($attributes) {
+            $attribute = $attributes->get($entry['attribute_id']);
+            $values = AttributeValue::whereIn('id', $entry['available_value_ids'] ?? [])->get();
+
+            return [
+                'attribute' => [
+                    'id' => $entry['attribute_id'],
+                    'name' => $attribute->name ?? null,
+                ],
+                'values' => $values->map(fn($v) => ['id' => $v->id, 'value' => $v->value])->values()->toArray(),
+            ];
+        })->values();
+    }
+
     private static function normalizeStockChannels(?array $channels): ?array
     {
         if (!$channels) return $channels;
@@ -80,6 +108,7 @@ class ProductVariant extends Model
                     ],
                 ];
             })->toArray(),
+            'available_attributes' => $this->available_attributes_resolved->toArray(),
         ];
 
         return $array;

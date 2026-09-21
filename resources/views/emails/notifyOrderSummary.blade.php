@@ -156,7 +156,7 @@
                               @if($item->variant)
                                 @php
                                   $variantName = $item->variant->variant['name'] ?? null;
-                                  $variantAttrs = $item->variant->attributes_values;
+                                  $variantAttrs = $item->resolved_attributes_values;
                                 @endphp
                                 @if($variantName)
                                   <div style="color: #666; font-size: 13px; margin-top: 4px;">
@@ -166,7 +166,7 @@
                                 @if($variantAttrs->isNotEmpty())
                                   <div style="color: #666; font-size: 12px; margin-top: 2px;">
                                     @foreach($variantAttrs as $attr)
-                                      <span><strong>{{ $attr->attribute->name }}:</strong> {{ $attr->value }}</span>
+                                      <span><strong>{{ $attr['attribute']['name'] }}:</strong> {{ $attr['value'] }}</span>
                                       @if(!$loop->last) | @endif
                                     @endforeach
                                   </div>

@@ -3,10 +3,10 @@
 namespace App\Jobs;
 
 use App\Models\Sale;
-use App\Models\ProductPdf;
 use App\Services\CintaCoserService;
 use App\Services\CintaPlancharService;
 use App\Services\EtiquetaService;
+use App\Services\ProductPdfResolverService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -109,81 +109,15 @@ class GenerateSalePdfsJob implements ShouldQueue
                     }
                 }
 
-                $variant = $productOrder->variant?->variant;
-                $productPdf = ProductPdf::where('product_id', $productOrder->product_id)->first();
-
-                // === Si hay un ProductPdf configurado ===
-                if ($productPdf) {
-                    Log::info($productPdf);
-
-                    $tematicasGuardadas = $productPdf['data']['tematicas'] ?? [];
-                    Log::info("Temáticas guardadas en ProductPdf: " . count($tematicasGuardadas));
-
-                    if ($variant) {
-                        $tematicaId = $variant['attributesvalues'][0]['id'] ?? null;
-
-                        if (!$tematicaId) {
-                            Log::warning("No se encontró temática para {$nombreCompleto}, product_order ID: {$productOrder->id}");
-                            continue;
-                        }
-
-                        // Buscar la temática correspondiente
-                        $tematicaCoincidente = collect($tematicasGuardadas)->firstWhere('id', $tematicaId);
-
-                        if ($tematicaCoincidente) {
-                            try {
-                                EtiquetaService::generarEtiquetas(
-                                    $sale->id,
-                                    $tematicaId,
-                                    [$nombreCompleto],
-                                    $productOrder,
-                                    $tematicaCoincidente,
-                                    $customColor,
-                                    $customIcon,
-                                    $sale->created_at,
-                                    [$form['name'] ?? '']
-                                );
-
-                                Log::info("PDF generado para {$nombreCompleto}, temática ID: {$tematicaId}");
-                                continue;
-                            } catch (\Throwable $e) {
-                                Log::error("Error generando PDF para {$nombreCompleto}, temática ID: {$tematicaId}", [
-                                    'error' => $e->getMessage(),
-                                    'product_order_id' => $productOrder->id,
-                                ]);
-                                continue;
-                            }
-                        }
-                    } else {
-                        // Sin variant: generar PDF por cada temática guardada
-                        foreach ($tematicasGuardadas as $tematica) {
-                            $tematicaId = $tematica['id'] ?? null;
-
-                            try {
-                                EtiquetaService::generarEtiquetas(
-                                    $sale->id,
-                                    $tematicaId,
-                                    [$nombreCompleto],
-                                    $productOrder,
-                                    $tematica,
-                                    $customColor,
-                                    $customIcon,
-                                    $sale->created_at,
-                                    [$form['name'] ?? '']
-                                );
-
-                                Log::info("PDF generado sin variante para {$nombreCompleto}, temática ID: {$tematicaId}");
-                            } catch (\Throwable $e) {
-                                Log::error("Error generando PDF para {$nombreCompleto}, temática ID: {$tematicaId}", [
-                                    'error' => $e->getMessage(),
-                                    'product_order_id' => $productOrder->id,
-                                ]);
-                            }
-                        }
-                    }
-                }
-
-                Log::info(message: "Sin informacion del pdf en el producto con id: $productOrder->product_id");
+                ProductPdfResolverService::resolveAndGenerate(
+                    $sale->id,
+                    $productOrder,
+                    $nombreCompleto,
+                    $form,
+                    $customColor,
+                    $customIcon,
+                    $sale->created_at
+                );
 
                 continue;
             }

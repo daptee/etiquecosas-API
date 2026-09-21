@@ -2,13 +2,20 @@
 
 namespace App\Services;
 
+use App\Models\LabelShape;
+use App\Models\PersonalizationIcon;
+use App\Models\ProductPdfDesign;
+use App\Models\Typography;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use setasign\Fpdi\Fpdi;
 
 class EtiquetaService
 {
+    private const CM_TO_PT = 72 / 2.54;
+
     /**
      * 🗑️ Elimina todos los PDFs existentes de un pedido específico
      */
@@ -281,6 +288,216 @@ class EtiquetaService
         }
 
         return $outputFiles;
+    }
+
+    /**
+     * Genera el/los PDF de etiqueta a partir de un diseño armado desde el editor
+     * del front (product_pdf_designs), en vez de las vistas fijas por temática.
+     * No modifica generarEtiquetas(): es el equivalente para diseños nuevos.
+     */
+    public static function generarEtiquetasDesdeDesign(int $ventaId, ProductPdfDesign $design, $productOrder, array $nombres, $customColor, $customIcon, $fechaCompra = null, array $firstNames = []): array
+    {
+        $outputFiles = [];
+        $fechaCarpeta = $fechaCompra
+            ? Carbon::parse($fechaCompra)->setTimezone('America/Argentina/Buenos_Aires')->format('d-m-Y')
+            : Carbon::now('America/Argentina/Buenos_Aires')->format('d-m-Y');
+        $dirPath = storage_path("app/pdf/planchas/{$fechaCarpeta}");
+        if (!is_dir($dirPath)) mkdir($dirPath, 0755, true);
+
+        $pages = self::normalizarPaginasDesign($design->data ?? []);
+        $sufijo = self::limpiarNombreArchivo(strtoupper($design->name ?: 'DESIGN'));
+
+        foreach ($nombres as $idx => $nombre) {
+            $resolvedPages = array_map(function ($page) use ($nombre, $customColor, $customIcon) {
+                return [
+                    'sheet' => $page['sheet'] ?? ['width_cm' => 18.5, 'height_cm' => 29],
+                    'elements' => array_map(
+                        fn($el) => self::resolverElementoDesign($el, $nombre, $customColor, $customIcon),
+                        $page['elements'] ?? []
+                    ),
+                ];
+            }, $pages);
+
+            // dompdf fija el tamaño físico del PDF una sola vez para todo el
+            // documento: hojas con sheet.width_cm/height_cm distintos no pueden
+            // convivir en el mismo archivo sin que unas se corten o queden con
+            // márgenes de sobra. Se agrupan por tamaño, se renderiza un PDF
+            // temporal por grupo (cada uno con el tamaño de página exacto de
+            // esa hoja) y se fusionan con FPDI en el único archivo final,
+            // igual que ya hace app/Console/Commands/GenerarEtiquetas.php.
+            $grupos = self::agruparPaginasPorTamano($resolvedPages);
+
+            $product_order = (object)[
+                'name' => $nombre,
+                'firstName' => $firstNames[$idx] ?? null,
+                'order' => (object)['id_external' => $ventaId],
+            ];
+
+            $filePath = "{$dirPath}/{$ventaId}-{$productOrder->id}-{$productOrder->product->name}-{$sufijo}-" . ($idx + 1) . ".pdf";
+            $tmpFiles = [];
+
+            try {
+                foreach ($grupos as $grupoIdx => $grupo) {
+                    $plantilla = [
+                        'design' => [
+                            'pages' => $grupo['pages'],
+                        ],
+                    ];
+
+                    $widthPt = $grupo['width_cm'] * self::CM_TO_PT;
+                    $heightPt = $grupo['height_cm'] * self::CM_TO_PT;
+
+                    $pdf = Pdf::loadView('tematica.editor.RENDER', compact('plantilla', 'product_order'))
+                        ->setPaper([0, 0, $widthPt, $heightPt]);
+                    $dompdf = $pdf->getDomPDF();
+                    $dompdf->getOptions()->setFontDir(public_path('fonts'));
+                    $dompdf->getOptions()->setFontCache(storage_path('fonts_cache'));
+
+                    $tmpPath = "{$filePath}.tmp{$grupoIdx}.pdf";
+                    $pdf->save($tmpPath);
+                    $tmpFiles[] = $tmpPath;
+                }
+
+                if (count($tmpFiles) === 1) {
+                    rename($tmpFiles[0], $filePath);
+                } else {
+                    $fpdi = new Fpdi();
+                    foreach ($tmpFiles as $tmpFile) {
+                        $pageCount = $fpdi->setSourceFile($tmpFile);
+                        for ($page = 1; $page <= $pageCount; $page++) {
+                            $tplId = $fpdi->importPage($page);
+                            $size = $fpdi->getTemplateSize($tplId);
+                            $fpdi->AddPage($size['orientation'], [$size['width'], $size['height']]);
+                            $fpdi->useTemplate($tplId);
+                        }
+                    }
+                    $fpdi->Output($filePath, 'F');
+                    foreach ($tmpFiles as $tmpFile) {
+                        @unlink($tmpFile);
+                    }
+                }
+
+                $outputFiles[] = $filePath;
+                Log::info("✅ PDF (editor) generado", ['path' => $filePath]);
+            } catch (\Throwable $e) {
+                foreach ($tmpFiles as $tmpFile) {
+                    @unlink($tmpFile);
+                }
+                Log::error("❌ Error generando PDF desde diseño del editor", [
+                    'design_id' => $design->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        return $outputFiles;
+    }
+
+    /**
+     * Agrupa páginas ya resueltas por tamaño físico de hoja (width_cm/height_cm),
+     * conservando el orden de aparición tanto de los grupos como de las páginas
+     * dentro de cada uno.
+     */
+    private static function agruparPaginasPorTamano(array $resolvedPages): array
+    {
+        $grupos = [];
+
+        foreach ($resolvedPages as $page) {
+            $widthCm = (float) ($page['sheet']['width_cm'] ?? 18.5);
+            $heightCm = (float) ($page['sheet']['height_cm'] ?? 29);
+            $key = round($widthCm, 2) . 'x' . round($heightCm, 2);
+
+            if (!isset($grupos[$key])) {
+                $grupos[$key] = ['width_cm' => $widthCm, 'height_cm' => $heightCm, 'pages' => []];
+            }
+
+            $grupos[$key]['pages'][] = $page;
+        }
+
+        return array_values($grupos);
+    }
+
+    /**
+     * Un diseño puede tener varias páginas (data.pages[]), cada una con su
+     * propia hoja y elementos — se renderizan como páginas del mismo PDF.
+     * Si un diseño viejo todavía tiene el formato de una sola página
+     * (data.sheet/data.elements sueltos), se normaliza a pages[] igual.
+     */
+    private static function normalizarPaginasDesign(array $data): array
+    {
+        if (!empty($data['pages']) && is_array($data['pages'])) {
+            return $data['pages'];
+        }
+
+        if (!empty($data['elements'])) {
+            return [[
+                'sheet' => $data['sheet'] ?? ['width_cm' => 18.5, 'height_cm' => 29],
+                'elements' => $data['elements'],
+            ]];
+        }
+
+        return [];
+    }
+
+    /**
+     * Resuelve un elemento del JSON del diseño: icono/tipografía reales desde los
+     * catálogos existentes, texto con el nombre del cliente, y overrides del cliente
+     * (color/ícono) SOLO si el elemento fue marcado como editable por el admin.
+     */
+    private static function resolverElementoDesign(array $el, string $nombre, $customColor, $customIcon): array
+    {
+        $type = $el['type'] ?? null;
+        $editable = ($el['editable_by_customer'] ?? false) === true;
+        $field = $el['editable_field'] ?? null;
+
+        if ($type === 'icon') {
+            $iconPath = null;
+
+            if ($editable && $field === 'icon' && $customIcon) {
+                $iconPath = public_path($customIcon);
+            } elseif (!empty($el['icon_id'])) {
+                $icon = PersonalizationIcon::find($el['icon_id']);
+                $iconPath = $icon && $icon->icon ? public_path($icon->icon) : null;
+            }
+
+            $el['resolved_icon_path'] = $iconPath;
+        }
+
+        if ($type === 'background' && !empty($el['label_shape_id'])) {
+            $shape = LabelShape::find($el['label_shape_id']);
+            if ($shape) {
+                $el['resolved_shape_type'] = $shape->shape_type;
+                $el['resolved_shape_corner_radius_cm'] = $shape->data['corner_radius_cm'] ?? 0;
+            }
+        }
+
+        if ($type === 'text') {
+            $content = $el['content'] ?? '{{customer_name}}';
+            $el['resolved_text'] = str_replace('{{customer_name}}', $nombre, $content);
+
+            $el['resolved_font_family'] = null;
+            $el['resolved_font_files'] = [];
+
+            if (!empty($el['font_id'])) {
+                $typography = Typography::with('files')->find($el['font_id']);
+                if ($typography) {
+                    $el['resolved_font_family'] = $typography->name;
+                    $el['resolved_font_files'] = $typography->files
+                        ->map(fn($file) => public_path($file->file_path))
+                        ->values()
+                        ->all();
+                }
+            }
+        }
+
+        if (in_array($type, ['background', 'text'], true) && $editable && $field === 'color' && $customColor) {
+            $colorValue = is_array($customColor) ? ($customColor[0] ?? null) : $customColor;
+            if ($colorValue) {
+                $el['color'] = ['mode' => 'hex', 'value' => $colorValue];
+            }
+        }
+
+        return $el;
     }
 
     /**
