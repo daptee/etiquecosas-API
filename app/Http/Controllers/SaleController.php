@@ -301,6 +301,23 @@ class SaleController extends Controller
         return $this->success($data, 'Venta resumida obtenida correctamente');
     }
 
+    // 📌 Verifica que todo producto con variantes (product_type_id == 2) tenga variant_id seleccionado
+    private function validateVariantSelection(array $products): ?array
+    {
+        $productIds = collect($products)->pluck('product_id')->unique();
+        $productTypes = Product::whereIn('id', $productIds)->pluck('product_type_id', 'id');
+
+        $errors = [];
+        foreach ($products as $index => $product) {
+            $productTypeId = $productTypes->get($product['product_id']);
+            if ($productTypeId == 2 && empty($product['variant_id'])) {
+                $errors["products.$index.variant_id"] = ['Debe seleccionar una variante para este producto.'];
+            }
+        }
+
+        return empty($errors) ? null : $errors;
+    }
+
     // 📌 Crear una venta
     public function store(Request $request)
     {
@@ -347,6 +364,12 @@ class SaleController extends Controller
         if ($validator->fails()) {
             $this->logAudit(null, 'Sale Validation Fail (Create)', $request->all(), $validator->errors());
             return $this->validationError($validator->errors());
+        }
+
+        $variantErrors = $this->validateVariantSelection($request->products);
+        if ($variantErrors) {
+            $this->logAudit(null, 'Sale Validation Fail (Create - Missing Variant)', $request->all(), $variantErrors);
+            return $this->validationError($variantErrors);
         }
 
         // buscar si existe el cliente por email nada mas no creamos nada aun
@@ -1407,6 +1430,12 @@ class SaleController extends Controller
             return $this->validationError($validator->errors());
         }
 
+        $variantErrors = $this->validateVariantSelection($request->products);
+        if ($variantErrors) {
+            $this->logAudit(Auth::user(), 'Local Sale Validation Fail (Create - Missing Variant)', $request->all(), $variantErrors);
+            return $this->validationError($variantErrors);
+        }
+
         // 📌 Verificar rol del usuario
         $user = Auth::user();
         if (!$user->profile_id == 1 || !$user->profile_id == 2) {
@@ -1510,6 +1539,14 @@ class SaleController extends Controller
         if ($validator->fails()) {
             $this->logAudit(Auth::user(), 'Local Sale Validation Fail (Update)', $request->all(), $validator->errors());
             return $this->validationError($validator->errors());
+        }
+
+        if ($request->has('products')) {
+            $variantErrors = $this->validateVariantSelection($request->products);
+            if ($variantErrors) {
+                $this->logAudit(Auth::user(), 'Local Sale Validation Fail (Update - Missing Variant)', $request->all(), $variantErrors);
+                return $this->validationError($variantErrors);
+            }
         }
 
         $sale = Sale::with(['products.product', 'products.variant'])->findOrFail($id);
