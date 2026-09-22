@@ -139,11 +139,12 @@ POST /api/v1/sales
 
 **Qué hace el backend con eso, automáticamente:**
 
-- La venta nueva se crea normal (arranca en "Pendiente de pago" o el estado que le mandes, sigue el flujo de siempre — puede terminar aprobada, rechazada, etc.).
-- La venta **original** (`sale_id: 94500` en el ejemplo) pasa de "Pendiente de pago" a un estado nuevo, **"Carrito recuperado"**, y queda asociada a la venta nueva (esto es automático — no hay que llamar a ningún endpoint aparte).
+- La venta nueva se crea normal (arranca en "Pendiente de pago" o el estado que le mandes, sigue el flujo de siempre — puede terminar aprobada, rechazada, etc.) y queda asociada a la original vía `sale_id`.
+- La venta nueva se marca con `is_recovered_cart: true`.
+- La venta **original** (`sale_id: 94500` en el ejemplo) **no se toca**: sigue "Pendiente de pago" en el admin como cualquier otra venta pendiente — no cambia de estado por esto.
 - Si esa venta original tenía un `abandoned_cart_log` (o sea, si vino de un mail de carrito abandonado), cuando la venta **nueva** se apruebe, ese log se marca como convertido igual — el reporte de carritos abandonados no pierde el dato aunque técnicamente la que se aprobó fue otra venta.
 
-Si el `sale_id` que mandás **no** está en estado "Pendiente de pago" (por ejemplo, ya se había recuperado antes, o ya se había cancelado), el backend simplemente no hace nada con la venta original — la nueva se crea igual, sin quedar asociada. Por eso conviene chequear el 410 del `GET` antes de dejar avanzar al cliente (ver más abajo).
+Si el `sale_id` que mandás **no** está en estado "Pendiente de pago" (por ejemplo, esa venta ya se había cancelado o aprobado), la venta nueva se crea igual pero **sin** `is_recovered_cart`. Por eso conviene chequear el 410 del `GET` antes de dejar avanzar al cliente (ver más abajo).
 
 ## Resumen para el front
 

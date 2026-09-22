@@ -28,6 +28,7 @@ class Sale extends Model
         'internal_comments',
         'sale_status_id',
         'sale_id',
+        'is_recovered_cart',
         'user_id',
         'cadete_id',
         'receiver_name',
@@ -39,6 +40,7 @@ class Sale extends Model
 
     protected $casts = [
         'fb_data' => 'array',
+        'is_recovered_cart' => 'boolean',
     ];
 
     // 🔹 Relaciones

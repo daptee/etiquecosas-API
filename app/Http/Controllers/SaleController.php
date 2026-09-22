@@ -485,6 +485,16 @@ class SaleController extends Controller
         // duplicados de arriba (su firma de productos queda vacía y nunca
         // matchea el reintento del checkout), generando ventas repetidas.
         $sale = DB::transaction(function () use ($request, $client, $total, $fbData) {
+            // Si sale_id apunta a un carrito todavía "Pendiente de pago", esta
+            // venta nueva lo está recuperando. La original NUNCA se edita ni
+            // cambia de estado por esto — sigue "Pendiente de pago" en el admin
+            // salvo que avance por otro motivo. Solo marcamos la venta nueva.
+            $isRecoveredCart = false;
+            if ($request->sale_id) {
+                $parentSale = Sale::find($request->sale_id);
+                $isRecoveredCart = $parentSale && $parentSale->sale_status_id == 8;
+            }
+
             $sale = Sale::create([
                 'client_id' => $client->id,
                 'channel_id' => $request->channel_id,
@@ -503,27 +513,9 @@ class SaleController extends Controller
                 'internal_comments' => $request->internal_comments,
                 'sale_status_id' => $request->sale_status_id,
                 'sale_id' => $request->sale_id,
+                'is_recovered_cart' => $isRecoveredCart,
                 'fb_data' => !empty($fbData) ? $fbData : null,
             ]);
-
-            // Si esta venta reemplaza a un carrito recuperado (todavía "Pendiente de pago"),
-            // la original pasa a "Carrito recuperado" en vez de seguir editándose.
-            if ($request->sale_id) {
-                $parentSale = Sale::find($request->sale_id);
-
-                if ($parentSale && $parentSale->sale_status_id == 8) {
-                    $recoveredStatusId = $this->getRecoveredCartStatusId();
-
-                    $parentSale->sale_status_id = $recoveredStatusId;
-                    $parentSale->save();
-
-                    SaleStatusHistory::create([
-                        'sale_id' => $parentSale->id,
-                        'sale_status_id' => $recoveredStatusId,
-                        'date' => Carbon::now(),
-                    ]);
-                }
-            }
 
             if ($request->shipping_save) {
                 ClientAddress::create([
@@ -746,17 +738,6 @@ class SaleController extends Controller
 
         $this->logAudit(Auth::user() ?? null, 'Update Status Sale', $request->all(), $sale);
         return $this->success($sale, 'Estado de venta actualizada correctamente');
-    }
-
-    private function getRecoveredCartStatusId(): int
-    {
-        $status = SaleStatus::where('name', 'Carrito recuperado')->first();
-
-        if (!$status) {
-            $status = SaleStatus::create(['name' => 'Carrito recuperado']);
-        }
-
-        return $status->id;
     }
 
     private function approveSale(Sale $sale): void
