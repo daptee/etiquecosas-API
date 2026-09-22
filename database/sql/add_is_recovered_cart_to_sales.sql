@@ -2,10 +2,12 @@
 -- Reemplaza el enfoque de sale_status "Carrito recuperado" por una
 -- columna boolean en sales. La venta ORIGINAL de un carrito abandonado
 -- ya no cambia de estado al recuperarse — sigue "Pendiente de pago" en
--- el admin. La venta NUEVA que la reemplaza queda marcada con
--- is_recovered_cart = 1 (ver SaleController::store).
+-- el admin, marcada con is_recovered_cart = 1 (ver SaleController::store).
 -- Equivalente en SQL crudo a la migración
 -- database/migrations/2026_09_22_000000_add_is_recovered_cart_to_sales_table.php
+--
+-- Si la columna ya existe (por una corrida previa parcial), saltear el
+-- primer ALTER TABLE y correr el resto.
 -- ============================================================
 
 ALTER TABLE sales
@@ -14,21 +16,16 @@ ALTER TABLE sales
 -- Limpieza del enfoque anterior (solo hace algo si ya se usó el estado
 -- "Carrito recuperado" en este ambiente; si nunca se creó, no rompe nada):
 
--- 1. Marcar como recuperadas las ventas hijas de una venta que haya
---    quedado en "Carrito recuperado".
+-- 1. Marcar como recuperadas las ventas que hayan quedado en "Carrito
+--    recuperado" (la venta ORIGINAL, no su hija) y revertirlas a
+--    "Pendiente de pago" (8).
 UPDATE sales
-SET is_recovered_cart = 1
-WHERE sale_id IN (
-    SELECT id FROM (
-        SELECT id FROM sales WHERE sale_status_id = (
-            SELECT id FROM sale_status WHERE name = 'Carrito recuperado'
-        )
-    ) AS recovered_parents
-);
+SET is_recovered_cart = 1, sale_status_id = 8
+WHERE sale_status_id = (SELECT id FROM sale_status WHERE name = 'Carrito recuperado');
 
--- 2. Revertir esas ventas originales a "Pendiente de pago" (8).
-UPDATE sales
-SET sale_status_id = 8
+-- 2. Borrar el historial de estados que apunte a ese sale_status — hay
+--    que hacerlo antes de poder borrar el status (queda una FK).
+DELETE FROM sales_status_history
 WHERE sale_status_id = (SELECT id FROM sale_status WHERE name = 'Carrito recuperado');
 
 -- 3. Borrar el estado, ya no se usa.
