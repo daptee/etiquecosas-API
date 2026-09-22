@@ -156,4 +156,4 @@ Si el `sale_id` que mandás **no** está en estado "Pendiente de pago" (por ejem
 2. Pegarle a `GET /api/v1/abandoned-cart/{uid}`.
 3. Si es 200 → mostrar los productos del carrito y permitir continuar la compra (y, si viene `coupon`, ofrecer aplicarlo).
 4. Si es 404 o 410 → mostrar un mensaje de que el carrito no está disponible (con un link al sitio para empezar de cero).
-5. Al confirmar, crear la venta con `POST /v1/sales` como un checkout normal, pero **mandando `sale_id` = el `sale_id` que devolvió el GET**. El backend se encarga de todo lo demás (cambiar el estado de la original, asociarla, trackear la conversión).
+5. Al confirmar, llamar a `POST /v1/sales` como un checkout normal, pero **mandando siempre `sale_id` = el `sale_id` que devolvió el GET**. El backend decide solo si reutiliza esa misma venta (no cambió nada) o crea una nueva asociada (cambió algo) — la respuesta trae la venta con la que hay que seguir al pago en cualquiera de los dos casos.
