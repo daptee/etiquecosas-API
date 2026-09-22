@@ -307,13 +307,13 @@ class SaleController extends Controller
     private function validateVariantSelection(array $products): ?array
     {
         $productIds = collect($products)->pluck('product_id')->unique();
-        $productTypes = Product::whereIn('id', $productIds)->pluck('product_type_id', 'id');
+        $productsInfo = Product::whereIn('id', $productIds)->get(['id', 'name', 'product_type_id'])->keyBy('id');
 
         $errors = [];
         foreach ($products as $index => $product) {
-            $productTypeId = $productTypes->get($product['product_id']);
-            if ($productTypeId == 2 && empty($product['variant_id'])) {
-                $errors["products.$index.variant_id"] = ['Debe seleccionar una variante para este producto.'];
+            $productInfo = $productsInfo->get($product['product_id']);
+            if ($productInfo && $productInfo->product_type_id == 2 && empty($product['variant_id'])) {
+                $errors["products.$index.variant_id"] = ["Debes seleccionar una variante para el producto \"{$productInfo->name}\"."];
             }
         }
 
@@ -371,7 +371,7 @@ class SaleController extends Controller
         $variantErrors = $this->validateVariantSelection($request->products);
         if ($variantErrors) {
             $this->logAudit(null, 'Sale Validation Fail (Create - Missing Variant)', $request->all(), $variantErrors);
-            return $this->validationError($variantErrors);
+            return $this->validationError($variantErrors, 'Faltan variantes por seleccionar');
         }
 
         // buscar si existe el cliente por email nada mas no creamos nada aun
@@ -1480,7 +1480,7 @@ class SaleController extends Controller
         $variantErrors = $this->validateVariantSelection($request->products);
         if ($variantErrors) {
             $this->logAudit(Auth::user(), 'Local Sale Validation Fail (Create - Missing Variant)', $request->all(), $variantErrors);
-            return $this->validationError($variantErrors);
+            return $this->validationError($variantErrors, 'Faltan variantes por seleccionar');
         }
 
         // 📌 Verificar rol del usuario
@@ -1592,7 +1592,7 @@ class SaleController extends Controller
             $variantErrors = $this->validateVariantSelection($request->products);
             if ($variantErrors) {
                 $this->logAudit(Auth::user(), 'Local Sale Validation Fail (Update - Missing Variant)', $request->all(), $variantErrors);
-                return $this->validationError($variantErrors);
+                return $this->validationError($variantErrors, 'Faltan variantes por seleccionar');
             }
         }
 
