@@ -21,3 +21,14 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+recovery_ventas_perdidas.sql
+recovery_ventas_perdidas_conflicto.sql
+recovery_ventas_perdidas_2.sql
+recovery_ventas_perdidas_conflicto_2.sql
+recovery_ventas_perdidas_3.sql
+recovery_ventas_perdidas_conflicto_3.sql
+recovery_marcar_password_reset.sql
+ventas_con_descuento_ids.txt
+ventas_conflicto_ids.txt
+ventas_recuperadas_ids.txt
+delete_venta_completa.sql
