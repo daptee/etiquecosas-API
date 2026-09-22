@@ -35,6 +35,7 @@ use App\Traits\ApiResponse;
 use App\Traits\FindObject;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -440,93 +441,130 @@ class SaleController extends Controller
             'client_ip_address' => $request->ip(),
         ], fn($v) => $v !== null);
 
-        $sale = Sale::create([
-            'client_id' => $client->id,
-            'channel_id' => $request->channel_id,
-            'external_id' => $request->external_id,
-            'address' => $request->shipping_address, // 👈 se llena
-            'locality_id' => $request->shipping_locality_id,
-            'postal_code' => $request->shipping_postal_code,
-            'client_shipping_id' => $request->client_shipping_id,
-            'subtotal' => $request->subtotal,
-            'discount_amount' => 0,
-            'total' => $total,
-            'shipping_cost' => $request->shipping_cost,
-            'shipping_method_id' => $request->shipping_method_id,
-            'payment_method_id' => 1,
-            'customer_notes' => $request->customer_notes,
-            'internal_comments' => $request->internal_comments,
-            'sale_status_id' => $request->sale_status_id,
-            'sale_id' => $request->sale_id,
-            'fb_data' => !empty($fbData) ? $fbData : null,
-        ]);
+        // 🔒 Evitar ventas duplicadas por doble click / reintento del checkout:
+        // si el mismo cliente ya creó una venta idéntica (mismo carrito y total)
+        // hace pocos segundos, devolvemos esa venta en vez de crear una nueva.
+        $productsSignature = collect($request->products)
+            ->map(fn($p) => ($p['product_id'] ?? '') . ':' . ($p['variant_id'] ?? '') . ':' . ($p['quantity'] ?? ''))
+            ->sort()
+            ->implode('|');
 
-        // Si esta venta reemplaza a un carrito recuperado (todavía "Pendiente de pago"),
-        // la original pasa a "Carrito recuperado" en vez de seguir editándose.
-        if ($request->sale_id) {
-            $parentSale = Sale::find($request->sale_id);
+        $duplicateWindowSeconds = 30;
 
-            if ($parentSale && $parentSale->sale_status_id == 8) {
-                $recoveredStatusId = $this->getRecoveredCartStatusId();
+        $possibleDuplicate = Sale::where('client_id', $client->id)
+            ->where('channel_id', $request->channel_id)
+            ->where('total', $total)
+            ->where('sale_status_id', $request->sale_status_id)
+            ->when($request->sale_id, function ($query) use ($request) {
+                $query->where('sale_id', $request->sale_id);
+            }, function ($query) {
+                $query->whereNull('sale_id');
+            })
+            ->where('created_at', '>=', Carbon::now()->subSeconds($duplicateWindowSeconds))
+            ->with('products')
+            ->orderByDesc('id')
+            ->first();
 
-                $parentSale->sale_status_id = $recoveredStatusId;
-                $parentSale->save();
+        if ($possibleDuplicate) {
+            $duplicateSignature = $possibleDuplicate->products
+                ->map(fn($p) => $p->product_id . ':' . ($p->variant_id ?? '') . ':' . $p->quantity)
+                ->sort()
+                ->implode('|');
 
-                SaleStatusHistory::create([
-                    'sale_id' => $parentSale->id,
-                    'sale_status_id' => $recoveredStatusId,
-                    'date' => Carbon::now(),
-                ]);
+            if ($duplicateSignature === $productsSignature) {
+                $possibleDuplicate->load(['client', 'products.product', 'products.variant', 'shippingMethod', 'locality', 'coupons']);
+                $this->logAudit(Auth::user() ?? null, 'Duplicate Sale Prevented', $request->all(), $possibleDuplicate);
+                return $this->success($possibleDuplicate, 'Venta creada correctamente');
             }
         }
 
-        if ($request->shipping_save) {
-            ClientAddress::create([
+        // 🔒 Todo esto tiene que ser atómico: si algo falla a mitad de camino
+        // (ej. un insert de producto), no puede quedar una venta a medio crear.
+        // Una venta "huérfana" sin productos rompe además la detección de
+        // duplicados de arriba (su firma de productos queda vacía y nunca
+        // matchea el reintento del checkout), generando ventas repetidas.
+        $sale = DB::transaction(function () use ($request, $client, $total, $fbData) {
+            // Si sale_id apunta a un carrito todavía "Pendiente de pago", esta
+            // venta nueva lo está recuperando. La original NUNCA se edita ni
+            // cambia de estado por esto — sigue "Pendiente de pago" en el admin
+            // salvo que avance por otro motivo. Solo marcamos la venta nueva.
+            $isRecoveredCart = false;
+            if ($request->sale_id) {
+                $parentSale = Sale::find($request->sale_id);
+                $isRecoveredCart = $parentSale && $parentSale->sale_status_id == 8;
+            }
+
+            $sale = Sale::create([
                 'client_id' => $client->id,
-                'address' => $request->shipping_address,
-                'locality_id' => $request->shipping_locality_id ?? null,
-                'postal_code' => $request->shipping_postal_code ?? null,
+                'channel_id' => $request->channel_id,
+                'external_id' => $request->external_id,
+                'address' => $request->shipping_address, // 👈 se llena
+                'locality_id' => $request->shipping_locality_id,
+                'postal_code' => $request->shipping_postal_code,
+                'client_shipping_id' => $request->client_shipping_id,
+                'subtotal' => $request->subtotal,
+                'discount_amount' => 0,
+                'total' => $total,
+                'shipping_cost' => $request->shipping_cost,
+                'shipping_method_id' => $request->shipping_method_id,
+                'payment_method_id' => 1,
+                'customer_notes' => $request->customer_notes,
+                'internal_comments' => $request->internal_comments,
+                'sale_status_id' => $request->sale_status_id,
+                'sale_id' => $request->sale_id,
+                'is_recovered_cart' => $isRecoveredCart,
+                'fb_data' => !empty($fbData) ? $fbData : null,
             ]);
-        }
 
-        $totalDiscount = 0;
+            if ($request->shipping_save) {
+                ClientAddress::create([
+                    'client_id' => $client->id,
+                    'address' => $request->shipping_address,
+                    'locality_id' => $request->shipping_locality_id ?? null,
+                    'postal_code' => $request->shipping_postal_code ?? null,
+                ]);
+            }
 
-        if ($request->coupons) {
-            foreach ($request->coupons as $c) {
-                $coupon = Coupon::where('code', $c['coupon_code'])->first();
+            $totalDiscount = 0;
+
+            if ($request->coupons) {
+                foreach ($request->coupons as $c) {
+                    $coupon = Coupon::where('code', $c['coupon_code'])->first();
+                    if ($coupon) {
+                        $couponDiscount = $c['discount_amount'];
+                        $sale->coupons()->attach($coupon->id, ['discount_amount' => $couponDiscount]);
+                        $totalDiscount += $couponDiscount;
+                    }
+                }
+            } elseif ($request->coupon_code) {
+                $coupon = Coupon::where('code', $request->coupon_code)->first();
                 if ($coupon) {
-                    $couponDiscount = $c['discount_amount'];
+                    $couponDiscount = $request->discount_amount ?? 0;
                     $sale->coupons()->attach($coupon->id, ['discount_amount' => $couponDiscount]);
                     $totalDiscount += $couponDiscount;
                 }
             }
-        } elseif ($request->coupon_code) {
-            $coupon = Coupon::where('code', $request->coupon_code)->first();
-            if ($coupon) {
-                $couponDiscount = $request->discount_amount ?? 0;
-                $sale->coupons()->attach($coupon->id, ['discount_amount' => $couponDiscount]);
-                $totalDiscount += $couponDiscount;
+
+            if ($totalDiscount > 0) {
+                $sale->discount_amount = $totalDiscount;
+                $sale->total = $sale->subtotal + $sale->shipping_cost - $totalDiscount;
+                $sale->save();
             }
-        }
 
-        if ($totalDiscount > 0) {
-            $sale->discount_amount = $totalDiscount;
-            $sale->total = $sale->subtotal + $sale->shipping_cost - $totalDiscount;
-            $sale->save();
-        }
+            // Guardar historial de estado
+            SaleStatusHistory::create([
+                'sale_id' => $sale->id,
+                'sale_status_id' => $sale->sale_status_id,
+                'date' => Carbon::now(),
+            ]);
 
+            // Guardar productos de la venta
+            foreach ($request->products as $product) {
+                $sale->products()->create($product);
+            }
 
-        // Guardar historial de estado
-        SaleStatusHistory::create([
-            'sale_id' => $sale->id,
-            'sale_status_id' => $sale->sale_status_id,
-            'date' => Carbon::now(),
-        ]);
-
-        // Guardar productos de la venta
-        foreach ($request->products as $product) {
-            $sale->products()->create($product);
-        }
+            return $sale;
+        });
 
         $sale->load(['client', 'products.product', 'products.variant', 'shippingMethod', 'locality', 'coupons']);
 
@@ -699,17 +737,6 @@ class SaleController extends Controller
 
         $this->logAudit(Auth::user() ?? null, 'Update Status Sale', $request->all(), $sale);
         return $this->success($sale, 'Estado de venta actualizada correctamente');
-    }
-
-    private function getRecoveredCartStatusId(): int
-    {
-        $status = SaleStatus::where('name', 'Carrito recuperado')->first();
-
-        if (!$status) {
-            $status = SaleStatus::create(['name' => 'Carrito recuperado']);
-        }
-
-        return $status->id;
     }
 
     private function approveSale(Sale $sale): void
