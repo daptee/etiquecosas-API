@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AbandonedCartLog;
 use App\Models\Coupon;
 use App\Models\Category;
 use App\Models\Product;
@@ -330,6 +331,7 @@ class CouponController extends Controller
         $validator = Validator::make($request->all(), [
             'code' => 'required|string',
             'client_id' => 'nullable|integer|exists:clients,id',
+            'sale_id' => 'nullable|integer|exists:sales,id',
         ]);
 
         if ($validator->fails()) {
@@ -338,6 +340,7 @@ class CouponController extends Controller
 
         $code = $request->code;
         $clientId = $request->client_id;
+        $saleId = $request->sale_id;
 
         $coupon = Coupon::with('categories:id,name', 'products:id,name')
             ->where('code', $code)
@@ -345,6 +348,23 @@ class CouponController extends Controller
 
         if (!$coupon) {
             return $this->error('Código de cupón inválido', 404);
+        }
+
+        // El cupón exclusivo de recuperación de carrito abandonado (ETIQUECARRITO)
+        // solo se puede usar en la venta a la que efectivamente se le ofreció por
+        // mail (Impacto 2) — no es un cupón de uso general.
+        if (strcasecmp($coupon->code, 'ETIQUECARRITO') === 0) {
+            if (!$saleId) {
+                return $this->error('Este cupón solo puede usarse al recuperar el carrito desde el mail correspondiente', 400);
+            }
+
+            $eligible = AbandonedCartLog::where('sale_id', $saleId)
+                ->whereNotNull('impact_2_sent_at')
+                ->exists();
+
+            if (!$eligible) {
+                return $this->error('Este cupón no está disponible para esta venta', 400);
+            }
         }
 
         // Validaciones de vigencia

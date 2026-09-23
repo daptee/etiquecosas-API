@@ -102,6 +102,7 @@ GET /api/v1/abandoned-cart/{uid}
 - Las imágenes (`product.images[].img`, `variant.img`) son **rutas relativas**, no URLs completas. Hay que armarlas como `https://api.etiquecosas.com.ar/public/{img}` (mismo criterio que ya usan en el resto del sitio para imágenes de producto).
 - `coupons` (array): los cupones que el cliente **ya tenía aplicados** en el carrito antes de abandonarlo (puede venir vacío `[]` si no había ninguno). Si viene alguno, el front lo tiene que reaplicar al recrear la venta.
 - `coupon` (objeto, no array): el cupón **exclusivo de recuperación** (`ETIQUECARRITO`) — distinto de los anteriores. Viene solo si este carrito ya recibió el segundo mail (Impacto 2, con el 15% off). Si todavía no le tocó ese mail, viene `null`.
+  - **Importante:** `ETIQUECARRITO` no es un cupón de uso general — al validarlo con `PATCH /v1/coupons/validate` hay que mandar también `sale_id` (el mismo de esta venta). El backend rechaza el cupón (400) si falta `sale_id`, o si esa venta nunca recibió el Impacto 2. Los demás cupones no necesitan `sale_id`.
 - `client_mail`, `client_name`, `client_lastname`, `client_phone`, `channel_id`, `shipping_address`, `shipping_locality_id`, `shipping_postal_code`, `customer_notes`: datos para recrear la venta sin pedirle el formulario de nuevo al cliente — ver la sección de abajo.
 
 ### Respuesta — Carrito no encontrado (404)
