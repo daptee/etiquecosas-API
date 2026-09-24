@@ -33,6 +33,7 @@ GET /api/v1/abandoned-cart/{uid}
   "message": "Carrito obtenido correctamente",
   "data": {
     "sale_id": 94500,
+    "recovered_sale_id": 94500,
     "subtotal": "59488.02",
     "shipping_cost": "10500.00",
     "shipping_method": { "id": 2, "name": "Correo" },
@@ -97,6 +98,7 @@ GET /api/v1/abandoned-cart/{uid}
 
 **Notas sobre los campos:**
 
+- `sale_id` y `recovered_sale_id` son el **mismo valor** (el id de esta venta). Se repiten a propósito: `recovered_sale_id` es la clave exacta que hay que reenviar tal cual en el `POST /v1/sales` (ver más abajo) — así no hay que renombrarla a mano.
 - `products` es un array con un item por cada producto agregado al carrito (mismo shape que devuelve el resto de la API para líneas de venta: `product` trae el producto completo, `variant` la variante elegida si corresponde).
 - `customization_data` viene como **string JSON** (no como objeto) — hay que hacer `JSON.parse()`. Contiene la personalización cargada por el cliente (nombre, color, ícono, etc., según el producto).
 - Las imágenes (`product.images[].img`, `variant.img`) son **rutas relativas**, no URLs completas. Hay que armarlas como `https://api.etiquecosas.com.ar/public/{img}` (mismo criterio que ya usan en el resto del sitio para imágenes de producto).
