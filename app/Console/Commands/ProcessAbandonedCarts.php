@@ -45,6 +45,11 @@ class ProcessAbandonedCarts extends Command
         $minAmount = (float) $this->option('min-amount');
         $maxAgeDays = (int) $this->option('max-age-days');
 
+        // Para poder confirmar desde afuera (pegándole al endpoint del cron)
+        // qué versión del código/config está corriendo en cada ambiente, sin
+        // necesitar acceso por SSH.
+        $this->info("Config activa -> wait-minutes={$waitMinutes} | impact2-days={$impact2Days} | min-amount={$minAmount} | max-age-days={$maxAgeDays}");
+
         $this->processNewAbandonments($waitMinutes, $minAmount, $maxAgeDays);
         $this->processImpact2();
 
