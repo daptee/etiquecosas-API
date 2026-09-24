@@ -33,7 +33,7 @@ GET /api/v1/abandoned-cart/{uid}
   "message": "Carrito obtenido correctamente",
   "data": {
     "sale_id": 94500,
-    "recovered_sale_id": 94500,
+    "recovered_sale_id": null,
     "subtotal": "59488.02",
     "shipping_cost": "10500.00",
     "shipping_method": { "id": 2, "name": "Correo" },
@@ -98,7 +98,8 @@ GET /api/v1/abandoned-cart/{uid}
 
 **Notas sobre los campos:**
 
-- `sale_id` y `recovered_sale_id` son el **mismo valor** (el id de esta venta). Se repiten a propósito: `recovered_sale_id` es la clave exacta que hay que reenviar tal cual en el `POST /v1/sales` (ver más abajo) — así no hay que renombrarla a mano.
+- `sale_id`: el id de esta venta (la original, la del carrito abandonado). **Es el valor que hay que mandar como `recovered_sale_id` en el `POST /v1/sales`** (ver más abajo) — ojo, cambia de nombre entre uno y otro, no se manda como `sale_id` en el POST.
+- `recovered_sale_id` (en este GET): es el valor real de esa columna para *esta* venta — casi siempre `null`, porque el carrito abandonado normalmente no es a su vez una recuperación de otro. No confundir con lo de arriba: esto no es el dato a reenviar, es solo informativo.
 - `products` es un array con un item por cada producto agregado al carrito (mismo shape que devuelve el resto de la API para líneas de venta: `product` trae el producto completo, `variant` la variante elegida si corresponde).
 - `customization_data` viene como **string JSON** (no como objeto) — hay que hacer `JSON.parse()`. Contiene la personalización cargada por el cliente (nombre, color, ícono, etc., según el producto).
 - Las imágenes (`product.images[].img`, `variant.img`) son **rutas relativas**, no URLs completas. Hay que armarlas como `https://api.etiquecosas.com.ar/public/{img}` (mismo criterio que ya usan en el resto del sitio para imágenes de producto).
@@ -159,4 +160,4 @@ Si el `recovered_sale_id` que mandás **no** está en estado "Pendiente de pago"
 2. Pegarle a `GET /api/v1/abandoned-cart/{uid}`.
 3. Si es 200 → mostrar los productos del carrito y permitir continuar la compra (y, si viene `coupon`, ofrecer aplicarlo).
 4. Si es 404 o 410 → mostrar un mensaje de que el carrito no está disponible (con un link al sitio para empezar de cero).
-5. Al confirmar, llamar a `POST /v1/sales` como un checkout normal, pero **mandando siempre `sale_id` = el `sale_id` que devolvió el GET**. El backend decide solo si reutiliza esa misma venta (no cambió nada) o crea una nueva asociada (cambió algo) — la respuesta trae la venta con la que hay que seguir al pago en cualquiera de los dos casos.
+5. Al confirmar, llamar a `POST /v1/sales` como un checkout normal, pero **mandando siempre `recovered_sale_id` = el `sale_id` que devolvió el GET** (son nombres distintos a propósito, no confundir con el `sale_id` del POST, que es otra cosa). El backend decide solo si reutiliza esa misma venta (no cambió nada) o crea una nueva asociada (cambió algo) — la respuesta trae la venta con la que hay que seguir al pago en cualquiera de los dos casos.

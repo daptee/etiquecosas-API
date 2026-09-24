@@ -34,11 +34,11 @@ class AbandonedCartLogController extends Controller
 
         $data = [
             'sale_id' => $sale->id,
-            // Mismo valor que sale_id, con el nombre exacto que hay que mandar
-            // como "recovered_sale_id" en el POST /v1/sales para recuperar
-            // este carrito (ver CARRITO_ABANDONADO.md) — se repite para evitar
-            // que el front tenga que renombrar la clave a mano.
-            'recovered_sale_id' => $sale->id,
+            // Valor real de la columna: null salvo que ESTA venta sea a su vez
+            // una recuperación de otra (caso encadenado, poco común). No es el
+            // valor a mandar en el POST — para eso se usa "sale_id" de acá
+            // arriba (ver CARRITO_ABANDONADO.md).
+            'recovered_sale_id' => $sale->recovered_sale_id,
             'subtotal' => $sale->subtotal,
             'shipping_cost' => $sale->shipping_cost,
             'shipping_method' => $sale->shippingMethod,
