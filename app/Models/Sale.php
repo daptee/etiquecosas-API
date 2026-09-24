@@ -28,6 +28,7 @@ class Sale extends Model
         'internal_comments',
         'sale_status_id',
         'sale_id',
+        'recovered_sale_id',
         'is_recovered_cart',
         'user_id',
         'cadete_id',
@@ -87,6 +88,19 @@ class Sale extends Model
     public function childSales()
     {
         return $this->hasMany(Sale::class, 'sale_id');
+    }
+
+    // Venta original de la que ESTA venta es una recuperación de carrito
+    // abandonado (distinto de parentSale/sale_id, que es la asociación manual).
+    public function recoveredFromSale()
+    {
+        return $this->belongsTo(Sale::class, 'recovered_sale_id');
+    }
+
+    // Ventas que recuperaron el carrito de ESTA venta.
+    public function cartRecoverySales()
+    {
+        return $this->hasMany(Sale::class, 'recovered_sale_id');
     }
 
     public function products()

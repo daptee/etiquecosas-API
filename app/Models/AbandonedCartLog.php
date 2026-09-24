@@ -51,8 +51,10 @@ class AbandonedCartLog extends Model
     public static function markConvertedForSale(Sale $sale): void
     {
         // Si esta venta viene de un carrito recuperado, el abandoned_cart_log
-        // está en la venta original (sale_id apunta hacia arriba en la cadena),
-        // no en esta venta nueva. Se sube por la cadena hasta encontrarlo.
+        // está en la venta original (recovered_sale_id apunta hacia arriba en
+        // la cadena — no confundir con sale_id, que es la asociación manual
+        // de ventas y no tiene nada que ver con esto). Se sube por la cadena
+        // hasta encontrarlo.
         $current = $sale;
         $depth = 0;
 
@@ -67,11 +69,11 @@ class AbandonedCartLog extends Model
                 return;
             }
 
-            if (!$current->sale_id) {
+            if (!$current->recovered_sale_id) {
                 return;
             }
 
-            $current = Sale::find($current->sale_id);
+            $current = Sale::find($current->recovered_sale_id);
             $depth++;
         }
     }

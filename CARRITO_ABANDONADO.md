@@ -125,7 +125,7 @@ La venta detrás de este `uid` ya no está en estado "Pendiente de pago" — el 
 
 Cuando el cliente confirma desde `/carrito-recuperado/{uid}`, el front llama a `POST /v1/sales` igual que en un checkout normal, usando los datos que le dio `GET /v1/abandoned-cart/{uid}` (`client_mail`, `client_name`, `client_lastname`, `client_phone`, `channel_id`, `shipping_address`, `shipping_locality_id`, `shipping_postal_code`, `customer_notes`, `products`, `coupons`, etc.), dejando que el cliente edite lo que quiera antes de confirmar (agregar/sacar productos, cambiar cantidad, cambiar el envío, aplicar otro cupón).
 
-La única diferencia con un checkout normal: hay que mandar el campo `sale_id` del body de `POST /v1/sales` con el `sale_id` que devolvió el `GET /v1/abandoned-cart/{uid}` (el de la venta original) — **siempre**, haya cambiado algo o no.
+La única diferencia con un checkout normal: hay que mandar el campo **`recovered_sale_id`** (no `sale_id` — ese campo es para otra cosa, la asociación manual de ventas que hace un admin, no tiene nada que ver con esto) en el body de `POST /v1/sales`, con el `sale_id` que devolvió el `GET /v1/abandoned-cart/{uid}` (el de la venta original) — **siempre**, haya cambiado algo o no.
 
 ```json
 POST /api/v1/sales
@@ -133,7 +133,7 @@ POST /api/v1/sales
   "client_mail": "...",
   "client_name": "...",
   ...
-  "sale_id": 94500,   // 👈 el sale_id de la venta original (carrito abandonado), siempre
+  "recovered_sale_id": 94500,   // 👈 el sale_id que te dio el GET, siempre. NO usar "sale_id" acá.
   "products": [ ... ]
 }
 ```
@@ -141,15 +141,15 @@ POST /api/v1/sales
 **El backend decide qué hacer comparando el carrito que llega contra la venta original** (productos con sus cantidades, método/dirección de envío, y cupones aplicados — el cupón exclusivo `ETIQUECARRITO` no cuenta para esta comparación, aplicarlo solo no se considera "un cambio"):
 
 - **Si no cambió nada:** no se crea ninguna venta nueva. Se reutiliza la venta **original**: la respuesta de `POST /v1/sales` es esa misma venta (mismo `id`), ahora marcada con `is_recovered_cart: true`. Con esa venta se sigue al flujo de pago de siempre.
-- **Si cambió algo** (otro producto, otra cantidad, otro envío, otro cupón que no sea `ETIQUECARRITO`): se crea una venta **nueva e independiente**, asociada a la original vía `sale_id`. Es esa venta nueva la que sigue el flujo de pago (puede terminar aprobada, rechazada, etc.).
-  - En este caso es la venta **original** (`sale_id: 94500` en el ejemplo) la que queda marcada con `is_recovered_cart: true` — no la nueva. Así siempre se puede identificar, desde la venta original, cuál fue la que disparó una recuperación de carrito.
+- **Si cambió algo** (otro producto, otra cantidad, otro envío, otro cupón que no sea `ETIQUECARRITO`): se crea una venta **nueva e independiente**, asociada a la original vía `recovered_sale_id`. Es esa venta nueva la que sigue el flujo de pago (puede terminar aprobada, rechazada, etc.).
+  - En este caso es la venta **original** (`id: 94500` en el ejemplo) la que queda marcada con `is_recovered_cart: true` — no la nueva. Así siempre se puede identificar, desde la venta original, cuál fue la que disparó una recuperación de carrito.
   - La venta original **no cambia de estado** en ningún caso: sigue "Pendiente de pago" salvo que avance por otro motivo.
 
-En resumen, **`is_recovered_cart` siempre queda en la venta original** que recibió el mail — nunca en la nueva. Si querés saber qué pasó con la compra después de una recuperación con cambios, hay que mirar la venta asociada (`childSales` de la original).
+En resumen, **`is_recovered_cart` siempre queda en la venta original** que recibió el mail — nunca en la nueva. Si querés saber qué pasó con la compra después de una recuperación con cambios, hay que mirar la venta asociada por `recovered_sale_id` (no confundir con `sale_id`/`childSales`, que es la asociación manual del admin).
 
 Si esa venta original tenía un `abandoned_cart_log` (vino de un mail de carrito abandonado), cuando la venta que efectivamente sigue el flujo de pago (la original reusada, o la nueva) se apruebe, ese log se marca como convertido — el reporte de carritos abandonados no pierde el dato aunque técnicamente se haya usado o creado otra venta.
 
-Si el `sale_id` que mandás **no** está en estado "Pendiente de pago" (por ejemplo, esa venta ya se había cancelado o aprobado), se crea una venta nueva normal, sin marcar nada como recuperado. Por eso conviene chequear el 410 del `GET` antes de dejar avanzar al cliente (ver más abajo).
+Si el `recovered_sale_id` que mandás **no** está en estado "Pendiente de pago" (por ejemplo, esa venta ya se había cancelado o aprobado), se crea una venta nueva normal, sin marcar nada como recuperado. Por eso conviene chequear el 410 del `GET` antes de dejar avanzar al cliente (ver más abajo).
 
 ## Resumen para el front
 

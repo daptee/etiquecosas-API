@@ -400,6 +400,7 @@ class SaleController extends Controller
             'internal_comments' => 'nullable|string',
             'sale_status_id' => 'required|integer|exists:sale_status,id',
             'sale_id' => 'nullable|integer|exists:sales,id',
+            'recovered_sale_id' => 'nullable|integer|exists:sales,id',
             'coupon_code' => 'nullable|string|exists:coupons,code',
             'discount_amount' => 'nullable|numeric|min:0',
             'coupons' => 'nullable|array',
@@ -497,8 +498,10 @@ class SaleController extends Controller
             'client_ip_address' => $request->ip(),
         ], fn($v) => $v !== null);
 
-        // 🔁 Recuperación de carrito abandonado: sale_id apunta a una venta que
-        // todavía está "Pendiente de pago". La ORIGINAL siempre queda marcada
+        // 🔁 Recuperación de carrito abandonado: recovered_sale_id apunta a una
+        // venta que todavía está "Pendiente de pago". Este campo es exclusivo
+        // para esta relación — sale_id se reserva para la asociación manual de
+        // ventas del admin, no se mezclan. La ORIGINAL siempre queda marcada
         // is_recovered_cart = true (identifica cuál venta fue la recuperada) y
         // su sale_status_id nunca se toca acá.
         // - Si el carrito llega sin cambios (mismos productos, envío y
@@ -508,8 +511,8 @@ class SaleController extends Controller
         //   esa la que sigue el flujo de pago.
         $recoveredParentSale = null;
 
-        if ($request->sale_id) {
-            $possibleParent = Sale::find($request->sale_id);
+        if ($request->recovered_sale_id) {
+            $possibleParent = Sale::find($request->recovered_sale_id);
 
             if ($possibleParent && $possibleParent->sale_status_id == 8) {
                 $recoveredParentSale = $possibleParent;
@@ -544,6 +547,11 @@ class SaleController extends Controller
                 $query->where('sale_id', $request->sale_id);
             }, function ($query) {
                 $query->whereNull('sale_id');
+            })
+            ->when($request->recovered_sale_id, function ($query) use ($request) {
+                $query->where('recovered_sale_id', $request->recovered_sale_id);
+            }, function ($query) {
+                $query->whereNull('recovered_sale_id');
             })
             ->where('created_at', '>=', Carbon::now()->subSeconds($duplicateWindowSeconds))
             ->with('products')
@@ -587,6 +595,7 @@ class SaleController extends Controller
                 'internal_comments' => $request->internal_comments,
                 'sale_status_id' => $request->sale_status_id,
                 'sale_id' => $request->sale_id,
+                'recovered_sale_id' => $request->recovered_sale_id,
                 'is_recovered_cart' => false,
                 'fb_data' => !empty($fbData) ? $fbData : null,
             ]);
