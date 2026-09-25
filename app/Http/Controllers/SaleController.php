@@ -36,6 +36,7 @@ use App\Traits\ApiResponse;
 use App\Traits\FindObject;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -320,6 +321,62 @@ class SaleController extends Controller
         return empty($errors) ? null : $errors;
     }
 
+    // Código del cupón exclusivo que ofrece el Impacto 2 del flujo de carrito
+    // abandonado (ver ProcessAbandonedCarts). Aplicarlo NO cuenta como "cambio"
+    // al recuperar un carrito — es justamente lo que le ofrecimos por mail.
+    private const RECOVERY_COUPON_CODE = 'ETIQUECARRITO';
+
+    // 📌 Compara el carrito que llega en el request contra una venta existente
+    // (usado para decidir si recuperar un carrito abandonado "sin cambios"
+    // reutiliza la venta original, o si hay que crear una nueva asociada)
+    private function cartMatchesSale(Request $request, Sale $sale): bool
+    {
+        $requestProductsSignature = collect($request->products)
+            ->map(fn($p) => ($p['product_id'] ?? '') . ':' . ($p['variant_id'] ?? '') . ':' . ($p['quantity'] ?? ''))
+            ->sort()
+            ->values()
+            ->implode('|');
+
+        $saleProductsSignature = $sale->products
+            ->map(fn($p) => $p->product_id . ':' . ($p->variant_id ?? '') . ':' . $p->quantity)
+            ->sort()
+            ->values()
+            ->implode('|');
+
+        if ($requestProductsSignature !== $saleProductsSignature) {
+            return false;
+        }
+
+        $sameShipping =
+            (int) ($request->shipping_method_id ?? 0) === (int) ($sale->shipping_method_id ?? 0) &&
+            trim((string) ($request->shipping_address ?? '')) === trim((string) ($sale->address ?? '')) &&
+            (int) ($request->shipping_locality_id ?? 0) === (int) ($sale->locality_id ?? 0) &&
+            trim((string) ($request->shipping_postal_code ?? '')) === trim((string) ($sale->postal_code ?? ''));
+
+        if (!$sameShipping) {
+            return false;
+        }
+
+        // El cupón de recuperación (ETIQUECARRITO) se excluye de la comparación:
+        // aplicarlo es parte esperada de la recuperación, no un cambio real.
+        $requestCouponCodes = collect($request->coupons ?? [])
+            ->pluck('coupon_code')
+            ->when($request->coupon_code, fn($collection) => $collection->push($request->coupon_code))
+            ->filter()
+            ->reject(fn($code) => strcasecmp($code, self::RECOVERY_COUPON_CODE) === 0)
+            ->unique()
+            ->sort()
+            ->values();
+
+        $saleCouponCodes = $sale->coupons->pluck('code')
+            ->reject(fn($code) => strcasecmp($code, self::RECOVERY_COUPON_CODE) === 0)
+            ->unique()
+            ->sort()
+            ->values();
+
+        return $requestCouponCodes->all() === $saleCouponCodes->all();
+    }
+
     // 📌 Crear una venta
     public function store(Request $request)
     {
@@ -345,6 +402,7 @@ class SaleController extends Controller
             'internal_comments' => 'nullable|string',
             'sale_status_id' => 'required|integer|exists:sale_status,id',
             'sale_id' => 'nullable|integer|exists:sales,id',
+            'recovered_sale_id' => 'nullable|integer|exists:sales,id',
             'coupon_code' => 'nullable|string|exists:coupons,code',
             'discount_amount' => 'nullable|numeric|min:0',
             'coupons' => 'nullable|array',
@@ -442,6 +500,37 @@ class SaleController extends Controller
             'client_ip_address' => $request->ip(),
         ], fn($v) => $v !== null);
 
+        // 🔁 Recuperación de carrito abandonado: recovered_sale_id apunta a una
+        // venta que todavía está "Pendiente de pago". Este campo es exclusivo
+        // para esta relación — sale_id se reserva para la asociación manual de
+        // ventas del admin, no se mezclan. La ORIGINAL siempre queda marcada
+        // is_recovered_cart = true (identifica cuál venta fue la recuperada) y
+        // su sale_status_id nunca se toca acá.
+        // - Si el carrito llega sin cambios (mismos productos, envío y
+        //   cupones que la original): no se crea nada nuevo, se reutiliza la
+        //   original para que sea ella la que siga el flujo de pago.
+        // - Si algo cambió: se crea una venta nueva asociada (más abajo) y es
+        //   esa la que sigue el flujo de pago.
+        $recoveredParentSale = null;
+
+        if ($request->recovered_sale_id) {
+            $possibleParent = Sale::find($request->recovered_sale_id);
+
+            if ($possibleParent && $possibleParent->sale_status_id == 8) {
+                $recoveredParentSale = $possibleParent;
+                $recoveredParentSale->load('products', 'coupons');
+
+                if ($this->cartMatchesSale($request, $recoveredParentSale)) {
+                    $recoveredParentSale->is_recovered_cart = true;
+                    $recoveredParentSale->save();
+
+                    $recoveredParentSale->load(['client', 'products.product', 'products.variant', 'shippingMethod', 'locality', 'coupons']);
+                    $this->logAudit(Auth::user() ?? null, 'Recovered Cart Reused Original Sale', $request->all(), $recoveredParentSale);
+                    return $this->success($recoveredParentSale, 'Venta creada correctamente');
+                }
+            }
+        }
+
         // 🔒 Evitar ventas duplicadas por doble click / reintento del checkout:
         // si el mismo cliente ya creó una venta idéntica (mismo carrito y total)
         // hace pocos segundos, devolvemos esa venta en vez de crear una nueva.
@@ -460,6 +549,11 @@ class SaleController extends Controller
                 $query->where('sale_id', $request->sale_id);
             }, function ($query) {
                 $query->whereNull('sale_id');
+            })
+            ->when($request->recovered_sale_id, function ($query) use ($request) {
+                $query->where('recovered_sale_id', $request->recovered_sale_id);
+            }, function ($query) {
+                $query->whereNull('recovered_sale_id');
             })
             ->where('created_at', '>=', Carbon::now()->subSeconds($duplicateWindowSeconds))
             ->with('products')
@@ -484,17 +578,7 @@ class SaleController extends Controller
         // Una venta "huérfana" sin productos rompe además la detección de
         // duplicados de arriba (su firma de productos queda vacía y nunca
         // matchea el reintento del checkout), generando ventas repetidas.
-        $sale = DB::transaction(function () use ($request, $client, $total, $fbData) {
-            // Si sale_id apunta a un carrito todavía "Pendiente de pago", esta
-            // venta nueva lo está recuperando. La original NUNCA se edita ni
-            // cambia de estado por esto — sigue "Pendiente de pago" en el admin
-            // salvo que avance por otro motivo. Solo marcamos la venta nueva.
-            $isRecoveredCart = false;
-            if ($request->sale_id) {
-                $parentSale = Sale::find($request->sale_id);
-                $isRecoveredCart = $parentSale && $parentSale->sale_status_id == 8;
-            }
-
+        $sale = DB::transaction(function () use ($request, $client, $total, $fbData, $recoveredParentSale) {
             $sale = Sale::create([
                 'client_id' => $client->id,
                 'channel_id' => $request->channel_id,
@@ -513,9 +597,17 @@ class SaleController extends Controller
                 'internal_comments' => $request->internal_comments,
                 'sale_status_id' => $request->sale_status_id,
                 'sale_id' => $request->sale_id,
-                'is_recovered_cart' => $isRecoveredCart,
+                'recovered_sale_id' => $request->recovered_sale_id,
+                'is_recovered_cart' => false,
                 'fb_data' => !empty($fbData) ? $fbData : null,
             ]);
+
+            // La venta original queda marcada como recuperada (no la nueva),
+            // sin tocarle el sale_status_id.
+            if ($recoveredParentSale) {
+                $recoveredParentSale->is_recovered_cart = true;
+                $recoveredParentSale->save();
+            }
 
             if ($request->shipping_save) {
                 ClientAddress::create([
