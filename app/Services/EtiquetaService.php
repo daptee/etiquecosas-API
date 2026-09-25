@@ -308,11 +308,13 @@ class EtiquetaService
         $sufijo = self::limpiarNombreArchivo(strtoupper($design->name ?: 'DESIGN'));
 
         foreach ($nombres as $idx => $nombre) {
-            $resolvedPages = array_map(function ($page) use ($nombre, $customColor, $customIcon) {
+            $firstName = $firstNames[$idx] ?? null;
+
+            $resolvedPages = array_map(function ($page) use ($nombre, $firstName, $customColor, $customIcon) {
                 return [
                     'sheet' => $page['sheet'] ?? ['width_cm' => 18.5, 'height_cm' => 29],
                     'elements' => array_map(
-                        fn($el) => self::resolverElementoDesign($el, $nombre, $customColor, $customIcon),
+                        fn($el) => self::resolverElementoDesign($el, $nombre, $firstName, $customColor, $customIcon),
                         $page['elements'] ?? []
                     ),
                 ];
@@ -444,7 +446,7 @@ class EtiquetaService
      * catálogos existentes, texto con el nombre del cliente, y overrides del cliente
      * (color/ícono) SOLO si el elemento fue marcado como editable por el admin.
      */
-    private static function resolverElementoDesign(array $el, string $nombre, $customColor, $customIcon): array
+    private static function resolverElementoDesign(array $el, string $nombre, ?string $firstName, $customColor, $customIcon): array
     {
         $type = $el['type'] ?? null;
         $editable = ($el['editable_by_customer'] ?? false) === true;
@@ -473,6 +475,8 @@ class EtiquetaService
 
         if ($type === 'text') {
             $content = $el['content'] ?? '{{customer_name}}';
+            $isCustomerName = str_contains($content, '{{customer_name}}');
+            $el['is_customer_name'] = $isCustomerName;
             $el['resolved_text'] = str_replace('{{customer_name}}', $nombre, $content);
 
             $el['resolved_font_family'] = null;
@@ -488,6 +492,13 @@ class EtiquetaService
                         ->all();
                 }
             }
+
+            $el['resolved_text_html'] = self::formatearTextoElemento(
+                $el['resolved_text'],
+                $el,
+                $isCustomerName ? $firstName : null
+            );
+            $el['resolved_font_size_px'] = self::resolverTamanoFuente($el);
         }
 
         if (in_array($type, ['background', 'text'], true) && $editable && $field === 'color' && $customColor) {
@@ -498,6 +509,60 @@ class EtiquetaService
         }
 
         return $el;
+    }
+
+    /**
+     * Arma el texto final (con los <br> de corte de renglón) para un elemento
+     * de texto del editor, usando formatName() con los límites que haya
+     * configurado el admin en ese elemento (o los defaults de siempre: 3
+     * renglones máx, 10 caracteres por renglón). Si min_lines pide más
+     * renglones de los que formatName generó, rellena con renglones vacíos.
+     */
+    private static function formatearTextoElemento(string $texto, array $el, ?string $firstName): string
+    {
+        $maxLines = (int) ($el['max_lines'] ?? 3);
+        $maxCharsPerLine = (int) ($el['max_chars_per_line'] ?? 10);
+        $minLines = (int) ($el['min_lines'] ?? 1);
+
+        $formateado = formatName($texto, $maxLines, $maxCharsPerLine, $firstName);
+
+        $lineas = explode('<br>', $formateado);
+        while (count($lineas) < $minLines) {
+            $lineas[] = '&nbsp;';
+        }
+
+        return implode('<br>', $lineas);
+    }
+
+    /**
+     * Tamaño de fuente configurable según cantidad de caracteres: font_size_rules
+     * es una lista de { max_chars, font_size_px } — se usa la primera regla cuyo
+     * max_chars sea mayor o igual a la longitud del texto (max_chars null/ausente
+     * = sin límite, sirve de regla "para el resto"). Si no hay reglas o ninguna
+     * matchea, se usa el font_size_px fijo del elemento.
+     */
+    private static function resolverTamanoFuente(array $el): ?int
+    {
+        $largo = mb_strlen($el['resolved_text'] ?? '', 'UTF-8');
+        $reglas = $el['font_size_rules'] ?? null;
+
+        if (!empty($reglas) && is_array($reglas)) {
+            $reglasOrdenadas = $reglas;
+            usort($reglasOrdenadas, function ($a, $b) {
+                $maxA = $a['max_chars'] ?? PHP_INT_MAX;
+                $maxB = $b['max_chars'] ?? PHP_INT_MAX;
+                return $maxA <=> $maxB;
+            });
+
+            foreach ($reglasOrdenadas as $regla) {
+                $maxChars = $regla['max_chars'] ?? null;
+                if (($maxChars === null || $largo <= $maxChars) && isset($regla['font_size_px'])) {
+                    return (int) $regla['font_size_px'];
+                }
+            }
+        }
+
+        return isset($el['font_size_px']) ? (int) $el['font_size_px'] : null;
     }
 
     /**

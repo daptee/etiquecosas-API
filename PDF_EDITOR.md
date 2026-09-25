@@ -176,12 +176,38 @@ Un diseño de **dos páginas** es simplemente dos entradas en `pages`, cada una 
 | `z_index` | no (default 0) | Orden de apilado |
 | `icon_id` | solo en `icon` | ID de `personalization_icons` (catálogo existente, `GET /api/icons`) |
 | `font_id` | solo en `text` | ID de `typographies` (catálogo existente, `GET /api/typographies`) |
-| `font_size_px` | solo en `text` | Tamaño de fuente |
+| `font_size_px` | solo en `text` | Tamaño de fuente por defecto (se usa si no hay `font_size_rules`, o si ninguna regla matchea) |
 | `content` | solo en `text` | Texto o placeholder. Hoy el único placeholder soportado es `{{customer_name}}` (se reemplaza por el nombre que puso el cliente en el checkout). **Nunca puede llevar HTML** — se limpia en el servidor |
+| `max_lines` | solo en `text`, opcional (default `3`) | Máximo de renglones en los que se puede partir el texto. Se clampea entre 1 y 20 |
+| `min_lines` | solo en `text`, opcional (default `1`) | Mínimo de renglones — si el texto entra en menos, se completa con renglones vacíos para reservar el espacio. Se clampea entre 1 y 20 |
+| `max_chars_per_line` | solo en `text`, opcional (default `10`) | Caracteres por renglón antes de cortar a la siguiente palabra. Se clampea entre 1 y 200 |
+| `font_size_rules` | solo en `text`, opcional | Escala de tamaño de fuente según la cantidad de caracteres del texto resuelto — ver ejemplo abajo. Si no se manda, se usa siempre `font_size_px` |
 | `color` | en `background`/`text` | `{ "mode": "hex" \| "cmyk", "value": "..." }`. Para `cmyk`, `value` es `"c,m,y,k"` (0 a 1), igual que ya usan las vistas legacy |
 | `label_shape_id` | opcional en `background` | Referencia a `label_shapes.id` si ese elemento representa una forma del catálogo |
 | `editable_by_customer` | opcional (default `false`) | Si es `true`, el cliente puede modificar este elemento en el checkout |
 | `editable_field` | requerido si `editable_by_customer` es `true` | `text` \| `color` \| `icon` — qué puede cambiar el cliente en ese elemento |
+
+**`max_lines` / `min_lines` / `max_chars_per_line`**: el corte de renglones usa `formatName()` — si el texto es el nombre del cliente (`content: "{{customer_name}}"`), se corta respetando la separación nombre/apellido (máximo 2 renglones reales aunque `max_lines` sea mayor); si es un texto fijo, se corta por palabras completas. El detalle completo con ejemplos está en [FORMATO_NOMBRES_PDF.md](FORMATO_NOMBRES_PDF.md).
+
+**`font_size_rules`** — lista ordenada por `max_chars` (de menor a mayor); se usa la primera regla cuyo `max_chars` sea mayor o igual a la cantidad de caracteres del texto. Una regla sin `max_chars` (o `null`) actúa como "para el resto" y conviene ponerla al final:
+
+```json
+{
+  "type": "text",
+  "content": "{{customer_name}}",
+  "font_id": 5,
+  "font_size_px": 40,
+  "max_lines": 2,
+  "min_lines": 1,
+  "max_chars_per_line": 10,
+  "font_size_rules": [
+    { "max_chars": 5, "font_size_px": 80 },
+    { "max_chars": 10, "font_size_px": 50 },
+    { "max_chars": null, "font_size_px": 30 }
+  ]
+}
+```
+Con esa config: "ANA" (3 caracteres) sale con `font_size_px: 80`, "GUILLERMINA" (11 caracteres) con `30`.
 
 **Importante sobre `editable_by_customer`**: esto reemplaza, de forma explícita por elemento, lo que hoy el checkout manda de forma implícita en `customization_data` (`form.name`, `color.color_code`, `icon.icon`). El front del storefront debe:
 - Mostrar el selector de color solo si algún elemento tiene `editable_field: "color"`.

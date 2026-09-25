@@ -84,10 +84,10 @@
                     @case('text')
                         <p style="
                             font-family: '{{ $el['resolved_font_family'] ?? 'sans-serif' }}';
-                            font-size: {{ $el['font_size_px'] ?? 32 }}px;
+                            font-size: {{ $el['resolved_font_size_px'] ?? $el['font_size_px'] ?? 32 }}px;
                             color: {{ ($el['color']['mode'] ?? 'hex') === 'cmyk' ? 'cmyk(' . ($el['color']['value'] ?? '0,0,0,1') . ')' : ($el['color']['value'] ?? '#000000') }};
                         ">
-                            {!! formatName($el['resolved_text'] ?? '', 3, 10, $product_order->firstName ?? null) !!}
+                            {!! $el['resolved_text_html'] ?? ($el['resolved_text'] ?? '') !!}
                         </p>
                         @break
 

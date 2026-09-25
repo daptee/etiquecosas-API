@@ -71,6 +71,24 @@ class PdfDesignSanitizer
 
             $el['editable_by_customer'] = ($el['editable_by_customer'] ?? false) === true;
 
+            if (isset($el['max_lines'])) {
+                $el['max_lines'] = max(1, min(20, (int) $el['max_lines']));
+            }
+            if (isset($el['min_lines'])) {
+                $el['min_lines'] = max(1, min(20, (int) $el['min_lines']));
+            }
+            if (isset($el['max_chars_per_line'])) {
+                $el['max_chars_per_line'] = max(1, min(200, (int) $el['max_chars_per_line']));
+            }
+            if (!empty($el['font_size_rules']) && is_array($el['font_size_rules'])) {
+                $el['font_size_rules'] = array_slice(array_map(function ($rule) {
+                    return [
+                        'max_chars' => isset($rule['max_chars']) ? max(0, (int) $rule['max_chars']) : null,
+                        'font_size_px' => isset($rule['font_size_px']) ? max(1, min(500, (int) $rule['font_size_px'])) : null,
+                    ];
+                }, $el['font_size_rules']), 0, 20);
+            }
+
             return $el;
         }, $elements);
     }
