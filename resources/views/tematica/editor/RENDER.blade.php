@@ -78,31 +78,46 @@
                 @switch($el['type'] ?? null)
                     @case('background')
                         @php
-                            $shapeType = $el['resolved_shape_type'] ?? null;
-                            $borderRadius = match ($shapeType) {
-                                'circle' => '50%',
-                                'rect' => ($el['resolved_shape_corner_radius_cm'] ?? 0) . 'cm',
-                                default => '0',
-                            };
-                            // padding_cm insetea el color hacia adentro de su propia caja
-                            // (un div vacío no se achica con "padding" normal de CSS).
-                            $paddingCm = (float) ($el['padding_cm'] ?? 0);
-                            $innerWidthCm = max(0, ($el['width_cm'] ?? 1) - 2 * $paddingCm);
-                            $innerHeightCm = max(0, ($el['height_cm'] ?? 1) - 2 * $paddingCm);
+                            // Prioridad de esquinas: si el elemento manda su propio
+                            // radius_mode/radius_pct, gana eso; si no, se usa lo que
+                            // haya resuelto la forma del catálogo (label_shape_id).
+                            if (($el['radius_mode'] ?? null) === 'straight') {
+                                $borderRadius = '0';
+                            } elseif (isset($el['radius_pct'])) {
+                                $borderRadius = ((float) $el['radius_pct']) . '%';
+                            } else {
+                                $shapeType = $el['resolved_shape_type'] ?? null;
+                                $borderRadius = match ($shapeType) {
+                                    'circle' => '50%',
+                                    'rect' => ($el['resolved_shape_corner_radius_cm'] ?? 0) . 'cm',
+                                    default => '0',
+                                };
+                            }
+
+                            // padding_cm NO achica el color: es una zona segura para
+                            // dónde el editor deja ubicar íconos/texto dentro de la
+                            // etiqueta, no algo que afecte el relleno de color, que
+                            // siempre llena el width_cm/height_cm completo.
+                            $borderWidthCm = (float) ($el['border']['width_cm'] ?? 0);
+                            $borderColor = $el['border']['color'] ?? null;
+                            $borderCss = $borderWidthCm > 0
+                                ? $borderWidthCm . 'cm solid ' . (($borderColor['mode'] ?? 'hex') === 'cmyk' ? 'cmyk(' . $borderColor['value'] . ')' : ($borderColor['value'] ?? '#000000'))
+                                : 'none';
                         @endphp
                         <div style="
-                            width: {{ $innerWidthCm }}cm;
-                            height: {{ $innerHeightCm }}cm;
-                            margin: {{ $paddingCm }}cm;
+                            box-sizing: border-box;
+                            width: 100%;
+                            height: 100%;
                             overflow: hidden;
                             border-radius: {{ $borderRadius }};
+                            border: {{ $borderCss }};
                             background: {{ ($el['color']['mode'] ?? 'hex') === 'cmyk' ? 'cmyk(' . $el['color']['value'] . ')' : ($el['color']['value'] ?? '#FFFFFF') }};
                         "></div>
                         @break
 
                     @case('icon')
                         @if (!empty($el['resolved_icon_path']))
-                            <img src="file://{{ str_replace('\\', '/', $el['resolved_icon_path']) }}" style="width:100%; height:100%;">
+                            <img src="file://{{ str_replace('\\', '/', $el['resolved_icon_path']) }}" style="width:100%; height:100%; object-fit: contain;">
                         @endif
                         @break
 

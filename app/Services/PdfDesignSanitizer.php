@@ -10,6 +10,7 @@ class PdfDesignSanitizer
     private const ALLOWED_TEXT_ALIGN = ['left', 'center', 'right'];
     private const ALLOWED_VERTICAL_ALIGN = ['top', 'middle', 'bottom'];
     private const ALLOWED_DYNAMIC_FIELDS = ['nombre_apellido', 'nombre', 'apellido'];
+    private const ALLOWED_RADIUS_MODES = ['straight', 'rounded'];
 
     /**
      * Deja pasar únicamente primitivos de forma SVG. Rechaza cualquier otra
@@ -127,6 +128,15 @@ class PdfDesignSanitizer
             }
             if (isset($el['group_id']) && is_string($el['group_id'])) {
                 $el['group_id'] = strip_tags($el['group_id']);
+            }
+            if (isset($el['radius_mode']) && !in_array($el['radius_mode'], self::ALLOWED_RADIUS_MODES, true)) {
+                $el['radius_mode'] = 'straight';
+            }
+            if (isset($el['radius_pct'])) {
+                $el['radius_pct'] = max(0, min(100, (float) $el['radius_pct']));
+            }
+            if (isset($el['border']['width_cm'])) {
+                $el['border']['width_cm'] = max(0, min(5, (float) $el['border']['width_cm']));
             }
 
             return $el;
