@@ -547,7 +547,11 @@ class EtiquetaService
         $maxCharsPerLine = (int) ($el['max_chars_per_line'] ?? 10);
         $minLines = (int) ($el['min_lines'] ?? 1);
 
-        $formateado = formatName($texto, $maxLines, $maxCharsPerLine, $firstName);
+        // A diferencia de formatName() (legacy, fuerza mayúsculas), acá se
+        // respeta la mayúscula/minúscula tal cual se tipeó el texto (fijo o
+        // dinámico) — el editor nuevo permite mezclar estilos ("CIRO" +
+        // "Robertito") y forzar mayúsculas lo rompería.
+        $formateado = self::dividirEnRenglones($texto, $maxLines, $maxCharsPerLine, $firstName);
 
         $lineas = explode('<br>', $formateado);
         while (count($lineas) < $minLines) {
@@ -555,6 +559,95 @@ class EtiquetaService
         }
 
         return implode('<br>', $lineas);
+    }
+
+    /**
+     * Misma lógica de corte de renglones que formatName() (nombre/apellido
+     * separado en 2 líneas si se pasa $firstName, o word-wrap agrupando
+     * partículas de apellidos compuestos) pero sin forzar mayúsculas.
+     */
+    private static function dividirEnRenglones(string $texto, int $maxLines, int $maxCharsPerLine, ?string $firstName): string
+    {
+        $texto = trim($texto);
+
+        if ($firstName !== null && $firstName !== '') {
+            $firstNameTrim = trim($firstName);
+
+            if (mb_strlen($texto, 'UTF-8') <= $maxCharsPerLine) {
+                return $texto;
+            }
+
+            $lastNamePart = trim(mb_substr($texto, mb_strlen($firstNameTrim, 'UTF-8'), null, 'UTF-8'));
+
+            if ($lastNamePart !== '') {
+                $lines = [$firstNameTrim, $lastNamePart];
+                if (count($lines) > $maxLines) {
+                    $lines = array_slice($lines, 0, $maxLines);
+                    $lines[$maxLines - 1] .= '…';
+                }
+                return implode('<br>', $lines);
+            }
+        }
+
+        $words = explode(' ', $texto);
+        $tokens = self::agruparParticulasApellido($words);
+
+        $lines = [];
+        $currentLine = '';
+
+        foreach ($tokens as $token) {
+            if (mb_strlen($currentLine . ' ' . $token, 'UTF-8') > $maxCharsPerLine && count($lines) < $maxLines - 1) {
+                $lines[] = trim($currentLine);
+                $currentLine = $token;
+            } else {
+                $currentLine .= ($currentLine ? ' ' : '') . $token;
+            }
+        }
+        $lines[] = trim($currentLine);
+
+        if (count($lines) > $maxLines) {
+            $lines = array_slice($lines, 0, $maxLines);
+            $lines[$maxLines - 1] .= '…';
+        }
+
+        return implode('<br>', $lines);
+    }
+
+    /**
+     * Igual que groupCompoundSurnameParts() (Helpers.php) pero comparando las
+     * partículas sin distinguir mayúsculas/minúsculas, preservando el texto
+     * original tal cual fue tipeado.
+     */
+    private static function agruparParticulasApellido(array $words): array
+    {
+        $particles = ['DE', 'DEL', 'DE LA', 'DE LOS', 'DE LAS', 'DI', 'LA', 'LAS', 'LOS', 'EL', 'Y', 'VAN', 'VON', 'BIN', 'BTE'];
+        $grouped = [];
+        $i = 0;
+        $total = count($words);
+
+        while ($i < $total) {
+            $matched = false;
+            if ($i + 1 < $total) {
+                $twoToken = mb_strtoupper($words[$i] . ' ' . $words[$i + 1], 'UTF-8');
+                if (in_array($twoToken, $particles, true) && $i + 2 < $total) {
+                    $grouped[] = $words[$i] . ' ' . $words[$i + 1] . ' ' . $words[$i + 2];
+                    $i += 3;
+                    $matched = true;
+                }
+            }
+
+            if (!$matched) {
+                if (in_array(mb_strtoupper($words[$i], 'UTF-8'), $particles, true) && $i + 1 < $total) {
+                    $grouped[] = $words[$i] . ' ' . $words[$i + 1];
+                    $i += 2;
+                } else {
+                    $grouped[] = $words[$i];
+                    $i++;
+                }
+            }
+        }
+
+        return $grouped;
     }
 
     /**
