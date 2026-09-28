@@ -80,8 +80,10 @@ Un diseño **no pertenece a un solo producto**: es una entidad independiente (un
 | `labelShapeId` | number \| null | Forma/tamaño de etiqueta usada (`label_shapes.id`) |
 | `name` | string | Nombre visible del diseño, ej. "Basquet - Maxi" |
 | `data` | object | **El diseño en sí** (ver esquema abajo) |
-| `isPublished` | boolean | `false` = borrador (el admin lo está editando, no se usa para generar PDFs reales aunque ya esté vinculado a productos). `true` = se usa en la generación real de la próxima venta |
+| `isPublished` | boolean | `false` = borrador (el admin lo está editando). `true` = terminado, listo para producción |
 | `statusId` | 1 \| 2 | 1 = activo, 2 = inactivo |
+
+**Para que un diseño se use realmente al generar el PDF de una venta, tienen que darse las dos cosas: `isPublished: true` Y `statusId: 1`.** Cualquiera de las dos que falte (borrador sin publicar, o publicado pero desactivado) hace que el sistema caiga al flujo legacy para ese producto, como si no hubiera diseño nuevo. Esto te permite "pausar" un diseño ya publicado con `statusId: 2` sin perder el estado de publicado (y sin tener que despublicarlo y volver a publicarlo después).
 | `products` | array | (solo lectura, viene incluido en las respuestas) los productos vinculados a este diseño, cada uno con su `pivot.themeKey` y `pivot.id` (el id del vínculo, para poder desvincularlo) |
 
 Un diseño se puede crear **sin ningún producto vinculado** — sirve como borrador o como plantilla para reutilizar más adelante. No es necesario mandar `productId` al crearlo.
@@ -320,7 +322,7 @@ El front debe usar los `id` que devuelven estos endpoints para completar `icon_i
 
 Al aprobarse/generarse una venta, por cada producto comprado:
 
-1. Se busca en `product_pdf_design_products` un vínculo para ese producto (y esa variante, si tiene) cuyo diseño esté `isPublished: true`.
+1. Se busca en `product_pdf_design_products` un vínculo para ese producto (y esa variante, si tiene) cuyo diseño esté `isPublished: true` y `statusId: 1` (activo).
 2. Si existe → se genera el PDF con el diseño nuevo (reemplazando `{{customer_name}}`, resolviendo íconos/tipografías, aplicando los overrides del cliente solo en los campos marcados como editables).
 3. Si no existe → se sigue generando el PDF exactamente como antes, con `product_pdf` y las vistas por temática.
 

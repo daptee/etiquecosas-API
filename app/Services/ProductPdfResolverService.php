@@ -32,7 +32,7 @@ class ProductPdfResolverService
             ->where('product_id', $productOrder->product_id)
             ->when($variant, fn($q) => $q->where('theme_key', $tematicaId))
             ->when(!$variant, fn($q) => $q->whereNull('theme_key'))
-            ->whereHas('design', fn($q) => $q->where('is_published', true))
+            ->whereHas('design', fn($q) => $q->where('is_published', true)->where('status_id', 1))
             ->first();
 
         $design = $link?->design;
