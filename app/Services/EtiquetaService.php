@@ -475,14 +475,32 @@ class EtiquetaService
         }
 
         if ($type === 'text') {
-            $content = $el['content'] ?? '{{customer_name}}';
-            $isCustomerName = str_contains($content, '{{customer_name}}');
+            // Esquema del editor del front: value_mode "fixed" = texto literal;
+            // cualquier otro valor + dynamic_field = tomar el dato real del cliente.
+            $dynamicField = $el['dynamic_field'] ?? null;
+            $isDynamic = ($el['value_mode'] ?? 'fixed') !== 'fixed' && $dynamicField;
+
+            if ($isDynamic) {
+                $resolvedText = match ($dynamicField) {
+                    'nombre_apellido' => $nombre,
+                    'apellido' => $lastName ?? '',
+                    'nombre' => $firstName ?? '',
+                    default => $el['content'] ?? '',
+                };
+                $isCustomerName = $dynamicField === 'nombre_apellido';
+            } else {
+                // Esquema anterior por placeholders {{...}} dentro de content (se mantiene por compatibilidad).
+                $content = $el['content'] ?? '{{customer_name}}';
+                $isCustomerName = str_contains($content, '{{customer_name}}');
+                $resolvedText = str_replace(
+                    ['{{customer_name}}', '{{customer_first_name}}', '{{customer_last_name}}'],
+                    [$nombre, $firstName ?? '', $lastName ?? ''],
+                    $content
+                );
+            }
+
             $el['is_customer_name'] = $isCustomerName;
-            $el['resolved_text'] = str_replace(
-                ['{{customer_name}}', '{{customer_first_name}}', '{{customer_last_name}}'],
-                [$nombre, $firstName ?? '', $lastName ?? ''],
-                $content
-            );
+            $el['resolved_text'] = $resolvedText;
 
             $el['resolved_font_family'] = null;
             $el['resolved_font_files'] = [];
@@ -541,15 +559,23 @@ class EtiquetaService
 
     /**
      * Tamaño de fuente configurable según cantidad de caracteres: font_size_rules
-     * es una lista de { max_chars, font_size_px } — se usa la primera regla cuyo
-     * max_chars sea mayor o igual a la longitud del texto (max_chars null/ausente
-     * = sin límite, sirve de regla "para el resto"). Si no hay reglas o ninguna
-     * matchea, se usa el font_size_px fijo del elemento.
+     * (o su alias del editor del front, length_rules) es una lista de
+     * { max_chars, font_size_px } — se usa la primera regla cuyo max_chars sea
+     * mayor o igual a la longitud del texto (max_chars null/ausente = sin
+     * límite, sirve de regla "para el resto"). Si no hay reglas, ninguna
+     * matchea, o length_rules_enabled viene en false, se usa el font_size_px
+     * fijo del elemento.
      */
     private static function resolverTamanoFuente(array $el): ?int
     {
         $largo = mb_strlen($el['resolved_text'] ?? '', 'UTF-8');
-        $reglas = $el['font_size_rules'] ?? null;
+
+        $reglas = null;
+        if (array_key_exists('length_rules_enabled', $el)) {
+            $reglas = $el['length_rules_enabled'] ? ($el['length_rules'] ?? null) : null;
+        } else {
+            $reglas = $el['font_size_rules'] ?? $el['length_rules'] ?? null;
+        }
 
         if (!empty($reglas) && is_array($reglas)) {
             $reglasOrdenadas = $reglas;

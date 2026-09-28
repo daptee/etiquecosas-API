@@ -179,26 +179,45 @@ Un diseño de **dos páginas** es simplemente dos entradas en `pages`, cada una 
 | `icon_id` | solo en `icon` | ID de `personalization_icons` (catálogo existente, `GET /api/icons`) |
 | `font_id` | solo en `text` | ID de `typographies` (catálogo existente, `GET /api/typographies`) |
 | `font_size_px` | solo en `text` | Tamaño de fuente por defecto (se usa si no hay `font_size_rules`, o si ninguna regla matchea) |
-| `content` | solo en `text` | Texto o placeholder. Placeholders soportados: `{{customer_name}}` (nombre completo), `{{customer_first_name}}` (solo nombre) y `{{customer_last_name}}` (solo apellido) — ver nota abajo. **Nunca puede llevar HTML** — se limpia en el servidor |
+| `content` | solo en `text` | Texto literal. Si `value_mode` es `"fixed"` (o no se manda `value_mode`), se usa tal cual — también acepta los placeholders `{{customer_name}}` / `{{customer_first_name}}` / `{{customer_last_name}}` dentro del string (ver nota abajo). **Nunca puede llevar HTML** — se limpia en el servidor |
+| `value_mode` | solo en `text`, opcional (default `"fixed"`) | `"fixed"` = usar `content` literal. Cualquier otro valor (ej. `"dynamic"`) + `dynamic_field` = ignorar `content` y usar el dato real del cliente |
+| `dynamic_field` | solo en `text`, requerido si `value_mode` no es `"fixed"` | `nombre_apellido` (nombre completo) \| `nombre` (solo nombre) \| `apellido` (solo apellido). Cualquier otro valor se descarta en el servidor (queda `null`, se usa `content` como fallback) |
 | `max_lines` | solo en `text`, opcional (default `3`) | Máximo de renglones en los que se puede partir el texto. Se clampea entre 1 y 20 |
 | `min_lines` | solo en `text`, opcional (default `1`) | Mínimo de renglones — si el texto entra en menos, se completa con renglones vacíos para reservar el espacio. Se clampea entre 1 y 20 |
 | `max_chars_per_line` | solo en `text`, opcional (default `10`) | Caracteres por renglón antes de cortar a la siguiente palabra. Se clampea entre 1 y 200 |
-| `font_size_rules` | solo en `text`, opcional | Escala de tamaño de fuente según la cantidad de caracteres del texto resuelto — ver ejemplo abajo. Si no se manda, se usa siempre `font_size_px` |
+| `font_size_rules` (alias: `length_rules` + `length_rules_enabled`) | solo en `text`, opcional | Escala de tamaño de fuente según la cantidad de caracteres del texto resuelto — ver ejemplo abajo. Si `length_rules_enabled` es `false`, se ignoran las reglas aunque estén cargadas (útil para guardarlas armadas pero desactivadas). Si no se manda nada de esto, se usa siempre `font_size_px` |
+| `text_align` | solo en `text`, opcional (default `center`) | `left` \| `center` \| `right` |
+| `vertical_align` | solo en `text`, opcional (default `middle`) | `top` \| `middle` \| `bottom` — centrado real dentro de la caja del elemento |
+| `vertical_offset_cm` | solo en `text`, opcional (default `0`) | Corrimiento fino vertical adicional (en cm), para ajustar ópticamente sin mover `y_cm`. Se clampea entre -50 y 50 |
+| `font_weight` | solo en `text`, opcional (default `400`) | Grosor de fuente (100 a 900, como CSS `font-weight`) |
+| `padding_cm` | opcional en `background`, opcional (default `0`) | Insetea el color hacia adentro de su propia caja (por ejemplo, para dejar un borde/margen visible alrededor). Se clampea entre 0 y 50 |
+| `rotation_deg` | opcional en cualquier tipo (default `0`) | Rotación del elemento en grados, sobre su propio centro. Se clampea entre -360 y 360 |
 | `color` | en `background`/`text` | `{ "mode": "hex" \| "cmyk", "value": "..." }`. Para `cmyk`, `value` es `"c,m,y,k"` (0 a 1), igual que ya usan las vistas legacy |
 | `label_shape_id` | opcional en `background` | Referencia a `label_shapes.id` si ese elemento representa una forma del catálogo |
+| `group_id` | opcional | Puramente organizativo para el editor (agrupar los elementos de una misma etiqueta física); el backend no lo usa |
 | `editable_by_customer` | opcional (default `false`) | Si es `true`, el cliente puede modificar este elemento en el checkout |
 | `editable_field` | requerido si `editable_by_customer` es `true` | `text` \| `color` \| `icon` — qué puede cambiar el cliente en ese elemento |
 
-**Nombre y apellido en posiciones separadas**: si querés poner el nombre en un extremo de la etiqueta y el apellido en otro, usá **dos elementos `text` distintos** — uno con `content: "{{customer_first_name}}"` y otro con `content: "{{customer_last_name}}"` — cada uno con su propio `x_cm`/`y_cm`. Por ejemplo:
+⚠️ **Importante sobre `dynamic_field` + cajas angostas**: si el texto real del cliente (nombre o apellido) es más largo que el string de prueba que usaste al diseñar, y no entra en `width_cm` al `font_size_px` configurado, el texto se corta horizontalmente (una palabra sin espacios no se puede partir en renglones). Para evitar esto con apellidos largos, activá `length_rules_enabled: true` con reglas que reduzcan la fuente según la cantidad de caracteres, o dejá el `width_cm` con margen de sobra.
 
-```json
-{ "type": "text", "content": "{{customer_first_name}}", "x_cm": 0.3, "y_cm": 0.3, "width_cm": 2, "height_cm": 1, "font_size_px": 40 },
-{ "type": "text", "content": "{{customer_last_name}}", "x_cm": 3.5, "y_cm": 1.8, "width_cm": 2, "height_cm": 1, "font_size_px": 40 }
-```
+**Nombre y apellido en posiciones separadas**: si querés poner el nombre en un extremo de la etiqueta y el apellido en otro, usá **dos elementos `text` distintos**, cada uno con su propio `x_cm`/`y_cm`. Hay dos formas equivalentes de decirle al backend qué mostrar en cada uno:
 
-`{{customer_name}}` sigue existiendo para cuando querés nombre y apellido juntos en un solo bloque (con el corte automático nombre/apellido de `formatName()`). `{{customer_first_name}}`/`{{customer_last_name}}` en cambio son texto plano — cada uno se corta solo por palabras si no entra en `max_chars_per_line` (normalmente no hace falta, un nombre o apellido solo rara vez necesita más de un renglón).
+- Con `value_mode`/`dynamic_field` (la forma que usa hoy el editor):
+  ```json
+  { "type": "text", "value_mode": "dynamic", "dynamic_field": "nombre", "content": "NOMBRE EJEMPLO", "x_cm": 0.3, "y_cm": 0.3, "width_cm": 2, "height_cm": 1, "font_size_px": 40 },
+  { "type": "text", "value_mode": "dynamic", "dynamic_field": "apellido", "content": "APELLIDO EJEMPLO", "x_cm": 3.5, "y_cm": 1.8, "width_cm": 2, "height_cm": 1, "font_size_px": 40 }
+  ```
+  `content` acá es solo un texto de referencia para cuando se previsualiza/edita sin datos reales — al generar el PDF real se ignora y se usa el nombre/apellido del cliente.
 
-**`max_lines` / `min_lines` / `max_chars_per_line`**: el corte de renglones usa `formatName()` — solo `content: "{{customer_name}}"` activa el corte especial de nombre/apellido (máximo 2 renglones reales aunque `max_lines` sea mayor); cualquier otro texto (incluidos `{{customer_first_name}}`/`{{customer_last_name}}` y los textos fijos) se corta por palabras completas. El detalle completo con ejemplos está en [FORMATO_NOMBRES_PDF.md](FORMATO_NOMBRES_PDF.md).
+- Con placeholders dentro de `content` (forma anterior, se sigue soportando):
+  ```json
+  { "type": "text", "content": "{{customer_first_name}}", "x_cm": 0.3, "y_cm": 0.3, "width_cm": 2, "height_cm": 1, "font_size_px": 40 },
+  { "type": "text", "content": "{{customer_last_name}}", "x_cm": 3.5, "y_cm": 1.8, "width_cm": 2, "height_cm": 1, "font_size_px": 40 }
+  ```
+
+`{{customer_name}}` / `dynamic_field: "nombre_apellido"` siguen existiendo para cuando querés nombre y apellido juntos en un solo bloque (con el corte automático nombre/apellido de `formatName()`). El nombre o el apellido solos (`nombre`/`apellido`/`{{customer_first_name}}`/`{{customer_last_name}}`) son texto plano — cada uno se corta solo por palabras si no entra en `max_chars_per_line` (normalmente no hace falta, un nombre o apellido solo rara vez necesita más de un renglón, pero si es más largo que la caja, conviene `length_rules` — ver la advertencia arriba).
+
+**`max_lines` / `min_lines` / `max_chars_per_line`**: el corte de renglones usa `formatName()` — solo el nombre completo (`dynamic_field: "nombre_apellido"` o `content: "{{customer_name}}"`) activa el corte especial de nombre/apellido (máximo 2 renglones reales aunque `max_lines` sea mayor); cualquier otro texto se corta por palabras completas. El detalle completo con ejemplos está en [FORMATO_NOMBRES_PDF.md](FORMATO_NOMBRES_PDF.md).
 
 **`font_size_rules`** — lista ordenada por `max_chars` (de menor a mayor); se usa la primera regla cuyo `max_chars` sea mayor o igual a la cantidad de caracteres del texto. Una regla sin `max_chars` (o `null`) actúa como "para el resto" y conviene ponerla al final:
 

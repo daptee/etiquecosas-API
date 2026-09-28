@@ -7,6 +7,9 @@ class PdfDesignSanitizer
     private const ALLOWED_SVG_TAGS = ['svg', 'path', 'rect', 'circle', 'ellipse', 'polygon', 'polyline', 'g'];
     private const ALLOWED_ELEMENT_TYPES = ['background', 'icon', 'text', 'shape'];
     private const ALLOWED_EDITABLE_FIELDS = ['text', 'color', 'icon'];
+    private const ALLOWED_TEXT_ALIGN = ['left', 'center', 'right'];
+    private const ALLOWED_VERTICAL_ALIGN = ['top', 'middle', 'bottom'];
+    private const ALLOWED_DYNAMIC_FIELDS = ['nombre_apellido', 'nombre', 'apellido'];
 
     /**
      * Deja pasar únicamente primitivos de forma SVG. Rechaza cualquier otra
@@ -80,13 +83,50 @@ class PdfDesignSanitizer
             if (isset($el['max_chars_per_line'])) {
                 $el['max_chars_per_line'] = max(1, min(200, (int) $el['max_chars_per_line']));
             }
-            if (!empty($el['font_size_rules']) && is_array($el['font_size_rules'])) {
-                $el['font_size_rules'] = array_slice(array_map(function ($rule) {
+            $sanitizeRules = function ($rules) {
+                return array_slice(array_map(function ($rule) {
                     return [
                         'max_chars' => isset($rule['max_chars']) ? max(0, (int) $rule['max_chars']) : null,
                         'font_size_px' => isset($rule['font_size_px']) ? max(1, min(500, (int) $rule['font_size_px'])) : null,
                     ];
-                }, $el['font_size_rules']), 0, 20);
+                }, $rules), 0, 20);
+            };
+            if (!empty($el['font_size_rules']) && is_array($el['font_size_rules'])) {
+                $el['font_size_rules'] = $sanitizeRules($el['font_size_rules']);
+            }
+            if (!empty($el['length_rules']) && is_array($el['length_rules'])) {
+                $el['length_rules'] = $sanitizeRules($el['length_rules']);
+            }
+            if (isset($el['length_rules_enabled'])) {
+                $el['length_rules_enabled'] = $el['length_rules_enabled'] === true;
+            }
+
+            if (isset($el['text_align']) && !in_array($el['text_align'], self::ALLOWED_TEXT_ALIGN, true)) {
+                $el['text_align'] = 'center';
+            }
+            if (isset($el['vertical_align']) && !in_array($el['vertical_align'], self::ALLOWED_VERTICAL_ALIGN, true)) {
+                $el['vertical_align'] = 'middle';
+            }
+            if (isset($el['dynamic_field']) && !in_array($el['dynamic_field'], self::ALLOWED_DYNAMIC_FIELDS, true)) {
+                $el['dynamic_field'] = null;
+            }
+            if (isset($el['value_mode']) && is_string($el['value_mode'])) {
+                $el['value_mode'] = strip_tags($el['value_mode']);
+            }
+            if (isset($el['rotation_deg'])) {
+                $el['rotation_deg'] = max(-360, min(360, (float) $el['rotation_deg']));
+            }
+            if (isset($el['vertical_offset_cm'])) {
+                $el['vertical_offset_cm'] = max(-50, min(50, (float) $el['vertical_offset_cm']));
+            }
+            if (isset($el['padding_cm'])) {
+                $el['padding_cm'] = max(0, min(50, (float) $el['padding_cm']));
+            }
+            if (isset($el['font_weight'])) {
+                $el['font_weight'] = max(100, min(900, (int) $el['font_weight']));
+            }
+            if (isset($el['group_id']) && is_string($el['group_id'])) {
+                $el['group_id'] = strip_tags($el['group_id']);
             }
 
             return $el;

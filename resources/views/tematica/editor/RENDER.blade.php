@@ -37,13 +37,18 @@
 }
 .editor-element {
     position: absolute;
-    overflow: hidden;
+}
+.editor-text-wrap {
+    display: table;
+    width: 100%;
+    height: 100%;
+}
+.editor-text-cell {
+    display: table-cell;
 }
 .editor-element p {
     margin: 0;
-    width: 100%;
-    height: 100%;
-    text-align: center;
+    line-height: 1.1;
 }
 </style>
 </head>
@@ -55,12 +60,16 @@
         @if (!$loop->last) page-break-after: always; @endif
     ">
         @foreach ($page['elements'] as $el)
+            @php
+                $rotationDeg = (float) ($el['rotation_deg'] ?? 0);
+            @endphp
             <div class="editor-element" style="
                 left: {{ $el['x_cm'] ?? 0 }}cm;
                 top: {{ $el['y_cm'] ?? 0 }}cm;
                 width: {{ $el['width_cm'] ?? 1 }}cm;
                 height: {{ $el['height_cm'] ?? 1 }}cm;
                 z-index: {{ $el['z_index'] ?? 0 }};
+                @if ($rotationDeg) transform: rotate({{ $rotationDeg }}deg); @endif
             ">
                 @switch($el['type'] ?? null)
                     @case('background')
@@ -71,8 +80,20 @@
                                 'rect' => ($el['resolved_shape_corner_radius_cm'] ?? 0) . 'cm',
                                 default => '0',
                             };
+                            // padding_cm insetea el color hacia adentro de su propia caja
+                            // (un div vacío no se achica con "padding" normal de CSS).
+                            $paddingCm = (float) ($el['padding_cm'] ?? 0);
+                            $innerWidthCm = max(0, ($el['width_cm'] ?? 1) - 2 * $paddingCm);
+                            $innerHeightCm = max(0, ($el['height_cm'] ?? 1) - 2 * $paddingCm);
                         @endphp
-                        <div style="width:100%; height:100%; border-radius: {{ $borderRadius }}; background: {{ ($el['color']['mode'] ?? 'hex') === 'cmyk' ? 'cmyk(' . $el['color']['value'] . ')' : ($el['color']['value'] ?? '#FFFFFF') }};"></div>
+                        <div style="
+                            width: {{ $innerWidthCm }}cm;
+                            height: {{ $innerHeightCm }}cm;
+                            margin: {{ $paddingCm }}cm;
+                            overflow: hidden;
+                            border-radius: {{ $borderRadius }};
+                            background: {{ ($el['color']['mode'] ?? 'hex') === 'cmyk' ? 'cmyk(' . $el['color']['value'] . ')' : ($el['color']['value'] ?? '#FFFFFF') }};
+                        "></div>
                         @break
 
                     @case('icon')
@@ -82,13 +103,23 @@
                         @break
 
                     @case('text')
-                        <p style="
-                            font-family: '{{ $el['resolved_font_family'] ?? 'sans-serif' }}';
-                            font-size: {{ $el['resolved_font_size_px'] ?? $el['font_size_px'] ?? 32 }}px;
-                            color: {{ ($el['color']['mode'] ?? 'hex') === 'cmyk' ? 'cmyk(' . ($el['color']['value'] ?? '0,0,0,1') . ')' : ($el['color']['value'] ?? '#000000') }};
-                        ">
-                            {!! $el['resolved_text_html'] ?? ($el['resolved_text'] ?? '') !!}
-                        </p>
+                        <div class="editor-text-wrap">
+                            <div class="editor-text-cell" style="
+                                vertical-align: {{ $el['vertical_align'] ?? 'middle' }};
+                                text-align: {{ $el['text_align'] ?? 'center' }};
+                            ">
+                                <p style="
+                                    position: relative;
+                                    top: {{ $el['vertical_offset_cm'] ?? 0 }}cm;
+                                    font-family: '{{ $el['resolved_font_family'] ?? 'sans-serif' }}';
+                                    font-size: {{ $el['resolved_font_size_px'] ?? $el['font_size_px'] ?? 32 }}px;
+                                    font-weight: {{ $el['font_weight'] ?? 400 }};
+                                    color: {{ ($el['color']['mode'] ?? 'hex') === 'cmyk' ? 'cmyk(' . ($el['color']['value'] ?? '0,0,0,1') . ')' : ($el['color']['value'] ?? '#000000') }};
+                                ">
+                                    {!! $el['resolved_text_html'] ?? ($el['resolved_text'] ?? '') !!}
+                                </p>
+                            </div>
+                        </div>
                         @break
 
                     @case('shape')
