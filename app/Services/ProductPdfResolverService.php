@@ -47,7 +47,8 @@ class ProductPdfResolverService
                     $customColor,
                     $customIcon,
                     $fecha,
-                    [$form['name'] ?? '']
+                    [$form['name'] ?? ''],
+                    [$form['lastName'] ?? '']
                 );
                 Log::info("PDF generado desde diseño del editor para {$nombreCompleto}, design ID: {$design->id}");
                 return $paths;

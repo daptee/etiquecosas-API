@@ -179,7 +179,7 @@ Un diseño de **dos páginas** es simplemente dos entradas en `pages`, cada una 
 | `icon_id` | solo en `icon` | ID de `personalization_icons` (catálogo existente, `GET /api/icons`) |
 | `font_id` | solo en `text` | ID de `typographies` (catálogo existente, `GET /api/typographies`) |
 | `font_size_px` | solo en `text` | Tamaño de fuente por defecto (se usa si no hay `font_size_rules`, o si ninguna regla matchea) |
-| `content` | solo en `text` | Texto o placeholder. Hoy el único placeholder soportado es `{{customer_name}}` (se reemplaza por el nombre que puso el cliente en el checkout). **Nunca puede llevar HTML** — se limpia en el servidor |
+| `content` | solo en `text` | Texto o placeholder. Placeholders soportados: `{{customer_name}}` (nombre completo), `{{customer_first_name}}` (solo nombre) y `{{customer_last_name}}` (solo apellido) — ver nota abajo. **Nunca puede llevar HTML** — se limpia en el servidor |
 | `max_lines` | solo en `text`, opcional (default `3`) | Máximo de renglones en los que se puede partir el texto. Se clampea entre 1 y 20 |
 | `min_lines` | solo en `text`, opcional (default `1`) | Mínimo de renglones — si el texto entra en menos, se completa con renglones vacíos para reservar el espacio. Se clampea entre 1 y 20 |
 | `max_chars_per_line` | solo en `text`, opcional (default `10`) | Caracteres por renglón antes de cortar a la siguiente palabra. Se clampea entre 1 y 200 |
@@ -189,7 +189,16 @@ Un diseño de **dos páginas** es simplemente dos entradas en `pages`, cada una 
 | `editable_by_customer` | opcional (default `false`) | Si es `true`, el cliente puede modificar este elemento en el checkout |
 | `editable_field` | requerido si `editable_by_customer` es `true` | `text` \| `color` \| `icon` — qué puede cambiar el cliente en ese elemento |
 
-**`max_lines` / `min_lines` / `max_chars_per_line`**: el corte de renglones usa `formatName()` — si el texto es el nombre del cliente (`content: "{{customer_name}}"`), se corta respetando la separación nombre/apellido (máximo 2 renglones reales aunque `max_lines` sea mayor); si es un texto fijo, se corta por palabras completas. El detalle completo con ejemplos está en [FORMATO_NOMBRES_PDF.md](FORMATO_NOMBRES_PDF.md).
+**Nombre y apellido en posiciones separadas**: si querés poner el nombre en un extremo de la etiqueta y el apellido en otro, usá **dos elementos `text` distintos** — uno con `content: "{{customer_first_name}}"` y otro con `content: "{{customer_last_name}}"` — cada uno con su propio `x_cm`/`y_cm`. Por ejemplo:
+
+```json
+{ "type": "text", "content": "{{customer_first_name}}", "x_cm": 0.3, "y_cm": 0.3, "width_cm": 2, "height_cm": 1, "font_size_px": 40 },
+{ "type": "text", "content": "{{customer_last_name}}", "x_cm": 3.5, "y_cm": 1.8, "width_cm": 2, "height_cm": 1, "font_size_px": 40 }
+```
+
+`{{customer_name}}` sigue existiendo para cuando querés nombre y apellido juntos en un solo bloque (con el corte automático nombre/apellido de `formatName()`). `{{customer_first_name}}`/`{{customer_last_name}}` en cambio son texto plano — cada uno se corta solo por palabras si no entra en `max_chars_per_line` (normalmente no hace falta, un nombre o apellido solo rara vez necesita más de un renglón).
+
+**`max_lines` / `min_lines` / `max_chars_per_line`**: el corte de renglones usa `formatName()` — solo `content: "{{customer_name}}"` activa el corte especial de nombre/apellido (máximo 2 renglones reales aunque `max_lines` sea mayor); cualquier otro texto (incluidos `{{customer_first_name}}`/`{{customer_last_name}}` y los textos fijos) se corta por palabras completas. El detalle completo con ejemplos está en [FORMATO_NOMBRES_PDF.md](FORMATO_NOMBRES_PDF.md).
 
 **`font_size_rules`** — lista ordenada por `max_chars` (de menor a mayor); se usa la primera regla cuyo `max_chars` sea mayor o igual a la cantidad de caracteres del texto. Una regla sin `max_chars` (o `null`) actúa como "para el resto" y conviene ponerla al final:
 

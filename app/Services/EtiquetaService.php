@@ -295,7 +295,7 @@ class EtiquetaService
      * del front (product_pdf_designs), en vez de las vistas fijas por temática.
      * No modifica generarEtiquetas(): es el equivalente para diseños nuevos.
      */
-    public static function generarEtiquetasDesdeDesign(int $ventaId, ProductPdfDesign $design, $productOrder, array $nombres, $customColor, $customIcon, $fechaCompra = null, array $firstNames = []): array
+    public static function generarEtiquetasDesdeDesign(int $ventaId, ProductPdfDesign $design, $productOrder, array $nombres, $customColor, $customIcon, $fechaCompra = null, array $firstNames = [], array $lastNames = []): array
     {
         $outputFiles = [];
         $fechaCarpeta = $fechaCompra
@@ -309,12 +309,13 @@ class EtiquetaService
 
         foreach ($nombres as $idx => $nombre) {
             $firstName = $firstNames[$idx] ?? null;
+            $lastName = $lastNames[$idx] ?? null;
 
-            $resolvedPages = array_map(function ($page) use ($nombre, $firstName, $customColor, $customIcon) {
+            $resolvedPages = array_map(function ($page) use ($nombre, $firstName, $lastName, $customColor, $customIcon) {
                 return [
                     'sheet' => $page['sheet'] ?? ['width_cm' => 18.5, 'height_cm' => 29],
                     'elements' => array_map(
-                        fn($el) => self::resolverElementoDesign($el, $nombre, $firstName, $customColor, $customIcon),
+                        fn($el) => self::resolverElementoDesign($el, $nombre, $firstName, $lastName, $customColor, $customIcon),
                         $page['elements'] ?? []
                     ),
                 ];
@@ -446,7 +447,7 @@ class EtiquetaService
      * catálogos existentes, texto con el nombre del cliente, y overrides del cliente
      * (color/ícono) SOLO si el elemento fue marcado como editable por el admin.
      */
-    private static function resolverElementoDesign(array $el, string $nombre, ?string $firstName, $customColor, $customIcon): array
+    private static function resolverElementoDesign(array $el, string $nombre, ?string $firstName, ?string $lastName, $customColor, $customIcon): array
     {
         $type = $el['type'] ?? null;
         $editable = ($el['editable_by_customer'] ?? false) === true;
@@ -477,7 +478,11 @@ class EtiquetaService
             $content = $el['content'] ?? '{{customer_name}}';
             $isCustomerName = str_contains($content, '{{customer_name}}');
             $el['is_customer_name'] = $isCustomerName;
-            $el['resolved_text'] = str_replace('{{customer_name}}', $nombre, $content);
+            $el['resolved_text'] = str_replace(
+                ['{{customer_name}}', '{{customer_first_name}}', '{{customer_last_name}}'],
+                [$nombre, $firstName ?? '', $lastName ?? ''],
+                $content
+            );
 
             $el['resolved_font_family'] = null;
             $el['resolved_font_files'] = [];

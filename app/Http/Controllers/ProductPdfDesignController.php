@@ -186,7 +186,9 @@ class ProductPdfDesignController extends Controller
     {
         $design = $this->findObject(ProductPdfDesign::class, $id);
 
-        $nombre = $request->query('name', 'NOMBRE EJEMPLO');
+        $firstName = $request->query('firstName', 'NOMBRE');
+        $lastName = $request->query('lastName', 'APELLIDO');
+        $nombre = trim("{$firstName} {$lastName}");
 
         $productOrder = (object)[
             'id' => 'preview-' . $design->id,
@@ -201,7 +203,9 @@ class ProductPdfDesignController extends Controller
                 [$nombre],
                 null,
                 null,
-                now()
+                now(),
+                [$firstName],
+                [$lastName]
             );
         } catch (\Throwable $e) {
             return $this->error('Error generando la vista previa: ' . $e->getMessage(), 500);
