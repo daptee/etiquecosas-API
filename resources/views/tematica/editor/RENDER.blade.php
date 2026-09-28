@@ -131,6 +131,15 @@
                                 'bottom' => ['100%', 'translateY(-100%)'],
                                 default => ['50%', 'translateY(-50%)'],
                             };
+
+                            // Corrección óptica: el centrado geométrico (basado en la
+                            // caja de línea completa) deja el texto visualmente "bajo"
+                            // cuando no tiene descendentes (g,j,p,q,y) — el espacio de
+                            // descendente de la fuente sigue contando en la caja aunque
+                            // no se use. Se nudgea hacia arriba una fracción del tamaño
+                            // de fuente para compensar.
+                            $fontSizePxActual = $el['resolved_font_size_px'] ?? $el['font_size_px'] ?? 32;
+                            $opticalNudgePx = $fontSizePxActual * 0.05;
                         @endphp
                         <div class="editor-text-wrap" style="
                             top: {{ $wrapTop }};
@@ -138,8 +147,9 @@
                             text-align: {{ $el['text_align'] ?? 'center' }};
                         ">
                             <p style="
+                                margin-top: -{{ $opticalNudgePx }}px;
                                 font-family: '{{ $el['resolved_font_family'] ?? 'sans-serif' }}';
-                                font-size: {{ $el['resolved_font_size_px'] ?? $el['font_size_px'] ?? 32 }}px;
+                                font-size: {{ $fontSizePxActual }}px;
                                 font-weight: {{ $el['font_weight'] ?? 400 }};
                                 color: {{ ($el['color']['mode'] ?? 'hex') === 'cmyk' ? 'cmyk(' . ($el['color']['value'] ?? '0,0,0,1') . ')' : ($el['color']['value'] ?? '#000000') }};
                             ">
