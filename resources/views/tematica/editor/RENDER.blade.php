@@ -126,9 +126,15 @@
                             // Centrado real (no una estimación): crece parejo hacia
                             // los dos lados desde el punto elegido si el texto termina
                             // siendo más alto que la caja declarada.
+                            // vertical_align "bottom": se le suma un empujón hacia abajo
+                            // (fracción del tamaño de fuente) para compensar el espacio de
+                            // interlineado invisible que queda por debajo de las letras —
+                            // si no, el texto queda visualmente más arriba de lo esperado.
+                            $fontSizePxActual = $el['resolved_font_size_px'] ?? $el['font_size_px'] ?? 32;
+                            $bottomNudgePx = $fontSizePxActual * 0.20;
                             [$wrapTop, $wrapTransform] = match ($el['vertical_align'] ?? 'middle') {
                                 'top' => ['0%', 'none'],
-                                'bottom' => ['100%', 'translateY(-100%)'],
+                                'bottom' => ['100%', "translateY(-100%) translateY({$bottomNudgePx}px)"],
                                 default => ['50%', 'translateY(-50%)'],
                             };
                         @endphp
