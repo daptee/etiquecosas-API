@@ -139,7 +139,7 @@
                             // no se use. Se nudgea hacia arriba una fracción del tamaño
                             // de fuente para compensar.
                             $fontSizePxActual = $el['resolved_font_size_px'] ?? $el['font_size_px'] ?? 32;
-                            $opticalNudgePx = $fontSizePxActual * 0.05;
+                            $opticalNudgePx = $fontSizePxActual * 0.03;
                         @endphp
                         <div class="editor-text-wrap" style="
                             top: {{ $wrapTop }};
