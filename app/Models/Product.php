@@ -146,6 +146,21 @@ class Product extends Model
         return $this->hasMany(ProductImage::class)->orderBy('position');
     }
 
+    /**
+     * Diseños de PDF del editor vinculados a este producto (solo los
+     * publicados y activos: son los únicos que realmente se usan para
+     * generar/previsualizar una etiqueta real). pivot.themeKey indica a
+     * qué variante corresponde cada uno.
+     */
+    public function pdfDesigns()
+    {
+        return $this->belongsToMany(ProductPdfDesign::class, 'product_pdf_design_products')
+            ->withPivot('id', 'theme_key')
+            ->withTimestamps()
+            ->where('product_pdf_designs.is_published', true)
+            ->where('product_pdf_designs.status_id', 1);
+    }
+
     public function relatedProducts()
     {
         return $this->belongsToMany(Product::class, 'product_related_product', 'product_id', 'related_product_id');

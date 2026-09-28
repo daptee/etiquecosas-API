@@ -398,7 +398,9 @@ class ProductController extends Controller
             'relatedProducts.images:id,product_id,img,is_main',
             'relatedProducts.tag:id,name,color',
             'relatedProducts.stockStatus:id,name',
-            'variants'
+            'variants',
+            'pdfDesigns:id,label_shape_id,name,data',
+            'pdfDesigns.labelShape:id,name,shape_type,width_cm,height_cm,data',
         ])->makeHidden([
                     'created_at',
                     'updated_at'
@@ -458,7 +460,9 @@ class ProductController extends Controller
             'relatedProducts.images:id,product_id,img,is_main',
             'relatedProducts.tag:id,name,color',
             'relatedProducts.stockStatus:id,name',
-            'variants'
+            'variants',
+            'pdfDesigns:id,label_shape_id,name,data',
+            'pdfDesigns.labelShape:id,name,shape_type,width_cm,height_cm,data',
         ])->makeHidden([
                     'created_at',
                     'updated_at'

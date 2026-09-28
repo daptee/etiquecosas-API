@@ -116,6 +116,7 @@ Route::prefix('v1')->group(function () {
 
     // product pdf designs (diseños armados desde el editor de PDFs)
     Route::get('product-pdf-designs', [ProductPdfDesignController::class, 'index']);
+    Route::get('product-pdf-designs/{id}/preview', [ProductPdfDesignController::class, 'preview']);
 
 
     // Coupons
