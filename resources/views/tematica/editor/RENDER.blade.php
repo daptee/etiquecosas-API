@@ -38,21 +38,20 @@
 .editor-element {
     position: absolute;
 }
-/* Centrado simétrico real: si el texto necesita más alto que la caja
-   declarada (nombres largos, varios renglones), crece por igual hacia
-   arriba y hacia abajo desde el centro de la caja, en vez de "colgar" hacia
-   abajo desde el borde superior (que es lo que pasa con table-cell cuando
-   el contenido no entra). */
+/* vertical_offset_cm ya viene resuelto desde el editor como la distancia
+   exacta desde el borde superior de la caja hasta donde debe arrancar el
+   bloque de texto (el editor ya calculó ahí adentro top/middle/bottom y la
+   cantidad de renglones estimada) — acá NO hay que centrar de nuevo, solo
+   posicionar el texto en ese offset tal cual, o se duplica el corrimiento. */
 .editor-text-wrap {
     position: absolute;
     left: 0;
-    top: 50%;
+    top: 0;
     width: 100%;
-    transform: translateY(-50%);
 }
 .editor-element p {
     margin: 0;
-    line-height: 1.1;
+    line-height: 1.15;
 }
 </style>
 </head>
@@ -122,24 +121,11 @@
                         @break
 
                     @case('text')
-                        @php
-                            // Centrado simétrico real alrededor del punto vertical elegido,
-                            // sin importar si el contenido termina siendo más alto que la
-                            // caja (crece parejo hacia los dos lados, no solo hacia abajo).
-                            [$wrapTop, $wrapTransform] = match ($el['vertical_align'] ?? 'middle') {
-                                'top' => ['0%', 'none'],
-                                'bottom' => ['100%', 'translateY(-100%)'],
-                                default => ['50%', 'translateY(-50%)'],
-                            };
-                        @endphp
                         <div class="editor-text-wrap" style="
-                            top: {{ $wrapTop }};
-                            transform: {{ $wrapTransform }};
+                            top: {{ $el['vertical_offset_cm'] ?? 0 }}cm;
                             text-align: {{ $el['text_align'] ?? 'center' }};
                         ">
                             <p style="
-                                position: relative;
-                                top: {{ $el['vertical_offset_cm'] ?? 0 }}cm;
                                 font-family: '{{ $el['resolved_font_family'] ?? 'sans-serif' }}';
                                 font-size: {{ $el['resolved_font_size_px'] ?? $el['font_size_px'] ?? 32 }}px;
                                 font-weight: {{ $el['font_weight'] ?? 400 }};

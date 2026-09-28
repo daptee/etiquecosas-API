@@ -652,23 +652,19 @@ class EtiquetaService
 
     /**
      * Tamaño de fuente configurable según cantidad de caracteres: font_size_rules
-     * (o su alias del editor del front, length_rules) es una lista de
-     * { max_chars, font_size_px } — se usa la primera regla cuyo max_chars sea
-     * mayor o igual a la longitud del texto (max_chars null/ausente = sin
-     * límite, sirve de regla "para el resto"). Si no hay reglas, ninguna
-     * matchea, o length_rules_enabled viene en false, se usa el font_size_px
-     * fijo del elemento.
+     * es una lista de { max_chars, font_size_px } ya resuelta por el editor
+     * (incluye la regla "para el resto" con max_chars null) — se usa la
+     * primera regla cuyo max_chars sea mayor o igual a la longitud del texto.
+     * `length_rules`/`length_rules_enabled` son solo el estado editable del
+     * editor (sin el catch-all) y NO se usan acá: cuando el toggle está
+     * prendido, el editor ya manda el resultado en font_size_rules; cuando
+     * está apagado, no manda font_size_rules en absoluto. Si no hay
+     * font_size_rules o ninguna matchea, se usa el font_size_px fijo.
      */
     private static function resolverTamanoFuente(array $el): ?int
     {
         $largo = mb_strlen($el['resolved_text'] ?? '', 'UTF-8');
-
-        $reglas = null;
-        if (array_key_exists('length_rules_enabled', $el)) {
-            $reglas = $el['length_rules_enabled'] ? ($el['length_rules'] ?? null) : null;
-        } else {
-            $reglas = $el['font_size_rules'] ?? $el['length_rules'] ?? null;
-        }
+        $reglas = $el['font_size_rules'] ?? null;
 
         if (!empty($reglas) && is_array($reglas)) {
             $reglasOrdenadas = $reglas;
