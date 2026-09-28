@@ -38,13 +38,17 @@
 .editor-element {
     position: absolute;
 }
+/* Centrado simétrico real: si el texto necesita más alto que la caja
+   declarada (nombres largos, varios renglones), crece por igual hacia
+   arriba y hacia abajo desde el centro de la caja, en vez de "colgar" hacia
+   abajo desde el borde superior (que es lo que pasa con table-cell cuando
+   el contenido no entra). */
 .editor-text-wrap {
-    display: table;
+    position: absolute;
+    left: 0;
+    top: 50%;
     width: 100%;
-    height: 100%;
-}
-.editor-text-cell {
-    display: table-cell;
+    transform: translateY(-50%);
 }
 .editor-element p {
     margin: 0;
@@ -103,22 +107,31 @@
                         @break
 
                     @case('text')
-                        <div class="editor-text-wrap">
-                            <div class="editor-text-cell" style="
-                                vertical-align: {{ $el['vertical_align'] ?? 'middle' }};
-                                text-align: {{ $el['text_align'] ?? 'center' }};
+                        @php
+                            // Centrado simétrico real alrededor del punto vertical elegido,
+                            // sin importar si el contenido termina siendo más alto que la
+                            // caja (crece parejo hacia los dos lados, no solo hacia abajo).
+                            [$wrapTop, $wrapTransform] = match ($el['vertical_align'] ?? 'middle') {
+                                'top' => ['0%', 'none'],
+                                'bottom' => ['100%', 'translateY(-100%)'],
+                                default => ['50%', 'translateY(-50%)'],
+                            };
+                        @endphp
+                        <div class="editor-text-wrap" style="
+                            top: {{ $wrapTop }};
+                            transform: {{ $wrapTransform }};
+                            text-align: {{ $el['text_align'] ?? 'center' }};
+                        ">
+                            <p style="
+                                position: relative;
+                                top: {{ $el['vertical_offset_cm'] ?? 0 }}cm;
+                                font-family: '{{ $el['resolved_font_family'] ?? 'sans-serif' }}';
+                                font-size: {{ $el['resolved_font_size_px'] ?? $el['font_size_px'] ?? 32 }}px;
+                                font-weight: {{ $el['font_weight'] ?? 400 }};
+                                color: {{ ($el['color']['mode'] ?? 'hex') === 'cmyk' ? 'cmyk(' . ($el['color']['value'] ?? '0,0,0,1') . ')' : ($el['color']['value'] ?? '#000000') }};
                             ">
-                                <p style="
-                                    position: relative;
-                                    top: {{ $el['vertical_offset_cm'] ?? 0 }}cm;
-                                    font-family: '{{ $el['resolved_font_family'] ?? 'sans-serif' }}';
-                                    font-size: {{ $el['resolved_font_size_px'] ?? $el['font_size_px'] ?? 32 }}px;
-                                    font-weight: {{ $el['font_weight'] ?? 400 }};
-                                    color: {{ ($el['color']['mode'] ?? 'hex') === 'cmyk' ? 'cmyk(' . ($el['color']['value'] ?? '0,0,0,1') . ')' : ($el['color']['value'] ?? '#000000') }};
-                                ">
-                                    {!! $el['resolved_text_html'] ?? ($el['resolved_text'] ?? '') !!}
-                                </p>
-                            </div>
+                                {!! $el['resolved_text_html'] ?? ($el['resolved_text'] ?? '') !!}
+                            </p>
                         </div>
                         @break
 
