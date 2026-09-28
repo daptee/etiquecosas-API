@@ -8,6 +8,7 @@
 /public/icons
 /public/fonts
 /storage/fonts
+/public/fonts/installed-fonts.json
 /storage/*.key
 /vendor
 .env
