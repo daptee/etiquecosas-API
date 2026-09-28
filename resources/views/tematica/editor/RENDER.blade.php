@@ -38,15 +38,16 @@
 .editor-element {
     position: absolute;
 }
-/* vertical_offset_cm ya viene resuelto desde el editor como la distancia
-   exacta desde el borde superior de la caja hasta donde debe arrancar el
-   bloque de texto (el editor ya calculó ahí adentro top/middle/bottom y la
-   cantidad de renglones estimada) — acá NO hay que centrar de nuevo, solo
-   posicionar el texto en ese offset tal cual, o se duplica el corrimiento. */
+/* El editor centra el texto EN VIVO en su propio lienzo (flexbox, con el
+   contenido real ya resuelto), no con una estimación. vertical_offset_cm
+   es una estimación del editor (cuántos renglones va a ocupar el texto) y
+   puede quedar levemente corrida respecto al centrado real — así que acá
+   centramos de verdad con el texto ya armado (resolved_text_html), en vez
+   de confiar en esa estimación. Crece simétrico hacia los dos lados si el
+   contenido termina siendo más alto que la caja declarada. */
 .editor-text-wrap {
     position: absolute;
     left: 0;
-    top: 0;
     width: 100%;
 }
 .editor-element p {
@@ -121,8 +122,19 @@
                         @break
 
                     @case('text')
+                        @php
+                            // Centrado real (no una estimación): crece parejo hacia
+                            // los dos lados desde el punto elegido si el texto termina
+                            // siendo más alto que la caja declarada.
+                            [$wrapTop, $wrapTransform] = match ($el['vertical_align'] ?? 'middle') {
+                                'top' => ['0%', 'none'],
+                                'bottom' => ['100%', 'translateY(-100%)'],
+                                default => ['50%', 'translateY(-50%)'],
+                            };
+                        @endphp
                         <div class="editor-text-wrap" style="
-                            top: {{ $el['vertical_offset_cm'] ?? 0 }}cm;
+                            top: {{ $wrapTop }};
+                            transform: {{ $wrapTransform }};
                             text-align: {{ $el['text_align'] ?? 'center' }};
                         ">
                             <p style="

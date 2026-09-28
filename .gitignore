@@ -6,7 +6,8 @@
 /public/images
 /public/products
 /public/icons
-/public/fonts/installed-fonts.json
+/public/fonts
+/storage/fonts
 /storage/*.key
 /vendor
 .env
