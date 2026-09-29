@@ -130,12 +130,16 @@
                             // (fracción del tamaño de fuente) para compensar el espacio de
                             // interlineado invisible que queda por debajo de las letras —
                             // si no, el texto queda visualmente más arriba de lo esperado.
+                            // "middle": empujón hacia arriba (fracción más chica), el
+                            // centrado geométrico deja el texto un poco más abajo de lo
+                            // esperado.
                             $fontSizePxActual = $el['resolved_font_size_px'] ?? $el['font_size_px'] ?? 32;
                             $bottomNudgePx = $fontSizePxActual * 0.20;
+                            $middleNudgePx = $fontSizePxActual * 0.20;
                             [$wrapTop, $wrapTransform] = match ($el['vertical_align'] ?? 'middle') {
                                 'top' => ['0%', 'none'],
                                 'bottom' => ['100%', "translateY(-100%) translateY({$bottomNudgePx}px)"],
-                                default => ['50%', 'translateY(-50%)'],
+                                default => ['50%', "translateY(-50%) translateY(-{$middleNudgePx}px)"],
                             };
                         @endphp
                         <div class="editor-text-wrap" style="

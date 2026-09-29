@@ -157,6 +157,98 @@ class ProductPdfDesignController extends Controller
     }
 
     /**
+     * Vincula este diseño a un producto para VARIAS temáticas/variantes a la
+     * vez (un theme_key por vínculo). Si alguna combinación producto+theme_key
+     * ya estaba vinculada a otro diseño, esa puntual se salta (no aborta el
+     * resto) y se informa en "skipped".
+     */
+    public function bulkAttachProducts(Request $request, $id)
+    {
+        $design = $this->findObject(ProductPdfDesign::class, $id);
+
+        $validator = Validator::make($request->all(), [
+            'productId' => 'required|exists:products,id',
+            'themeKeys' => 'required|array|min:1',
+            'themeKeys.*' => 'nullable|integer',
+        ]);
+        if ($validator->fails()) {
+            $this->logAudit(Auth::user(), 'Bulk Attach Products to Pdf Design', $request->all(), $validator->errors());
+            return $this->validationError($validator->errors());
+        }
+
+        $created = [];
+        $skipped = [];
+
+        foreach ($request->themeKeys as $themeKey) {
+            try {
+                $link = ProductPdfDesignProduct::create([
+                    'product_pdf_design_id' => $design->id,
+                    'product_id' => $request->productId,
+                    'theme_key' => $themeKey,
+                ]);
+                $created[] = $link;
+            } catch (QueryException $e) {
+                $skipped[] = [
+                    'themeKey' => $themeKey,
+                    'reason' => 'Ya existe un diseño vinculado a este producto y esta variante/temática',
+                ];
+            }
+        }
+
+        $design->load(['products', 'labelShape', 'generalStatus']);
+        $this->logAudit(Auth::user(), 'Bulk Attach Products to Pdf Design', $request->all(), [
+            'created' => count($created),
+            'skipped' => $skipped,
+        ]);
+
+        return $this->success($design, 'Vínculos creados', [
+            'created' => count($created),
+            'skipped' => $skipped,
+        ]);
+    }
+
+    /**
+     * Desvincula este diseño de un producto para VARIAS temáticas/variantes a
+     * la vez. Para desvincular el vínculo "sin variante" (theme_key null),
+     * incluí `null` dentro de themeKeys.
+     */
+    public function bulkDetachProducts(Request $request, $id)
+    {
+        $design = $this->findObject(ProductPdfDesign::class, $id);
+
+        $validator = Validator::make($request->all(), [
+            'productId' => 'required|exists:products,id',
+            'themeKeys' => 'required|array|min:1',
+            'themeKeys.*' => 'nullable|integer',
+        ]);
+        if ($validator->fails()) {
+            $this->logAudit(Auth::user(), 'Bulk Detach Products from Pdf Design', $request->all(), $validator->errors());
+            return $this->validationError($validator->errors());
+        }
+
+        $themeKeys = $request->themeKeys;
+        $hasNull = in_array(null, $themeKeys, true);
+        $nonNullKeys = array_values(array_filter($themeKeys, fn($k) => $k !== null));
+
+        $deletedCount = ProductPdfDesignProduct::where('product_pdf_design_id', $design->id)
+            ->where('product_id', $request->productId)
+            ->where(function ($q) use ($nonNullKeys, $hasNull) {
+                if (!empty($nonNullKeys)) {
+                    $q->whereIn('theme_key', $nonNullKeys);
+                }
+                if ($hasNull) {
+                    $q->orWhereNull('theme_key');
+                }
+            })
+            ->delete();
+
+        $design->load(['products', 'labelShape', 'generalStatus']);
+        $this->logAudit(Auth::user(), 'Bulk Detach Products from Pdf Design', $request->all(), ['deleted' => $deletedCount]);
+
+        return $this->success($design, 'Vínculos eliminados', ['deleted' => $deletedCount]);
+    }
+
+    /**
      * Quita el vínculo entre este diseño y un producto (por el id del vínculo,
      * no del producto, porque un mismo producto podría estar vinculado más de
      * una vez con distintos theme_key).
