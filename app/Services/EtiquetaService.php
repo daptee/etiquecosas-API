@@ -309,11 +309,15 @@ class EtiquetaService
 
         // Íconos "por atributo": productos con atributos tipo ícono (ej. "Iconos",
         // "Color banda 2") ya traen su propio ícono en el valor elegido de la
-        // variante (attribute_values.icon vía variant.variant.attributesvalues).
-        // El elemento del diseño pide ESE ícono con dynamic_attribute_id,
-        // matcheando el id del ATRIBUTO (no del valor) — distinto del ícono
-        // "libre" que elige el cliente en customization_data.icon.
-        $attributeIcons = collect($productOrder->variant?->variant['attributesvalues'] ?? [])
+        // variante. OJO: ese ícono NO está en la columna JSON cruda
+        // (variant->variant['attributesvalues'] solo tiene id/value) — se
+        // resuelve recién en ProductVariant::toArray() (metadata -> icon_id ->
+        // PersonalizationIcon), así que hay que pasar por ahí, no leer la
+        // columna cruda directo. El elemento del diseño pide ese ícono con
+        // dynamic_attribute_id, matcheando el id del ATRIBUTO (no del valor) —
+        // distinto del ícono "libre" que elige el cliente en
+        // customization_data.icon.
+        $attributeIcons = collect($productOrder->variant?->toArray()['variant']['attributesvalues'] ?? [])
             ->filter(fn($av) => !empty($av['icon']) && !empty($av['attribute']['id']))
             ->keyBy(fn($av) => $av['attribute']['id'])
             ->map(fn($av) => $av['icon']);
