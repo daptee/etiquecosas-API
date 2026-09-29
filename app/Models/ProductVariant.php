@@ -77,6 +77,41 @@ class ProductVariant extends Model
         }, $channels);
     }
 
+    /**
+     * Para atributos de tipo "icon", el metadata del valor trae {"value": <id>}
+     * que apunta a personalization_icons; devuelve el path del icono.
+     */
+    private static function formatAttributeValues($attributesValues): array
+    {
+        $iconIds = $attributesValues
+            ->filter(fn($attr) => ($attr->attribute->type ?? null) === 'icon')
+            ->map(fn($attr) => $attr->metadata['value'] ?? null)
+            ->filter()
+            ->unique();
+
+        $icons = $iconIds->isEmpty()
+            ? collect()
+            : PersonalizationIcon::withTrashed()->whereIn('id', $iconIds)->pluck('icon', 'id');
+
+        return $attributesValues->map(function ($attr) use ($icons) {
+            $data = [
+                'id' => $attr->id,
+                'value' => $attr->value,
+            ];
+
+            if (($attr->attribute->type ?? null) === 'icon') {
+                $data['icon'] = $icons->get($attr->metadata['value'] ?? null);
+            }
+
+            $data['attribute'] = [
+                'id' => $attr->attribute->id ?? null,
+                'name' => $attr->attribute->name ?? null,
+            ];
+
+            return $data;
+        })->values()->toArray();
+    }
+
     public function toArray()
     {
         $array = parent::toArray();
@@ -98,16 +133,7 @@ class ProductVariant extends Model
             'wholesale_min_amount' => $this->variant['wholesale_min_amount'] ?? null,
             'order' => $this->variant['order'] ?? null,
             'is_heritable' => isset($this->variant['is_heritable']) ? (int) $this->variant['is_heritable'] : null,
-            'attributesvalues' => $this->attributes_values->map(function ($attr) {
-                return [
-                    'id' => $attr->id,
-                    'value' => $attr->value,
-                    'attribute' => [
-                        'id' => $attr->attribute->id ?? null,
-                        'name' => $attr->attribute->name ?? null,
-                    ],
-                ];
-            })->toArray(),
+            'attributesvalues' => self::formatAttributeValues($this->attributes_values),
             'available_attributes' => $this->available_attributes_resolved->toArray(),
         ];
 
