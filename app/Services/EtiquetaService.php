@@ -471,6 +471,13 @@ class EtiquetaService
             if ($shape) {
                 $el['resolved_shape_type'] = $shape->shape_type;
                 $el['resolved_shape_corner_radius_cm'] = $shape->data['corner_radius_cm'] ?? 0;
+                // Formas "custom" (data.outline_svg): el path viene dibujado en
+                // el propio sistema de coordenadas del label_shape (su
+                // width_cm/height_cm de catálogo), no en el del elemento —
+                // hace falta ese tamaño original para el viewBox del SVG.
+                $el['resolved_shape_outline_svg'] = $shape->data['outline_svg'] ?? null;
+                $el['resolved_shape_width_cm'] = (float) $shape->width_cm;
+                $el['resolved_shape_height_cm'] = (float) $shape->height_cm;
             }
         }
 

@@ -126,15 +126,35 @@
                                 : 'none';
                             $innerWidthCm = max(0, $declaredWidthCm - 2 * $borderWidthCm);
                             $innerHeightCm = max(0, $declaredHeightCm - 2 * $borderWidthCm);
+                            $backgroundColorCss = ($el['color']['mode'] ?? 'hex') === 'cmyk' ? 'cmyk(' . $el['color']['value'] . ')' : ($el['color']['value'] ?? '#FFFFFF');
                         @endphp
-                        <div style="
-                            width: {{ $innerWidthCm }}cm;
-                            height: {{ $innerHeightCm }}cm;
-                            overflow: hidden;
-                            border-radius: {{ $borderRadius }};
-                            border: {{ $borderCss }};
-                            background: {{ ($el['color']['mode'] ?? 'hex') === 'cmyk' ? 'cmyk(' . $el['color']['value'] . ')' : ($el['color']['value'] ?? '#FFFFFF') }};
-                        "></div>
+                        @if (($el['resolved_shape_type'] ?? null) === 'custom' && !empty($el['resolved_shape_outline_svg']))
+                            @php
+                                // El path viene dibujado en el sistema de coordenadas
+                                // ORIGINAL del label_shape (su width_cm/height_cm de
+                                // catálogo) — el viewBox tiene que ser ESE tamaño, no el
+                                // del elemento ya reescalado en la página, y
+                                // preserveAspectRatio="none" para que estire libremente
+                                // hasta el width_cm/height_cm que el admin le puso acá.
+                                // No soporta borde (border-box a mano no aplica a un path
+                                // arbitrario): si el diseño le pone uno, se ignora.
+                                $shapeViewBoxW = $el['resolved_shape_width_cm'] ?? $declaredWidthCm;
+                                $shapeViewBoxH = $el['resolved_shape_height_cm'] ?? $declaredHeightCm;
+                                $shapeSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' . $shapeViewBoxW . ' ' . $shapeViewBoxH . '" preserveAspectRatio="none">'
+                                    . '<path d="' . $el['resolved_shape_outline_svg'] . '" fill="' . $backgroundColorCss . '" /></svg>';
+                                $shapeSvgUri = 'data:image/svg+xml;base64,' . base64_encode($shapeSvg);
+                            @endphp
+                            <img src="{{ $shapeSvgUri }}" style="width: {{ $declaredWidthCm }}cm; height: {{ $declaredHeightCm }}cm;">
+                        @else
+                            <div style="
+                                width: {{ $innerWidthCm }}cm;
+                                height: {{ $innerHeightCm }}cm;
+                                overflow: hidden;
+                                border-radius: {{ $borderRadius }};
+                                border: {{ $borderCss }};
+                                background: {{ $backgroundColorCss }};
+                            "></div>
+                        @endif
                         @break
 
                     @case('icon')
