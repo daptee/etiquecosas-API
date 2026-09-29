@@ -307,15 +307,26 @@ class EtiquetaService
         $pages = self::normalizarPaginasDesign($design->data ?? []);
         $sufijo = self::limpiarNombreArchivo(strtoupper($design->name ?: 'DESIGN'));
 
+        // Íconos "por atributo": productos con atributos tipo ícono (ej. "Iconos",
+        // "Color banda 2") ya traen su propio ícono en el valor elegido de la
+        // variante (attribute_values.icon vía variant.variant.attributesvalues).
+        // El elemento del diseño pide ESE ícono con dynamic_attribute_id,
+        // matcheando el id del ATRIBUTO (no del valor) — distinto del ícono
+        // "libre" que elige el cliente en customization_data.icon.
+        $attributeIcons = collect($productOrder->variant?->variant['attributesvalues'] ?? [])
+            ->filter(fn($av) => !empty($av['icon']) && !empty($av['attribute']['id']))
+            ->keyBy(fn($av) => $av['attribute']['id'])
+            ->map(fn($av) => $av['icon']);
+
         foreach ($nombres as $idx => $nombre) {
             $firstName = $firstNames[$idx] ?? null;
             $lastName = $lastNames[$idx] ?? null;
 
-            $resolvedPages = array_map(function ($page) use ($nombre, $firstName, $lastName, $customColor, $customIcon) {
+            $resolvedPages = array_map(function ($page) use ($nombre, $firstName, $lastName, $customColor, $customIcon, $attributeIcons) {
                 return [
                     'sheet' => $page['sheet'] ?? ['width_cm' => 18.5, 'height_cm' => 29],
                     'elements' => array_map(
-                        fn($el) => self::resolverElementoDesign($el, $nombre, $firstName, $lastName, $customColor, $customIcon),
+                        fn($el) => self::resolverElementoDesign($el, $nombre, $firstName, $lastName, $customColor, $customIcon, $attributeIcons),
                         $page['elements'] ?? []
                     ),
                 ];
@@ -447,7 +458,7 @@ class EtiquetaService
      * catálogos existentes, texto con el nombre del cliente, y overrides del cliente
      * (color/ícono) SOLO si el elemento fue marcado como editable por el admin.
      */
-    private static function resolverElementoDesign(array $el, string $nombre, ?string $firstName, ?string $lastName, $customColor, $customIcon): array
+    private static function resolverElementoDesign(array $el, string $nombre, ?string $firstName, ?string $lastName, $customColor, $customIcon, $attributeIcons = null): array
     {
         $type = $el['type'] ?? null;
         $editable = ($el['editable_by_customer'] ?? false) === true;
@@ -455,8 +466,16 @@ class EtiquetaService
 
         if ($type === 'icon') {
             $iconPath = null;
+            $dynamicAttributeId = $el['dynamic_attribute_id'] ?? null;
+            $attributeIcon = $dynamicAttributeId && $attributeIcons ? $attributeIcons->get($dynamicAttributeId) : null;
 
-            if ($editable && $field === 'icon' && $customIcon) {
+            if ($attributeIcon) {
+                // Ícono propio del valor de atributo que trae la variante
+                // (ej. "Iconos"/"Color banda 2") — tiene prioridad sobre el
+                // ícono "libre" de customization_data cuando el elemento pide
+                // uno puntual con dynamic_attribute_id.
+                $iconPath = public_path($attributeIcon);
+            } elseif ($editable && $field === 'icon' && $customIcon) {
                 $iconPath = public_path($customIcon);
             } elseif (!empty($el['icon_id'])) {
                 $icon = PersonalizationIcon::find($el['icon_id']);
