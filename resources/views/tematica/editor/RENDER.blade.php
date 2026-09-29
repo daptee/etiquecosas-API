@@ -78,13 +78,18 @@
                 @switch($el['type'] ?? null)
                     @case('background')
                         @php
-                            // Prioridad de esquinas: si el elemento manda su propio
-                            // radius_mode/radius_pct, gana eso; si no, se usa lo que
-                            // haya resuelto la forma del catálogo (label_shape_id).
+                            $declaredWidthCm = (float) ($el['width_cm'] ?? 1);
+                            $declaredHeightCm = (float) ($el['height_cm'] ?? 1);
+
+                            // Radio de esquina en CM (no %): se calcula sobre el tamaño
+                            // DECLARADO del elemento, igual que hace el editor — así el
+                            // resultado visual da lo mismo tenga o no borde (ver nota de
+                            // abajo sobre por qué el % de CSS no sirve acá).
                             if (($el['radius_mode'] ?? null) === 'straight') {
                                 $borderRadius = '0';
                             } elseif (isset($el['radius_pct'])) {
-                                $borderRadius = ((float) $el['radius_pct']) . '%';
+                                $radiusCm = min($declaredWidthCm, $declaredHeightCm) * ((float) $el['radius_pct']) / 100;
+                                $borderRadius = $radiusCm . 'cm';
                             } else {
                                 $shapeType = $el['resolved_shape_type'] ?? null;
                                 $borderRadius = match ($shapeType) {
@@ -94,20 +99,27 @@
                                 };
                             }
 
-                            // padding_cm NO achica el color: es una zona segura para
-                            // dónde el editor deja ubicar íconos/texto dentro de la
-                            // etiqueta, no algo que afecte el relleno de color, que
-                            // siempre llena el width_cm/height_cm completo.
+                            // dompdf pinta el fondo (background) hasta el borde exterior
+                            // del content-box (content + 2×borde), igual que el spec CSS
+                            // de background-clip:border-box — así que para que el total
+                            // (fondo+borde) termine midiendo justo el width_cm/height_cm
+                            // declarado, el <div> tiene que declarar su tamaño ya restado
+                            // el borde (content-box). NO hay que agregarle además un
+                            // margin: dompdf no compensa ese margin corriendo el resto del
+                            // contenido, así que sólo desplaza el dibujo entero hacia
+                            // adentro sin encoger nada, y el conjunto termina invadiendo la
+                            // etiqueta de al lado por el mismo ancho del borde.
                             $borderWidthCm = (float) ($el['border']['width_cm'] ?? 0);
                             $borderColor = $el['border']['color'] ?? null;
                             $borderCss = $borderWidthCm > 0
                                 ? $borderWidthCm . 'cm solid ' . (($borderColor['mode'] ?? 'hex') === 'cmyk' ? 'cmyk(' . $borderColor['value'] . ')' : ($borderColor['value'] ?? '#000000'))
                                 : 'none';
+                            $innerWidthCm = max(0, $declaredWidthCm - 2 * $borderWidthCm);
+                            $innerHeightCm = max(0, $declaredHeightCm - 2 * $borderWidthCm);
                         @endphp
                         <div style="
-                            box-sizing: border-box;
-                            width: 100%;
-                            height: 100%;
+                            width: {{ $innerWidthCm }}cm;
+                            height: {{ $innerHeightCm }}cm;
                             overflow: hidden;
                             border-radius: {{ $borderRadius }};
                             border: {{ $borderCss }};
