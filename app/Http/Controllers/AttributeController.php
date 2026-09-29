@@ -80,7 +80,7 @@ class AttributeController extends Controller
         $valuesData = collect($request->input('values', []))->map(function ($value) {
             return [
                 'value'     => $value['value'],
-                'metadata'  => isset($value['metadata']) ? json_encode($value['metadata']) : null,
+                'metadata'  => $value['metadata'] ?? null,
                 'status_id' => $value['statusId'] ?? 1,
             ];
         })->toArray();
@@ -126,11 +126,11 @@ class AttributeController extends Controller
         foreach ($submittedValues as $data) {
             $updateData = [
                 'value'     => $data['value'],
-                'metadata'  => isset($data['metadata']) ? json_encode($data['metadata']) : null,
+                'metadata'  => $data['metadata'] ?? null,
                 'status_id' => $data['statusId'] ?? 1,
             ];
             if (!empty($data['id']) && in_array($data['id'], $existingIds)) {
-                $attribute->values()->where('id', $data['id'])->update($updateData);
+                $attribute->values()->find($data['id'])?->update($updateData);
             } else {
                 $attribute->values()->create($updateData);
             }

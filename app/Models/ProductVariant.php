@@ -81,11 +81,30 @@ class ProductVariant extends Model
      * Para atributos de tipo "icon", el metadata del valor trae {"value": <id>}
      * que apunta a personalization_icons; devuelve el path del icono.
      */
+    /**
+     * Extrae el id del icono del metadata, que puede venir como
+     * {"value":4}, {"value":[4]} o doblemente codificado ("{\"value\":4}").
+     */
+    private static function iconIdFromMetadata($metadata)
+    {
+        if (is_string($metadata)) {
+            $metadata = json_decode($metadata, true);
+        }
+
+        $value = is_array($metadata) ? ($metadata['value'] ?? null) : null;
+
+        if (is_array($value)) {
+            $value = reset($value) ?: null;
+        }
+
+        return is_numeric($value) ? (int) $value : null;
+    }
+
     private static function formatAttributeValues($attributesValues): array
     {
         $iconIds = $attributesValues
             ->filter(fn($attr) => ($attr->attribute->type ?? null) === 'icon')
-            ->map(fn($attr) => $attr->metadata['value'] ?? null)
+            ->map(fn($attr) => self::iconIdFromMetadata($attr->metadata))
             ->filter()
             ->unique();
 
@@ -100,7 +119,7 @@ class ProductVariant extends Model
             ];
 
             if (($attr->attribute->type ?? null) === 'icon') {
-                $data['icon'] = $icons->get($attr->metadata['value'] ?? null);
+                $data['icon'] = $icons->get(self::iconIdFromMetadata($attr->metadata));
             }
 
             $data['attribute'] = [
