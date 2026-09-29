@@ -17,16 +17,26 @@
         @if (($el['type'] ?? null) === 'text' && !empty($el['resolved_font_family']) && !empty($el['resolved_font_files'][0]))
             @php
                 $fontPath = str_replace('\\', '/', $el['resolved_font_files'][0]);
-                $fontFormat = match (strtolower(pathinfo($fontPath, PATHINFO_EXTENSION))) {
-                    'otf' => 'opentype',
-                    'woff' => 'woff',
-                    'woff2' => 'woff2',
-                    default => 'truetype',
-                };
             @endphp
+            {{-- OJO: format() SIEMPRE tiene que decir 'truetype', sea cual sea
+                 la extensión real (.ttf/.otf/.woff/.eot). El Stylesheet.php de
+                 esta versión de dompdf descarta la @font-face entera si el
+                 format declarado no es literalmente el string "truetype" (ver
+                 vendor/dompdf/dompdf/src/Css/Stylesheet.php:1646) — así que
+                 poner 'opentype' para un .otf hace que dompdf ni siquiera
+                 intente cargar el archivo. php-font-lib, aparte, detecta el
+                 tipo real del archivo por sus primeros bytes (no por este
+                 string), así que decir "truetype" acá no rompe nada. --}}
+            {{-- font-weight tiene que matchear el que usa el <p> de este elemento:
+                 la tipografía subida no distingue variantes por peso (un solo
+                 archivo), así que si se declara la @font-face como "normal" pero
+                 el texto pide font-weight:700, dompdf no encuentra un "bold" de
+                 esa familia y cae directo a Times-Bold en vez de usar el único
+                 archivo que sí tiene registrado. --}}
             @font-face {
                 font-family: '{{ $el['resolved_font_family'] }}';
-                src: url('file://{{ $fontPath }}') format('{{ $fontFormat }}');
+                src: url('file://{{ $fontPath }}') format('truetype');
+                font-weight: {{ $el['font_weight'] ?? 400 }};
             }
         @endif
     @endforeach

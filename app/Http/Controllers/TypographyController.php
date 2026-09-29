@@ -16,7 +16,12 @@ class TypographyController extends Controller
 {
     use FindObject, ApiResponse, Auditable;
 
-    private const ALLOWED_EXTENSIONS = ['ttf', 'otf', 'woff', 'woff2', 'eot'];
+    // .woff2 no tiene ningún parser en php-font-lib (dompdf) — se rechaza acá
+    // en la subida en vez de dejarlo fallar en silencio (cae a una fuente
+    // estándar) recién al generar el PDF. El resto (ttf/otf/woff/eot) sí
+    // funciona, siempre que el @font-face lo declare como 'truetype' (ver
+    // nota en RENDER.blade.php).
+    private const ALLOWED_EXTENSIONS = ['ttf', 'otf', 'woff', 'eot'];
 
     public function index(Request $request)
     {
