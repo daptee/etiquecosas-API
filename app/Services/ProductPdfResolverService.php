@@ -26,12 +26,18 @@ class ProductPdfResolverService
         $fecha
     ): array {
         $variant = $productOrder->variant?->variant;
+        // $tematicaId (attribute_values.id) es solo para el flujo LEGACY de abajo,
+        // no se toca. El diseño nuevo vincula por product_variants.id
+        // (product_pdf_design_products.theme_key = variant_id), que es lo que
+        // manda el front al vincular temáticas — no el primer atributo de la
+        // variante.
         $tematicaId = $productOrder->resolved_attributes_values->first()['id'] ?? null;
+        $variantId = $productOrder->variant_id;
 
         $link = ProductPdfDesignProduct::with('design')
             ->where('product_id', $productOrder->product_id)
-            ->when($variant, fn($q) => $q->where('theme_key', $tematicaId))
-            ->when(!$variant, fn($q) => $q->whereNull('theme_key'))
+            ->when($variantId, fn($q) => $q->where('theme_key', $variantId))
+            ->when(!$variantId, fn($q) => $q->whereNull('theme_key'))
             ->whereHas('design', fn($q) => $q->where('is_published', true)->where('status_id', 1))
             ->first();
 

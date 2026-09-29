@@ -1,8 +1,9 @@
 -- Vincula un diseño (product_pdf_designs) con los productos que lo usan.
 -- Un mismo diseño puede reutilizarse en varios productos; theme_key equivale
--- al id de la variante/temática (attribute_values.id) que selecciona ese
--- diseño DENTRO de ese producto puntual (puede variar de un producto a otro).
--- theme_key NULL = ese producto usa el diseño sin selector de variante.
+-- al id de la variante (product_variants.id, NO attribute_values.id) que
+-- selecciona ese diseño DENTRO de ese producto puntual (puede variar de un
+-- producto a otro). theme_key NULL = ese producto usa el diseño sin selector
+-- de variante.
 CREATE TABLE `product_pdf_design_products` (
   `id`                    BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   `product_pdf_design_id` BIGINT UNSIGNED NOT NULL,

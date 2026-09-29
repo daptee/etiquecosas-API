@@ -93,7 +93,7 @@ Un diseño se puede crear **sin ningún producto vinculado** — sirve como borr
 | Campo | Tipo | Descripción |
 |---|---|---|
 | `productId` | number | Producto que usa este diseño |
-| `themeKey` | number \| null | ID de la variante/temática que, **en ese producto**, selecciona este diseño (el mismo id que hoy usan las `attribute_values` de una variante). `null` = ese producto usa el diseño sin selector de variante |
+| `themeKey` | number \| null | El `id` de `product_variants` (**no** de `attribute_values`) que, **en ese producto**, selecciona este diseño. `null` = ese producto usa el diseño sin selector de variante |
 
 > Un mismo `productId` + `themeKey` solo puede estar vinculado a **un** diseño a la vez (si ya hay un vínculo con esa combinación, hay que desvincularlo antes de crear otro).
 
