@@ -106,6 +106,7 @@ class ProductVariant extends Model
             $data['attribute'] = [
                 'id' => $attr->attribute->id ?? null,
                 'name' => $attr->attribute->name ?? null,
+                'type' => $attr->attribute->type ?? null,
             ];
 
             return $data;
