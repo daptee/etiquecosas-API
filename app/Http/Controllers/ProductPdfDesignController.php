@@ -30,6 +30,18 @@ class ProductPdfDesignController extends Controller
             $query->whereHas('products', fn($q) => $q->where('products.id', $productId));
         }
 
+        if ($statusId = $request->query('statusId')) {
+            $query->where('status_id', $statusId);
+        }
+
+        if ($labelShapeId = $request->query('labelShapeId')) {
+            $query->where('label_shape_id', $labelShapeId);
+        }
+
+        if ($request->filled('isPublished')) {
+            $query->where('is_published', $request->boolean('isPublished'));
+        }
+
         $query->orderBy('name', 'asc');
 
         if (!$perPage) {
@@ -244,6 +256,103 @@ class ProductPdfDesignController extends Controller
 
         $design->load(['products', 'labelShape', 'generalStatus']);
         $this->logAudit(Auth::user(), 'Bulk Detach Products from Pdf Design', $request->all(), ['deleted' => $deletedCount]);
+
+        return $this->success($design, 'Vínculos eliminados', ['deleted' => $deletedCount]);
+    }
+
+    /**
+     * Igual que bulkAttachProducts, pero para VARIOS productos a la vez, cada
+     * uno con su propia lista de temáticas/variantes.
+     */
+    public function bulkAttachMany(Request $request, $id)
+    {
+        $design = $this->findObject(ProductPdfDesign::class, $id);
+
+        $validator = Validator::make($request->all(), [
+            'links' => 'required|array|min:1',
+            'links.*.productId' => 'required|exists:products,id',
+            'links.*.themeKeys' => 'required|array|min:1',
+            'links.*.themeKeys.*' => 'nullable|integer',
+        ]);
+        if ($validator->fails()) {
+            $this->logAudit(Auth::user(), 'Bulk Attach Many Products to Pdf Design', $request->all(), $validator->errors());
+            return $this->validationError($validator->errors());
+        }
+
+        $created = [];
+        $skipped = [];
+
+        foreach ($request->links as $link) {
+            foreach ($link['themeKeys'] as $themeKey) {
+                try {
+                    $created[] = ProductPdfDesignProduct::create([
+                        'product_pdf_design_id' => $design->id,
+                        'product_id' => $link['productId'],
+                        'theme_key' => $themeKey,
+                    ]);
+                } catch (QueryException $e) {
+                    $skipped[] = [
+                        'productId' => $link['productId'],
+                        'themeKey' => $themeKey,
+                        'reason' => 'Ya existe un diseño vinculado a este producto y esta variante/temática',
+                    ];
+                }
+            }
+        }
+
+        $design->load(['products', 'labelShape', 'generalStatus']);
+        $this->logAudit(Auth::user(), 'Bulk Attach Many Products to Pdf Design', $request->all(), [
+            'created' => count($created),
+            'skipped' => $skipped,
+        ]);
+
+        return $this->success($design, 'Vínculos creados', [
+            'created' => count($created),
+            'skipped' => $skipped,
+        ]);
+    }
+
+    /**
+     * Igual que bulkDetachProducts, pero para VARIOS productos a la vez, cada
+     * uno con su propia lista de temáticas/variantes a desvincular.
+     */
+    public function bulkDetachMany(Request $request, $id)
+    {
+        $design = $this->findObject(ProductPdfDesign::class, $id);
+
+        $validator = Validator::make($request->all(), [
+            'links' => 'required|array|min:1',
+            'links.*.productId' => 'required|exists:products,id',
+            'links.*.themeKeys' => 'required|array|min:1',
+            'links.*.themeKeys.*' => 'nullable|integer',
+        ]);
+        if ($validator->fails()) {
+            $this->logAudit(Auth::user(), 'Bulk Detach Many Products from Pdf Design', $request->all(), $validator->errors());
+            return $this->validationError($validator->errors());
+        }
+
+        $deletedCount = 0;
+
+        foreach ($request->links as $link) {
+            $themeKeys = $link['themeKeys'];
+            $hasNull = in_array(null, $themeKeys, true);
+            $nonNullKeys = array_values(array_filter($themeKeys, fn($k) => $k !== null));
+
+            $deletedCount += ProductPdfDesignProduct::where('product_pdf_design_id', $design->id)
+                ->where('product_id', $link['productId'])
+                ->where(function ($q) use ($nonNullKeys, $hasNull) {
+                    if (!empty($nonNullKeys)) {
+                        $q->whereIn('theme_key', $nonNullKeys);
+                    }
+                    if ($hasNull) {
+                        $q->orWhereNull('theme_key');
+                    }
+                })
+                ->delete();
+        }
+
+        $design->load(['products', 'labelShape', 'generalStatus']);
+        $this->logAudit(Auth::user(), 'Bulk Detach Many Products from Pdf Design', $request->all(), ['deleted' => $deletedCount]);
 
         return $this->success($design, 'Vínculos eliminados', ['deleted' => $deletedCount]);
     }

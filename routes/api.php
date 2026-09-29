@@ -224,9 +224,11 @@ Route::middleware('jwt.auth')->prefix('product-pdf-designs')->group(function () 
     Route::delete('/{id}', [ProductPdfDesignController::class, 'delete']);
     Route::get('/{id}/preview', [ProductPdfDesignController::class, 'preview']);
     Route::post('/{id}/products', [ProductPdfDesignController::class, 'attachProduct']);
-    // Las rutas "bulk" van antes de "/{linkId}" para que "bulk" no se matchee como si fuera un linkId.
+    // Las rutas "bulk"/"bulk-many" van antes de "/{linkId}" para que no se matcheen como si fueran un linkId.
     Route::post('/{id}/products/bulk', [ProductPdfDesignController::class, 'bulkAttachProducts']);
     Route::delete('/{id}/products/bulk', [ProductPdfDesignController::class, 'bulkDetachProducts']);
+    Route::post('/{id}/products/bulk-many', [ProductPdfDesignController::class, 'bulkAttachMany']);
+    Route::delete('/{id}/products/bulk-many', [ProductPdfDesignController::class, 'bulkDetachMany']);
     Route::delete('/{id}/products/{linkId}', [ProductPdfDesignController::class, 'detachProduct']);
 });
 
