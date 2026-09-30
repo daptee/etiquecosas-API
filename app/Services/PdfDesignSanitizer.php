@@ -156,4 +156,27 @@ class PdfDesignSanitizer
             return $el;
         }, $elements);
     }
+
+    /**
+     * Sanea data.pages[].sheet: color y ruta de imagen de fondo de la hoja.
+     * La ruta de la imagen nunca se acepta como URL/HTML libre — tiene que
+     * venir del endpoint de subida (POST .../background-image), así que acá
+     * solo se limpia texto ejecutable, no se valida que el archivo exista.
+     */
+    public static function sanitizeSheet(array $sheet): array
+    {
+        if (isset($sheet['background_color']) && is_array($sheet['background_color'])) {
+            $mode = $sheet['background_color']['mode'] ?? 'hex';
+            $sheet['background_color'] = [
+                'mode' => in_array($mode, ['hex', 'cmyk'], true) ? $mode : 'hex',
+                'value' => isset($sheet['background_color']['value']) ? strip_tags((string) $sheet['background_color']['value']) : null,
+            ];
+        }
+
+        if (isset($sheet['background_image']) && is_string($sheet['background_image'])) {
+            $sheet['background_image'] = strip_tags($sheet['background_image']);
+        }
+
+        return $sheet;
+    }
 }

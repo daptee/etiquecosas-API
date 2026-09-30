@@ -9,6 +9,7 @@ use App\Services\PdfDesignSanitizer;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use App\Traits\FindObject;
 use App\Traits\ApiResponse;
@@ -419,6 +420,32 @@ class ProductPdfDesignController extends Controller
         return response()->file($paths[0]);
     }
 
+    /**
+     * Sube una imagen para usar como fondo de una hoja del diseño
+     * (data.pages[].sheet.background_image). Solo sube el archivo y devuelve
+     * la ruta — el front la guarda donde corresponda dentro del `data` al
+     * hacer el POST de actualización del diseño.
+     */
+    public function uploadBackgroundImage(Request $request, $id)
+    {
+        $design = $this->findObject(ProductPdfDesign::class, $id);
+
+        $validator = Validator::make($request->all(), [
+            'image' => 'required|file|mimes:jpg,jpeg,png,webp,svg|max:8192',
+        ]);
+        if ($validator->fails()) {
+            $this->logAudit(Auth::user(), 'Upload Pdf Design Background Image', $request->all(), $validator->errors());
+            return $this->validationError($validator->errors());
+        }
+
+        $file = $request->file('image');
+        $path = 'pdf-backgrounds/' . $design->id . '/' . uniqid('bg_') . '.' . $file->getClientOriginalExtension();
+        Storage::disk('public_uploads')->put($path, file_get_contents($file));
+
+        $this->logAudit(Auth::user(), 'Upload Pdf Design Background Image', ['designId' => $id], ['path' => $path]);
+        return $this->success(['path' => $path], 'Imagen de fondo subida');
+    }
+
     private function rules(): array
     {
         return [
@@ -443,6 +470,9 @@ class ProductPdfDesignController extends Controller
             $data['pages'] = array_map(function ($page) {
                 if (!empty($page['elements']) && is_array($page['elements'])) {
                     $page['elements'] = PdfDesignSanitizer::sanitizeElements($page['elements']);
+                }
+                if (!empty($page['sheet']) && is_array($page['sheet'])) {
+                    $page['sheet'] = PdfDesignSanitizer::sanitizeSheet($page['sheet']);
                 }
                 return $page;
             }, $data['pages']);

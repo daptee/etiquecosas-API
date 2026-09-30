@@ -223,6 +223,7 @@ Route::middleware('jwt.auth')->prefix('product-pdf-designs')->group(function () 
     Route::patch('/{id}/toggle-status', [ProductPdfDesignController::class, 'toggleStatus']);
     Route::delete('/{id}', [ProductPdfDesignController::class, 'delete']);
     Route::get('/{id}/preview', [ProductPdfDesignController::class, 'preview']);
+    Route::post('/{id}/background-image', [ProductPdfDesignController::class, 'uploadBackgroundImage']);
     Route::post('/{id}/products', [ProductPdfDesignController::class, 'attachProduct']);
     // Las rutas "bulk"/"bulk-many" van antes de "/{linkId}" para que no se matcheen como si fueran un linkId.
     Route::post('/{id}/products/bulk', [ProductPdfDesignController::class, 'bulkAttachProducts']);

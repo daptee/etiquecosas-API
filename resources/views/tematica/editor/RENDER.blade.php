@@ -67,11 +67,33 @@
 </head>
 <body>
 @foreach ($plantilla['design']['pages'] as $page)
+    @php
+        $sheetBgColor = $page['sheet']['background_color'] ?? null;
+        $sheetBgColorCss = $sheetBgColor
+            ? (($sheetBgColor['mode'] ?? 'hex') === 'cmyk' ? 'cmyk(' . $sheetBgColor['value'] . ')' : ($sheetBgColor['value'] ?? null))
+            : null;
+        $sheetBgImagePath = $page['sheet']['background_image'] ?? null;
+    @endphp
     <div class="editor-sheet" style="
         width: {{ $page['sheet']['width_cm'] ?? 18.5 }}cm;
         height: {{ $page['sheet']['height_cm'] ?? 29 }}cm;
+        @if ($sheetBgColorCss) background-color: {{ $sheetBgColorCss }}; @endif
         @if (!$loop->last) page-break-after: always; @endif
     ">
+        @if ($sheetBgImagePath)
+            {{-- Fondo de página completa: va primero en el DOM y con z-index
+                 bajo para quedar detrás de todos los elementos, sean cuales
+                 sean sus propios z-index (0, 1, 2...). --}}
+            <img src="file://{{ str_replace('\\', '/', public_path($sheetBgImagePath)) }}" style="
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                z-index: -1;
+                object-fit: cover;
+            ">
+        @endif
         @foreach ($page['elements'] as $el)
             @php
                 $rotationDeg = (float) ($el['rotation_deg'] ?? 0);
