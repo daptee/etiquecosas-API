@@ -317,7 +317,13 @@ class EtiquetaService
         // dynamic_attribute_id, matcheando el id del ATRIBUTO (no del valor) —
         // distinto del ícono "libre" que elige el cliente en
         // customization_data.icon.
-        $attributeIcons = collect($productOrder->variant?->toArray()['variant']['attributesvalues'] ?? [])
+        // ?-> por sí solo no alcanza: el preview() del editor arma un
+        // $productOrder de prueba (stdClass) SIN la propiedad "variant" en
+        // absoluto, y leer una propiedad inexistente ya tira el warning antes
+        // de llegar al "?->" (Laravel lo escala a ErrorException = 500). El
+        // "??" sí lo suprime, por eso la variante se lee así primero.
+        $variantModel = $productOrder->variant ?? null;
+        $attributeIcons = collect($variantModel?->toArray()['variant']['attributesvalues'] ?? [])
             ->filter(fn($av) => !empty($av['icon']) && !empty($av['attribute']['id']))
             ->keyBy(fn($av) => $av['attribute']['id'])
             ->map(fn($av) => $av['icon']);
