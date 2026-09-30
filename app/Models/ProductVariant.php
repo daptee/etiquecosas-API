@@ -78,14 +78,10 @@ class ProductVariant extends Model
     }
 
     /**
-     * Para atributos de tipo "icon", el metadata del valor trae {"value": <id>}
-     * que apunta a personalization_icons; devuelve el path del icono.
-     */
-    /**
-     * Extrae el id del icono del metadata, que puede venir como
+     * Extrae el id referenciado en el metadata, que puede venir como
      * {"value":4}, {"value":[4]} o doblemente codificado ("{\"value\":4}").
      */
-    private static function iconIdFromMetadata($metadata)
+    private static function idFromMetadata($metadata)
     {
         if (is_string($metadata)) {
             $metadata = json_decode($metadata, true);
@@ -100,26 +96,47 @@ class ProductVariant extends Model
         return is_numeric($value) ? (int) $value : null;
     }
 
-    private static function formatAttributeValues($attributesValues): array
+    private static function metadataIdsForType($attributesValues, string $type)
     {
-        $iconIds = $attributesValues
-            ->filter(fn($attr) => ($attr->attribute->type ?? null) === 'icon')
-            ->map(fn($attr) => self::iconIdFromMetadata($attr->metadata))
+        return $attributesValues
+            ->filter(fn($attr) => ($attr->attribute->type ?? null) === $type)
+            ->map(fn($attr) => self::idFromMetadata($attr->metadata))
             ->filter()
             ->unique();
+    }
 
+    /**
+     * Para atributos de tipo "icon" o "typography", el metadata del valor trae
+     * {"value": <id>} que apunta a personalization_icons o typographies;
+     * devuelve el path del icono o del archivo de la fuente.
+     */
+    private static function formatAttributeValues($attributesValues): array
+    {
+        $iconIds = self::metadataIdsForType($attributesValues, 'icon');
         $icons = $iconIds->isEmpty()
             ? collect()
             : PersonalizationIcon::withTrashed()->whereIn('id', $iconIds)->pluck('icon', 'id');
 
-        return $attributesValues->map(function ($attr) use ($icons) {
+        $typographyIds = self::metadataIdsForType($attributesValues, 'typography');
+        $fonts = $typographyIds->isEmpty()
+            ? collect()
+            : TypographyFile::whereIn('typography_id', $typographyIds)
+                ->orderBy('id')
+                ->get()
+                ->groupBy('typography_id')
+                ->map(fn($files) => $files->first()->file_path);
+
+        return $attributesValues->map(function ($attr) use ($icons, $fonts) {
             $data = [
                 'id' => $attr->id,
                 'value' => $attr->value,
             ];
 
-            if (($attr->attribute->type ?? null) === 'icon') {
-                $data['icon'] = $icons->get(self::iconIdFromMetadata($attr->metadata));
+            $type = $attr->attribute->type ?? null;
+            if ($type === 'icon') {
+                $data['icon'] = $icons->get(self::idFromMetadata($attr->metadata));
+            } elseif ($type === 'typography') {
+                $data['font'] = $fonts->get(self::idFromMetadata($attr->metadata));
             }
 
             $data['attribute'] = [
