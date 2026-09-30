@@ -34,7 +34,7 @@ CREATE TABLE abandoned_cart_logs (
 -- VALUES ('2026_08_21_000000_create_abandoned_cart_logs_table', (SELECT MAX(batch) FROM migrations));
 
 -- ============================================================
--- Cupón fijo del Impacto 2 (ETIQUECARRITO, 15% off)
+-- Cupón fijo del Impacto 2 (ETIQUECARRITO, 5% off)
 -- Opcional: si no se inserta a mano, el comando
 -- `php artisan carts:process-abandoned` lo crea solo la primera
 -- vez que necesita mandar un Impacto 2 (Coupon::firstOrCreate).
@@ -50,7 +50,7 @@ INSERT INTO coupons (
     created_at, updated_at
 )
 SELECT
-    'Recuperación de carrito abandonado', 'ETIQUECARRITO', NOW(), DATE_ADD(NOW(), INTERVAL 5 YEAR), 5000, 15,
+    'Recuperación de carrito abandonado', 'ETIQUECARRITO', NOW(), DATE_ADD(NOW(), INTERVAL 5 YEAR), 5000, 5,
     0, 1, 0, 0,
     'Porcentaje', 1, 1,
     1, 0, (SELECT id FROM coupon_statuses WHERE name LIKE '%activ%' LIMIT 1),

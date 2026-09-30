@@ -33,7 +33,7 @@ class ProcessAbandonedCarts extends Command
     protected $description = 'Detecta carritos abandonados y envía los recordatorios del flujo (Impacto 1 y 2)';
 
     private const COUPON_CODE = 'ETIQUECARRITO';
-    private const COUPON_PERCENT = 15;
+    private const COUPON_PERCENT = 5;
 
     /**
      * Execute the console command.

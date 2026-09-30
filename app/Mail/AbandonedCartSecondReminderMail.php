@@ -26,7 +26,7 @@ class AbandonedCartSecondReminderMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Último aviso: 15% OFF + envío gratis en tu compra 🎁',
+            subject: 'Último aviso: ' . (int) $this->coupon->value . '% OFF + envío gratis en tu compra 🎁',
             replyTo: ['info@etiquecosas.com.ar'],
         );
     }
