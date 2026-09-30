@@ -21,7 +21,7 @@
 </head>
 
 <body style="margin: 0; width: 100%; padding: 0; word-break: break-word; -webkit-font-smoothing: antialiased; background-color: #ffffff;">
-  <div style="font-family: 'Montserrat', sans-serif; mso-line-height-rule: exactly; display:none;">Último aviso: 15% OFF + envío gratis</div>
+  <div style="font-family: 'Montserrat', sans-serif; mso-line-height-rule: exactly; display:none;">Último aviso: {{ (int) $coupon->value }}% OFF + envío gratis</div>
 
   <table style="width:100%; font-family: Montserrat, -apple-system, 'Segoe UI', sans-serif;" cellpadding="0" cellspacing="0" role="presentation">
     <tr>
