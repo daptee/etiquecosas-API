@@ -9,7 +9,7 @@ class PdfDesignSanitizer
     private const ALLOWED_EDITABLE_FIELDS = ['text', 'color', 'icon'];
     private const ALLOWED_TEXT_ALIGN = ['left', 'center', 'right'];
     private const ALLOWED_VERTICAL_ALIGN = ['top', 'middle', 'bottom'];
-    private const ALLOWED_DYNAMIC_FIELDS = ['nombre_apellido', 'nombre', 'apellido'];
+    private const ALLOWED_DYNAMIC_FIELDS = ['nombre_apellido', 'nombre', 'apellido', 'fecha', 'numero_pedido'];
     private const ALLOWED_RADIUS_MODES = ['straight', 'rounded'];
 
     /**

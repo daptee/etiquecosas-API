@@ -7,6 +7,7 @@ use App\Models\ProductPdfDesignProduct;
 use App\Models\ProductVariant;
 use App\Services\EtiquetaService;
 use App\Services\PdfDesignSanitizer;
+use Carbon\Carbon;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -403,6 +404,13 @@ class ProductPdfDesignController extends Controller
         $customColor = $request->query('color');
         $variantId = $request->query('variantId');
 
+        // Mismo motivo que arriba: sin esto, un elemento de texto con
+        // dynamic_field "fecha"/"numero_pedido" sale vacío en el preview.
+        // ?fecha= (cualquier formato que entienda Carbon::parse) y
+        // ?numeroPedido= simulan esos datos de una venta real.
+        $fechaPreview = $request->query('fecha') ? Carbon::parse($request->query('fecha')) : now();
+        $numeroPedidoPreview = (int) $request->query('numeroPedido', 0);
+
         $productOrder = (object)[
             'id' => 'preview-' . $design->id,
             'product' => (object)['name' => $design->name],
@@ -411,13 +419,13 @@ class ProductPdfDesignController extends Controller
 
         try {
             $paths = EtiquetaService::generarEtiquetasDesdeDesign(
-                0,
+                $numeroPedidoPreview,
                 $design,
                 $productOrder,
                 [$nombre],
                 $customColor,
                 $customIcon,
-                now(),
+                $fechaPreview,
                 [$firstName],
                 [$lastName]
             );

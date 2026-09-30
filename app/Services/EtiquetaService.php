@@ -309,6 +309,12 @@ class EtiquetaService
         $dirPath = storage_path("app/pdf/planchas/{$fechaCarpeta}");
         if (!is_dir($dirPath)) mkdir($dirPath, 0755, true);
 
+        // Para elementos de texto con dynamic_field "fecha"/"numero_pedido" —
+        // mismo mecanismo que nombre/apellido, pero con datos de la venta en
+        // vez de datos del cliente.
+        $fechaTexto = Carbon::parse($fechaCompra ?? now())->setTimezone('America/Argentina/Buenos_Aires')->format('d/m/Y');
+        $numeroPedido = (string) $ventaId;
+
         $pages = self::normalizarPaginasDesign($design->data ?? []);
         $sufijo = self::limpiarNombreArchivo(strtoupper($design->name ?: 'DESIGN'));
 
@@ -363,11 +369,11 @@ class EtiquetaService
             $firstName = $firstNames[$idx] ?? null;
             $lastName = $lastNames[$idx] ?? null;
 
-            $resolvedPages = array_map(function ($page) use ($nombre, $firstName, $lastName, $customColor, $customIcon, $attributeIcons, $attributeFonts) {
+            $resolvedPages = array_map(function ($page) use ($nombre, $firstName, $lastName, $customColor, $customIcon, $attributeIcons, $attributeFonts, $fechaTexto, $numeroPedido) {
                 return [
                     'sheet' => $page['sheet'] ?? ['width_cm' => 18.5, 'height_cm' => 29],
                     'elements' => array_map(
-                        fn($el) => self::resolverElementoDesign($el, $nombre, $firstName, $lastName, $customColor, $customIcon, $attributeIcons, $attributeFonts),
+                        fn($el) => self::resolverElementoDesign($el, $nombre, $firstName, $lastName, $customColor, $customIcon, $attributeIcons, $attributeFonts, $fechaTexto, $numeroPedido),
                         $page['elements'] ?? []
                     ),
                 ];
@@ -499,7 +505,7 @@ class EtiquetaService
      * catálogos existentes, texto con el nombre del cliente, y overrides del cliente
      * (color/ícono) SOLO si el elemento fue marcado como editable por el admin.
      */
-    private static function resolverElementoDesign(array $el, string $nombre, ?string $firstName, ?string $lastName, $customColor, $customIcon, $attributeIcons = null, $attributeFonts = null): array
+    private static function resolverElementoDesign(array $el, string $nombre, ?string $firstName, ?string $lastName, $customColor, $customIcon, $attributeIcons = null, $attributeFonts = null, ?string $fechaTexto = null, ?string $numeroPedido = null): array
     {
         $type = $el['type'] ?? null;
         $editable = ($el['editable_by_customer'] ?? false) === true;
@@ -563,6 +569,8 @@ class EtiquetaService
                     'nombre_apellido' => $nombre,
                     'apellido' => $lastName ?? '',
                     'nombre' => $firstName ?? '',
+                    'fecha' => $fechaTexto ?? '',
+                    'numero_pedido' => $numeroPedido ?? '',
                     default => $el['content'] ?? '',
                 };
                 $isCustomerName = $dynamicField === 'nombre_apellido';
