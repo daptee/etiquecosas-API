@@ -1858,7 +1858,7 @@ class SaleController extends Controller
 
             return $this->success(
                 $sale->load('products.product', 'products.variant'),
-                'PDF generado correctamente [DEBUG-ICON-FIX-2026-09-29]',
+                'PDF generado correctamente',
                 ['pdf_paths' => $pdfPaths]
             );
 

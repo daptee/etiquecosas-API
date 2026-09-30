@@ -126,6 +126,12 @@ class PdfDesignSanitizer
             if (isset($el['font_weight'])) {
                 $el['font_weight'] = max(100, min(900, (int) $el['font_weight']));
             }
+            if (isset($el['line_height'])) {
+                $el['line_height'] = max(0.5, min(5, (float) $el['line_height']));
+            }
+            if (isset($el['word_spacing_px'])) {
+                $el['word_spacing_px'] = max(-50, min(200, (float) $el['word_spacing_px']));
+            }
             if (isset($el['group_id']) && is_string($el['group_id'])) {
                 $el['group_id'] = strip_tags($el['group_id']);
             }

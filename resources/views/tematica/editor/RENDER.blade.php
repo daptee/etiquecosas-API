@@ -62,7 +62,6 @@
 }
 .editor-element p {
     margin: 0;
-    line-height: 1.15;
 }
 </style>
 </head>
@@ -183,6 +182,13 @@
                                 'bottom' => ['100%', "translateY(-100%) translateY({$bottomNudgePx}px)"],
                                 default => ['50%', "translateY(-50%) translateY(-{$middleNudgePx}px)"],
                             };
+                            // line_height: mismo número que CSS line-height (sin unidad,
+                            // multiplica el tamaño de fuente) — 1.15 es el valor que ya
+                            // se usaba fijo antes de poder configurarlo por elemento.
+                            // word_spacing_px: espacio EXTRA (en px) que se suma entre
+                            // palabras, además del espacio normal de la fuente.
+                            $lineHeight = $el['line_height'] ?? 1.15;
+                            $wordSpacingPx = $el['word_spacing_px'] ?? 0;
                         @endphp
                         <div class="editor-text-wrap" style="
                             top: {{ $wrapTop }};
@@ -193,6 +199,8 @@
                                 font-family: '{{ $el['resolved_font_family'] ?? 'sans-serif' }}';
                                 font-size: {{ $el['resolved_font_size_px'] ?? $el['font_size_px'] ?? 32 }}px;
                                 font-weight: {{ $el['font_weight'] ?? 400 }};
+                                line-height: {{ $lineHeight }};
+                                word-spacing: {{ $wordSpacingPx }}px;
                                 color: {{ ($el['color']['mode'] ?? 'hex') === 'cmyk' ? 'cmyk(' . ($el['color']['value'] ?? '0,0,0,1') . ')' : ($el['color']['value'] ?? '#000000') }};
                             ">
                                 {!! $el['resolved_text_html'] ?? ($el['resolved_text'] ?? '') !!}
