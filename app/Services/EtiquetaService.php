@@ -328,6 +328,19 @@ class EtiquetaService
             ->keyBy(fn($av) => $av['attribute']['id'])
             ->map(fn($av) => $av['icon']);
 
+        // TEMPORAL — sacar cuando se confirme el fix de íconos por atributo.
+        Log::info('[DEBUG-ICON-FIX] attributeIcons resuelto', [
+            'design_id' => $design->id,
+            'product_order_id' => $productOrder->id ?? null,
+            'variant_id' => $variantModel->id ?? null,
+            'attributeIcons' => $attributeIcons->toArray(),
+            'customIcon_param' => $customIcon,
+            'elementos_icon' => collect($pages)->flatMap(fn($p) => $p['elements'] ?? [])
+                ->filter(fn($el) => ($el['type'] ?? null) === 'icon')
+                ->map(fn($el) => ['id' => $el['id'] ?? null, 'dynamic_attribute_id' => $el['dynamic_attribute_id'] ?? null])
+                ->values()->toArray(),
+        ]);
+
         foreach ($nombres as $idx => $nombre) {
             $firstName = $firstNames[$idx] ?? null;
             $lastName = $lastNames[$idx] ?? null;
@@ -493,6 +506,15 @@ class EtiquetaService
             }
 
             $el['resolved_icon_path'] = $iconPath;
+
+            // TEMPORAL — sacar cuando se confirme el fix de íconos por atributo.
+            Log::info('[DEBUG-ICON-FIX] resolverElementoDesign icon', [
+                'el_id' => $el['id'] ?? null,
+                'dynamic_attribute_id' => $dynamicAttributeId,
+                'attributeIcon_encontrado' => $attributeIcon,
+                'customIcon_param' => $customIcon,
+                'resolved_icon_path' => $iconPath,
+            ]);
         }
 
         if ($type === 'background' && !empty($el['label_shape_id'])) {
