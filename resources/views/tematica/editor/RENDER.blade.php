@@ -182,12 +182,13 @@
                                 'bottom' => ['100%', "translateY(-100%) translateY({$bottomNudgePx}px)"],
                                 default => ['50%', "translateY(-50%) translateY(-{$middleNudgePx}px)"],
                             };
-                            // line_height: mismo número que CSS line-height (sin unidad,
-                            // multiplica el tamaño de fuente) — 1.15 es el valor que ya
-                            // se usaba fijo antes de poder configurarlo por elemento.
+                            // resolved_line_height ya viene resuelto según
+                            // line_height_rules (igual que resolved_font_size_px con
+                            // font_size_rules) — solo cae al line_height fijo (o 1.15)
+                            // si no hay reglas o ninguna matchea.
                             // word_spacing_px: espacio EXTRA (en px) que se suma entre
                             // palabras, además del espacio normal de la fuente.
-                            $lineHeight = $el['line_height'] ?? 1.15;
+                            $lineHeight = $el['resolved_line_height'] ?? $el['line_height'] ?? 1.15;
                             $wordSpacingPx = $el['word_spacing_px'] ?? 0;
                         @endphp
                         <div class="editor-text-wrap" style="

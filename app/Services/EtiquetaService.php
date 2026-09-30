@@ -552,6 +552,7 @@ class EtiquetaService
                 $isCustomerName ? $firstName : null
             );
             $el['resolved_font_size_px'] = self::resolverTamanoFuente($el);
+            $el['resolved_line_height'] = self::resolverInterlineado($el);
         }
 
         if (in_array($type, ['background', 'text'], true) && $editable && $field === 'color' && $customColor) {
@@ -713,6 +714,36 @@ class EtiquetaService
         }
 
         return isset($el['font_size_px']) ? (int) $el['font_size_px'] : null;
+    }
+
+    /**
+     * Interlineado según la cantidad de caracteres del texto resuelto — mismo
+     * esquema que resolverTamanoFuente() pero para line_height. Si no hay
+     * reglas configuradas (o ninguna matchea), usa el line_height fijo del
+     * elemento (o 1.15 si tampoco hay).
+     */
+    private static function resolverInterlineado(array $el): float
+    {
+        $largo = mb_strlen($el['resolved_text'] ?? '', 'UTF-8');
+        $reglas = $el['line_height_rules'] ?? null;
+
+        if (!empty($reglas) && is_array($reglas)) {
+            $reglasOrdenadas = $reglas;
+            usort($reglasOrdenadas, function ($a, $b) {
+                $maxA = $a['max_chars'] ?? PHP_INT_MAX;
+                $maxB = $b['max_chars'] ?? PHP_INT_MAX;
+                return $maxA <=> $maxB;
+            });
+
+            foreach ($reglasOrdenadas as $regla) {
+                $maxChars = $regla['max_chars'] ?? null;
+                if (($maxChars === null || $largo <= $maxChars) && isset($regla['line_height'])) {
+                    return (float) $regla['line_height'];
+                }
+            }
+        }
+
+        return isset($el['line_height']) ? (float) $el['line_height'] : 1.15;
     }
 
     /**

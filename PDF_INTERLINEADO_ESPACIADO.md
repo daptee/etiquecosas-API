@@ -20,6 +20,31 @@ Ninguno de los dos es obligatorio — si no se mandan, el texto se comporta exac
 - Se clampea entre `0.5` y `5`.
 - Solo tiene efecto visible en textos de **más de un renglón** — con nombre/apellido en una sola línea no se nota.
 
+### `line_height_rules` — interlineado según la longitud del texto
+
+Igual que `font_size_rules` (tamaño de fuente según cantidad de caracteres), `line_height_rules` cambia el **interlineado** según cuántos caracteres tiene el texto ya resuelto (con el nombre/apellido real del cliente, no el texto de ejemplo del editor):
+
+```json
+{
+  "type": "text",
+  "content": "{{customer_name}}",
+  "font_size_px": 40,
+  "line_height": 1.0,
+  "line_height_rules": [
+    { "max_chars": 7, "line_height": 1.0 },
+    { "max_chars": 15, "line_height": 1.8 },
+    { "max_chars": null, "line_height": 2.0 }
+  ]
+}
+```
+
+Con esa config: "ANA" (3 caracteres) usa `line_height: 1.0`, "ROBERTITO" (9 caracteres) usa `1.8`, "GUILLERMINA CASTRO" (18 caracteres) usa `2.0`.
+
+- Es una lista ordenada por `max_chars` (de menor a mayor); se usa la primera regla cuyo `max_chars` sea mayor o igual a la cantidad de caracteres. Una regla sin `max_chars` (o `null`) actúa como "para el resto" — conviene ponerla al final.
+- Cada `line_height` de la lista se clampea igual que el campo suelto (0.5 a 5).
+- Si no se manda `line_height_rules` (o ninguna regla matchea), se usa el `line_height` fijo del elemento — total compatibilidad con diseños que no usan esto.
+- No existe un equivalente para `word_spacing_px` — ese solo se puede fijar, no varía según longitud (no lo pidieron y no hay un caso de uso claro para eso; se puede agregar después si hace falta).
+
 ## `word_spacing_px`
 
 ```json

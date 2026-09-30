@@ -190,7 +190,8 @@ Un diseño de **dos páginas** es simplemente dos entradas en `pages`, cada una 
 | `vertical_align` | solo en `text`, opcional (default `middle`) | `top` \| `middle` \| `bottom` — centrado real dentro de la caja del elemento |
 | `vertical_offset_cm` | solo en `text`, opcional (default `0`) | Corrimiento fino vertical adicional (en cm), para ajustar ópticamente sin mover `y_cm`. Se clampea entre -50 y 50 |
 | `font_weight` | solo en `text`, opcional (default `400`) | Grosor de fuente (100 a 900, como CSS `font-weight`) |
-| `line_height` | solo en `text`, opcional (default `1.15`) | Interlineado — mismo número que CSS `line-height` (sin unidad, multiplica el tamaño de fuente). Se clampea entre 0.5 y 5. Ver [PDF_INTERLINEADO_ESPACIADO.md](PDF_INTERLINEADO_ESPACIADO.md) |
+| `line_height` | solo en `text`, opcional (default `1.15`) | Interlineado fijo — mismo número que CSS `line-height` (sin unidad, multiplica el tamaño de fuente). Se usa si no hay `line_height_rules`, o si ninguna regla matchea. Se clampea entre 0.5 y 5. Ver [PDF_INTERLINEADO_ESPACIADO.md](PDF_INTERLINEADO_ESPACIADO.md) |
+| `line_height_rules` | solo en `text`, opcional | Interlineado según la cantidad de caracteres del texto resuelto — mismo esquema que `font_size_rules`. Ver [PDF_INTERLINEADO_ESPACIADO.md](PDF_INTERLINEADO_ESPACIADO.md) |
 | `word_spacing_px` | solo en `text`, opcional (default `0`) | Espacio extra entre palabras, en px, además del espacio normal de la fuente. Se clampea entre -50 y 200. Ver [PDF_INTERLINEADO_ESPACIADO.md](PDF_INTERLINEADO_ESPACIADO.md) |
 | `padding_cm` | opcional en `background`, opcional (default `0`) | Insetea el color hacia adentro de su propia caja (por ejemplo, para dejar un borde/margen visible alrededor). Se clampea entre 0 y 50 |
 | `rotation_deg` | opcional en cualquier tipo (default `0`) | Rotación del elemento en grados, sobre su propio centro. Se clampea entre -360 y 360 |

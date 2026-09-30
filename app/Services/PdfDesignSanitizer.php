@@ -101,6 +101,14 @@ class PdfDesignSanitizer
             if (isset($el['length_rules_enabled'])) {
                 $el['length_rules_enabled'] = $el['length_rules_enabled'] === true;
             }
+            if (!empty($el['line_height_rules']) && is_array($el['line_height_rules'])) {
+                $el['line_height_rules'] = array_slice(array_map(function ($rule) {
+                    return [
+                        'max_chars' => isset($rule['max_chars']) ? max(0, (int) $rule['max_chars']) : null,
+                        'line_height' => isset($rule['line_height']) ? max(0.5, min(5, (float) $rule['line_height'])) : null,
+                    ];
+                }, $el['line_height_rules']), 0, 20);
+            }
 
             if (isset($el['text_align']) && !in_array($el['text_align'], self::ALLOWED_TEXT_ALIGN, true)) {
                 $el['text_align'] = 'center';
