@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ProductPdfDesign;
 use App\Models\ProductPdfDesignProduct;
+use App\Models\ProductVariant;
 use App\Services\EtiquetaService;
 use App\Services\PdfDesignSanitizer;
 use Illuminate\Database\QueryException;
@@ -392,9 +393,20 @@ class ProductPdfDesignController extends Controller
         $lastName = $request->query('lastName', 'APELLIDO');
         $nombre = trim("{$firstName} {$lastName}");
 
+        // Sin esto, cualquier ícono que dependa de la personalización del
+        // cliente (editable_field:"icon" o dynamic_attribute_id) sale en
+        // blanco en el preview, porque no hay ninguna venta real detrás.
+        // ?icon= simula el ícono "libre" (customization_data.icon.icon);
+        // ?variantId= carga una variante real para que también resuelvan los
+        // íconos por atributo (dynamic_attribute_id).
+        $customIcon = $request->query('icon');
+        $customColor = $request->query('color');
+        $variantId = $request->query('variantId');
+
         $productOrder = (object)[
             'id' => 'preview-' . $design->id,
             'product' => (object)['name' => $design->name],
+            'variant' => $variantId ? ProductVariant::find($variantId) : null,
         ];
 
         try {
@@ -403,8 +415,8 @@ class ProductPdfDesignController extends Controller
                 $design,
                 $productOrder,
                 [$nombre],
-                null,
-                null,
+                $customColor,
+                $customIcon,
                 now(),
                 [$firstName],
                 [$lastName]
