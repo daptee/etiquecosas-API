@@ -328,10 +328,21 @@ class EtiquetaService
         // de llegar al "?->" (Laravel lo escala a ErrorException = 500). El
         // "??" sí lo suprime, por eso la variante se lee así primero.
         $variantModel = $productOrder->variant ?? null;
-        $attributeIcons = collect($variantModel?->toArray()['variant']['attributesvalues'] ?? [])
+        $variantAttributesValues = collect($variantModel?->toArray()['variant']['attributesvalues'] ?? []);
+        $attributeIcons = $variantAttributesValues
             ->filter(fn($av) => !empty($av['icon']) && !empty($av['attribute']['id']))
             ->keyBy(fn($av) => $av['attribute']['id'])
             ->map(fn($av) => $av['icon']);
+
+        // Mismo mecanismo que $attributeIcons pero para tipografía: atributos
+        // tipo "typography" (ej. "Tipografía") ya traen su propio archivo de
+        // fuente en el valor elegido de la variante (ProductVariant::toArray()
+        // resuelve "font" igual que resuelve "icon"). Un elemento de texto con
+        // dynamic_attribute_id usa ESE archivo en vez de font_id.
+        $attributeFonts = $variantAttributesValues
+            ->filter(fn($av) => !empty($av['font']) && !empty($av['attribute']['id']))
+            ->keyBy(fn($av) => $av['attribute']['id'])
+            ->map(fn($av) => $av['font']);
 
         // TEMPORAL — sacar cuando se confirme el fix de íconos por atributo.
         $debugAttributeIcons = [
@@ -352,11 +363,11 @@ class EtiquetaService
             $firstName = $firstNames[$idx] ?? null;
             $lastName = $lastNames[$idx] ?? null;
 
-            $resolvedPages = array_map(function ($page) use ($nombre, $firstName, $lastName, $customColor, $customIcon, $attributeIcons) {
+            $resolvedPages = array_map(function ($page) use ($nombre, $firstName, $lastName, $customColor, $customIcon, $attributeIcons, $attributeFonts) {
                 return [
                     'sheet' => $page['sheet'] ?? ['width_cm' => 18.5, 'height_cm' => 29],
                     'elements' => array_map(
-                        fn($el) => self::resolverElementoDesign($el, $nombre, $firstName, $lastName, $customColor, $customIcon, $attributeIcons),
+                        fn($el) => self::resolverElementoDesign($el, $nombre, $firstName, $lastName, $customColor, $customIcon, $attributeIcons, $attributeFonts),
                         $page['elements'] ?? []
                     ),
                 ];
@@ -488,7 +499,7 @@ class EtiquetaService
      * catálogos existentes, texto con el nombre del cliente, y overrides del cliente
      * (color/ícono) SOLO si el elemento fue marcado como editable por el admin.
      */
-    private static function resolverElementoDesign(array $el, string $nombre, ?string $firstName, ?string $lastName, $customColor, $customIcon, $attributeIcons = null): array
+    private static function resolverElementoDesign(array $el, string $nombre, ?string $firstName, ?string $lastName, $customColor, $customIcon, $attributeIcons = null, $attributeFonts = null): array
     {
         $type = $el['type'] ?? null;
         $editable = ($el['editable_by_customer'] ?? false) === true;
@@ -572,7 +583,20 @@ class EtiquetaService
             $el['resolved_font_family'] = null;
             $el['resolved_font_files'] = [];
 
-            if (!empty($el['font_id'])) {
+            $dynamicFontAttributeId = $el['dynamic_attribute_id'] ?? null;
+            $attributeFont = $dynamicFontAttributeId && $attributeFonts ? $attributeFonts->get($dynamicFontAttributeId) : null;
+
+            if ($attributeFont) {
+                // Tipografía propia del valor de atributo que trae la variante
+                // (ej. "Tipografía") — tiene prioridad sobre el font_id fijo
+                // cuando el elemento pide una puntual con dynamic_attribute_id.
+                // No hay un nombre de tipografía real acá (el atributo solo
+                // trae la ruta del archivo) — se genera un nombre sintético,
+                // solo se usa internamente para asociar el @font-face con el
+                // texto, no tiene que matchear ningún catálogo.
+                $el['resolved_font_family'] = 'attr-font-' . $dynamicFontAttributeId;
+                $el['resolved_font_files'] = [public_path($attributeFont)];
+            } elseif (!empty($el['font_id'])) {
                 $typography = Typography::with('files')->find($el['font_id']);
                 if ($typography) {
                     $el['resolved_font_family'] = $typography->name;

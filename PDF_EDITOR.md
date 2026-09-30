@@ -177,7 +177,8 @@ Un diseño de **dos páginas** es simplemente dos entradas en `pages`, cada una 
 | `width_cm`, `height_cm` | sí | Tamaño del elemento, en cm |
 | `z_index` | no (default 0) | Orden de apilado |
 | `icon_id` | solo en `icon` | ID de `personalization_icons` (catálogo existente, `GET /api/icons`) |
-| `font_id` | solo en `text` | ID de `typographies` (catálogo existente, `GET /api/typographies`) |
+| `font_id` | solo en `text` | ID de `typographies` (catálogo existente, `GET /api/typographies`). Se ignora si `dynamic_attribute_id` matchea un atributo de tipo tipografía de la variante |
+| `dynamic_attribute_id` | opcional en `text`/`icon` | ID de un **atributo** (no de un valor) — usa la tipografía/ícono que trae el valor elegido de ese atributo en la variante de la venta, en vez de `font_id`/`icon_id` fijos. Ver [PDF_TIPOGRAFIA_POR_ATRIBUTO.md](PDF_TIPOGRAFIA_POR_ATRIBUTO.md) / [PDF_ICONO_PERSONALIZADO.md](PDF_ICONO_PERSONALIZADO.md) |
 | `font_size_px` | solo en `text` | Tamaño de fuente por defecto (se usa si no hay `font_size_rules`, o si ninguna regla matchea) |
 | `content` | solo en `text` | Texto literal. Si `value_mode` es `"fixed"` (o no se manda `value_mode`), se usa tal cual — también acepta los placeholders `{{customer_name}}` / `{{customer_first_name}}` / `{{customer_last_name}}` dentro del string (ver nota abajo). **Se respeta mayúscula/minúscula tal cual se tipea** (a diferencia de las vistas legacy, que siempre fuerzan mayúsculas) — si querés "CIRO" en mayúscula, escribilo así. **Nunca puede llevar HTML** — se limpia en el servidor |
 | `value_mode` | solo en `text`, opcional (default `"fixed"`) | `"fixed"` = usar `content` literal. Cualquier otro valor (ej. `"dynamic"`) + `dynamic_field` = ignorar `content` y usar el dato real del cliente |
