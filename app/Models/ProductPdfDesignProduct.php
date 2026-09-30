@@ -12,6 +12,8 @@ class ProductPdfDesignProduct extends Model
         'product_pdf_design_id',
         'product_id',
         'theme_key',
+        'page_id',
+        'sort_order',
     ];
 
     public function design()

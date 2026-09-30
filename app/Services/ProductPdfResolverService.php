@@ -34,20 +34,44 @@ class ProductPdfResolverService
         $tematicaId = $productOrder->resolved_attributes_values->first()['id'] ?? null;
         $variantId = $productOrder->variant_id;
 
-        $link = ProductPdfDesignProduct::with('design')
+        // Puede haber VARIOS vínculos para el mismo producto+variante (uno por
+        // cada página que compone el PDF final, pudiendo venir de diseños
+        // distintos) — ver product_pdf_design_products.page_id/sort_order.
+        $links = ProductPdfDesignProduct::with('design')
             ->where('product_id', $productOrder->product_id)
             ->when($variantId, fn($q) => $q->where('theme_key', $variantId))
             ->when(!$variantId, fn($q) => $q->whereNull('theme_key'))
             ->whereHas('design', fn($q) => $q->where('is_published', true)->where('status_id', 1))
-            ->first();
+            ->orderBy('sort_order')
+            ->get();
 
-        $design = $link?->design;
-
-        if ($design) {
+        if ($links->isNotEmpty()) {
             try {
-                $paths = EtiquetaService::generarEtiquetasDesdeDesign(
+                // Caso más común (un solo vínculo a un diseño entero): se
+                // mantiene byte-a-byte el llamado de siempre, sin pasar por el
+                // camino de "combinar páginas" para no arriesgar ese camino ya
+                // probado.
+                if ($links->count() === 1 && !$links->first()->page_id) {
+                    $design = $links->first()->design;
+                    $paths = EtiquetaService::generarEtiquetasDesdeDesign(
+                        $ventaId,
+                        $design,
+                        $productOrder,
+                        [$nombreCompleto],
+                        $customColor,
+                        $customIcon,
+                        $fecha,
+                        [$form['name'] ?? ''],
+                        [$form['lastName'] ?? '']
+                    );
+                    Log::info("PDF generado desde diseño del editor para {$nombreCompleto}, design ID: {$design->id}");
+                    return $paths;
+                }
+
+                $pageRefs = $links->map(fn($link) => ['design' => $link->design, 'page_id' => $link->page_id])->all();
+                $paths = EtiquetaService::generarEtiquetasDesdeDesignsMultiples(
                     $ventaId,
-                    $design,
+                    $pageRefs,
                     $productOrder,
                     [$nombreCompleto],
                     $customColor,
@@ -56,10 +80,10 @@ class ProductPdfResolverService
                     [$form['name'] ?? ''],
                     [$form['lastName'] ?? '']
                 );
-                Log::info("PDF generado desde diseño del editor para {$nombreCompleto}, design ID: {$design->id}");
+                Log::info("PDF generado combinando " . count($pageRefs) . " página(s) de diseños del editor para {$nombreCompleto}");
                 return $paths;
             } catch (\Throwable $e) {
-                Log::error("Error generando PDF desde diseño del editor para {$nombreCompleto}, design ID: {$design->id}", [
+                Log::error("Error generando PDF desde diseño(s) del editor para {$nombreCompleto}", [
                     'error' => $e->getMessage(),
                     'product_order_id' => $productOrder->id,
                 ]);

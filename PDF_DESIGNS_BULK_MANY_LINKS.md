@@ -24,6 +24,7 @@ Ambos son `jwt.auth` (admin), igual que el resto del CRUD del editor.
 ```
 
 - Cada entrada de `links` es un producto distinto con su propia lista de `themeKeys` (mismo formato que ya usa el endpoint puntual: un id de temática/variante por vínculo, o `null` si ese producto no depende de variante).
+- `pageId`/`sortOrder` (opcionales, por entrada de `links`): si ese producto usa una página puntual de este diseño (no todas) — misma página para todas sus `themeKeys`. Ver [PDF_PAGINAS_COMBINADAS.md](PDF_PAGINAS_COMBINADAS.md).
 
 ### Respuesta
 

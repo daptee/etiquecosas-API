@@ -94,6 +94,8 @@ Un diseño se puede crear **sin ningún producto vinculado** — sirve como borr
 |---|---|---|
 | `productId` | number | Producto que usa este diseño |
 | `themeKey` | number \| null | El `id` de `product_variants` (**no** de `attribute_values`) que, **en ese producto**, selecciona este diseño. `null` = ese producto usa el diseño sin selector de variante |
+| `pageId` | string \| null | Si se manda, usa SOLO esa página de este diseño (`data.pages[].id`) en vez de todas sus páginas. Ver [PDF_PAGINAS_COMBINADAS.md](PDF_PAGINAS_COMBINADAS.md) |
+| `sortOrder` | number (default `0`) | Orden de armado cuando un producto+variante combina páginas de varios vínculos/diseños. Ver [PDF_PAGINAS_COMBINADAS.md](PDF_PAGINAS_COMBINADAS.md) |
 
 > Un mismo `productId` + `themeKey` solo puede estar vinculado a **un** diseño a la vez (si ya hay un vínculo con esa combinación, hay que desvincularlo antes de crear otro).
 

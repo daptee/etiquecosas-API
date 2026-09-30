@@ -302,6 +302,62 @@ class EtiquetaService
      */
     public static function generarEtiquetasDesdeDesign(int $ventaId, ProductPdfDesign $design, $productOrder, array $nombres, $customColor, $customIcon, $fechaCompra = null, array $firstNames = [], array $lastNames = []): array
     {
+        $pages = self::normalizarPaginasDesign($design->data ?? []);
+        $sufijo = self::limpiarNombreArchivo(strtoupper($design->name ?: 'DESIGN'));
+
+        return self::generarEtiquetasDesdePaginas(
+            $ventaId, $pages, $sufijo, "design:{$design->id}", $productOrder,
+            $nombres, $customColor, $customIcon, $fechaCompra, $firstNames, $lastNames
+        );
+    }
+
+    /**
+     * Igual que generarEtiquetasDesdeDesign(), pero para un producto+variante
+     * que arma su PDF combinando páginas puntuales de VARIOS diseños (no un
+     * diseño entero) — ver product_pdf_design_products.page_id/sort_order.
+     * $pageRefs: array ordenado de ['design' => ProductPdfDesign, 'page_id' => ?string].
+     * page_id null = todas las páginas de ESE diseño puntual (no de los demás).
+     */
+    public static function generarEtiquetasDesdeDesignsMultiples(int $ventaId, array $pageRefs, $productOrder, array $nombres, $customColor, $customIcon, $fechaCompra = null, array $firstNames = [], array $lastNames = []): array
+    {
+        $pages = [];
+        $nombresDesigns = [];
+
+        foreach ($pageRefs as $ref) {
+            /** @var ProductPdfDesign $design */
+            $design = $ref['design'];
+            $pageId = $ref['page_id'] ?? null;
+
+            $paginasDelDesign = self::normalizarPaginasDesign($design->data ?? []);
+            if ($pageId) {
+                $paginasDelDesign = array_values(array_filter(
+                    $paginasDelDesign,
+                    fn($p) => ($p['id'] ?? null) === $pageId
+                ));
+            }
+
+            $pages = array_merge($pages, $paginasDelDesign);
+            $nombresDesigns[] = $design->name;
+        }
+
+        $sufijo = self::limpiarNombreArchivo(strtoupper(implode(' - ', array_unique($nombresDesigns)) ?: 'COMBO'));
+        $logId = 'designs:' . implode(',', array_map(fn($ref) => $ref['design']->id . ($ref['page_id'] ? ":{$ref['page_id']}" : ''), $pageRefs));
+
+        return self::generarEtiquetasDesdePaginas(
+            $ventaId, $pages, $sufijo, $logId, $productOrder,
+            $nombres, $customColor, $customIcon, $fechaCompra, $firstNames, $lastNames
+        );
+    }
+
+    /**
+     * Núcleo compartido de renderizado: recibe las páginas YA armadas (de un
+     * solo diseño, o combinadas de varios) y hace el resto — resolver cada
+     * elemento, agrupar por tamaño de hoja, renderizar y fusionar con FPDI.
+     * $logId es solo para identificar el origen en logs/debug (no afecta el
+     * render), ya que acá puede no haber un único ProductPdfDesign detrás.
+     */
+    private static function generarEtiquetasDesdePaginas(int $ventaId, array $pages, string $sufijo, string $logId, $productOrder, array $nombres, $customColor, $customIcon, $fechaCompra = null, array $firstNames = [], array $lastNames = []): array
+    {
         $outputFiles = [];
         $fechaCarpeta = $fechaCompra
             ? Carbon::parse($fechaCompra)->setTimezone('America/Argentina/Buenos_Aires')->format('d-m-Y')
@@ -314,9 +370,6 @@ class EtiquetaService
         // vez de datos del cliente.
         $fechaTexto = Carbon::parse($fechaCompra ?? now())->setTimezone('America/Argentina/Buenos_Aires')->format('d/m/Y');
         $numeroPedido = (string) $ventaId;
-
-        $pages = self::normalizarPaginasDesign($design->data ?? []);
-        $sufijo = self::limpiarNombreArchivo(strtoupper($design->name ?: 'DESIGN'));
 
         // Íconos "por atributo": productos con atributos tipo ícono (ej. "Iconos",
         // "Color banda 2") ya traen su propio ícono en el valor elegido de la
@@ -352,7 +405,7 @@ class EtiquetaService
 
         // TEMPORAL — sacar cuando se confirme el fix de íconos por atributo.
         $debugAttributeIcons = [
-            'design_id' => $design->id,
+            'log_id' => $logId,
             'product_order_id' => $productOrder->id ?? null,
             'variant_id' => $variantModel->id ?? null,
             'attributeIcons' => $attributeIcons->toArray(),
@@ -445,7 +498,7 @@ class EtiquetaService
                     @unlink($tmpFile);
                 }
                 Log::error("❌ Error generando PDF desde diseño del editor", [
-                    'design_id' => $design->id,
+                    'log_id' => $logId,
                     'error' => $e->getMessage(),
                 ]);
             }

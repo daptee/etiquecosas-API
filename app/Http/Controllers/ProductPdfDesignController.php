@@ -150,6 +150,9 @@ class ProductPdfDesignController extends Controller
         $validator = Validator::make($request->all(), [
             'productId' => 'required|exists:products,id',
             'themeKey' => 'nullable|integer',
+            // id de data.pages[].id de ESTE diseño — null = usa todas sus páginas.
+            'pageId' => 'nullable|string|max:255',
+            'sortOrder' => 'nullable|integer',
         ]);
         if ($validator->fails()) {
             $this->logAudit(Auth::user(), 'Attach Product to Pdf Design', $request->all(), $validator->errors());
@@ -161,9 +164,11 @@ class ProductPdfDesignController extends Controller
                 'product_pdf_design_id' => $design->id,
                 'product_id' => $request->productId,
                 'theme_key' => $request->themeKey,
+                'page_id' => $request->pageId,
+                'sort_order' => $request->sortOrder ?? 0,
             ]);
         } catch (QueryException $e) {
-            return $this->validationError(['themeKey' => ['Ya existe un diseño vinculado a este producto y esta variante/temática']]);
+            return $this->validationError(['themeKey' => ['Ya existe un vínculo idéntico (mismo producto, variante, diseño y página)']]);
         }
 
         $design->load(['products:id,name,sku', 'labelShape', 'generalStatus']);
@@ -185,6 +190,9 @@ class ProductPdfDesignController extends Controller
             'productId' => 'required|exists:products,id',
             'themeKeys' => 'required|array|min:1',
             'themeKeys.*' => 'nullable|integer',
+            // Misma página (o diseño entero) para TODAS las temáticas de esta llamada.
+            'pageId' => 'nullable|string|max:255',
+            'sortOrder' => 'nullable|integer',
         ]);
         if ($validator->fails()) {
             $this->logAudit(Auth::user(), 'Bulk Attach Products to Pdf Design', $request->all(), $validator->errors());
@@ -200,12 +208,14 @@ class ProductPdfDesignController extends Controller
                     'product_pdf_design_id' => $design->id,
                     'product_id' => $request->productId,
                     'theme_key' => $themeKey,
+                    'page_id' => $request->pageId,
+                    'sort_order' => $request->sortOrder ?? 0,
                 ]);
                 $created[] = $link;
             } catch (QueryException $e) {
                 $skipped[] = [
                     'themeKey' => $themeKey,
-                    'reason' => 'Ya existe un diseño vinculado a este producto y esta variante/temática',
+                    'reason' => 'Ya existe un vínculo idéntico (mismo producto, variante, diseño y página)',
                 ];
             }
         }
@@ -276,6 +286,9 @@ class ProductPdfDesignController extends Controller
             'links.*.productId' => 'required|exists:products,id',
             'links.*.themeKeys' => 'required|array|min:1',
             'links.*.themeKeys.*' => 'nullable|integer',
+            // Misma página (o diseño entero) para todas las temáticas de ESE producto.
+            'links.*.pageId' => 'nullable|string|max:255',
+            'links.*.sortOrder' => 'nullable|integer',
         ]);
         if ($validator->fails()) {
             $this->logAudit(Auth::user(), 'Bulk Attach Many Products to Pdf Design', $request->all(), $validator->errors());
@@ -292,12 +305,14 @@ class ProductPdfDesignController extends Controller
                         'product_pdf_design_id' => $design->id,
                         'product_id' => $link['productId'],
                         'theme_key' => $themeKey,
+                        'page_id' => $link['pageId'] ?? null,
+                        'sort_order' => $link['sortOrder'] ?? 0,
                     ]);
                 } catch (QueryException $e) {
                     $skipped[] = [
                         'productId' => $link['productId'],
                         'themeKey' => $themeKey,
-                        'reason' => 'Ya existe un diseño vinculado a este producto y esta variante/temática',
+                        'reason' => 'Ya existe un vínculo idéntico (mismo producto, variante, diseño y página)',
                     ];
                 }
             }

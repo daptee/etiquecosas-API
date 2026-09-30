@@ -40,7 +40,7 @@ class ProductPdfDesign extends Model
     public function products()
     {
         return $this->belongsToMany(Product::class, 'product_pdf_design_products')
-            ->withPivot('id', 'theme_key')
+            ->withPivot('id', 'theme_key', 'page_id', 'sort_order')
             ->withTimestamps();
     }
 

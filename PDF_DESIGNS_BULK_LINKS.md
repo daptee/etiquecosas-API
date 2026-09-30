@@ -22,6 +22,7 @@ Ambos son `jwt.auth` (admin), igual que el resto del CRUD del editor.
 
 - `productId`: el producto al que se le van a vincular todas esas temáticas.
 - `themeKeys`: array de ids de temática/variante (los mismos `theme_key` que ya se usan en el vínculo puntual). Si alguna temática de ese producto no depende de variante, poné `null` en ese lugar del array.
+- `pageId`/`sortOrder` (opcionales): si el vínculo es para una página puntual de este diseño (no todas) — misma página para todas las `themeKeys` de esta llamada. Ver [PDF_PAGINAS_COMBINADAS.md](PDF_PAGINAS_COMBINADAS.md).
 
 ### Respuesta
 

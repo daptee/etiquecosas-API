@@ -155,7 +155,7 @@ class Product extends Model
     public function pdfDesigns()
     {
         return $this->belongsToMany(ProductPdfDesign::class, 'product_pdf_design_products')
-            ->withPivot('id', 'theme_key')
+            ->withPivot('id', 'theme_key', 'page_id', 'sort_order')
             ->withTimestamps()
             ->where('product_pdf_designs.is_published', true)
             ->where('product_pdf_designs.status_id', 1);
