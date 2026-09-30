@@ -1742,6 +1742,7 @@ class SaleController extends Controller
             $sale = Sale::with('products.product', 'products.variant')->findOrFail($id);
 
             $pdfPaths = [];
+            EtiquetaService::$debugIconLog = []; // TEMPORAL — ver nota en EtiquetaService
 
             // 🗑️ Eliminar todos los PDFs anteriores de este pedido antes de generar nuevos
             EtiquetaService::limpiarPdfsDelPedido($sale->id, $sale->created_at);
@@ -1859,7 +1860,7 @@ class SaleController extends Controller
             return $this->success(
                 $sale->load('products.product', 'products.variant'),
                 'PDF generado correctamente [DEBUG-ICON-FIX-2026-09-29]',
-                ['pdf_paths' => $pdfPaths]
+                ['pdf_paths' => $pdfPaths, 'debug_icon_fix' => EtiquetaService::$debugIconLog]
             );
 
         } catch (\Throwable $th) {

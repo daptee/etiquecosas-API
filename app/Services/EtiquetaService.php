@@ -16,6 +16,11 @@ class EtiquetaService
 {
     private const CM_TO_PT = 72 / 2.54;
 
+    // TEMPORAL — buffer de debug para exponer en la respuesta de la API
+    // (además del log) mientras se investiga el fix de íconos por atributo.
+    // Sacar junto con los Log::info('[DEBUG-ICON-FIX]...') cuando se confirme.
+    public static array $debugIconLog = [];
+
     /**
      * 🗑️ Elimina todos los PDFs existentes de un pedido específico
      */
@@ -329,7 +334,7 @@ class EtiquetaService
             ->map(fn($av) => $av['icon']);
 
         // TEMPORAL — sacar cuando se confirme el fix de íconos por atributo.
-        Log::info('[DEBUG-ICON-FIX] attributeIcons resuelto', [
+        $debugAttributeIcons = [
             'design_id' => $design->id,
             'product_order_id' => $productOrder->id ?? null,
             'variant_id' => $variantModel->id ?? null,
@@ -339,7 +344,9 @@ class EtiquetaService
                 ->filter(fn($el) => ($el['type'] ?? null) === 'icon')
                 ->map(fn($el) => ['id' => $el['id'] ?? null, 'dynamic_attribute_id' => $el['dynamic_attribute_id'] ?? null])
                 ->values()->toArray(),
-        ]);
+        ];
+        Log::info('[DEBUG-ICON-FIX] attributeIcons resuelto', $debugAttributeIcons);
+        self::$debugIconLog[] = ['tipo' => 'attributeIcons'] + $debugAttributeIcons;
 
         foreach ($nombres as $idx => $nombre) {
             $firstName = $firstNames[$idx] ?? null;
@@ -508,13 +515,15 @@ class EtiquetaService
             $el['resolved_icon_path'] = $iconPath;
 
             // TEMPORAL — sacar cuando se confirme el fix de íconos por atributo.
-            Log::info('[DEBUG-ICON-FIX] resolverElementoDesign icon', [
+            $debugElementoIcon = [
                 'el_id' => $el['id'] ?? null,
                 'dynamic_attribute_id' => $dynamicAttributeId,
                 'attributeIcon_encontrado' => $attributeIcon,
                 'customIcon_param' => $customIcon,
                 'resolved_icon_path' => $iconPath,
-            ]);
+            ];
+            Log::info('[DEBUG-ICON-FIX] resolverElementoDesign icon', $debugElementoIcon);
+            self::$debugIconLog[] = ['tipo' => 'resolverElementoDesign'] + $debugElementoIcon;
         }
 
         if ($type === 'background' && !empty($el['label_shape_id'])) {
