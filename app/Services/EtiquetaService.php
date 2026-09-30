@@ -614,6 +614,7 @@ class EtiquetaService
             );
             $el['resolved_font_size_px'] = self::resolverTamanoFuente($el);
             $el['resolved_line_height'] = self::resolverInterlineado($el);
+            $el['resolved_letter_spacing_px'] = self::resolverEspaciadoLetras($el);
         }
 
         if (in_array($type, ['background', 'text'], true) && $editable && $field === 'color' && $customColor) {
@@ -805,6 +806,36 @@ class EtiquetaService
         }
 
         return isset($el['line_height']) ? (float) $el['line_height'] : 1.15;
+    }
+
+    /**
+     * Espaciado entre letras según la cantidad de caracteres del texto
+     * resuelto — mismo esquema que resolverInterlineado()/resolverTamanoFuente().
+     * Si no hay reglas configuradas (o ninguna matchea), usa el
+     * letter_spacing_px fijo del elemento (o 0 si tampoco hay).
+     */
+    private static function resolverEspaciadoLetras(array $el): float
+    {
+        $largo = mb_strlen($el['resolved_text'] ?? '', 'UTF-8');
+        $reglas = $el['letter_spacing_rules'] ?? null;
+
+        if (!empty($reglas) && is_array($reglas)) {
+            $reglasOrdenadas = $reglas;
+            usort($reglasOrdenadas, function ($a, $b) {
+                $maxA = $a['max_chars'] ?? PHP_INT_MAX;
+                $maxB = $b['max_chars'] ?? PHP_INT_MAX;
+                return $maxA <=> $maxB;
+            });
+
+            foreach ($reglasOrdenadas as $regla) {
+                $maxChars = $regla['max_chars'] ?? null;
+                if (($maxChars === null || $largo <= $maxChars) && isset($regla['letter_spacing_px'])) {
+                    return (float) $regla['letter_spacing_px'];
+                }
+            }
+        }
+
+        return isset($el['letter_spacing_px']) ? (float) $el['letter_spacing_px'] : 0.0;
     }
 
     /**

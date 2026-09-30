@@ -1,9 +1,9 @@
-# Interlineado y espacio entre palabras en el diseñador de PDF
+# Interlineado y espacio entre letras en el diseñador de PDF
 
 Igual que ya se puede elegir en cuántos renglones parte un texto (`max_lines`/`min_lines`) o el tamaño de fuente según la longitud (`font_size_rules`), ahora también se puede configurar por elemento de texto:
 
 - **`line_height`** — el interlineado (espacio entre renglones).
-- **`word_spacing_px`** — el espacio extra entre palabras.
+- **`letter_spacing_px`** — el espacio extra entre letras.
 
 Ninguno de los dos es obligatorio — si no se mandan, el texto se comporta exactamente igual que antes.
 
@@ -43,18 +43,40 @@ Con esa config: "ANA" (3 caracteres) usa `line_height: 1.0`, "ROBERTITO" (9 cara
 - Es una lista ordenada por `max_chars` (de menor a mayor); se usa la primera regla cuyo `max_chars` sea mayor o igual a la cantidad de caracteres. Una regla sin `max_chars` (o `null`) actúa como "para el resto" — conviene ponerla al final.
 - Cada `line_height` de la lista se clampea igual que el campo suelto (0.5 a 5).
 - Si no se manda `line_height_rules` (o ninguna regla matchea), se usa el `line_height` fijo del elemento — total compatibilidad con diseños que no usan esto.
-- No existe un equivalente para `word_spacing_px` — ese solo se puede fijar, no varía según longitud (no lo pidieron y no hay un caso de uso claro para eso; se puede agregar después si hace falta).
-
-## `word_spacing_px`
+## `letter_spacing_px`
 
 ```json
-{ "type": "text", "content": "ESCRIBI VOS", "font_size_px": 40, "word_spacing_px": 12 }
+{ "type": "text", "content": "ESCRIBI VOS", "font_size_px": 40, "letter_spacing_px": 4 }
 ```
 
-- Espacio **extra** (en px) que se suma en cada espacio entre palabras, además del espacio normal de esa tipografía. `0` = sin cambios. Puede ser negativo para juntar más las palabras.
+- Espacio **extra** (en px) que se suma entre cada **letra** (no entre palabras), además del espacio normal de esa tipografía. `0` = sin cambios. Puede ser negativo para juntar más las letras.
 - **Default: `0`**.
 - Se clampea entre `-50` y `200`.
-- Solo tiene efecto si el texto tiene más de una palabra (nombre y apellido juntos, texto fijo con varias palabras, etc.) — un nombre solo no tiene espacios donde aplicarlo.
+- A diferencia de un espaciado por palabra, esto afecta a **todo el texto**, tenga una palabra sola o varias.
+
+### `letter_spacing_rules` — espaciado entre letras según la longitud del texto
+
+Mismo esquema que `font_size_rules`/`line_height_rules`: cambia el espaciado entre letras según cuántos caracteres tiene el texto ya resuelto:
+
+```json
+{
+  "type": "text",
+  "content": "{{customer_name}}",
+  "font_size_px": 40,
+  "letter_spacing_px": 0,
+  "letter_spacing_rules": [
+    { "max_chars": 7, "letter_spacing_px": 0 },
+    { "max_chars": 15, "letter_spacing_px": -1 },
+    { "max_chars": null, "letter_spacing_px": -2 }
+  ]
+}
+```
+
+Con esa config: "ANA" (3 caracteres) usa `0`, "ROBERTITO" (9 caracteres) usa `-1` (un poco más juntas las letras para ganar espacio), "GUILLERMINA CASTRO" (18 caracteres) usa `-2`.
+
+- Misma lógica que `line_height_rules`: lista ordenada por `max_chars`, se usa la primera regla cuyo `max_chars` sea mayor o igual a la cantidad de caracteres, una regla sin `max_chars` (o `null`) es "para el resto".
+- Cada `letter_spacing_px` de la lista se clampea igual que el campo suelto (-50 a 200).
+- Si no se manda `letter_spacing_rules` (o ninguna regla matchea), se usa el `letter_spacing_px` fijo del elemento (o `0`) — total compatibilidad con diseños que no usan esto.
 
 ---
 
@@ -62,7 +84,7 @@ Con esa config: "ANA" (3 caracteres) usa `line_height: 1.0`, "ROBERTITO" (9 cara
 
 Ambas propiedades se probaron generando un PDF real y leyendo los operadores de dibujo del PDF resultante (no a simple vista):
 
-- `word_spacing_px` se traduce al operador `Tw` de PDF (espaciado de palabra nativo del formato) — confirmado que con `40px` aparece `30.000 Tw` en el stream, y con `0px` no aparece (default `0`).
+- `letter_spacing_px` se traduce al operador `Tc` de PDF (espaciado de carácter nativo del formato) — confirmado que con `10px` aparece `7.500 Tc` en el stream, y con `0px` no aparece (default `0`).
 - `line_height` se confirmó midiendo la distancia real entre renglones: con `line_height: 2.5` la distancia entre líneas fue exactamente 2.5 veces la de `line_height: 1.0`.
 
 ---
@@ -78,7 +100,7 @@ Van en el mismo elemento `type: "text"` que ya tiene `font_size_px`, `max_lines`
   "font_id": 5,
   "font_size_px": 40,
   "line_height": 1.4,
-  "word_spacing_px": 6,
+  "letter_spacing_px": 2,
   "max_lines": 2,
   "text_align": "center",
   "vertical_align": "middle"

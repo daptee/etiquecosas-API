@@ -109,6 +109,14 @@ class PdfDesignSanitizer
                     ];
                 }, $el['line_height_rules']), 0, 20);
             }
+            if (!empty($el['letter_spacing_rules']) && is_array($el['letter_spacing_rules'])) {
+                $el['letter_spacing_rules'] = array_slice(array_map(function ($rule) {
+                    return [
+                        'max_chars' => isset($rule['max_chars']) ? max(0, (int) $rule['max_chars']) : null,
+                        'letter_spacing_px' => isset($rule['letter_spacing_px']) ? max(-50, min(200, (float) $rule['letter_spacing_px'])) : null,
+                    ];
+                }, $el['letter_spacing_rules']), 0, 20);
+            }
 
             if (isset($el['text_align']) && !in_array($el['text_align'], self::ALLOWED_TEXT_ALIGN, true)) {
                 $el['text_align'] = 'center';
@@ -137,8 +145,8 @@ class PdfDesignSanitizer
             if (isset($el['line_height'])) {
                 $el['line_height'] = max(0.5, min(5, (float) $el['line_height']));
             }
-            if (isset($el['word_spacing_px'])) {
-                $el['word_spacing_px'] = max(-50, min(200, (float) $el['word_spacing_px']));
+            if (isset($el['letter_spacing_px'])) {
+                $el['letter_spacing_px'] = max(-50, min(200, (float) $el['letter_spacing_px']));
             }
             if (isset($el['group_id']) && is_string($el['group_id'])) {
                 $el['group_id'] = strip_tags($el['group_id']);

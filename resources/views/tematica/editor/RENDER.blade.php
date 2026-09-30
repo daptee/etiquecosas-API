@@ -208,10 +208,12 @@
                             // line_height_rules (igual que resolved_font_size_px con
                             // font_size_rules) — solo cae al line_height fijo (o 1.15)
                             // si no hay reglas o ninguna matchea.
-                            // word_spacing_px: espacio EXTRA (en px) que se suma entre
-                            // palabras, además del espacio normal de la fuente.
+                            // resolved_letter_spacing_px ya viene resuelto según
+                            // letter_spacing_rules (igual que resolved_line_height con
+                            // line_height_rules) — solo cae al letter_spacing_px fijo
+                            // (o 0) si no hay reglas o ninguna matchea.
                             $lineHeight = $el['resolved_line_height'] ?? $el['line_height'] ?? 1.15;
-                            $wordSpacingPx = $el['word_spacing_px'] ?? 0;
+                            $letterSpacingPx = $el['resolved_letter_spacing_px'] ?? $el['letter_spacing_px'] ?? 0;
                         @endphp
                         <div class="editor-text-wrap" style="
                             top: {{ $wrapTop }};
@@ -223,7 +225,7 @@
                                 font-size: {{ $el['resolved_font_size_px'] ?? $el['font_size_px'] ?? 32 }}px;
                                 font-weight: {{ $el['font_weight'] ?? 400 }};
                                 line-height: {{ $lineHeight }};
-                                word-spacing: {{ $wordSpacingPx }}px;
+                                letter-spacing: {{ $letterSpacingPx }}px;
                                 color: {{ ($el['color']['mode'] ?? 'hex') === 'cmyk' ? 'cmyk(' . ($el['color']['value'] ?? '0,0,0,1') . ')' : ($el['color']['value'] ?? '#000000') }};
                             ">
                                 {!! $el['resolved_text_html'] ?? ($el['resolved_text'] ?? '') !!}
