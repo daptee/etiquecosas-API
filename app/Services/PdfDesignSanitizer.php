@@ -164,6 +164,12 @@ class PdfDesignSanitizer
             if (isset($el['border']['width_cm'])) {
                 $el['border']['width_cm'] = max(0, min(5, (float) $el['border']['width_cm']));
             }
+            if (isset($el['background_image']) && is_string($el['background_image'])) {
+                $el['background_image'] = strip_tags($el['background_image']);
+            }
+            if (isset($el['custom_icon_path']) && is_string($el['custom_icon_path'])) {
+                $el['custom_icon_path'] = strip_tags($el['custom_icon_path']);
+            }
 
             return $el;
         }, $elements);

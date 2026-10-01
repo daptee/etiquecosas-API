@@ -166,6 +166,7 @@
                             $innerWidthCm = max(0, $declaredWidthCm - 2 * $borderWidthCm);
                             $innerHeightCm = max(0, $declaredHeightCm - 2 * $borderWidthCm);
                             $backgroundColorCss = ($el['color']['mode'] ?? 'hex') === 'cmyk' ? 'cmyk(' . $el['color']['value'] . ')' : ($el['color']['value'] ?? '#FFFFFF');
+                            $backgroundImagePath = $el['background_image'] ?? null;
                         @endphp
                         @if (($el['resolved_shape_type'] ?? null) === 'custom' && !empty($el['resolved_shape_outline_svg']))
                             @php
@@ -192,7 +193,19 @@
                                 border-radius: {{ $borderRadius }};
                                 border: {{ $borderCss }};
                                 background: {{ $backgroundColorCss }};
-                            "></div>
+                            ">
+                                @if ($backgroundImagePath)
+                                    {{-- Imagen propia de ESTA etiqueta (no toda la página) —
+                                         reemplaza el color de fondo. Va adentro del mismo div
+                                         con overflow:hidden/border-radius de arriba, así que
+                                         respeta el recorte/esquinas igual que el color. --}}
+                                    <img src="file://{{ str_replace('\\', '/', public_path($backgroundImagePath)) }}" style="
+                                        width: 100%;
+                                        height: 100%;
+                                        object-fit: cover;
+                                    ">
+                                @endif
+                            </div>
                         @endif
                         @break
 

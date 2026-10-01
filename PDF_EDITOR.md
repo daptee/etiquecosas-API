@@ -201,6 +201,8 @@ Un diseño de **dos páginas** es simplemente dos entradas en `pages`, cada una 
 | `rotation_deg` | opcional en cualquier tipo (default `0`) | Rotación del elemento en grados, sobre su propio centro. Se clampea entre -360 y 360 |
 | `color` | en `background`/`text` | `{ "mode": "hex" \| "cmyk", "value": "..." }`. Para `cmyk`, `value` es `"c,m,y,k"` (0 a 1), igual que ya usan las vistas legacy |
 | `label_shape_id` | opcional en `background` | Referencia a `label_shapes.id` si ese elemento representa una forma del catálogo |
+| `background_image` | opcional en `background` | Ruta de una imagen propia de ESTE elemento (subida por `POST .../element-image`) — reemplaza el `color` como relleno. Ver [PDF_IMAGENES_ETIQUETA_E_ICONO.md](PDF_IMAGENES_ETIQUETA_E_ICONO.md) |
+| `custom_icon_path` | opcional en `icon` | Ruta de una imagen propia de ESTE elemento (subida por `POST .../element-image`, NO aparece en `GET /api/icons`) — reemplaza `icon_id`. Ver [PDF_IMAGENES_ETIQUETA_E_ICONO.md](PDF_IMAGENES_ETIQUETA_E_ICONO.md) |
 | `group_id` | opcional | Puramente organizativo para el editor (agrupar los elementos de una misma etiqueta física); el backend no lo usa. Para que varios elementos mantengan una distancia fija entre sí y queden centrados en su etiqueta, ver `layout_groups` en [PDF_LAYOUT_GROUPS.md](PDF_LAYOUT_GROUPS.md) |
 | `editable_by_customer` | opcional (default `false`) | Si es `true`, el cliente puede modificar este elemento en el checkout |
 | `editable_field` | requerido si `editable_by_customer` es `true` | `text` \| `color` \| `icon` — qué puede cambiar el cliente en ese elemento |

@@ -817,6 +817,11 @@ class EtiquetaService
                 $iconPath = public_path($attributeIcon);
             } elseif ($editable && $field === 'icon' && $customIcon) {
                 $iconPath = public_path($customIcon);
+            } elseif (!empty($el['custom_icon_path'])) {
+                // Imagen subida puntual para ESTE elemento (no viene del
+                // catálogo personalization_icons) — mismo nivel que icon_id,
+                // una alternativa a elegir un ícono del catálogo.
+                $iconPath = public_path($el['custom_icon_path']);
             } elseif (!empty($el['icon_id'])) {
                 $icon = PersonalizationIcon::find($el['icon_id']);
                 $iconPath = $icon && $icon->icon ? public_path($icon->icon) : null;

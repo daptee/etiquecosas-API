@@ -522,6 +522,35 @@ class ProductPdfDesignController extends Controller
         return $this->success(['path' => $path], 'Imagen de fondo subida');
     }
 
+    /**
+     * Sube una imagen para usar en UN elemento puntual del diseño — como
+     * fondo de una etiqueta (data.pages[].elements[].background_image) o como
+     * ícono custom (data.pages[].elements[].custom_icon_path). A diferencia de
+     * subir un ícono por POST /icons, esto NO crea nada en personalization_icons
+     * — es una imagen propia de este diseño, no aparece en GET /api/icons.
+     * Solo sube el archivo y devuelve la ruta — el front la guarda en el
+     * campo que corresponda dentro del `data` al actualizar el diseño.
+     */
+    public function uploadElementImage(Request $request, $id)
+    {
+        $design = $this->findObject(ProductPdfDesign::class, $id);
+
+        $validator = Validator::make($request->all(), [
+            'image' => 'required|file|mimes:jpg,jpeg,png,webp,svg|max:8192',
+        ]);
+        if ($validator->fails()) {
+            $this->logAudit(Auth::user(), 'Upload Pdf Design Element Image', $request->all(), $validator->errors());
+            return $this->validationError($validator->errors());
+        }
+
+        $file = $request->file('image');
+        $path = 'pdf-element-images/' . $design->id . '/' . uniqid('el_') . '.' . $file->getClientOriginalExtension();
+        Storage::disk('public_uploads')->put($path, file_get_contents($file));
+
+        $this->logAudit(Auth::user(), 'Upload Pdf Design Element Image', ['designId' => $id], ['path' => $path]);
+        return $this->success(['path' => $path], 'Imagen subida');
+    }
+
     private function rules(): array
     {
         return [
