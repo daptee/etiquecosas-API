@@ -79,10 +79,16 @@ class ProductPdfDesignController extends Controller
             return $this->validationError($validator->errors());
         }
 
+        $data = $this->sanitizeDesignData($request->input('data'));
+        if ($layoutErrors = $this->layoutGroupErrors($data)) {
+            $this->logAudit(Auth::user(), 'Store Product Pdf Design', $request->all(), $layoutErrors);
+            return $this->validationError($layoutErrors);
+        }
+
         $design = ProductPdfDesign::create([
             'label_shape_id' => $request->labelShapeId,
             'name' => $request->name,
-            'data' => $this->sanitizeDesignData($request->input('data')),
+            'data' => $data,
             'is_published' => $request->boolean('isPublished'),
             'status_id' => $request->statusId ?? 1,
         ]);
@@ -106,10 +112,19 @@ class ProductPdfDesignController extends Controller
             return $this->validationError($validator->errors());
         }
 
+        $data = $design->data;
+        if (is_array($request->input('data'))) {
+            $data = $this->sanitizeDesignData($request->input('data'));
+            if ($layoutErrors = $this->layoutGroupErrors($data)) {
+                $this->logAudit(Auth::user(), 'Update Product Pdf Design', $request->all(), $layoutErrors);
+                return $this->validationError($layoutErrors);
+            }
+        }
+
         $design->update([
             'label_shape_id' => $request->input('labelShapeId', $design->label_shape_id),
             'name' => $request->input('name', $design->name),
-            'data' => $request->has('data') ? $this->sanitizeDesignData($request->input('data')) : $design->data,
+            'data' => $data,
             'is_published' => $request->has('isPublished') ? $request->boolean('isPublished') : $design->is_published,
             'status_id' => $request->input('statusId', $design->status_id),
         ]);
@@ -424,13 +439,39 @@ class ProductPdfDesignController extends Controller
         // ?fecha= (cualquier formato que entienda Carbon::parse) y
         // ?numeroPedido= simulan esos datos de una venta real.
         $fechaPreview = $request->query('fecha') ? Carbon::parse($request->query('fecha')) : now();
-        $numeroPedidoPreview = (int) $request->query('numeroPedido', 0);
+        $numeroPedidoPreview = (int) $request->query('numeroPedido', 111111);
+        // Para {{id_producto}}: no hay producto comprado detrás del preview.
+        $idProductoPreview = (int) $request->query('idProducto', 222222);
 
         $productOrder = (object)[
             'id' => 'preview-' . $design->id,
+            'product_id' => $idProductoPreview,
             'product' => (object)['name' => $design->name],
             'variant' => $variantId ? ProductVariant::find($variantId) : null,
         ];
+
+        // ?format=layout: mismo cálculo que el PDF, pero devuelve las
+        // posiciones de los layout_groups en JSON (para comparar contra el
+        // editor), sin renderizar nada.
+        if ($request->query('format') === 'layout') {
+            try {
+                $layout = EtiquetaService::calcularLayoutDesdeDesign(
+                    $numeroPedidoPreview,
+                    $design,
+                    $productOrder,
+                    $nombre,
+                    $customColor,
+                    $customIcon,
+                    $fechaPreview,
+                    $firstName,
+                    $lastName
+                );
+            } catch (\Throwable $e) {
+                return $this->error('Error calculando el layout: ' . $e->getMessage(), 500);
+            }
+
+            return response()->json($layout);
+        }
 
         try {
             $paths = EtiquetaService::generarEtiquetasDesdeDesign(
@@ -509,10 +550,40 @@ class ProductPdfDesignController extends Controller
                 if (!empty($page['sheet']) && is_array($page['sheet'])) {
                     $page['sheet'] = PdfDesignSanitizer::sanitizeSheet($page['sheet']);
                 }
+                if (!empty($page['layout_groups']) && is_array($page['layout_groups'])) {
+                    $page['layout_groups'] = PdfDesignSanitizer::sanitizeLayoutGroups($page['layout_groups']);
+                }
                 return $page;
             }, $data['pages']);
         }
 
         return $data;
+    }
+
+    /**
+     * Errores de data.pages[].layout_groups (ya saneados) en el formato de
+     * errores de validación: "data.pages.{i}.layout_groups.{j}" => [mensaje].
+     * Vacío = todos los grupos son válidos.
+     */
+    private function layoutGroupErrors(array $data): array
+    {
+        $errors = [];
+
+        foreach ($data['pages'] ?? [] as $pageIdx => $page) {
+            if (!is_array($page) || !array_key_exists('layout_groups', $page) || $page['layout_groups'] === null) {
+                continue;
+            }
+            if (!is_array($page['layout_groups'])) {
+                $errors["data.pages.{$pageIdx}.layout_groups"] = ['layout_groups tiene que ser una lista.'];
+                continue;
+            }
+
+            $groupErrors = PdfDesignSanitizer::validateLayoutGroups($page['layout_groups'], $page['elements'] ?? []);
+            foreach ($groupErrors as $groupIdx => $message) {
+                $errors["data.pages.{$pageIdx}.layout_groups.{$groupIdx}"] = [$message];
+            }
+        }
+
+        return $errors;
     }
 }

@@ -11,6 +11,10 @@ class PdfDesignSanitizer
     private const ALLOWED_VERTICAL_ALIGN = ['top', 'middle', 'bottom'];
     private const ALLOWED_DYNAMIC_FIELDS = ['nombre_apellido', 'nombre', 'apellido', 'fecha', 'numero_pedido'];
     private const ALLOWED_RADIUS_MODES = ['straight', 'rounded'];
+    private const ALLOWED_LAYOUT_DIRECTIONS = ['vertical', 'horizontal'];
+    private const ALLOWED_LAYOUT_ALIGNS = ['start', 'center', 'end'];
+    private const ALLOWED_LAYOUT_MEMBER_TYPES = ['text', 'icon'];
+    private const MAX_LAYOUT_GAP_CM = 50;
 
     /**
      * Deja pasar únicamente primitivos de forma SVG. Rechaza cualquier otra
@@ -186,5 +190,140 @@ class PdfDesignSanitizer
         }
 
         return $sheet;
+    }
+
+    /**
+     * Sanea data.pages[].layout_groups: solo deja pasar los campos conocidos,
+     * con los ids limpios y gap_cm como número. No decide si el grupo es
+     * válido — eso lo hace validateLayoutGroups() (422 al guardar, descarte
+     * silencioso al generar).
+     */
+    public static function sanitizeLayoutGroups(array $groups): array
+    {
+        return array_values(array_map(function ($group) {
+            if (!is_array($group)) {
+                return $group;
+            }
+
+            $clean = [
+                'id' => isset($group['id']) && is_scalar($group['id']) ? strip_tags((string) $group['id']) : null,
+                'container_element_id' => isset($group['container_element_id']) && is_scalar($group['container_element_id'])
+                    ? strip_tags((string) $group['container_element_id'])
+                    : null,
+                'direction' => $group['direction'] ?? null,
+                'gap_cm' => isset($group['gap_cm']) && is_numeric($group['gap_cm']) ? (float) $group['gap_cm'] : ($group['gap_cm'] ?? null),
+                'align' => $group['align'] ?? 'center',
+                'members' => is_array($group['members'] ?? null)
+                    ? array_values(array_map(fn($id) => is_scalar($id) ? strip_tags((string) $id) : $id, $group['members']))
+                    : ($group['members'] ?? null),
+            ];
+
+            return $clean;
+        }, $groups));
+    }
+
+    /**
+     * Valida los layout_groups de UNA página contra sus elementos. Devuelve
+     * [índice del grupo => mensaje] solo para los grupos inválidos (vacío =
+     * todo bien). Se usa al guardar (cada error es un 422) y al generar el PDF
+     * (los grupos con error se descartan con un warning).
+     *
+     * Un miembro repetido en dos grupos es error para el SEGUNDO grupo (al
+     * generar, el primero lo conserva).
+     */
+    public static function validateLayoutGroups(array $groups, array $elements): array
+    {
+        $elementsById = [];
+        foreach ($elements as $el) {
+            if (is_array($el) && isset($el['id']) && is_scalar($el['id']) && $el['id'] !== '') {
+                $elementsById[(string) $el['id']] = $el;
+            }
+        }
+
+        $errors = [];
+        $seenGroupIds = [];
+        $usedMembers = [];
+
+        foreach ($groups as $idx => $group) {
+            if (!is_array($group)) {
+                $errors[$idx] = 'El grupo tiene que ser un objeto.';
+                continue;
+            }
+
+            $groupId = $group['id'] ?? null;
+            if (!is_scalar($groupId) || (string) $groupId === '') {
+                $errors[$idx] = 'Falta el id del grupo.';
+                continue;
+            }
+            $groupId = (string) $groupId;
+            if (isset($seenGroupIds[$groupId])) {
+                $errors[$idx] = "El id de grupo \"{$groupId}\" está repetido en la página.";
+                continue;
+            }
+            $seenGroupIds[$groupId] = true;
+
+            $containerId = $group['container_element_id'] ?? null;
+            $container = is_scalar($containerId) ? ($elementsById[(string) $containerId] ?? null) : null;
+            if (!$container) {
+                $errors[$idx] = "Grupo \"{$groupId}\": el container_element_id no existe en la página.";
+                continue;
+            }
+            if (($container['type'] ?? null) !== 'background') {
+                $errors[$idx] = "Grupo \"{$groupId}\": el contenedor tiene que ser un elemento de tipo background.";
+                continue;
+            }
+
+            if (!in_array($group['direction'] ?? null, self::ALLOWED_LAYOUT_DIRECTIONS, true)) {
+                $errors[$idx] = "Grupo \"{$groupId}\": direction tiene que ser vertical u horizontal.";
+                continue;
+            }
+            if (!in_array($group['align'] ?? 'center', self::ALLOWED_LAYOUT_ALIGNS, true)) {
+                $errors[$idx] = "Grupo \"{$groupId}\": align tiene que ser start, center o end.";
+                continue;
+            }
+
+            $gap = $group['gap_cm'] ?? null;
+            if (!is_numeric($gap) || (float) $gap < 0 || (float) $gap > self::MAX_LAYOUT_GAP_CM) {
+                $errors[$idx] = "Grupo \"{$groupId}\": gap_cm tiene que ser un número entre 0 y " . self::MAX_LAYOUT_GAP_CM . '.';
+                continue;
+            }
+
+            $members = $group['members'] ?? null;
+            if (!is_array($members) || count($members) === 0) {
+                $errors[$idx] = "Grupo \"{$groupId}\": members no puede estar vacío.";
+                continue;
+            }
+
+            $memberError = null;
+            $groupMembers = [];
+            foreach ($members as $memberId) {
+                $memberKey = is_scalar($memberId) ? (string) $memberId : null;
+                $member = $memberKey !== null ? ($elementsById[$memberKey] ?? null) : null;
+                if (!$member) {
+                    $memberError = "Grupo \"{$groupId}\": el miembro \"" . ($memberKey ?? '?') . '" no existe en la página.';
+                    break;
+                }
+                if (!in_array($member['type'] ?? null, self::ALLOWED_LAYOUT_MEMBER_TYPES, true)) {
+                    $memberError = "Grupo \"{$groupId}\": el miembro \"{$memberKey}\" tiene que ser de tipo text o icon.";
+                    break;
+                }
+                if (isset($usedMembers[$memberKey]) || isset($groupMembers[$memberKey])) {
+                    $otherGroup = $usedMembers[$memberKey] ?? $groupId;
+                    $memberError = "Grupo \"{$groupId}\": el elemento \"{$memberKey}\" ya está en el grupo \"{$otherGroup}\".";
+                    break;
+                }
+                $groupMembers[$memberKey] = true;
+            }
+            if ($memberError) {
+                $errors[$idx] = $memberError;
+                continue;
+            }
+
+            foreach (array_keys($groupMembers) as $memberKey) {
+                $usedMembers[$memberKey] = $groupId;
+            }
+        }
+
+        return $errors;
     }
 }

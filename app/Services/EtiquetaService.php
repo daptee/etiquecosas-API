@@ -15,6 +15,15 @@ use setasign\Fpdi\Fpdi;
 class EtiquetaService
 {
     private const CM_TO_PT = 72 / 2.54;
+    // font_size_px del editor está en px CSS (96 dpi, igual que config/dompdf.php).
+    private const PX_TO_CM = 2.54 / 96;
+
+    // Fuente de respaldo de todos los textos del editor (y la que se usa con
+    // font_id vacío): métricas compatibles con Arial, que es lo que dibuja el
+    // editor. Sin esto dompdf caía en Helvetica (sin fuente) o Times (fuente
+    // subida que no carga). Se declara en RENDER.blade.php.
+    public const FALLBACK_FONT_FAMILY = 'Liberation Sans';
+    public const FALLBACK_FONT_FILE = 'fonts/LiberationSans-Regular.ttf';
 
     // TEMPORAL — buffer de debug para exponer en la respuesta de la API
     // (además del log) mientras se investiga el fix de íconos por atributo.
@@ -365,11 +374,155 @@ class EtiquetaService
         $dirPath = storage_path("app/pdf/planchas/{$fechaCarpeta}");
         if (!is_dir($dirPath)) mkdir($dirPath, 0755, true);
 
-        // Para elementos de texto con dynamic_field "fecha"/"numero_pedido" —
-        // mismo mecanismo que nombre/apellido, pero con datos de la venta en
-        // vez de datos del cliente.
+        $contexto = self::prepararContextoDesign($ventaId, $productOrder, $fechaCompra, $pages, $logId, $customIcon);
+
+        foreach ($nombres as $idx => $nombre) {
+            $resolvedPages = self::resolverPaginasDesign(
+                $pages, $contexto, $nombre, $firstNames[$idx] ?? null, $lastNames[$idx] ?? null,
+                $customColor, $customIcon, $logId
+            );
+
+            // dompdf fija el tamaño físico del PDF una sola vez para todo el
+            // documento: hojas con sheet.width_cm/height_cm distintos no pueden
+            // convivir en el mismo archivo sin que unas se corten o queden con
+            // márgenes de sobra. Se agrupan por tamaño, se renderiza un PDF
+            // temporal por grupo (cada uno con el tamaño de página exacto de
+            // esa hoja) y se fusionan con FPDI en el único archivo final,
+            // igual que ya hace app/Console/Commands/GenerarEtiquetas.php.
+            $grupos = self::agruparPaginasPorTamano($resolvedPages);
+
+            $product_order = (object)[
+                'name' => $nombre,
+                'firstName' => $firstNames[$idx] ?? null,
+                'order' => (object)['id_external' => $ventaId],
+            ];
+
+            $filePath = "{$dirPath}/{$ventaId}-{$productOrder->id}-{$productOrder->product->name}-{$sufijo}-" . ($idx + 1) . ".pdf";
+            $tmpFiles = [];
+
+            try {
+                foreach ($grupos as $grupoIdx => $grupo) {
+                    $plantilla = [
+                        'design' => [
+                            'pages' => $grupo['pages'],
+                        ],
+                    ];
+
+                    $widthPt = $grupo['width_cm'] * self::CM_TO_PT;
+                    $heightPt = $grupo['height_cm'] * self::CM_TO_PT;
+
+                    // El caché de métricas de fuentes usa la ruta de
+                    // config/dompdf.php (font_cache) — no se pisa acá.
+                    $pdf = Pdf::loadView('tematica.editor.RENDER', compact('plantilla', 'product_order'))
+                        ->setPaper([0, 0, $widthPt, $heightPt]);
+                    $dompdf = $pdf->getDomPDF();
+                    $dompdf->getOptions()->setFontDir(public_path('fonts'));
+
+                    $tmpPath = "{$filePath}.tmp{$grupoIdx}.pdf";
+                    $pdf->save($tmpPath);
+                    $tmpFiles[] = $tmpPath;
+                }
+
+                if (count($tmpFiles) === 1) {
+                    rename($tmpFiles[0], $filePath);
+                } else {
+                    $fpdi = new Fpdi();
+                    foreach ($tmpFiles as $tmpFile) {
+                        $pageCount = $fpdi->setSourceFile($tmpFile);
+                        for ($page = 1; $page <= $pageCount; $page++) {
+                            $tplId = $fpdi->importPage($page);
+                            $size = $fpdi->getTemplateSize($tplId);
+                            $fpdi->AddPage($size['orientation'], [$size['width'], $size['height']]);
+                            $fpdi->useTemplate($tplId);
+                        }
+                    }
+                    $fpdi->Output($filePath, 'F');
+                    foreach ($tmpFiles as $tmpFile) {
+                        @unlink($tmpFile);
+                    }
+                }
+
+                $outputFiles[] = $filePath;
+                Log::info("✅ PDF (editor) generado", ['path' => $filePath]);
+            } catch (\Throwable $e) {
+                foreach ($tmpFiles as $tmpFile) {
+                    @unlink($tmpFile);
+                }
+                Log::error("❌ Error generando PDF desde diseño del editor", [
+                    'log_id' => $logId,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        return $outputFiles;
+    }
+
+    /**
+     * Mismo cálculo que generarEtiquetasDesdeDesign() (resolver elementos +
+     * layout_groups), pero sin renderizar: devuelve las posiciones finales
+     * de cada grupo, para el GET .../preview?format=layout del editor.
+     */
+    public static function calcularLayoutDesdeDesign(int $ventaId, ProductPdfDesign $design, $productOrder, string $nombre, $customColor, $customIcon, $fechaCompra = null, ?string $firstName = null, ?string $lastName = null): array
+    {
+        $logId = "design:{$design->id}";
+        $pages = self::normalizarPaginasDesign($design->data ?? []);
+        $contexto = self::prepararContextoDesign($ventaId, $productOrder, $fechaCompra, $pages, $logId, $customIcon);
+        $resolvedPages = self::resolverPaginasDesign($pages, $contexto, $nombre, $firstName, $lastName, $customColor, $customIcon, $logId);
+
+        return [
+            'pages' => array_map(fn($page, $index) => [
+                'index' => $index,
+                'id' => $page['id'],
+                'groups' => $page['layout'],
+            ], $resolvedPages, array_keys($resolvedPages)),
+        ];
+    }
+
+    /**
+     * Resuelve todas las páginas para UN nombre: cada elemento con sus datos
+     * reales (resolverElementoDesign) y después los layout_groups de la
+     * página, que necesitan el texto ya resuelto para medir.
+     */
+    private static function resolverPaginasDesign(array $pages, array $contexto, string $nombre, ?string $firstName, ?string $lastName, $customColor, $customIcon, string $logId): array
+    {
+        $resolvedPages = [];
+
+        foreach ($pages as $pageIdx => $page) {
+            $resolved = [
+                'id' => $page['id'] ?? null,
+                'sheet' => $page['sheet'] ?? ['width_cm' => 18.5, 'height_cm' => 29],
+                'elements' => array_map(
+                    fn($el) => self::resolverElementoDesign(
+                        $el, $nombre, $firstName, $lastName, $customColor, $customIcon,
+                        $contexto['attributeIcons'], $contexto['attributeFonts'],
+                        $contexto['fechaTexto'], $contexto['numeroPedido'], $contexto['idProducto']
+                    ),
+                    $page['elements'] ?? []
+                ),
+            ];
+
+            $resolvedPages[] = self::aplicarLayoutGroups($resolved, $page['layout_groups'] ?? [], $logId, $pageIdx);
+        }
+
+        return $resolvedPages;
+    }
+
+    /**
+     * Datos de la venta que comparten todos los nombres/páginas: fecha,
+     * número de pedido, id de producto e íconos/tipografías por atributo de
+     * la variante.
+     */
+    private static function prepararContextoDesign(int $ventaId, $productOrder, $fechaCompra, array $pages, string $logId, $customIcon = null): array
+    {
+        // Para elementos de texto con dynamic_field "fecha"/"numero_pedido"
+        // (o {{fecha}}/{{numero_pedido}} en content) — mismo mecanismo que
+        // nombre/apellido, pero con datos de la venta en vez de datos del cliente.
         $fechaTexto = Carbon::parse($fechaCompra ?? now())->setTimezone('America/Argentina/Buenos_Aires')->format('d/m/Y');
         $numeroPedido = (string) $ventaId;
+        // {{id_producto}}: products.id del producto comprado. El preview arma
+        // un $productOrder de prueba (stdClass) con su propio product_id.
+        $idProducto = (string) ($productOrder->product_id ?? '');
 
         // Íconos "por atributo": productos con atributos tipo ícono (ej. "Iconos",
         // "Color banda 2") ya traen su propio ícono en el valor elegido de la
@@ -418,93 +571,13 @@ class EtiquetaService
         Log::info('[DEBUG-ICON-FIX] attributeIcons resuelto', $debugAttributeIcons);
         self::$debugIconLog[] = ['tipo' => 'attributeIcons'] + $debugAttributeIcons;
 
-        foreach ($nombres as $idx => $nombre) {
-            $firstName = $firstNames[$idx] ?? null;
-            $lastName = $lastNames[$idx] ?? null;
-
-            $resolvedPages = array_map(function ($page) use ($nombre, $firstName, $lastName, $customColor, $customIcon, $attributeIcons, $attributeFonts, $fechaTexto, $numeroPedido) {
-                return [
-                    'sheet' => $page['sheet'] ?? ['width_cm' => 18.5, 'height_cm' => 29],
-                    'elements' => array_map(
-                        fn($el) => self::resolverElementoDesign($el, $nombre, $firstName, $lastName, $customColor, $customIcon, $attributeIcons, $attributeFonts, $fechaTexto, $numeroPedido),
-                        $page['elements'] ?? []
-                    ),
-                ];
-            }, $pages);
-
-            // dompdf fija el tamaño físico del PDF una sola vez para todo el
-            // documento: hojas con sheet.width_cm/height_cm distintos no pueden
-            // convivir en el mismo archivo sin que unas se corten o queden con
-            // márgenes de sobra. Se agrupan por tamaño, se renderiza un PDF
-            // temporal por grupo (cada uno con el tamaño de página exacto de
-            // esa hoja) y se fusionan con FPDI en el único archivo final,
-            // igual que ya hace app/Console/Commands/GenerarEtiquetas.php.
-            $grupos = self::agruparPaginasPorTamano($resolvedPages);
-
-            $product_order = (object)[
-                'name' => $nombre,
-                'firstName' => $firstNames[$idx] ?? null,
-                'order' => (object)['id_external' => $ventaId],
-            ];
-
-            $filePath = "{$dirPath}/{$ventaId}-{$productOrder->id}-{$productOrder->product->name}-{$sufijo}-" . ($idx + 1) . ".pdf";
-            $tmpFiles = [];
-
-            try {
-                foreach ($grupos as $grupoIdx => $grupo) {
-                    $plantilla = [
-                        'design' => [
-                            'pages' => $grupo['pages'],
-                        ],
-                    ];
-
-                    $widthPt = $grupo['width_cm'] * self::CM_TO_PT;
-                    $heightPt = $grupo['height_cm'] * self::CM_TO_PT;
-
-                    $pdf = Pdf::loadView('tematica.editor.RENDER', compact('plantilla', 'product_order'))
-                        ->setPaper([0, 0, $widthPt, $heightPt]);
-                    $dompdf = $pdf->getDomPDF();
-                    $dompdf->getOptions()->setFontDir(public_path('fonts'));
-                    $dompdf->getOptions()->setFontCache(storage_path('fonts_cache'));
-
-                    $tmpPath = "{$filePath}.tmp{$grupoIdx}.pdf";
-                    $pdf->save($tmpPath);
-                    $tmpFiles[] = $tmpPath;
-                }
-
-                if (count($tmpFiles) === 1) {
-                    rename($tmpFiles[0], $filePath);
-                } else {
-                    $fpdi = new Fpdi();
-                    foreach ($tmpFiles as $tmpFile) {
-                        $pageCount = $fpdi->setSourceFile($tmpFile);
-                        for ($page = 1; $page <= $pageCount; $page++) {
-                            $tplId = $fpdi->importPage($page);
-                            $size = $fpdi->getTemplateSize($tplId);
-                            $fpdi->AddPage($size['orientation'], [$size['width'], $size['height']]);
-                            $fpdi->useTemplate($tplId);
-                        }
-                    }
-                    $fpdi->Output($filePath, 'F');
-                    foreach ($tmpFiles as $tmpFile) {
-                        @unlink($tmpFile);
-                    }
-                }
-
-                $outputFiles[] = $filePath;
-                Log::info("✅ PDF (editor) generado", ['path' => $filePath]);
-            } catch (\Throwable $e) {
-                foreach ($tmpFiles as $tmpFile) {
-                    @unlink($tmpFile);
-                }
-                Log::error("❌ Error generando PDF desde diseño del editor", [
-                    'log_id' => $logId,
-                    'error' => $e->getMessage(),
-                ]);
-            }
-        }
-
-        return $outputFiles;
+        return [
+            'fechaTexto' => $fechaTexto,
+            'numeroPedido' => $numeroPedido,
+            'idProducto' => $idProducto,
+            'attributeIcons' => $attributeIcons,
+            'attributeFonts' => $attributeFonts,
+        ];
     }
 
     /**
@@ -554,11 +627,178 @@ class EtiquetaService
     }
 
     /**
+     * Aplica los layout_groups de una página ya resuelta: cada grupo apila sus
+     * miembros (text/icon) con gap_cm fijo entre sí y centra el conjunto en la
+     * caja completa de su etiqueta (el background contenedor, sin restar
+     * padding). Reescribe x_cm/y_cm (y height_cm en los textos) de los
+     * miembros; no toca z_index ni el orden de los elementos.
+     *
+     * - Miembro ausente (ícono sin imagen resuelta, texto vacío): no ocupa
+     *   lugar, no suma gap y no se dibuja.
+     * - Texto: alto = renglones reales × font_size × line_height, sin
+     *   min_lines; se dibuja sin vertical_align (ver RENDER.blade.php).
+     * - Si el conjunto no entra, no se escala: desborda y queda en el log.
+     * - Grupos inválidos (datos viejos) se descartan con un warning; si un
+     *   elemento está en dos grupos, se queda en el primero.
+     *
+     * Devuelve la página con 'layout' = posiciones finales por grupo (lo que
+     * expone GET .../preview?format=layout).
+     */
+    private static function aplicarLayoutGroups(array $page, $groups, string $logId, int $pageIdx): array
+    {
+        $page['layout'] = [];
+        if (empty($groups) || !is_array($groups)) {
+            return $page;
+        }
+
+        $logContext = ['log_id' => $logId, 'page_index' => $pageIdx, 'page_id' => $page['id'] ?? null];
+        $groups = PdfDesignSanitizer::sanitizeLayoutGroups($groups);
+        $errors = PdfDesignSanitizer::validateLayoutGroups($groups, $page['elements']);
+
+        $indexById = [];
+        foreach ($page['elements'] as $i => $el) {
+            if (isset($el['id']) && is_scalar($el['id']) && (string) $el['id'] !== '' && !isset($indexById[(string) $el['id']])) {
+                $indexById[(string) $el['id']] = $i;
+            }
+        }
+
+        foreach ($groups as $groupIdx => $group) {
+            if (isset($errors[$groupIdx])) {
+                Log::warning('[layout_groups] Grupo descartado', $logContext + ['group_index' => $groupIdx, 'motivo' => $errors[$groupIdx]]);
+                continue;
+            }
+            if ($group['direction'] !== 'vertical') {
+                // Fase 2 (horizontal, con medición del ancho real del texto).
+                Log::warning('[layout_groups] Grupo horizontal todavía no soportado, se ignora', $logContext + ['group_id' => $group['id']]);
+                continue;
+            }
+
+            $container = $page['elements'][$indexById[$group['container_element_id']]];
+            $containerX = (float) ($container['x_cm'] ?? 0);
+            $containerY = (float) ($container['y_cm'] ?? 0);
+            $containerW = (float) ($container['width_cm'] ?? 1);
+            $containerH = (float) ($container['height_cm'] ?? 1);
+            $gap = (float) $group['gap_cm'];
+            $align = $group['align'] ?? 'center';
+
+            // Tamaño de cada miembro: alto en el eje principal, ancho en el transversal.
+            $members = [];
+            foreach ($group['members'] as $memberId) {
+                $i = $indexById[$memberId];
+                $el = $page['elements'][$i];
+                $present = self::esMiembroLayoutPresente($el);
+
+                if ($el['type'] === 'text') {
+                    $fontSizePx = (float) ($el['resolved_font_size_px'] ?? $el['font_size_px'] ?? 32);
+                    $lineHeight = (float) ($el['resolved_line_height_design'] ?? $el['line_height'] ?? 1.15);
+                    $height = count($el['resolved_lines'] ?? ['']) * $fontSizePx * $lineHeight * self::PX_TO_CM;
+                } else {
+                    $height = (float) ($el['height_cm'] ?? 1);
+                }
+
+                $members[] = [
+                    'index' => $i,
+                    'present' => $present,
+                    'width' => (float) ($el['width_cm'] ?? 1),
+                    'height' => $height,
+                ];
+            }
+
+            $presentes = array_values(array_filter($members, fn($m) => $m['present']));
+            $total = array_sum(array_column($presentes, 'height')) + $gap * max(0, count($presentes) - 1);
+            $blockWidth = $presentes ? max(array_column($presentes, 'width')) : 0;
+            $blockX = $containerX + ($containerW - $blockWidth) / 2;
+            $cursorY = $containerY + ($containerH - $total) / 2;
+            $overflow = max(0, $total - $containerH);
+
+            $debugMembers = [];
+            foreach ($members as $member) {
+                $el = &$page['elements'][$member['index']];
+
+                if (!$member['present']) {
+                    $el['layout_hidden'] = true;
+                    $debugMembers[] = ['id' => $el['id'], 'type' => $el['type'], 'present' => false];
+                    unset($el);
+                    continue;
+                }
+
+                $x = match ($align) {
+                    'start' => $blockX,
+                    'end' => $blockX + $blockWidth - $member['width'],
+                    default => $blockX + ($blockWidth - $member['width']) / 2,
+                };
+
+                $el['x_cm'] = $x;
+                $el['y_cm'] = $cursorY;
+                $el['rotation_deg'] = 0;
+                $el['layout_group_id'] = $group['id'];
+
+                if ($el['type'] === 'text') {
+                    $el['height_cm'] = $member['height'];
+                    $el['layout_text'] = true;
+                    $el['resolved_text_html'] = self::renglonesAHtml($el['resolved_lines'] ?? []);
+                }
+
+                $debugMember = [
+                    'id' => $el['id'],
+                    'type' => $el['type'],
+                    'present' => true,
+                    'x_cm' => round($x, 2),
+                    'y_cm' => round($cursorY, 2),
+                    'width_cm' => round($member['width'], 2),
+                    'height_cm' => round($member['height'], 2),
+                ];
+                if ($el['type'] === 'text') {
+                    $debugMember['lines'] = $el['resolved_lines'] ?? [];
+                }
+                $debugMembers[] = $debugMember;
+
+                $cursorY += $member['height'] + $gap;
+                unset($el);
+            }
+
+            if ($overflow > 0) {
+                Log::warning('[layout_groups] El grupo no entra en su etiqueta (no se escala)', $logContext + [
+                    'group_id' => $group['id'],
+                    'overflow_cm' => round($overflow, 2),
+                ]);
+            }
+
+            $page['layout'][] = [
+                'id' => $group['id'],
+                'container' => [
+                    'x_cm' => round($containerX, 2),
+                    'y_cm' => round($containerY, 2),
+                    'width_cm' => round($containerW, 2),
+                    'height_cm' => round($containerH, 2),
+                ],
+                'overflow_cm' => round($overflow, 2),
+                'members' => $debugMembers,
+            ];
+        }
+
+        return $page;
+    }
+
+    /**
+     * Ausente = ícono sin imagen resuelta, o texto que quedó vacío después de
+     * sustituir y normalizar (ej. "apellido" sin dato).
+     */
+    private static function esMiembroLayoutPresente(array $el): bool
+    {
+        return match ($el['type'] ?? null) {
+            'icon' => !empty($el['resolved_icon_path']),
+            'text' => ($el['resolved_text'] ?? '') !== '',
+            default => false,
+        };
+    }
+
+    /**
      * Resuelve un elemento del JSON del diseño: icono/tipografía reales desde los
      * catálogos existentes, texto con el nombre del cliente, y overrides del cliente
      * (color/ícono) SOLO si el elemento fue marcado como editable por el admin.
      */
-    private static function resolverElementoDesign(array $el, string $nombre, ?string $firstName, ?string $lastName, $customColor, $customIcon, $attributeIcons = null, $attributeFonts = null, ?string $fechaTexto = null, ?string $numeroPedido = null): array
+    private static function resolverElementoDesign(array $el, string $nombre, ?string $firstName, ?string $lastName, $customColor, $customIcon, $attributeIcons = null, $attributeFonts = null, ?string $fechaTexto = null, ?string $numeroPedido = null, ?string $idProducto = null): array
     {
         $type = $el['type'] ?? null;
         $editable = ($el['editable_by_customer'] ?? false) === true;
@@ -632,14 +872,16 @@ class EtiquetaService
                 $content = $el['content'] ?? '{{customer_name}}';
                 $isCustomerName = str_contains($content, '{{customer_name}}');
                 $resolvedText = str_replace(
-                    ['{{customer_name}}', '{{customer_first_name}}', '{{customer_last_name}}'],
-                    [$nombre, $firstName ?? '', $lastName ?? ''],
+                    ['{{customer_name}}', '{{customer_first_name}}', '{{customer_last_name}}', '{{fecha}}', '{{numero_pedido}}', '{{id_producto}}'],
+                    [$nombre, $firstName ?? '', $lastName ?? '', $fechaTexto ?? '', $numeroPedido ?? '', $idProducto ?? ''],
                     $content
                 );
             }
 
             $el['is_customer_name'] = $isCustomerName;
-            $el['resolved_text'] = $resolvedText;
+            // Normalizado ANTES de cortar renglones y de contar caracteres para
+            // las reglas por longitud, así el editor y el backend cuentan igual.
+            $el['resolved_text'] = self::normalizarEspacios($resolvedText);
 
             $el['resolved_font_family'] = null;
             $el['resolved_font_files'] = [];
@@ -668,11 +910,15 @@ class EtiquetaService
                 }
             }
 
-            $el['resolved_text_html'] = self::formatearTextoElemento(
+            // Renglones sin escapar (los usa aplicarLayoutGroups para medir y
+            // para rearmar el HTML sin min_lines) + el HTML final ya escapado.
+            $el['resolved_lines'] = self::dividirEnRenglones(
                 $el['resolved_text'],
-                $el,
+                (int) ($el['max_lines'] ?? 3),
+                (int) ($el['max_chars_per_line'] ?? 10),
                 $isCustomerName ? $firstName : null
             );
+            $el['resolved_text_html'] = self::renglonesAHtml($el['resolved_lines'], (int) ($el['min_lines'] ?? 1));
             $el['resolved_font_size_px'] = self::resolverTamanoFuente($el);
 
             // dompdf calcula el line-height sin unidad en base a las métricas
@@ -684,8 +930,13 @@ class EtiquetaService
             // número de line_height se ve distinto según qué tipografía se eligió.
             // Se corrige dividiendo por esa métrica, para que el número que carga el
             // admin se vea igual sin importar la fuente.
-            $fontRatio = self::obtenerRatioMetricasFuente($el['resolved_font_files'][0] ?? null);
-            $el['resolved_line_height'] = self::resolverInterlineado($el) / $fontRatio;
+            // Sin tipografía propia el texto sale con la de respaldo (Liberation
+            // Sans), así que la corrección se calcula con ESE archivo.
+            $fontRatio = self::obtenerRatioMetricasFuente($el['resolved_font_files'][0] ?? public_path(self::FALLBACK_FONT_FILE));
+            // line_height tal cual lo cargó el admin (ya con sus reglas): es el
+            // que usa el layout para el alto del bloque (líneas × fs × lh).
+            $el['resolved_line_height_design'] = self::resolverInterlineado($el);
+            $el['resolved_line_height'] = $el['resolved_line_height_design'] / $fontRatio;
             $el['resolved_letter_spacing_px'] = self::resolverEspaciadoLetras($el);
         }
 
@@ -700,57 +951,57 @@ class EtiquetaService
     }
 
     /**
-     * Arma el texto final (con los <br> de corte de renglón) para un elemento
-     * de texto del editor, usando formatName() con los límites que haya
-     * configurado el admin en ese elemento (o los defaults de siempre: 3
-     * renglones máx, 10 caracteres por renglón). Si min_lines pide más
-     * renglones de los que formatName generó, rellena con renglones vacíos.
+     * HTML final de un texto del editor: los renglones escapados (un nombre
+     * con "<" o "&" no puede romper el PDF) unidos con <br>. Si min_lines
+     * pide más renglones de los que salieron, rellena con renglones vacíos
+     * (dentro de un layout_group se llama con 1: no se reserva espacio).
      */
-    private static function formatearTextoElemento(string $texto, array $el, ?string $firstName): string
+    private static function renglonesAHtml(array $lineas, int $minLines = 1): string
     {
-        $maxLines = (int) ($el['max_lines'] ?? 3);
-        $maxCharsPerLine = (int) ($el['max_chars_per_line'] ?? 10);
-        $minLines = (int) ($el['min_lines'] ?? 1);
-
-        // A diferencia de formatName() (legacy, fuerza mayúsculas), acá se
-        // respeta la mayúscula/minúscula tal cual se tipeó el texto (fijo o
-        // dinámico) — el editor nuevo permite mezclar estilos ("CIRO" +
-        // "Robertito") y forzar mayúsculas lo rompería.
-        $formateado = self::dividirEnRenglones($texto, $maxLines, $maxCharsPerLine, $firstName);
-
-        $lineas = explode('<br>', $formateado);
-        while (count($lineas) < $minLines) {
-            $lineas[] = '&nbsp;';
+        $html = array_map(fn($linea) => htmlspecialchars($linea, ENT_QUOTES, 'UTF-8'), $lineas);
+        while (count($html) < $minLines) {
+            $html[] = '&nbsp;';
         }
 
-        return implode('<br>', $lineas);
+        return implode('<br>', $html);
+    }
+
+    /**
+     * Cualquier secuencia de espacios en blanco (incluidos \n y \t) pasa a un
+     * solo espacio, y se recortan los extremos.
+     */
+    private static function normalizarEspacios(string $texto): string
+    {
+        return trim(preg_replace('/\s+/u', ' ', $texto) ?? $texto);
     }
 
     /**
      * Misma lógica de corte de renglones que formatName() (nombre/apellido
      * separado en 2 líneas si se pasa $firstName, o word-wrap agrupando
-     * partículas de apellidos compuestos) pero sin forzar mayúsculas.
+     * partículas de apellidos compuestos) pero sin forzar mayúsculas — el
+     * editor nuevo permite mezclar estilos ("CIRO" + "Robertito").
+     * Devuelve los renglones SIN escapar; nunca más de $maxLines (lo que
+     * sobra queda pegado en el último).
      */
-    private static function dividirEnRenglones(string $texto, int $maxLines, int $maxCharsPerLine, ?string $firstName): string
+    private static function dividirEnRenglones(string $texto, int $maxLines, int $maxCharsPerLine, ?string $firstName): array
     {
-        $texto = trim($texto);
+        $maxLines = max(1, $maxLines);
+        $texto = self::normalizarEspacios($texto);
 
         if ($firstName !== null && $firstName !== '') {
-            $firstNameTrim = trim($firstName);
+            $firstNameTrim = self::normalizarEspacios($firstName);
 
             if (mb_strlen($texto, 'UTF-8') <= $maxCharsPerLine) {
-                return $texto;
+                return [$texto];
             }
 
             $lastNamePart = trim(mb_substr($texto, mb_strlen($firstNameTrim, 'UTF-8'), null, 'UTF-8'));
 
             if ($lastNamePart !== '') {
-                $lines = [$firstNameTrim, $lastNamePart];
-                if (count($lines) > $maxLines) {
-                    $lines = array_slice($lines, 0, $maxLines);
-                    $lines[$maxLines - 1] .= '…';
+                if ($maxLines === 1) {
+                    return [$firstNameTrim . '…'];
                 }
-                return implode('<br>', $lines);
+                return [$firstNameTrim, $lastNamePart];
             }
         }
 
@@ -761,21 +1012,20 @@ class EtiquetaService
         $currentLine = '';
 
         foreach ($tokens as $token) {
-            if (mb_strlen($currentLine . ' ' . $token, 'UTF-8') > $maxCharsPerLine && count($lines) < $maxLines - 1) {
+            // Con el renglón todavía vacío se mide solo el token (antes se
+            // medía " " + token: una primera palabra de maxCharsPerLine
+            // caracteres o más dejaba un renglón vacío arriba).
+            $candidate = $currentLine === '' ? $token : $currentLine . ' ' . $token;
+            if ($currentLine !== '' && mb_strlen($candidate, 'UTF-8') > $maxCharsPerLine && count($lines) < $maxLines - 1) {
                 $lines[] = trim($currentLine);
                 $currentLine = $token;
             } else {
-                $currentLine .= ($currentLine ? ' ' : '') . $token;
+                $currentLine = $candidate;
             }
         }
         $lines[] = trim($currentLine);
 
-        if (count($lines) > $maxLines) {
-            $lines = array_slice($lines, 0, $maxLines);
-            $lines[$maxLines - 1] .= '…';
-        }
-
-        return implode('<br>', $lines);
+        return $lines;
     }
 
     /**
@@ -855,7 +1105,11 @@ class EtiquetaService
      * una fuente (vendor/dompdf/dompdf/lib/Cpdf.php::getFontHeight(), vía
      * Adapter/CPDF.php::get_font_height()):
      *
-     *   (hhea.ascent - hhea.descent) / unitsPerEm  ×  config('dompdf.options.font_height_ratio')
+     *   (hhea.ascent - hhea.descent + hhea.lineGap) / unitsPerEm  ×  config('dompdf.options.font_height_ratio')
+     *
+     * El lineGap entra porque php-font-lib lo guarda como FontHeightOffset en
+     * el .ufm y Cpdf::getFontHeight() lo suma (medido con Liberation Sans:
+     * sin él, cada renglón salía ~3% más alto que en el navegador).
      *
      * dompdf aplica esto como factor sobre CUALQUIER line-height sin unidad
      * que se declare, así que el mismo número de line_height termina viéndose
@@ -884,10 +1138,11 @@ class EtiquetaService
             $unitsPerEm = (float) $font->getData('head', 'unitsPerEm');
             $ascent = (float) $font->getData('hhea', 'ascent');
             $descent = (float) $font->getData('hhea', 'descent');
+            $lineGap = (float) ($font->getData('hhea', 'lineGap') ?? 0);
             $fontHeightRatioConfig = (float) config('dompdf.options.font_height_ratio', 1.1);
 
             if ($unitsPerEm > 0) {
-                $ratio = (($ascent - $descent) / $unitsPerEm) * $fontHeightRatioConfig;
+                $ratio = (($ascent - $descent + $lineGap) / $unitsPerEm) * $fontHeightRatioConfig;
             }
         } catch (\Throwable $e) {
             $ratio = 1.0;

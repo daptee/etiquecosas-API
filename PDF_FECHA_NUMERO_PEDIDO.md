@@ -36,7 +36,7 @@ Dos `dynamic_field` nuevos para elementos de texto, al lado de `nombre`/`apellid
 
 ## Preview
 
-El preview del editor no tiene una venta real detrás, así que por defecto muestra la fecha de hoy y `0`. Para simularlo con datos de mentira (o de una venta real), usá los parámetros nuevos del preview — ver [PDF_PREVIEW_ICONOS.md](PDF_PREVIEW_ICONOS.md):
+El preview del editor no tiene una venta real detrás, así que por defecto muestra la fecha de hoy y `111111`. Para simularlo con datos de mentira (o de una venta real), usá los parámetros nuevos del preview — ver [PDF_PREVIEW_ICONOS.md](PDF_PREVIEW_ICONOS.md):
 
 ```
 GET /product-pdf-designs/{id}/preview?fecha=2026-01-15&numeroPedido=100154

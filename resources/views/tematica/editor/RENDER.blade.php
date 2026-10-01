@@ -12,6 +12,22 @@
     margin: 0;
 }
 
+{{-- Fuente de respaldo de todos los textos (y la de font_id vacío):
+     métricas de Arial, que es lo que dibuja el editor. Se declara para 400 y
+     700 con el mismo archivo para que un font_weight distinto no caiga en
+     Times-Bold. --}}
+@php
+    $fallbackFontFamily = \App\Services\EtiquetaService::FALLBACK_FONT_FAMILY;
+    $fallbackFontPath = str_replace('\\', '/', public_path(\App\Services\EtiquetaService::FALLBACK_FONT_FILE));
+@endphp
+@foreach ([400, 700] as $fallbackWeight)
+@font-face {
+    font-family: '{{ $fallbackFontFamily }}';
+    src: url('file://{{ $fallbackFontPath }}') format('truetype');
+    font-weight: {{ $fallbackWeight }};
+}
+@endforeach
+
 @foreach ($plantilla['design']['pages'] as $page)
     @foreach ($page['elements'] as $el)
         @if (($el['type'] ?? null) === 'text' && !empty($el['resolved_font_family']) && !empty($el['resolved_font_files'][0]))
@@ -95,6 +111,8 @@
             ">
         @endif
         @foreach ($page['elements'] as $el)
+            {{-- Miembro ausente de un layout_group (ícono sin imagen, texto vacío). --}}
+            @continue(!empty($el['layout_hidden']))
             @php
                 $rotationDeg = (float) ($el['rotation_deg'] ?? 0);
             @endphp
@@ -214,6 +232,15 @@
                                 'bottom' => ['100%', "translateY(-100%) translateY({$bottomNudgePx}px)"],
                                 default => ['50%', "translateY(-50%) translateY(-{$middleNudgePx}px)"],
                             };
+                            // Texto dentro de un layout_group: la caja ya mide
+                            // exactamente renglones × font_size × line_height (lo
+                            // calculó aplicarLayoutGroups), así que va pegado arriba,
+                            // sin vertical_align ni empujones, y sin que dompdf lo
+                            // vuelva a cortar por ancho.
+                            $isLayoutText = !empty($el['layout_text']);
+                            if ($isLayoutText) {
+                                [$wrapTop, $wrapTransform] = ['0', 'none'];
+                            }
                             // resolved_line_height ya viene resuelto según
                             // line_height_rules (igual que resolved_font_size_px con
                             // font_size_rules) — solo cae al line_height fijo (o 1.15)
@@ -231,7 +258,8 @@
                             text-align: {{ $el['text_align'] ?? 'center' }};
                         ">
                             <p style="
-                                font-family: '{{ $el['resolved_font_family'] ?? 'sans-serif' }}';
+                                font-family: @if (!empty($el['resolved_font_family']))'{{ $el['resolved_font_family'] }}', @endif'{{ $fallbackFontFamily }}';
+                                @if ($isLayoutText) white-space: nowrap; @endif
                                 font-size: {{ $el['resolved_font_size_px'] ?? $el['font_size_px'] ?? 32 }}px;
                                 font-weight: {{ $el['font_weight'] ?? 400 }};
                                 line-height: {{ $lineHeight }};

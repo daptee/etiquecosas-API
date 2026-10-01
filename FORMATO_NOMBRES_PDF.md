@@ -85,7 +85,7 @@ DE, DEL, DE LA, DE LOS, DE LAS, DI, LA, LAS, LOS, EL, Y, VAN, VON, BIN, BTE
 |---|---|
 | `Sofia` | `SOFIA` *(1 renglón)* |
 | `Juan Perez` | `JUAN PEREZ` *(1 renglón — entra en 10 caracteres)* |
-| `Guillermina` | *(renglón vacío)* <br> `GUILLERMINA` *(2 renglones — ver nota abajo)* |
+| `Guillermina` | *(renglón vacío)* <br> `GUILLERMINA` *(2 renglones en las vistas legacy — ver nota abajo)* |
 | `Juan Carlos Perez` | `JUAN` <br> `CARLOS` <br> `PEREZ` *(3 renglones)* |
 | `Maria de la Cruz` | `MARIA` <br> `DE LA CRUZ` *(2 renglones — "DE LA CRUZ" no se separa)* |
 | `Juan de los Santos` | `JUAN` <br> `DE LOS SANTOS` *(2 renglones)* |
@@ -94,7 +94,9 @@ DE, DEL, DE LA, DE LOS, DE LAS, DI, LA, LAS, LOS, EL, Y, VAN, VON, BIN, BTE
 
 ⚠️ **A diferencia del Modo A, acá el truncado con "…" nunca se activa**, sin importar qué `max_lines` configures — por cómo arma los renglones, el algoritmo nunca genera más de `max_lines` renglones para empezar (el último renglón simplemente absorbe todo lo que quede, por más que sea largo, como en el último ejemplo de la tabla).
 
-⚠️ **Caso raro**: una sola palabra sin espacios y más larga que `max_chars_per_line` (ej. `GUILLERMINA` sola) puede generar un **renglón vacío antes** de la palabra, porque el algoritmo solo corta entre palabras, nunca dentro de una palabra. Si te pasa esto en un texto fijo del editor, conviene acortar el texto o agrandar `max_chars_per_line`.
+**Editor nuevo — espacios**: antes de cortar (y antes de contar caracteres para las reglas por longitud), cualquier secuencia de espacios en blanco (espacios dobles, `
+`, `	`) pasa a un solo espacio y se recortan los extremos: `Ana  Paz` y `Ana
+Paz` dan `Ana Paz`. Una palabra más larga que `max_chars_per_line` no se parte y queda sola en su renglón. En el editor nuevo ya **no** se genera el renglón vacío de arriba (`GUILLERMINA` sale en 1 renglón); las vistas legacy (`formatName()`) siguen igual que antes. El pseudocódigo exacto está en [PDF_LAYOUT_GROUPS_RESPUESTAS_2.md](PDF_LAYOUT_GROUPS_RESPUESTAS_2.md#23-algoritmo-de-corte-de-líneas).
 
 ---
 
