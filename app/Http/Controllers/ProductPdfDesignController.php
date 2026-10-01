@@ -488,7 +488,7 @@ class ProductPdfDesignController extends Controller
             'name' => 'required|string|max:255',
             'data' => 'required|array',
             'data.pages' => 'required|array|min:1',
-            'data.pages.*.elements' => 'required|array',
+            'data.pages.*.elements' => 'nullable|array',
             'isPublished' => 'nullable|boolean',
             'statusId' => 'nullable|exists:general_statuses,id',
         ];
@@ -503,6 +503,9 @@ class ProductPdfDesignController extends Controller
     {
         if (!empty($data['pages']) && is_array($data['pages'])) {
             $data['pages'] = array_map(function ($page) {
+                if (!empty($page['elements']) && is_array($page['elements'])) {
+                    $page['elements'] = PdfDesignSanitizer::sanitizeElements($page['elements']);
+                }
                 if (!empty($page['sheet']) && is_array($page['sheet'])) {
                     $page['sheet'] = PdfDesignSanitizer::sanitizeSheet($page['sheet']);
                 }
