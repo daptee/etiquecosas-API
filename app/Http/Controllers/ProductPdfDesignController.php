@@ -503,9 +503,6 @@ class ProductPdfDesignController extends Controller
     {
         if (!empty($data['pages']) && is_array($data['pages'])) {
             $data['pages'] = array_map(function ($page) {
-                if (!empty($page['elements']) && is_array($page['elements'])) {
-                    $page['elements'] = PdfDesignSanitizer::sanitizeElements($page['elements']);
-                }
                 if (!empty($page['sheet']) && is_array($page['sheet'])) {
                     $page['sheet'] = PdfDesignSanitizer::sanitizeSheet($page['sheet']);
                 }
