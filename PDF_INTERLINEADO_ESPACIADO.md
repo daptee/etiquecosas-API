@@ -20,6 +20,8 @@ Ninguno de los dos es obligatorio — si no se mandan, el texto se comporta exac
 - Se clampea entre `0.5` y `5`.
 - Solo tiene efecto visible en textos de **más de un renglón** — con nombre/apellido en una sola línea no se nota.
 
+**Importante — corrección automática por tipografía**: dompdf no interpreta `line-height` como un multiplicador puro del tamaño de fuente — lo combina con las métricas verticales propias de cada archivo de fuente (`hhea.ascent`/`descent`), que varían mucho de una tipografía a otra (una fuente "display" puede tener hasta 60-70% más métrica vertical que una genérica). Sin corregir esto, el mismo `line_height: 1.15` se vería con MUCHO más aire en una tipografía que en otra. El backend ahora lee esas métricas del archivo de fuente real que usa cada elemento y ajusta el valor antes de mandarlo a dompdf, para que el mismo número de `line_height` se vea igual sin importar qué tipografía (`font_id` o la de un atributo) esté usando ese texto. No hay que hacer nada para esto — es automático y transparente.
+
 ### `line_height_rules` — interlineado según la longitud del texto
 
 Igual que `font_size_rules` (tamaño de fuente según cantidad de caracteres), `line_height_rules` cambia el **interlineado** según cuántos caracteres tiene el texto ya resuelto (con el nombre/apellido real del cliente, no el texto de ejemplo del editor):

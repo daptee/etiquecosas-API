@@ -674,7 +674,18 @@ class EtiquetaService
                 $isCustomerName ? $firstName : null
             );
             $el['resolved_font_size_px'] = self::resolverTamanoFuente($el);
-            $el['resolved_line_height'] = self::resolverInterlineado($el);
+
+            // dompdf calcula el line-height sin unidad en base a las métricas
+            // VERTICALES de cada fuente (hhea: ascent+descent+lineGap / unitsPerEm),
+            // no en base al font-size puro — confirmado con coordenadas reales:
+            // el mismo "line_height: 2" da ~65% más de distancia entre renglones con
+            // Oswald que con una fuente genérica, porque el hhea de Oswald vale 1.48x
+            // su unitsPerEm (vs ~1.0x de una fuente "normal"). Sin esto, el mismo
+            // número de line_height se ve distinto según qué tipografía se eligió.
+            // Se corrige dividiendo por esa métrica, para que el número que carga el
+            // admin se vea igual sin importar la fuente.
+            $fontRatio = self::obtenerRatioMetricasFuente($el['resolved_font_files'][0] ?? null);
+            $el['resolved_line_height'] = self::resolverInterlineado($el) / $fontRatio;
             $el['resolved_letter_spacing_px'] = self::resolverEspaciadoLetras($el);
         }
 
@@ -837,6 +848,58 @@ class EtiquetaService
         }
 
         return isset($el['font_size_px']) ? (int) $el['font_size_px'] : null;
+    }
+
+    /**
+     * Reproduce EXACTO el cálculo que hace dompdf para la altura "natural" de
+     * una fuente (vendor/dompdf/dompdf/lib/Cpdf.php::getFontHeight(), vía
+     * Adapter/CPDF.php::get_font_height()):
+     *
+     *   (hhea.ascent - hhea.descent) / unitsPerEm  ×  config('dompdf.options.font_height_ratio')
+     *
+     * dompdf aplica esto como factor sobre CUALQUIER line-height sin unidad
+     * que se declare, así que el mismo número de line_height termina viéndose
+     * distinto según la fuente — confirmado leyendo el .ufm.json cacheado de
+     * Oswald (Ascender=1193, Descender=-289, igual al hhea real del archivo) y
+     * reproduciendo la cuenta exacta contra coordenadas reales del PDF. Para
+     * una fuente "normal" este factor ronda ~1 (ej. sans-serif genérica dio
+     * ~0.99); para Oswald da ~1.63 (65% más interlineado con el mismo número).
+     * Se cachea por archivo. Si no se puede leer, no corrige (1.0).
+     */
+    private static array $fontLineHeightRatioCache = [];
+
+    private static function obtenerRatioMetricasFuente(?string $fontFilePath): float
+    {
+        if (!$fontFilePath || !file_exists($fontFilePath)) {
+            return 1.0;
+        }
+        if (isset(self::$fontLineHeightRatioCache[$fontFilePath])) {
+            return self::$fontLineHeightRatioCache[$fontFilePath];
+        }
+
+        $ratio = 1.0;
+        try {
+            $font = \FontLib\Font::load($fontFilePath);
+            $font->parse();
+            $unitsPerEm = (float) $font->getData('head', 'unitsPerEm');
+            $ascent = (float) $font->getData('hhea', 'ascent');
+            $descent = (float) $font->getData('hhea', 'descent');
+            $fontHeightRatioConfig = (float) config('dompdf.options.font_height_ratio', 1.1);
+
+            if ($unitsPerEm > 0) {
+                $ratio = (($ascent - $descent) / $unitsPerEm) * $fontHeightRatioConfig;
+            }
+        } catch (\Throwable $e) {
+            $ratio = 1.0;
+        }
+
+        // Protección: si el archivo trae métricas rotas/fuera de rango
+        // razonable, no corrige de más (ni divide por algo irrisorio).
+        if ($ratio <= 0.1 || $ratio > 3) {
+            $ratio = 1.0;
+        }
+
+        return self::$fontLineHeightRatioCache[$fontFilePath] = $ratio;
     }
 
     /**
