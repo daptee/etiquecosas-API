@@ -81,7 +81,15 @@ class PdfLayoutGroupsTest extends TestCase
         return [
             'sin id' => [['id' => null]],
             'contenedor inexistente' => [['container_element_id' => 'nope']],
-            'contenedor que no es background' => [['container_element_id' => 't1']],
+            'contenedor que es miembro' => [['container_element_id' => 't1']],
+            'sin contenedor ni anchor' => [['container_element_id' => null]],
+            'anchor no numérico' => [['container_element_id' => null, 'anchor' => ['x_cm' => 'a', 'y_cm' => 1]]],
+            'links de largo incorrecto' => [['links' => []]],
+            'link sin eje y' => [['links' => [['x' => ['mode' => 'align', 'value' => 'center']]]]],
+            'mode desconocido' => [['links' => [['x' => ['mode' => 'flex'], 'y' => ['mode' => 'align', 'value' => 'center']]]]],
+            'side desconocido' => [['links' => [['x' => ['mode' => 'align', 'value' => 'center'], 'y' => ['mode' => 'gap', 'side' => 'below', 'cm' => 0.3]]]]],
+            'cm fuera de rango' => [['links' => [['x' => ['mode' => 'align', 'value' => 'center'], 'y' => ['mode' => 'gap', 'side' => 'after', 'cm' => -51]]]]],
+            'value desconocido' => [['links' => [['x' => ['mode' => 'align', 'value' => 'middle'], 'y' => ['mode' => 'gap', 'side' => 'after', 'cm' => 0.3]]]]],
             'direction desconocida' => [['direction' => 'diagonal']],
             'align desconocido' => [['align' => 'middle']],
             'gap negativo' => [['gap_cm' => -1]],
@@ -161,7 +169,10 @@ class PdfLayoutGroupsTest extends TestCase
 
         [$icono, $texto] = $grupo['members'];
         $this->assertSame(['x_cm' => 2.9, 'y_cm' => 1.76], ['x_cm' => $icono['x_cm'], 'y_cm' => $icono['y_cm']]);
-        $this->assertSame(['x_cm' => 1.0, 'y_cm' => 3.26, 'height_cm' => 0.97], ['x_cm' => $texto['x_cm'], 'y_cm' => $texto['y_cm'], 'height_cm' => $texto['height_cm']]);
+        $this->assertSame(['y_cm' => 3.26, 'height_cm' => 0.97], ['y_cm' => $texto['y_cm'], 'height_cm' => $texto['height_cm']]);
+        // El ancho del texto es el medido (no el de su caja de 5cm), centrado igual.
+        $this->assertLessThan(5, $texto['width_cm']);
+        $this->assertEqualsWithDelta(3.5, $texto['x_cm'] + $texto['width_cm'] / 2, 0.011);
         $this->assertSame(['Ana'], $texto['lines']);
         $this->assertEquals(0, $grupo['overflow_cm']);
     }
@@ -198,15 +209,143 @@ class PdfLayoutGroupsTest extends TestCase
         $this->assertSame(2.51, $grupo['members'][1]['y_cm']);
     }
 
-    public function test_align_start_y_end_en_el_eje_transversal(): void
+    private function relacion(array $link, array $extra = []): array
     {
-        $elements = [$this->background(), $this->icono(), $this->texto('Ana', ['width_cm' => 3])];
+        return array_merge([
+            'id' => 'r1',
+            'members' => ['t1', 'i1'],
+            'links' => [$link],
+            'anchor' => ['x_cm' => 3.5, 'y_cm' => 3],
+        ], $extra);
+    }
 
-        [$icono] = $this->calcular($elements, [$this->grupo(['align' => 'start'])])[0]['members'];
-        $this->assertSame(2.0, $icono['x_cm']); // bloque de 3cm centrado en 5cm → empieza en 2
+    private static function gap(string $side, float $cm): array
+    {
+        return ['mode' => 'gap', 'side' => $side, 'cm' => $cm];
+    }
 
-        [$icono] = $this->calcular($elements, [$this->grupo(['align' => 'end'])])[0]['members'];
-        $this->assertSame(3.8, $icono['x_cm']); // 2 + 3 - 1.2
+    private static function align(string $value): array
+    {
+        return ['mode' => 'align', 'value' => $value];
+    }
+
+    public function test_relacion_valida_con_anchor_y_sin_contenedor(): void
+    {
+        $relacion = $this->relacion(['x' => self::align('center'), 'y' => self::gap('after', -0.2)], ['direction' => 'diagonal']);
+
+        // Con links, los campos del modelo 1 se ignoran (aunque sean inválidos).
+        $this->assertSame([], PdfDesignSanitizer::validateLayoutGroups([$relacion], $this->elementos()));
+    }
+
+    public function test_contenedor_inexistente_al_generar_usa_el_anchor(): void
+    {
+        $relacion = $this->relacion(['x' => self::align('center'), 'y' => self::gap('after', 0.3)], ['container_element_id' => 'ya-no-existe']);
+
+        $this->assertArrayHasKey(0, PdfDesignSanitizer::validateLayoutGroups([$relacion], $this->elementos()));
+        $this->assertSame([], PdfDesignSanitizer::validateLayoutGroups([$relacion], $this->elementos(), false));
+
+        $grupo = $this->calcular([$this->background(), $this->icono(), $this->texto('Ana')], [$relacion])[0];
+        $this->assertSame(['x_cm' => 3.5, 'y_cm' => 3.0], $grupo['center']);
+    }
+
+    public function test_align_start_y_end_contra_el_ancho_medido_del_texto(): void
+    {
+        $elements = [$this->background(), $this->icono(), $this->texto('María Fernanda')];
+        $elements[1]['width_cm'] = 0.6;
+
+        [$texto, $icono] = $this->calcular($elements, [$this->relacion(['x' => self::align('start'), 'y' => self::gap('after', 0.3)])])[0]['members'];
+        $this->assertEqualsWithDelta($texto['x_cm'], $icono['x_cm'], 0.011);
+
+        [$texto, $icono] = $this->calcular($elements, [$this->relacion(['x' => self::align('end'), 'y' => self::gap('after', 0.3)])])[0]['members'];
+        $this->assertEqualsWithDelta($texto['x_cm'] + $texto['width_cm'], $icono['x_cm'] + $icono['width_cm'], 0.011);
+    }
+
+    public function test_horizontal_a_la_derecha_y_a_la_izquierda(): void
+    {
+        $elements = [$this->background(), $this->icono(), $this->texto('Ana')];
+
+        [$texto, $icono] = $this->calcular($elements, [$this->relacion(['x' => self::gap('after', 0.2), 'y' => self::align('center')])])[0]['members'];
+        $this->assertEqualsWithDelta(0.2, $icono['x_cm'] - ($texto['x_cm'] + $texto['width_cm']), 0.011);
+        $this->assertEqualsWithDelta($texto['y_cm'] + $texto['height_cm'] / 2, $icono['y_cm'] + $icono['height_cm'] / 2, 0.011);
+
+        [$texto, $icono] = $this->calcular($elements, [$this->relacion(['x' => self::gap('before', 0.2), 'y' => self::align('center')])])[0]['members'];
+        $this->assertEqualsWithDelta(0.2, $texto['x_cm'] - ($icono['x_cm'] + $icono['width_cm']), 0.011);
+    }
+
+    public function test_gap_negativo_superpone_y_before_pone_arriba(): void
+    {
+        $elements = [$this->background(), $this->icono(), $this->texto('Ana')];
+
+        [$texto, $icono] = $this->calcular($elements, [$this->relacion(['x' => self::align('center'), 'y' => self::gap('after', -0.2)])])[0]['members'];
+        $this->assertEqualsWithDelta(-0.2, $icono['y_cm'] - ($texto['y_cm'] + $texto['height_cm']), 0.011);
+
+        [$texto, $icono] = $this->calcular($elements, [$this->relacion(['x' => self::align('center'), 'y' => self::gap('before', 0.3)])])[0]['members'];
+        $this->assertEqualsWithDelta(0.3, $texto['y_cm'] - ($icono['y_cm'] + $icono['height_cm']), 0.011);
+    }
+
+    public function test_el_conjunto_se_centra_en_los_dos_ejes(): void
+    {
+        $grupo = $this->calcular(
+            [$this->background(), $this->icono(), $this->texto('Ana')],
+            [$this->relacion(['x' => self::gap('after', 0.2), 'y' => self::align('start')], ['anchor' => ['x_cm' => 2, 'y_cm' => 4]])]
+        )[0];
+
+        $presentes = $grupo['members'];
+        $minX = min(array_map(fn($m) => $m['x_cm'], $presentes));
+        $maxX = max(array_map(fn($m) => $m['x_cm'] + $m['width_cm'], $presentes));
+        $minY = min(array_map(fn($m) => $m['y_cm'], $presentes));
+        $maxY = max(array_map(fn($m) => $m['y_cm'] + $m['height_cm'], $presentes));
+        $this->assertEqualsWithDelta(2, ($minX + $maxX) / 2, 0.011);
+        $this->assertEqualsWithDelta(4, ($minY + $maxY) / 2, 0.011);
+    }
+
+    public function test_contenedor_puede_ser_cualquier_elemento_y_usa_su_caja_de_diseno(): void
+    {
+        // "ref" es miembro de OTRO grupo (que lo mueve), pero el centro se toma
+        // de su caja de diseño (0,0 → 2x2 = centro 1,1).
+        $ref = $this->texto('REF', ['id' => 'ref', 'x_cm' => 0, 'y_cm' => 0, 'width_cm' => 2, 'height_cm' => 2]);
+        $grupos = $this->calcular(
+            [$this->background(), $ref, $this->icono(), $this->texto('Ana')],
+            [
+                ['id' => 'otro', 'members' => ['ref'], 'links' => [], 'anchor' => ['x_cm' => 6, 'y_cm' => 5]],
+                $this->relacion(['x' => self::align('center'), 'y' => self::gap('after', 0.3)], ['container_element_id' => 'ref']),
+            ]
+        );
+
+        $this->assertSame(['x_cm' => 1.0, 'y_cm' => 1.0], $grupos[1]['center']);
+        $this->assertSame('ref', $grupos[1]['container']['id']);
+    }
+
+    public function test_modelo_1_equivale_a_sus_links(): void
+    {
+        $elements = [$this->background(), $this->icono(), $this->texto('María Fernanda')];
+        $modelo1 = $this->calcular($elements, [$this->grupo(['align' => 'end'])])[0]['members'];
+        $links = $this->calcular($elements, [[
+            'id' => 'g1', 'members' => ['i1', 't1'], 'container_element_id' => 'bg',
+            'links' => [['x' => self::align('end'), 'y' => self::gap('after', 0.3)]],
+        ]])[0]['members'];
+
+        $this->assertSame($modelo1, $links);
+    }
+
+    public function test_tres_miembros_con_el_del_medio_ausente(): void
+    {
+        // El tercero se ubica respecto del anterior PRESENTE (el primero).
+        $grupo = $this->calcular(
+            [$this->background(), $this->icono('i1'), $this->texto('{{customer_last_name}}'), $this->icono('i2')],
+            [[
+                'id' => 'g1', 'members' => ['i1', 't1', 'i2'], 'container_element_id' => 'bg',
+                'links' => [
+                    ['x' => self::align('center'), 'y' => self::gap('after', 0.3)],
+                    ['x' => self::align('center'), 'y' => self::gap('after', 0.5)],
+                ],
+            ]],
+            ''
+        )[0];
+
+        [$i1, $t1, $i2] = $grupo['members'];
+        $this->assertFalse($t1['present']);
+        $this->assertEqualsWithDelta(0.5, $i2['y_cm'] - ($i1['y_cm'] + $i1['height_cm']), 0.011);
     }
 
     public function test_el_padding_del_contenedor_no_cambia_el_centrado(): void
@@ -224,7 +363,8 @@ class PdfLayoutGroupsTest extends TestCase
             [$this->grupo()]
         )[0];
 
-        $this->assertSame(1.47, $grupo['overflow_cm']);
+        // 2.47cm de alto centrado en una etiqueta de 1cm: sale 0.74cm por arriba y por abajo.
+        $this->assertSame(0.74, $grupo['overflow_cm']);
         $this->assertSame(1.2, $grupo['members'][0]['height_cm']);
     }
 

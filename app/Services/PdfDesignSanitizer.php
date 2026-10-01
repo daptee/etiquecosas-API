@@ -14,6 +14,7 @@ class PdfDesignSanitizer
     private const ALLOWED_LAYOUT_DIRECTIONS = ['vertical', 'horizontal'];
     private const ALLOWED_LAYOUT_ALIGNS = ['start', 'center', 'end'];
     private const ALLOWED_LAYOUT_MEMBER_TYPES = ['text', 'icon'];
+    private const ALLOWED_LAYOUT_SIDES = ['after', 'before'];
     private const MAX_LAYOUT_GAP_CM = 50;
 
     /**
@@ -199,30 +200,66 @@ class PdfDesignSanitizer
     }
 
     /**
-     * Sanea data.pages[].layout_groups: solo deja pasar los campos conocidos,
-     * con los ids limpios y gap_cm como número. No decide si el grupo es
-     * válido — eso lo hace validateLayoutGroups() (422 al guardar, descarte
-     * silencioso al generar).
+     * Sanea data.pages[].layout_groups: solo deja pasar los campos conocidos
+     * (v2: links/anchor; modelo 1: direction/gap_cm/align), con los ids
+     * limpios y los números como números. No decide si el grupo es válido —
+     * eso lo hace validateLayoutGroups() (422 al guardar, descarte con
+     * warning al generar).
      */
     public static function sanitizeLayoutGroups(array $groups): array
     {
-        return array_values(array_map(function ($group) {
+        $cleanId = fn($id) => is_scalar($id) && (string) $id !== '' ? strip_tags((string) $id) : null;
+        $number = fn($value) => is_numeric($value) ? (float) $value : $value;
+
+        $cleanRule = function ($rule) use ($number) {
+            if (!is_array($rule)) {
+                return $rule;
+            }
+            $clean = ['mode' => $rule['mode'] ?? null];
+            if (array_key_exists('side', $rule)) {
+                $clean['side'] = $rule['side'];
+            }
+            if (array_key_exists('cm', $rule)) {
+                $clean['cm'] = $number($rule['cm']);
+            }
+            if (array_key_exists('value', $rule)) {
+                $clean['value'] = $rule['value'];
+            }
+            return $clean;
+        };
+
+        return array_values(array_map(function ($group) use ($cleanId, $number, $cleanRule) {
             if (!is_array($group)) {
                 return $group;
             }
 
             $clean = [
-                'id' => isset($group['id']) && is_scalar($group['id']) ? strip_tags((string) $group['id']) : null,
-                'container_element_id' => isset($group['container_element_id']) && is_scalar($group['container_element_id'])
-                    ? strip_tags((string) $group['container_element_id'])
-                    : null,
-                'direction' => $group['direction'] ?? null,
-                'gap_cm' => isset($group['gap_cm']) && is_numeric($group['gap_cm']) ? (float) $group['gap_cm'] : ($group['gap_cm'] ?? null),
-                'align' => $group['align'] ?? 'center',
+                'id' => $cleanId($group['id'] ?? null),
                 'members' => is_array($group['members'] ?? null)
                     ? array_values(array_map(fn($id) => is_scalar($id) ? strip_tags((string) $id) : $id, $group['members']))
                     : ($group['members'] ?? null),
+                'container_element_id' => $cleanId($group['container_element_id'] ?? null),
             ];
+
+            if (array_key_exists('links', $group) && $group['links'] !== null) {
+                $clean['links'] = is_array($group['links'])
+                    ? array_values(array_map(fn($link) => is_array($link)
+                        ? ['x' => $cleanRule($link['x'] ?? null), 'y' => $cleanRule($link['y'] ?? null)]
+                        : $link, $group['links']))
+                    : $group['links'];
+            }
+            if (array_key_exists('anchor', $group) && $group['anchor'] !== null) {
+                $clean['anchor'] = is_array($group['anchor'])
+                    ? ['x_cm' => $number($group['anchor']['x_cm'] ?? null), 'y_cm' => $number($group['anchor']['y_cm'] ?? null)]
+                    : $group['anchor'];
+            }
+
+            // Modelo 1 (compatibilidad): solo se usan si no hay links.
+            foreach (['direction', 'gap_cm', 'align'] as $field) {
+                if (array_key_exists($field, $group)) {
+                    $clean[$field] = $field === 'gap_cm' ? $number($group[$field]) : $group[$field];
+                }
+            }
 
             return $clean;
         }, $groups));
@@ -231,18 +268,22 @@ class PdfDesignSanitizer
     /**
      * Valida los layout_groups de UNA página contra sus elementos. Devuelve
      * [índice del grupo => mensaje] solo para los grupos inválidos (vacío =
-     * todo bien). Se usa al guardar (cada error es un 422) y al generar el PDF
-     * (los grupos con error se descartan con un warning).
+     * todo bien).
+     *
+     * $alGuardar = true (POST del diseño, cada error es un 422): un
+     * container_element_id que no existe o que es miembro del grupo es error.
+     * $alGuardar = false (al generar el PDF, datos guardados antes): ese
+     * contenedor se ignora y se usa anchor; solo es error si tampoco hay anchor.
      *
      * Un miembro repetido en dos grupos es error para el SEGUNDO grupo (al
      * generar, el primero lo conserva).
      */
-    public static function validateLayoutGroups(array $groups, array $elements): array
+    public static function validateLayoutGroups(array $groups, array $elements, bool $alGuardar = true): array
     {
         $elementsById = [];
         foreach ($elements as $el) {
             if (is_array($el) && isset($el['id']) && is_scalar($el['id']) && $el['id'] !== '') {
-                $elementsById[(string) $el['id']] = $el;
+                $elementsById[(string) $el['id']] ??= $el;
             }
         }
 
@@ -268,68 +309,149 @@ class PdfDesignSanitizer
             }
             $seenGroupIds[$groupId] = true;
 
-            $containerId = $group['container_element_id'] ?? null;
-            $container = is_scalar($containerId) ? ($elementsById[(string) $containerId] ?? null) : null;
-            if (!$container) {
-                $errors[$idx] = "Grupo \"{$groupId}\": el container_element_id no existe en la página.";
-                continue;
-            }
-            if (($container['type'] ?? null) !== 'background') {
-                $errors[$idx] = "Grupo \"{$groupId}\": el contenedor tiene que ser un elemento de tipo background.";
+            $error = self::validarMiembros($group, $groupId, $elementsById, $usedMembers)
+                ?? self::validarReglasLayout($group, $groupId)
+                ?? self::validarCentrado($group, $groupId, $elementsById, $alGuardar);
+
+            if ($error) {
+                $errors[$idx] = $error;
                 continue;
             }
 
-            if (!in_array($group['direction'] ?? null, self::ALLOWED_LAYOUT_DIRECTIONS, true)) {
-                $errors[$idx] = "Grupo \"{$groupId}\": direction tiene que ser vertical u horizontal.";
-                continue;
-            }
-            if (!in_array($group['align'] ?? 'center', self::ALLOWED_LAYOUT_ALIGNS, true)) {
-                $errors[$idx] = "Grupo \"{$groupId}\": align tiene que ser start, center o end.";
-                continue;
-            }
-
-            $gap = $group['gap_cm'] ?? null;
-            if (!is_numeric($gap) || (float) $gap < 0 || (float) $gap > self::MAX_LAYOUT_GAP_CM) {
-                $errors[$idx] = "Grupo \"{$groupId}\": gap_cm tiene que ser un número entre 0 y " . self::MAX_LAYOUT_GAP_CM . '.';
-                continue;
-            }
-
-            $members = $group['members'] ?? null;
-            if (!is_array($members) || count($members) === 0) {
-                $errors[$idx] = "Grupo \"{$groupId}\": members no puede estar vacío.";
-                continue;
-            }
-
-            $memberError = null;
-            $groupMembers = [];
-            foreach ($members as $memberId) {
-                $memberKey = is_scalar($memberId) ? (string) $memberId : null;
-                $member = $memberKey !== null ? ($elementsById[$memberKey] ?? null) : null;
-                if (!$member) {
-                    $memberError = "Grupo \"{$groupId}\": el miembro \"" . ($memberKey ?? '?') . '" no existe en la página.';
-                    break;
-                }
-                if (!in_array($member['type'] ?? null, self::ALLOWED_LAYOUT_MEMBER_TYPES, true)) {
-                    $memberError = "Grupo \"{$groupId}\": el miembro \"{$memberKey}\" tiene que ser de tipo text o icon.";
-                    break;
-                }
-                if (isset($usedMembers[$memberKey]) || isset($groupMembers[$memberKey])) {
-                    $otherGroup = $usedMembers[$memberKey] ?? $groupId;
-                    $memberError = "Grupo \"{$groupId}\": el elemento \"{$memberKey}\" ya está en el grupo \"{$otherGroup}\".";
-                    break;
-                }
-                $groupMembers[$memberKey] = true;
-            }
-            if ($memberError) {
-                $errors[$idx] = $memberError;
-                continue;
-            }
-
-            foreach (array_keys($groupMembers) as $memberKey) {
-                $usedMembers[$memberKey] = $groupId;
+            foreach ($group['members'] as $memberId) {
+                $usedMembers[(string) $memberId] = $groupId;
             }
         }
 
         return $errors;
+    }
+
+    private static function validarMiembros(array $group, string $groupId, array $elementsById, array $usedMembers): ?string
+    {
+        $members = $group['members'] ?? null;
+        if (!is_array($members) || count($members) === 0) {
+            return "Grupo \"{$groupId}\": members no puede estar vacío.";
+        }
+
+        $groupMembers = [];
+        foreach ($members as $memberId) {
+            $memberKey = is_scalar($memberId) ? (string) $memberId : null;
+            $member = $memberKey !== null ? ($elementsById[$memberKey] ?? null) : null;
+            if (!$member) {
+                return "Grupo \"{$groupId}\": el miembro \"" . ($memberKey ?? '?') . '" no existe en la página.';
+            }
+            if (!in_array($member['type'] ?? null, self::ALLOWED_LAYOUT_MEMBER_TYPES, true)) {
+                return "Grupo \"{$groupId}\": el miembro \"{$memberKey}\" tiene que ser de tipo text o icon.";
+            }
+            if (isset($usedMembers[$memberKey]) || isset($groupMembers[$memberKey])) {
+                $otherGroup = $usedMembers[$memberKey] ?? $groupId;
+                return "Grupo \"{$groupId}\": el elemento \"{$memberKey}\" ya está en el grupo \"{$otherGroup}\".";
+            }
+            $groupMembers[$memberKey] = true;
+        }
+
+        return null;
+    }
+
+    /**
+     * Con links (v2) valida cada regla por eje; sin links, los campos del
+     * modelo 1 (direction/align/gap_cm). Si hay links, el modelo 1 se ignora.
+     */
+    private static function validarReglasLayout(array $group, string $groupId): ?string
+    {
+        if (array_key_exists('links', $group)) {
+            $links = $group['links'];
+            $expected = count($group['members']) - 1;
+            if (!is_array($links) || count($links) !== $expected) {
+                return "Grupo \"{$groupId}\": links tiene que tener {$expected} elemento(s) (uno menos que members).";
+            }
+
+            foreach (array_values($links) as $linkIdx => $link) {
+                foreach (['x', 'y'] as $axis) {
+                    $ruleError = self::validarReglaEje(is_array($link) ? ($link[$axis] ?? null) : null);
+                    if ($ruleError) {
+                        return "Grupo \"{$groupId}\": links[{$linkIdx}].{$axis} {$ruleError}";
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        if (!in_array($group['direction'] ?? null, self::ALLOWED_LAYOUT_DIRECTIONS, true)) {
+            return "Grupo \"{$groupId}\": direction tiene que ser vertical u horizontal (o mandar links).";
+        }
+        if (!in_array($group['align'] ?? 'center', self::ALLOWED_LAYOUT_ALIGNS, true)) {
+            return "Grupo \"{$groupId}\": align tiene que ser start, center o end.";
+        }
+        $gap = $group['gap_cm'] ?? null;
+        if (!is_numeric($gap) || (float) $gap < 0 || (float) $gap > self::MAX_LAYOUT_GAP_CM) {
+            return "Grupo \"{$groupId}\": gap_cm tiene que ser un número entre 0 y " . self::MAX_LAYOUT_GAP_CM . '.';
+        }
+
+        return null;
+    }
+
+    private static function validarReglaEje($rule): ?string
+    {
+        if (!is_array($rule)) {
+            return 'falta o no es un objeto.';
+        }
+
+        return match ($rule['mode'] ?? null) {
+            'gap' => match (true) {
+                !in_array($rule['side'] ?? null, self::ALLOWED_LAYOUT_SIDES, true) => 'tiene un side inválido (after o before).',
+                !is_numeric($rule['cm'] ?? null) || !is_finite((float) $rule['cm']) || abs((float) $rule['cm']) > self::MAX_LAYOUT_GAP_CM
+                    => 'tiene que tener cm entre -' . self::MAX_LAYOUT_GAP_CM . ' y ' . self::MAX_LAYOUT_GAP_CM . '.',
+                default => null,
+            },
+            'align' => in_array($rule['value'] ?? null, self::ALLOWED_LAYOUT_ALIGNS, true)
+                ? null
+                : 'tiene un value inválido (start, center o end).',
+            default => 'tiene un mode inválido (gap o align).',
+        };
+    }
+
+    /**
+     * Punto de centrado: el centro de container_element_id (cualquier elemento
+     * que no sea miembro) o, si no, anchor.
+     */
+    private static function validarCentrado(array $group, string $groupId, array $elementsById, bool $alGuardar): ?string
+    {
+        $anchor = $group['anchor'] ?? null;
+        $hasAnchor = $anchor !== null;
+        if ($hasAnchor && !self::esAnchorValido($anchor)) {
+            return "Grupo \"{$groupId}\": anchor tiene que tener x_cm e y_cm numéricos.";
+        }
+
+        $containerId = $group['container_element_id'] ?? null;
+        if ($containerId !== null && $containerId !== '') {
+            $containerError = null;
+            if (!isset($elementsById[(string) $containerId])) {
+                $containerError = "Grupo \"{$groupId}\": el container_element_id \"{$containerId}\" no existe en la página.";
+            } elseif (in_array((string) $containerId, array_map('strval', $group['members']), true)) {
+                $containerError = "Grupo \"{$groupId}\": el container_element_id no puede ser uno de los members.";
+            }
+
+            if (!$containerError) {
+                return null;
+            }
+            if ($alGuardar || !$hasAnchor) {
+                return $containerError;
+            }
+        }
+
+        if (!$hasAnchor) {
+            return "Grupo \"{$groupId}\": falta anchor o container_element_id para saber dónde centrar.";
+        }
+
+        return null;
+    }
+
+    public static function esAnchorValido($anchor): bool
+    {
+        return is_array($anchor)
+            && is_numeric($anchor['x_cm'] ?? null) && is_finite((float) $anchor['x_cm'])
+            && is_numeric($anchor['y_cm'] ?? null) && is_finite((float) $anchor['y_cm']);
     }
 }

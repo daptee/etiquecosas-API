@@ -1,10 +1,11 @@
-# Grupos con distribución (`layout_groups`)
+# Relaciones entre elementos (`layout_groups`)
 
-Un grupo hace que varios elementos de una etiqueta (texto e íconos) mantengan siempre la **misma distancia entre sí** y queden **centrados en su etiqueta**, aunque el texto "De la compra" salga más corto o más largo que el de ejemplo.
+Una relación hace que dos (o más) elementos de una página —texto e íconos— mantengan siempre la **misma distancia y alineación entre sí**, y que el conjunto quede **centrado en un punto**, aunque el texto "De la compra" salga más corto o más largo que el de ejemplo.
 
-> **Estado:** fase 1 implementada (grupos **verticales**). Los grupos **horizontales** se aceptan al guardar, pero al generar el PDF todavía se ignoran (los miembros quedan en su posición de diseño y se registra un `warning`). Llegan en la fase 2.
+- **v2 (actual):** cada grupo trae `links` (una regla por eje entre cada par de miembros consecutivos) y se centra en `anchor` o en el centro de cualquier elemento (`container_element_id`).
+- **Modelo 1 (compatibilidad):** grupos sin `links`, con `direction`/`gap_cm`/`align` y una etiqueta como contenedor. Siguen funcionando: se convierten a `links` equivalentes.
 
-Sin `layout_groups` todo funciona exactamente igual que antes.
+Sin `layout_groups`, todo funciona exactamente igual que antes.
 
 ## Formato
 
@@ -12,79 +13,101 @@ Cada página (`data.pages[]`) admite una lista opcional `layout_groups`:
 
 ```json
 {
-  "pages": [
+  "id": "layout-1759300000000-1234",
+  "members": ["icon-1", "text-1"],
+  "links": [
     {
-      "sheet": { "width_cm": 18.5, "height_cm": 29 },
-      "elements": [
-        { "id": "bg-1", "type": "background", "x_cm": 0.5, "y_cm": 0.5, "width_cm": 5, "height_cm": 4 },
-        { "id": "icon-1", "type": "icon", "icon_id": 34, "x_cm": 2.4, "y_cm": 1, "width_cm": 1.2, "height_cm": 1.2 },
-        { "id": "text-1", "type": "text", "value_mode": "dynamic", "dynamic_field": "nombre_apellido", "x_cm": 0.5, "y_cm": 2.5, "width_cm": 5, "height_cm": 1, "font_size_px": 32 }
-      ],
-      "layout_groups": [
-        {
-          "id": "group-1",
-          "container_element_id": "bg-1",
-          "direction": "vertical",
-          "gap_cm": 0.3,
-          "align": "center",
-          "members": ["icon-1", "text-1"]
-        }
-      ]
+      "x": { "mode": "align", "value": "center" },
+      "y": { "mode": "gap", "side": "after", "cm": 0.3 }
     }
-  ]
+  ],
+  "anchor": { "x_cm": 3.0, "y_cm": 2.4 },
+  "container_element_id": "bg-1"
 }
 ```
 
 | Campo | Obligatorio | Descripción |
 |---|---|---|
 | `id` | sí | Único dentro de la página |
-| `container_element_id` | sí | `id` de un elemento `background` de la misma página (la etiqueta) |
-| `direction` | sí | `vertical` \| `horizontal` (horizontal: fase 2) |
-| `gap_cm` | sí | Distancia fija entre miembros, de 0 a 50 |
-| `align` | no (default `center`) | `start` \| `center` \| `end`: alineación de cada miembro en el eje transversal |
-| `members` | sí | `id`s de elementos `text` o `icon` de la página, **en orden** (de arriba hacia abajo en vertical) |
+| `members` | sí | `id`s de elementos `text` o `icon` de la página, en orden. Cada elemento puede estar en **un solo** grupo |
+| `links` | no | `links[i]` ubica a `members[i+1]` respecto de `members[i]`. Largo = `members.length − 1`. Si falta, se usan `direction`/`gap_cm`/`align` (modelo 1) |
+| `anchor` | sí, salvo que haya `container_element_id` | Punto `{x_cm, y_cm}` en el que se centra el conjunto |
+| `container_element_id` | no | `id` de **cualquier** elemento de la página que no sea miembro del grupo. Si existe, el centro de su caja reemplaza a `anchor`. Puede ser `null` |
+| `direction`, `gap_cm`, `align` | no | Solo modelo 1. **Si hay `links`, se ignoran** (no se validan) |
 
-- Cada elemento puede estar en **un solo** grupo.
-- Los miembros conservan su `x_cm`/`y_cm`/`width_cm`/`height_cm` de diseño; el backend los reemplaza al generar.
-- **Columnas × filas:** el backend no replica nada. El frontend manda **un grupo por cada copia** de la etiqueta, con los elementos de esa copia y su propia etiqueta como contenedor.
+### Regla de un eje (`x` o `y` de un link)
+
+```json
+{ "mode": "gap",   "side": "after" | "before", "cm": -50..50 }
+{ "mode": "align", "value": "start" | "center" | "end" }
+```
+
+- `gap`: distancia fija con el anterior en ese eje. `after` = a la derecha (X) o abajo (Y); `before` = a la izquierda o arriba. `cm` **puede ser negativo**: los elementos se superponen esa cantidad.
+- `align`: alineado con el anterior por su borde inicial (izquierdo/superior), su centro o su borde final (derecho/inferior).
+- Cada link necesita las dos reglas (`x` e `y`), con cualquier combinación de modos.
+
+### Modelo 1 → `links`
+
+| `direction` | `x` | `y` |
+|---|---|---|
+| `vertical` | `align(align)` | `gap after (gap_cm)` |
+| `horizontal` | `gap after (gap_cm)` | `align(align)` |
+
+Para `align: center` el resultado es idéntico al de la versión anterior. Para `start`/`end` cambia: ahora la alineación es contra el **ancho medido** del texto, no contra el ancho de su caja.
 
 ## Validación al guardar
 
-`POST /product-pdf-designs` y `POST /product-pdf-designs/{id}` responden **422** si un grupo es inválido, con el error en `errors["data.pages.{i}.layout_groups.{j}"]`:
+`POST /product-pdf-designs` y `POST /product-pdf-designs/{id}` responden **422** con el error en `errors["data.pages.{i}.layout_groups.{j}"]` cuando:
+
+- falta `id` o está repetido en la página;
+- `members` está vacío, o tiene un `id` que no existe o que no es `text`/`icon`; un elemento aparece en dos grupos;
+- hay `links` y su largo no es `members.length − 1`, o una regla es inválida (falta `x` o `y`; `mode`, `side` o `value` desconocidos; `cm` no numérico o fuera de −50..50);
+- no hay `links` y `direction`, `align` o `gap_cm` son inválidos (modelo 1: `gap_cm` de 0 a 50);
+- faltan a la vez `anchor` y `container_element_id`, o `anchor` no tiene `x_cm` e `y_cm` numéricos;
+- `container_element_id` (no `null`/vacío) no existe en la página o es uno de los `members`.
 
 ```json
 {
   "message": "Error de validacion",
   "errors": {
-    "data.pages.0.layout_groups.1": ["Grupo \"group-2\": el elemento \"text-1\" ya está en el grupo \"group-1\"."]
+    "data.pages.0.layout_groups.1": ["Grupo \"r2\": links[0].y tiene un side inválido (after o before)."]
   }
 }
 ```
 
-Es inválido cuando: falta `id` o está repetido en la página; `container_element_id` no existe o no es `background`; `members` está vacío o tiene un `id` que no existe o que no es `text`/`icon`; un elemento está en dos grupos; `direction` o `align` traen un valor desconocido; `gap_cm` no es un número entre 0 y 50.
+**Al generar el PDF** (datos guardados antes, o un elemento borrado después): un grupo inválido se descarta con un `warning` en el log y sus miembros quedan en su posición de diseño. Si `container_element_id` ya no existe (o es miembro) pero hay `anchor`, se usa el `anchor`. Si un elemento está en dos grupos, se queda en el primero.
 
-Al **generar** el PDF (datos guardados antes, o un elemento borrado después), un grupo inválido se descarta en silencio con un `warning` en el log y sus miembros quedan en su posición de diseño. Si un elemento está en dos grupos, se queda en el primero.
+## Cómo se calcula
 
-## Cómo se calcula (vertical)
+1. **Ausentes:** un ícono sin imagen resuelta o un texto que queda vacío (por ejemplo, `apellido` sin dato) no ocupa lugar, no cuenta para la distancia y no se dibuja.
+2. **Tamaño de cada presente:**
+   - ícono: su `width_cm` × `height_cm`;
+   - texto: **ancho** = el de su renglón más ancho, medido con su fuente, tamaño y `letter_spacing_px` ya resueltos (con tope en el `width_cm` de su caja); **alto** = `renglones × font_size_px × line_height × 2,54 / 96` cm. `min_lines` no reserva espacio.
+3. **Cadena:** el primer presente va en (0,0). Cada siguiente se ubica respecto del **anterior presente** con su propio link (`links[i−1]`), eje por eje:
 
-1. **Miembros ausentes:** un ícono sin imagen resuelta (por ejemplo, el cliente no eligió ícono) o un texto que queda vacío (por ejemplo, `apellido` sin dato) no ocupa lugar, no suma `gap` y no se dibuja.
-2. **Alto de cada miembro:**
-   - ícono: su `height_cm`;
-   - texto: `renglones × font_size_px × line_height × 2,54 / 96` cm, con el texto ya sustituido y los valores ya resueltos por sus reglas por longitud. `min_lines` **no** reserva espacio.
-3. **Total** = suma de altos + `gap_cm × (presentes − 1)`.
-4. El conjunto se **centra verticalmente** en la caja completa de la etiqueta (`x/y/width/height` del contenedor, **sin** restar `padding_cm`).
-5. **Eje horizontal:** el bloque mide lo del miembro más ancho (el ancho de un texto es el `width_cm` de su caja) y se centra en la etiqueta; cada miembro se ubica en el bloque según `align`.
-6. Si el conjunto **no entra**, no se escala: desborda y se registra un `warning` con cuánto.
-7. Los miembros se dibujan **sin rotación** (se ignora `rotation_deg`). `z_index` y el orden de los elementos no cambian.
+   | Regla | Posición |
+   |---|---|
+   | `gap after` | `prev.pos + prev.size + cm` |
+   | `gap before` | `prev.pos − cm − size` |
+   | `align start` | `prev.pos` |
+   | `align end` | `prev.pos + prev.size − size` |
+   | `align center` | `prev.pos + (prev.size − size) / 2` |
+
+4. **Centrado:** el rectángulo que envuelve a los presentes se traslada para que su centro coincida con el punto de centrado, en **los dos ejes**:
+   - el centro de la caja **de diseño** de `container_element_id` (aunque ese elemento esté en otro grupo y se haya movido);
+   - si no, `anchor`.
+5. Un solo presente queda centrado en el punto de centrado.
+6. **Nunca se escala.** Si el conjunto se sale de su etiqueta (cuando el contenedor es un `background`) o de la hoja, se registra un `warning` con cuánto.
+7. Los miembros se dibujan **sin rotación**; `z_index` y el orden de los elementos no cambian.
 
 ### Cómo se dibuja un texto dentro de un grupo
 
-- Caja: `left`/`top` calculados, `width = width_cm`, `height` = el alto calculado.
-- Sin `vertical_align`, sin `vertical_offset_cm` y sin ajustes ópticos: el primer renglón empieza arriba de la caja, como en CSS estándar.
-- `white-space: nowrap`: los renglones son exactamente los del corte por caracteres. Si uno es más ancho que la caja, desborda hacia los costados.
-- `text_align` sigue aplicando dentro del `width_cm`.
+- Caja: `left`/`top` calculados, `width` = el ancho medido, `height` = el alto calculado.
+- Sin `vertical_align`, sin `vertical_offset_cm`, sin ajustes ópticos y sin relleno lateral.
+- `white-space: nowrap`: los renglones son exactamente los del corte por caracteres. Si uno es más ancho que el tope (`width_cm` de la caja), desborda hacia los costados.
+- `text_align` aplica dentro de la caja (afecta a los renglones más cortos que el más ancho).
 
-Medido contra el PDF real (Liberation Sans, 32 px, `line_height` 1.15): la línea base de cada renglón queda a menos de 0,01 cm de donde la ubica CSS.
+El ancho se mide con la misma función que usa dompdf para dibujar (`FontMetrics::getTextWidth`). Medido contra el PDF real, el primer glifo de cada renglón empieza a menos de 0,005 cm del `x_cm` calculado, y la línea base, a menos de 0,01 cm de donde la ubica CSS.
 
 ## Comparar con el editor: `?format=layout`
 
@@ -98,12 +121,13 @@ Medido contra el PDF real (Liberation Sans, 32 px, `line_height` 1.15): la líne
       "id": "page-1",
       "groups": [
         {
-          "id": "group-1",
-          "container": { "x_cm": 0.5, "y_cm": 0.5, "width_cm": 5, "height_cm": 4 },
+          "id": "r1",
+          "center": { "x_cm": 3.5, "y_cm": 3 },
+          "container": { "id": "bg-1", "x_cm": 1, "y_cm": 1, "width_cm": 5, "height_cm": 4 },
           "overflow_cm": 0,
           "members": [
-            { "id": "icon-1", "type": "icon", "present": true, "x_cm": 2.4, "y_cm": 0.78, "width_cm": 1.2, "height_cm": 1.2 },
-            { "id": "text-1", "type": "text", "present": true, "x_cm": 0.5, "y_cm": 2.28, "width_cm": 5, "height_cm": 1.95, "lines": ["NOMBRE", "APELLIDO"] }
+            { "id": "icon-1", "type": "icon", "present": true, "x_cm": 2.9, "y_cm": 1.76, "width_cm": 1.2, "height_cm": 1.2 },
+            { "id": "text-1", "type": "text", "present": true, "x_cm": 2.75, "y_cm": 3.26, "width_cm": 1.51, "height_cm": 0.97, "lines": ["Ana"] }
           ]
         }
       ]
@@ -112,14 +136,15 @@ Medido contra el PDF real (Liberation Sans, 32 px, `line_height` 1.15): la líne
 }
 ```
 
-- Números en cm con 2 decimales. `lines` solo en los textos; los ausentes vienen con `present: false` y sin posición.
-- Solo aparecen los grupos que se aplicaron (los inválidos y los horizontales no).
+- Números en cm con 2 decimales. `center` es el punto de centrado usado; `container` es `null` cuando se centró en `anchor`.
+- `lines` solo en los textos; los ausentes vienen con `present: false` y sin posición.
+- Solo aparecen los grupos que se aplicaron (los inválidos no).
 
 ## Cambios relacionados (aplican a todos los diseños del editor)
 
 - **Corte de renglones:** se normalizan los espacios (espacios dobles, `\n` y `\t` pasan a un espacio) antes de cortar y de contar caracteres para las reglas por longitud, y una primera palabra de `max_chars_per_line` caracteres o más ya no deja un renglón vacío arriba. Ver [FORMATO_NOMBRES_PDF.md](FORMATO_NOMBRES_PDF.md).
 - **Tokens en texto fijo:** `content` también sustituye `{{fecha}}` (`d/m/Y`, Buenos Aires, fecha de aprobación del pago), `{{numero_pedido}}` (`sales.id`) y `{{id_producto}}` (`products.id` del producto comprado).
-- **Preview sin venta real:** `numeroPedido` vale `111111` y `idProducto` (parámetro nuevo `?idProducto=`) vale `222222` si no se mandan.
+- **Preview sin venta real:** `numeroPedido` vale `111111` y `idProducto` (parámetro `?idProducto=`) vale `222222` si no se mandan.
 - **Escapado:** el texto se escapa antes de insertarlo en el HTML; un nombre con `<` o `&` sale tal cual.
-- **Fuente de respaldo:** todos los textos usan Liberation Sans (métricas de Arial) como respaldo, y es la fuente cuando `font_id` está vacío (antes salía Helvetica). Una tipografía subida que no carga cae en Liberation Sans en vez de Times.
-- **Interlineado:** la corrección por métricas de la fuente ahora incluye el `lineGap` del archivo, igual que hace dompdf. Las fuentes con `lineGap` mayor que cero tenían cerca de un 3% más de interlineado que en el navegador; ahora coinciden.
+- **Fuente de respaldo:** todos los textos usan Liberation Sans (métricas de Arial) como respaldo, y es la fuente cuando `font_id` está vacío. Una tipografía subida que no carga cae en Liberation Sans en vez de Times.
+- **Interlineado:** la corrección por métricas de la fuente incluye el `lineGap` del archivo, igual que hace dompdf.

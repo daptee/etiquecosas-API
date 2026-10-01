@@ -17,6 +17,8 @@ class EtiquetaService
     private const CM_TO_PT = 72 / 2.54;
     // font_size_px del editor está en px CSS (96 dpi, igual que config/dompdf.php).
     private const PX_TO_CM = 2.54 / 96;
+    private const PX_TO_PT = 72 / 96;
+    private const PT_TO_CM = 2.54 / 72;
 
     // Fuente de respaldo de todos los textos del editor (y la que se usa con
     // font_id vacío): métricas compatibles con Arial, que es lo que dibuja el
@@ -627,22 +629,30 @@ class EtiquetaService
     }
 
     /**
-     * Aplica los layout_groups de una página ya resuelta: cada grupo apila sus
-     * miembros (text/icon) con gap_cm fijo entre sí y centra el conjunto en la
-     * caja completa de su etiqueta (el background contenedor, sin restar
-     * padding). Reescribe x_cm/y_cm (y height_cm en los textos) de los
-     * miembros; no toca z_index ni el orden de los elementos.
+     * Aplica los layout_groups (relaciones entre elementos) de una página ya
+     * resuelta — ver PDF_LAYOUT_GROUPS.md. Cada grupo encadena sus miembros
+     * (text/icon): el primero presente va en (0,0) y cada siguiente se ubica
+     * respecto del anterior presente según su link, por eje (distancia fija o
+     * alineación). Después el rectángulo que envuelve al conjunto se centra
+     * en el punto de centrado: el centro de container_element_id (su caja de
+     * DISEÑO, aunque esté en otro grupo) o, si no, anchor.
      *
+     * - Grupos sin links (modelo 1: direction/gap_cm/align) se convierten a
+     *   links equivalentes.
      * - Miembro ausente (ícono sin imagen resuelta, texto vacío): no ocupa
-     *   lugar, no suma gap y no se dibuja.
-     * - Texto: alto = renglones reales × font_size × line_height, sin
-     *   min_lines; se dibuja sin vertical_align (ver RENDER.blade.php).
-     * - Si el conjunto no entra, no se escala: desborda y queda en el log.
+     *   lugar, no cuenta para la distancia y no se dibuja.
+     * - Texto: ancho = el de su renglón más ancho medido con su fuente (tope
+     *   en el width_cm de su caja); alto = renglones × font_size ×
+     *   line_height, sin min_lines. Se dibuja sin vertical_align.
+     * - Nunca se escala. Si el conjunto se sale de su etiqueta (o de la hoja),
+     *   queda un warning en el log.
      * - Grupos inválidos (datos viejos) se descartan con un warning; si un
      *   elemento está en dos grupos, se queda en el primero.
      *
-     * Devuelve la página con 'layout' = posiciones finales por grupo (lo que
-     * expone GET .../preview?format=layout).
+     * Reescribe x_cm/y_cm (y width_cm/height_cm en los textos) de los
+     * miembros; no toca z_index ni el orden de los elementos. Devuelve la
+     * página con 'layout' = posiciones finales por grupo (lo que expone
+     * GET .../preview?format=layout).
      */
     private static function aplicarLayoutGroups(array $page, $groups, string $logId, int $pageIdx): array
     {
@@ -653,8 +663,11 @@ class EtiquetaService
 
         $logContext = ['log_id' => $logId, 'page_index' => $pageIdx, 'page_id' => $page['id'] ?? null];
         $groups = PdfDesignSanitizer::sanitizeLayoutGroups($groups);
-        $errors = PdfDesignSanitizer::validateLayoutGroups($groups, $page['elements']);
+        $errors = PdfDesignSanitizer::validateLayoutGroups($groups, $page['elements'], false);
 
+        // Cajas de DISEÑO: el centro de un contenedor se toma de acá, aunque
+        // ese elemento sea miembro de otro grupo y ya se haya movido.
+        $disenio = $page['elements'];
         $indexById = [];
         foreach ($page['elements'] as $i => $el) {
             if (isset($el['id']) && is_scalar($el['id']) && (string) $el['id'] !== '' && !isset($indexById[(string) $el['id']])) {
@@ -667,49 +680,53 @@ class EtiquetaService
                 Log::warning('[layout_groups] Grupo descartado', $logContext + ['group_index' => $groupIdx, 'motivo' => $errors[$groupIdx]]);
                 continue;
             }
-            if ($group['direction'] !== 'vertical') {
-                // Fase 2 (horizontal, con medición del ancho real del texto).
-                Log::warning('[layout_groups] Grupo horizontal todavía no soportado, se ignora', $logContext + ['group_id' => $group['id']]);
-                continue;
-            }
 
-            $container = $page['elements'][$indexById[$group['container_element_id']]];
-            $containerX = (float) ($container['x_cm'] ?? 0);
-            $containerY = (float) ($container['y_cm'] ?? 0);
-            $containerW = (float) ($container['width_cm'] ?? 1);
-            $containerH = (float) ($container['height_cm'] ?? 1);
-            $gap = (float) $group['gap_cm'];
-            $align = $group['align'] ?? 'center';
+            $links = self::linksDelGrupo($group);
+            [$center, $container] = self::centroDelGrupo($group, $disenio, $indexById);
 
-            // Tamaño de cada miembro: alto en el eje principal, ancho en el transversal.
+            // Tamaño de cada miembro.
             $members = [];
             foreach ($group['members'] as $memberId) {
                 $i = $indexById[$memberId];
                 $el = $page['elements'][$i];
                 $present = self::esMiembroLayoutPresente($el);
+                [$width, $height] = $present && $el['type'] === 'text'
+                    ? self::medidasTextoLayout($el)
+                    : [(float) ($el['width_cm'] ?? 1), (float) ($el['height_cm'] ?? 1)];
 
-                if ($el['type'] === 'text') {
-                    $fontSizePx = (float) ($el['resolved_font_size_px'] ?? $el['font_size_px'] ?? 32);
-                    $lineHeight = (float) ($el['resolved_line_height_design'] ?? $el['line_height'] ?? 1.15);
-                    $height = count($el['resolved_lines'] ?? ['']) * $fontSizePx * $lineHeight * self::PX_TO_CM;
-                } else {
-                    $height = (float) ($el['height_cm'] ?? 1);
-                }
-
-                $members[] = [
-                    'index' => $i,
-                    'present' => $present,
-                    'width' => (float) ($el['width_cm'] ?? 1),
-                    'height' => $height,
-                ];
+                $members[] = ['index' => $i, 'present' => $present, 'width' => $width, 'height' => $height];
             }
 
+            // Cadena: cada presente respecto del anterior presente.
+            $prev = null;
+            foreach ($members as $k => &$member) {
+                if (!$member['present']) {
+                    continue;
+                }
+                if ($prev === null) {
+                    $member['x'] = 0.0;
+                    $member['y'] = 0.0;
+                } else {
+                    $link = $links[$k - 1];
+                    $member['x'] = self::posicionEnEje($link['x'], $prev['x'], $prev['width'], $member['width']);
+                    $member['y'] = self::posicionEnEje($link['y'], $prev['y'], $prev['height'], $member['height']);
+                }
+                $prev = $member;
+            }
+            unset($member);
+
+            // Centrado del rectángulo que envuelve a los presentes.
             $presentes = array_values(array_filter($members, fn($m) => $m['present']));
-            $total = array_sum(array_column($presentes, 'height')) + $gap * max(0, count($presentes) - 1);
-            $blockWidth = $presentes ? max(array_column($presentes, 'width')) : 0;
-            $blockX = $containerX + ($containerW - $blockWidth) / 2;
-            $cursorY = $containerY + ($containerH - $total) / 2;
-            $overflow = max(0, $total - $containerH);
+            $bbox = null;
+            if ($presentes) {
+                $minX = min(array_map(fn($m) => $m['x'], $presentes));
+                $minY = min(array_map(fn($m) => $m['y'], $presentes));
+                $maxX = max(array_map(fn($m) => $m['x'] + $m['width'], $presentes));
+                $maxY = max(array_map(fn($m) => $m['y'] + $m['height'], $presentes));
+                $shiftX = $center['x_cm'] - ($minX + $maxX) / 2;
+                $shiftY = $center['y_cm'] - ($minY + $maxY) / 2;
+                $bbox = [$minX + $shiftX, $minY + $shiftY, $maxX + $shiftX, $maxY + $shiftY];
+            }
 
             $debugMembers = [];
             foreach ($members as $member) {
@@ -722,18 +739,13 @@ class EtiquetaService
                     continue;
                 }
 
-                $x = match ($align) {
-                    'start' => $blockX,
-                    'end' => $blockX + $blockWidth - $member['width'],
-                    default => $blockX + ($blockWidth - $member['width']) / 2,
-                };
-
-                $el['x_cm'] = $x;
-                $el['y_cm'] = $cursorY;
+                $el['x_cm'] = $member['x'] + $shiftX;
+                $el['y_cm'] = $member['y'] + $shiftY;
                 $el['rotation_deg'] = 0;
                 $el['layout_group_id'] = $group['id'];
 
                 if ($el['type'] === 'text') {
+                    $el['width_cm'] = $member['width'];
                     $el['height_cm'] = $member['height'];
                     $el['layout_text'] = true;
                     $el['resolved_text_html'] = self::renglonesAHtml($el['resolved_lines'] ?? []);
@@ -743,8 +755,8 @@ class EtiquetaService
                     'id' => $el['id'],
                     'type' => $el['type'],
                     'present' => true,
-                    'x_cm' => round($x, 2),
-                    'y_cm' => round($cursorY, 2),
+                    'x_cm' => round($el['x_cm'], 2),
+                    'y_cm' => round($el['y_cm'], 2),
                     'width_cm' => round($member['width'], 2),
                     'height_cm' => round($member['height'], 2),
                 ];
@@ -752,13 +764,12 @@ class EtiquetaService
                     $debugMember['lines'] = $el['resolved_lines'] ?? [];
                 }
                 $debugMembers[] = $debugMember;
-
-                $cursorY += $member['height'] + $gap;
                 unset($el);
             }
 
+            $overflow = $bbox ? self::desbordeDelGrupo($bbox, $container, $page['sheet']) : 0.0;
             if ($overflow > 0) {
-                Log::warning('[layout_groups] El grupo no entra en su etiqueta (no se escala)', $logContext + [
+                Log::warning('[layout_groups] El grupo se sale de ' . ($container && ($container['type'] ?? null) === 'background' ? 'su etiqueta' : 'la hoja') . ' (no se escala)', $logContext + [
                     'group_id' => $group['id'],
                     'overflow_cm' => round($overflow, 2),
                 ]);
@@ -766,18 +777,188 @@ class EtiquetaService
 
             $page['layout'][] = [
                 'id' => $group['id'],
-                'container' => [
-                    'x_cm' => round($containerX, 2),
-                    'y_cm' => round($containerY, 2),
-                    'width_cm' => round($containerW, 2),
-                    'height_cm' => round($containerH, 2),
-                ],
+                'center' => ['x_cm' => round($center['x_cm'], 2), 'y_cm' => round($center['y_cm'], 2)],
+                'container' => $container ? [
+                    'id' => $container['id'],
+                    'x_cm' => round((float) ($container['x_cm'] ?? 0), 2),
+                    'y_cm' => round((float) ($container['y_cm'] ?? 0), 2),
+                    'width_cm' => round((float) ($container['width_cm'] ?? 1), 2),
+                    'height_cm' => round((float) ($container['height_cm'] ?? 1), 2),
+                ] : null,
                 'overflow_cm' => round($overflow, 2),
                 'members' => $debugMembers,
             ];
         }
 
         return $page;
+    }
+
+    /**
+     * links[i] ubica a members[i+1] respecto de members[i]. Un grupo del
+     * modelo 1 (sin links) se convierte: vertical = x alineado según align +
+     * y a gap_cm abajo; horizontal = x a gap_cm a la derecha + y alineado.
+     */
+    private static function linksDelGrupo(array $group): array
+    {
+        if (isset($group['links'])) {
+            return array_values($group['links']);
+        }
+
+        $gap = ['mode' => 'gap', 'side' => 'after', 'cm' => (float) $group['gap_cm']];
+        $align = ['mode' => 'align', 'value' => $group['align'] ?? 'center'];
+        $link = $group['direction'] === 'horizontal' ? ['x' => $gap, 'y' => $align] : ['x' => $align, 'y' => $gap];
+
+        return array_fill(0, max(0, count($group['members']) - 1), $link);
+    }
+
+    /**
+     * Punto de centrado del grupo: el centro de la caja de diseño de
+     * container_element_id si existe y no es miembro; si no, anchor (ya
+     * validado: uno de los dos existe). Devuelve [centro, contenedor|null].
+     */
+    private static function centroDelGrupo(array $group, array $disenio, array $indexById): array
+    {
+        $containerId = $group['container_element_id'] ?? null;
+        if ($containerId !== null && isset($indexById[$containerId]) && !in_array($containerId, $group['members'], true)) {
+            $container = $disenio[$indexById[$containerId]];
+            return [[
+                'x_cm' => (float) ($container['x_cm'] ?? 0) + (float) ($container['width_cm'] ?? 1) / 2,
+                'y_cm' => (float) ($container['y_cm'] ?? 0) + (float) ($container['height_cm'] ?? 1) / 2,
+            ], $container];
+        }
+
+        return [['x_cm' => (float) $group['anchor']['x_cm'], 'y_cm' => (float) $group['anchor']['y_cm']], null];
+    }
+
+    /**
+     * Posición de un miembro en un eje respecto del anterior presente
+     * (pos/size = x/ancho en X, y/alto en Y). cm negativo = se superponen.
+     */
+    private static function posicionEnEje(array $rule, float $prevPos, float $prevSize, float $size): float
+    {
+        if ($rule['mode'] === 'gap') {
+            $cm = (float) $rule['cm'];
+            return $rule['side'] === 'before' ? $prevPos - $cm - $size : $prevPos + $prevSize + $cm;
+        }
+
+        return match ($rule['value']) {
+            'start' => $prevPos,
+            'end' => $prevPos + $prevSize - $size,
+            default => $prevPos + ($prevSize - $size) / 2,
+        };
+    }
+
+    /**
+     * Cuánto se sale el conjunto (el máximo por cualquier lado) de su
+     * etiqueta si el contenedor es un background, o de la hoja si no.
+     */
+    private static function desbordeDelGrupo(array $bbox, ?array $container, array $sheet): float
+    {
+        if ($container && ($container['type'] ?? null) === 'background') {
+            $refX = (float) ($container['x_cm'] ?? 0);
+            $refY = (float) ($container['y_cm'] ?? 0);
+            $refW = (float) ($container['width_cm'] ?? 1);
+            $refH = (float) ($container['height_cm'] ?? 1);
+        } else {
+            [$refX, $refY] = [0.0, 0.0];
+            $refW = (float) ($sheet['width_cm'] ?? 18.5);
+            $refH = (float) ($sheet['height_cm'] ?? 29);
+        }
+
+        [$minX, $minY, $maxX, $maxY] = $bbox;
+
+        return max(0.0, $refX - $minX, $refY - $minY, $maxX - ($refX + $refW), $maxY - ($refY + $refH));
+    }
+
+    /**
+     * [ancho, alto] en cm de un texto dentro de un grupo. Alto = renglones ×
+     * font_size × line_height (sin min_lines). Ancho = el renglón más ancho,
+     * medido con la misma función que usa dompdf para dibujarlo
+     * (FontMetrics::getTextWidth, con su fuente, tamaño y letter-spacing ya
+     * resueltos), con tope en el width_cm de su caja.
+     */
+    private static function medidasTextoLayout(array $el): array
+    {
+        $lines = $el['resolved_lines'] ?? [''];
+        $fontSizePx = (float) ($el['resolved_font_size_px'] ?? $el['font_size_px'] ?? 32);
+        $lineHeight = (float) ($el['resolved_line_height_design'] ?? $el['line_height'] ?? 1.15);
+        $letterSpacingPx = (float) ($el['resolved_letter_spacing_px'] ?? $el['letter_spacing_px'] ?? 0);
+        $boxWidth = (float) ($el['width_cm'] ?? 1);
+
+        $fontMetrics = self::metricasFuentes();
+        $font = self::fuenteParaMedir($fontMetrics, $el);
+        $widestPt = 0.0;
+        foreach ($lines as $line) {
+            $widestPt = max($widestPt, $fontMetrics->getTextWidth($line, $font, $fontSizePx * self::PX_TO_PT, 0.0, $letterSpacingPx * self::PX_TO_PT));
+        }
+
+        return [
+            min($widestPt * self::PT_TO_CM, $boxWidth),
+            count($lines) * $fontSizePx * $lineHeight * self::PX_TO_CM,
+        ];
+    }
+
+    private static ?\Dompdf\FontMetrics $fontMetricsMedicion = null;
+    private static array $fuentesRegistradasMedicion = [];
+
+    /**
+     * FontMetrics de un Dompdf con la misma configuración que el render, solo
+     * para medir (no renderiza nada). Uno por proceso.
+     */
+    private static function metricasFuentes(): \Dompdf\FontMetrics
+    {
+        if (!self::$fontMetricsMedicion) {
+            $dompdf = Pdf::loadHTML('')->getDomPDF();
+            $dompdf->getOptions()->setFontDir(public_path('fonts'));
+            self::$fontMetricsMedicion = $dompdf->getFontMetrics();
+        }
+
+        return self::$fontMetricsMedicion;
+    }
+
+    /**
+     * La misma fuente que va a elegir dompdf al dibujar (RENDER.blade.php):
+     * la del elemento si carga, si no Liberation Sans, si no la por defecto.
+     */
+    private static function fuenteParaMedir(\Dompdf\FontMetrics $fontMetrics, array $el): string
+    {
+        $weight = (int) ($el['font_weight'] ?? 400);
+        $subtype = $fontMetrics->getType("{$weight} normal");
+
+        $candidates = [];
+        if (!empty($el['resolved_font_family']) && !empty($el['resolved_font_files'][0])) {
+            self::registrarFuenteMedicion($fontMetrics, $el['resolved_font_family'], $el['resolved_font_files'][0], $weight);
+            $candidates[] = $el['resolved_font_family'];
+        }
+        self::registrarFuenteMedicion($fontMetrics, self::FALLBACK_FONT_FAMILY, public_path(self::FALLBACK_FONT_FILE), $weight);
+        $candidates[] = self::FALLBACK_FONT_FAMILY;
+
+        foreach ($candidates as $family) {
+            $font = $fontMetrics->getFont($family, $subtype);
+            if ($font) {
+                return $font;
+            }
+        }
+
+        return $fontMetrics->getFont(null, $subtype);
+    }
+
+    private static function registrarFuenteMedicion(\Dompdf\FontMetrics $fontMetrics, string $family, string $path, int $weight): void
+    {
+        $key = mb_strtolower($family) . "|{$weight}|{$path}";
+        if (isset(self::$fuentesRegistradasMedicion[$key])) {
+            return;
+        }
+        self::$fuentesRegistradasMedicion[$key] = true;
+
+        try {
+            $fontMetrics->registerFont(
+                ['family' => $family, 'weight' => (string) $weight, 'style' => 'normal'],
+                'file://' . str_replace('\\', '/', $path)
+            );
+        } catch (\Throwable $e) {
+            Log::warning('[layout_groups] No se pudo cargar la fuente para medir', ['family' => $family, 'path' => $path, 'error' => $e->getMessage()]);
+        }
     }
 
     /**
