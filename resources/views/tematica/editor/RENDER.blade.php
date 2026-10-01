@@ -199,8 +199,18 @@
                             $fontSizePxActual = $el['resolved_font_size_px'] ?? $el['font_size_px'] ?? 32;
                             $bottomNudgePx = $fontSizePxActual * 0.20;
                             $middleNudgePx = $fontSizePxActual * 0.20;
+                            // "top": dompdf deja un espacio invisible ENCIMA del primer
+                            // renglón (ascenso de la fuente + el medio-interlineado de la
+                            // caja de línea) que un navegador no muestra igual — el editor
+                            // dibuja el texto pegado al borde superior de su caja, así que
+                            // hay que subirlo para compensar ese aire, si no queda más
+                            // abajo de lo esperado. Medido contra un caso real (Oswald,
+                            // 16px, line_height 1.15): ese aire ronda el 90% del tamaño de
+                            // fuente — se deja un poco conservador (85%) de margen.
+                            $topNudgePx = $fontSizePxActual * -0.10;
+                            $topShiftPx = -$topNudgePx;
                             [$wrapTop, $wrapTransform] = match ($el['vertical_align'] ?? 'middle') {
-                                'top' => ['0%', 'none'],
+                                'top' => ['0%', "translateY({$topShiftPx}px)"],
                                 'bottom' => ['100%', "translateY(-100%) translateY({$bottomNudgePx}px)"],
                                 default => ['50%', "translateY(-50%) translateY(-{$middleNudgePx}px)"],
                             };
