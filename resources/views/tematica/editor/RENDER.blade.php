@@ -224,12 +224,20 @@
                             // (fracción del tamaño de fuente) para compensar el espacio de
                             // interlineado invisible que queda por debajo de las letras —
                             // si no, el texto queda visualmente más arriba de lo esperado.
-                            // "middle": empujón hacia arriba (fracción más chica), el
-                            // centrado geométrico deja el texto un poco más abajo de lo
-                            // esperado.
+                            // "middle": SIN empujón. Con el ratio de obtenerRatioMetricasFuente()
+                            // ya aplicado (resolved_line_height), el alto de línea efectivo que
+                            // dompdf dibuja es line_height×font_size exacto — y con ese alto, el
+                            // tramo de tinta real (de la punta del ascendente de la 1ra línea a
+                            // la punta del descendente de la última) queda centrado matemáticamente
+                            // en la caja SOLO con translateY(-50%): el half-leading que CSS reparte
+                            // arriba/abajo de cada renglón ya es simétrico, así que agregar un
+                            // empujón fijo (0.20×font_size, probado antes) lo descentra para cajas
+                            // chicas/line_height ajustado — medido con un caso real (etiqueta de
+                            // 1.15cm con 2 renglones, line_height:1): con el empujón el texto
+                            // quedaba pegado arriba (separación 1:2.6 entre arriba/abajo); sin él,
+                            // la separación da prácticamente simétrica.
                             $fontSizePxActual = $el['resolved_font_size_px'] ?? $el['font_size_px'] ?? 32;
                             $bottomNudgePx = $fontSizePxActual * 0.20;
-                            $middleNudgePx = $fontSizePxActual * 0.20;
                             // "top": dompdf deja un espacio invisible ENCIMA del primer
                             // renglón (ascenso de la fuente + el medio-interlineado de la
                             // caja de línea) que un navegador no muestra igual — el editor
@@ -243,7 +251,7 @@
                             [$wrapTop, $wrapTransform] = match ($el['vertical_align'] ?? 'middle') {
                                 'top' => ['0%', "translateY({$topShiftPx}px)"],
                                 'bottom' => ['100%', "translateY(-100%) translateY({$bottomNudgePx}px)"],
-                                default => ['50%', "translateY(-50%) translateY(-{$middleNudgePx}px)"],
+                                default => ['50%', 'translateY(-50%)'],
                             };
                             // Texto dentro de un layout_group: la caja ya mide
                             // exactamente renglones × font_size × line_height (lo
