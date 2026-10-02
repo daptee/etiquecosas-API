@@ -6,6 +6,7 @@ use App\Models\ProductPdfDesign;
 use App\Models\ProductPdfDesignProduct;
 use App\Models\ProductVariant;
 use App\Services\EtiquetaService;
+use App\Services\PdfDesignImportService;
 use App\Services\PdfDesignSanitizer;
 use Carbon\Carbon;
 use Illuminate\Database\QueryException;
@@ -96,6 +97,53 @@ class ProductPdfDesignController extends Controller
         $design->load(['products:id,name,sku', 'labelShape', 'generalStatus']);
         $this->logAudit(Auth::user(), 'Store Product Pdf Design', $request->all(), $design);
         return $this->success($design, 'Diseño de PDF creado');
+    }
+
+    /**
+     * Sube un PDF YA GENERADO por este mismo backend (una hoja de etiquetas
+     * del sistema viejo, product_pdf/vistas por temática) y arma un diseño
+     * nuevo para el editor a partir de lo que detecta ahí: fondos, íconos y
+     * texto, con su posición/tamaño/color real. Los íconos quedan con
+     * icon_id=1 (placeholder fijo, no hay forma confiable de matchear la
+     * imagen real contra el catálogo solo mirando el PDF) y font_id siempre
+     * queda null — se completan a mano en el editor. Ver PDF_IMPORTAR_DESDE_PDF.md.
+     */
+    public function importFromPdf(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'pdf' => 'required|file|mimes:pdf|max:20480',
+            'name' => 'required|string|max:255',
+            'labelShapeId' => 'nullable|exists:label_shapes,id',
+        ]);
+        if ($validator->fails()) {
+            $this->logAudit(Auth::user(), 'Import Pdf Design', $request->all(), $validator->errors());
+            return $this->validationError($validator->errors());
+        }
+
+        $tmpPath = $request->file('pdf')->getRealPath();
+
+        try {
+            $data = $this->sanitizeDesignData(PdfDesignImportService::import($tmpPath));
+        } catch (\Throwable $e) {
+            return $this->error('No se pudo analizar el PDF: ' . $e->getMessage(), 500);
+        }
+
+        $elementCount = count($data['pages'][0]['elements'] ?? []);
+        if ($elementCount === 0) {
+            return $this->error('No se detectó ningún elemento en el PDF — puede que no sea un PDF generado por este sistema', 422);
+        }
+
+        $design = ProductPdfDesign::create([
+            'label_shape_id' => $request->labelShapeId,
+            'name' => $request->name,
+            'data' => $data,
+            'is_published' => false,
+            'status_id' => 1,
+        ]);
+
+        $design->load(['products:id,name,sku', 'labelShape', 'generalStatus']);
+        $this->logAudit(Auth::user(), 'Import Pdf Design', ['name' => $request->name], ['designId' => $design->id, 'elementCount' => $elementCount]);
+        return $this->success($design, "Diseño importado del PDF ({$elementCount} elementos detectados)");
     }
 
     public function update(Request $request, $id)

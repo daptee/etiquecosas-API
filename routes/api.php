@@ -219,6 +219,8 @@ Route::middleware('jwt.auth')->prefix('product-pdf-designs')->group(function () 
     Route::get('/', [ProductPdfDesignController::class, 'index']);
     Route::get('/{id}', [ProductPdfDesignController::class, 'show']);
     Route::post('/', [ProductPdfDesignController::class, 'store']);
+    // Antes de "/{id}" — si no, "import-from-pdf" matchearía como si fuera un id.
+    Route::post('/import-from-pdf', [ProductPdfDesignController::class, 'importFromPdf']);
     Route::post('/{id}', [ProductPdfDesignController::class, 'update']);
     Route::patch('/{id}/toggle-status', [ProductPdfDesignController::class, 'toggleStatus']);
     Route::delete('/{id}', [ProductPdfDesignController::class, 'delete']);
