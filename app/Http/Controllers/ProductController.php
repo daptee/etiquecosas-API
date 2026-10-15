@@ -407,7 +407,32 @@ class ProductController extends Controller
                 ]);
 
         $product->setRelation('variants', $product->variants->sortBy(fn($v) => $v->variant['order'] ?? 0)->values());
+        $this->filterPdfDesignsByPivotPage($product);
         return $this->success($product, 'Producto obtenido exitosamente');
+    }
+
+    /**
+     * Un producto puede estar vinculado a UNA SOLA página puntual de un
+     * diseño ajeno (product_pdf_design_products.page_id), no al diseño
+     * entero — exactamente lo mismo que ya hace
+     * EtiquetaService::generarEtiquetasDesdeDesignsMultiples() al generar el
+     * PDF real de una venta (filtra data.pages por ese page_id). Acá hace
+     * falta lo mismo: sin este filtro, pdfDesigns trae el `data` COMPLETO
+     * del diseño ajeno (todas sus páginas/hojas), aunque el producto solo
+     * haya elegido una — pivot.page_id === null sigue significando "el
+     * diseño entero", no se toca en ese caso.
+     */
+    private function filterPdfDesignsByPivotPage(Product $product): void
+    {
+        foreach ($product->pdfDesigns as $design) {
+            $pageId = $design->pivot->page_id ?? null;
+            if (!$pageId || empty($design->data['pages'])) {
+                continue;
+            }
+            $data = $design->data;
+            $data['pages'] = array_values(array_filter($data['pages'], fn($p) => ($p['id'] ?? null) === $pageId));
+            $design->data = $data;
+        }
     }
 
     public function slug(Request $request, string $slug)
@@ -469,6 +494,7 @@ class ProductController extends Controller
                 ]);
 
         $product->setRelation('variants', $product->variants->sortBy(fn($v) => $v->variant['order'] ?? 0)->values());
+        $this->filterPdfDesignsByPivotPage($product);
 
         return $this->success($product, 'Producto obtenido exitosamente');
     }
