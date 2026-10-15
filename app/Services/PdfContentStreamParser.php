@@ -34,6 +34,15 @@ class PdfContentStreamParser
         $stack = [];
         $ctm = $identity;
         $fillColor = '#000000';
+        // CMYK original del relleno vigente (string "c,m,y,k"), o null si el
+        // relleno vino de rg/g (RGB directo, no hay CMYK que preservar). Se
+        // guarda ADEMÁS del hex (no en vez de) porque un visor de PDF con
+        // manejo de color le aplica al operador `k` (CMYK) un perfil que lo
+        // deja más apagado que la conversión matemática simple que usa
+        // cmykToHex() — para que un fondo quede IDÉNTICO al original hay que
+        // reproducir el mismo operador `k`, no solo un RGB matemáticamente
+        // equivalente (ver PdfDesignImportService::rectToBackgroundElement).
+        $fillColorCmyk = null;
         $strokeColor = '#000000';
         $lineWidthPt = 1.0;
 
@@ -61,7 +70,7 @@ class PdfContentStreamParser
 
             switch ($op) {
                 case 'q':
-                    $stack[] = ['ctm' => $ctm, 'color' => $fillColor, 'stroke' => $strokeColor, 'lw' => $lineWidthPt];
+                    $stack[] = ['ctm' => $ctm, 'color' => $fillColor, 'colorCmyk' => $fillColorCmyk, 'stroke' => $strokeColor, 'lw' => $lineWidthPt];
                     break;
 
                 case 'Q':
@@ -69,6 +78,7 @@ class PdfContentStreamParser
                     if ($prev) {
                         $ctm = $prev['ctm'];
                         $fillColor = $prev['color'];
+                        $fillColorCmyk = $prev['colorCmyk'];
                         $strokeColor = $prev['stroke'];
                         $lineWidthPt = $prev['lw'];
                     }
@@ -85,6 +95,7 @@ class PdfContentStreamParser
                     if (count($operands) >= 3) {
                         [$r, $g, $b] = array_map('floatval', array_slice($operands, -3));
                         $fillColor = self::rgbToHex($r, $g, $b);
+                        $fillColorCmyk = null;
                     }
                     break;
 
@@ -92,6 +103,7 @@ class PdfContentStreamParser
                     if (count($operands) >= 1) {
                         $gray = (float) end($operands);
                         $fillColor = self::rgbToHex($gray, $gray, $gray);
+                        $fillColorCmyk = null;
                     }
                     break;
 
@@ -99,6 +111,7 @@ class PdfContentStreamParser
                     if (count($operands) >= 4) {
                         [$c, $m2, $y, $k] = array_map('floatval', array_slice($operands, -4));
                         $fillColor = self::cmykToHex($c, $m2, $y, $k);
+                        $fillColorCmyk = sprintf('%s,%s,%s,%s', self::trimNum($c), self::trimNum($m2), self::trimNum($y), self::trimNum($k));
                     }
                     break;
 
@@ -178,6 +191,7 @@ class PdfContentStreamParser
                                 'type' => 'rect',
                                 'x' => $box['x'], 'y' => $box['y'], 'w' => $box['w'], 'h' => $box['h'],
                                 'color' => $fillColor,
+                                'colorCmyk' => $fillColorCmyk,
                                 'filled' => true,
                                 'borderColor' => in_array($op, ['b', 'b*', 'B', 'B*'], true) ? $strokeColor : null,
                                 'borderWidthPt' => in_array($op, ['b', 'b*', 'B', 'B*'], true) ? $lineWidthPt : 0,
@@ -462,7 +476,18 @@ class PdfContentStreamParser
         // porque este parser asume texto latino simple sin subsetting (ver
         // comentario de la clase).
         $utf8 = @mb_convert_encoding($inner, 'UTF-8', 'Windows-1252');
-        return $utf8 !== false ? $utf8 : $inner;
+        $utf8 = $utf8 !== false ? $utf8 : $inner;
+
+        // Defensivo: un bug de caché de fuentes de dompdf (ajeno a este
+        // parser — ver EtiquetaService::generarEtiquetas()) a veces termina
+        // codificando el texto en 2 bytes por carácter (Identity-H/CID) en
+        // vez de WinAnsi de 1 byte, y esta decodificación asume 1 byte — el
+        // resultado queda con un byte nulo intercalado entre cada letra
+        // (ej. "N\0O\0M\0B\0R\0E"). Sacando los bytes nulos se recupera el
+        // texto correcto en ese caso (el byte alto de un carácter ASCII en
+        // UTF-16BE es 0x00), y no afecta al caso normal (nunca hay bytes
+        // nulos legítimos en texto decodificado).
+        return str_replace("\0", '', $utf8);
     }
 
     /**
@@ -523,5 +548,15 @@ class PdfContentStreamParser
     {
         $clamp = fn($v) => max(0, min(255, (int) round(255 * (1 - $v) * (1 - $k))));
         return sprintf('#%02X%02X%02X', $clamp($c), $clamp($m), $clamp($y));
+    }
+
+    /**
+     * Un componente CMYK (0–1) tal como lo necesita el `cmyk(c,m,y,k)` de CSS
+     * que ya entiende dompdf — sin ceros de más (ej. 0.390000 -> "0.39") pero
+     * sin perder precisión real.
+     */
+    private static function trimNum(float $v): string
+    {
+        return rtrim(rtrim(number_format(max(0, min(1, $v)), 6, '.', ''), '0'), '.') ?: '0';
     }
 }

@@ -228,14 +228,19 @@
                             // (con el alto de línea ya compensado por obtenerRatioMetricasFuente())
                             // da un tramo de tinta TEÓRICO simétrico usando el ascenso/descenso
                             // declarado en la métrica hhea de la fuente — pero el FontBBox real
-                            // (la tinta de los glifos que existen de verdad) casi siempre es más
-                            // chico, sobre todo el descenso: una fuente de solo mayúsculas como
-                            // esta (Universitaria) declara Descender=-212/1000em en hhea pero su
-                            // FontBBox real solo baja a -31/1000em (prácticamente sin descendentes).
-                            // Esa diferencia hace que la tinta real quede más arriba de lo que el
-                            // modelo teórico asume, así que hace falta un empujón hacia abajo para
-                            // compensar — a diferencia del empujón de 0.20 que había antes (que
-                            // sobrecorregía y dejaba el texto pegado arriba), este es más chico.
+                            // (la tinta de los glifos que existen de verdad) casi siempre es
+                            // distinto, sobre todo el descenso, y la diferencia exacta varía por
+                            // fuente (una de solo mayúsculas como Universitaria casi no tiene
+                            // descendentes reales aunque la hhea diga que sí). Se probó una
+                            // corrección por fuente a partir de esa diferencia (ascenso/descenso
+                            // real vs. declarado) pero no dio un resultado consistente entre
+                            // fuentes variadas (Oswald quedaba sobrecorregida hacia abajo con la
+                            // misma fórmula que centraba bien a otras) — queda pendiente si hace
+                            // falta más precisión. Por ahora 0.10 es un valor de compromiso fijo,
+                            // verificado a ojo contra una grilla de 5 fuentes × 3 tamaños: anda
+                            // bien en la mayoría, se queda un poco corto en alguna fuente puntual
+                            // y un poco largo en otra, pero sin un sesgo sistemático para ningún
+                            // lado — no cambiarlo sin volver a probar contra varias fuentes a la vez.
                             $fontSizePxActual = $el['resolved_font_size_px'] ?? $el['font_size_px'] ?? 32;
                             $bottomNudgePx = $fontSizePxActual * 0.20;
                             $middleNudgePx = $fontSizePxActual * 0.10;

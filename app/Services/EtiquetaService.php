@@ -141,6 +141,20 @@ class EtiquetaService
                 $dompdf = $pdf->getDomPDF();
                 $dompdf->getOptions()->setFontDir(public_path('fonts'));
                 $dompdf->getOptions()->setFontCache(storage_path('fonts_cache'));
+                // Estas vistas (tematica/*) ya declaran Oswald/Lora con @font-face
+                // apuntando a un archivo LOCAL (file://) — el <link> a
+                // fonts.googleapis.com que además traen es redundante, y con
+                // `enable_remote` global en true dompdf lo va a buscar igual. El
+                // problema: si dompdf termina registrando ESA versión (la de
+                // Google) en vez de la local para la family "oswald", pisa el
+                // caché COMPARTIDO `installed-fonts.json` para toda la app, y esa
+                // versión remota puede quedar con una codificación de glifos
+                // (CID/2 bytes) distinta a la local — el texto generado con ese
+                // registro corrompido sale con bytes nulos intercalados entre
+                // letra y letra. Como la fuente local ya alcanza, se desactiva la
+                // carga remota PARA ESTE RENDER puntual (no toca el config
+                // global `enable_remote`, por si algo más depende de él).
+                $dompdf->getOptions()->setIsRemoteEnabled(false);
                 $pdf->save($filePath);
                 $outputFiles[] = $filePath;
                 Log::info("✅ PDF generado", ['path' => $filePath]);
@@ -1431,7 +1445,7 @@ class EtiquetaService
      * 🧹 Limpia un nombre para uso en rutas de archivos.
      * Remueve acentos, caracteres especiales y espacios múltiples.
      */
-    private static function limpiarNombreArchivo(string $nombre): string
+    public static function limpiarNombreArchivo(string $nombre): string
     {
         // Tabla de reemplazo de caracteres acentuados
         $acentos = [

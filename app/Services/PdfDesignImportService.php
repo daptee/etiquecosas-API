@@ -82,12 +82,13 @@ class PdfDesignImportService
             // vectoriales sueltos — si hay ambos en la misma celda, es raro,
             // pero la imagen da una caja más confiable.
             $iconBoxes = !empty($imagesByCell[$idx]) ? $imagesByCell[$idx] : ($iconFragmentsByCell[$idx] ?? []);
-            if (!empty($iconBoxes)) {
+            $iconBox = !empty($iconBoxes) ? self::combineBoxes($iconBoxes) : null;
+            if ($iconBox) {
                 $elements[] = self::iconBoxToElement($iconBoxes, $pageHeightPt);
             }
 
             if (!empty($textsByCell[$idx])) {
-                $elements[] = self::textsToTextElement($textsByCell[$idx], $pageHeightPt, $rect);
+                $elements[] = self::textsToTextElement($textsByCell[$idx], $pageHeightPt, $rect, $iconBox);
             }
         }
 
@@ -217,6 +218,17 @@ class PdfDesignImportService
 
     private static function rectToBackgroundElement(array $rect, float $pageHeightPt): array
     {
+        // Si el PDF original pintó este rect con el operador CMYK `k` (no RGB
+        // `rg`), se guarda el CMYK tal cual en vez de convertirlo a hex: un
+        // visor de PDF con manejo de color le aplica a `k` un perfil que lo
+        // ve bien más apagado que la conversión matemática simple que usamos
+        // para el hex (ver PdfContentStreamParser::cmykToHex) — para que el
+        // fondo importado se vea IDÉNTICO al original (no solo "matemáticamente
+        // equivalente") hay que reproducir el mismo operador `k`, no un RGB.
+        $color = !empty($rect['colorCmyk'])
+            ? ['mode' => 'cmyk', 'value' => $rect['colorCmyk']]
+            : ['mode' => 'hex', 'value' => $rect['color']];
+
         $el = [
             'id' => 'el-imported-' . uniqid(),
             'type' => 'background',
@@ -225,7 +237,7 @@ class PdfDesignImportService
             'width_cm' => round($rect['w'] / self::PT_PER_CM, 2),
             'height_cm' => round($rect['h'] / self::PT_PER_CM, 2),
             'z_index' => 0,
-            'color' => ['mode' => 'hex', 'value' => $rect['color']],
+            'color' => $color,
             'editable_by_customer' => false,
         ];
 
@@ -248,22 +260,33 @@ class PdfDesignImportService
      */
     private static function iconBoxToElement(array $boxes, float $pageHeightPt): array
     {
+        $box = self::combineBoxes($boxes);
+
+        return [
+            'id' => 'el-imported-' . uniqid(),
+            'type' => 'icon',
+            'x_cm' => round($box['x'] / self::PT_PER_CM, 2),
+            'y_cm' => round(($pageHeightPt - $box['y'] - $box['h']) / self::PT_PER_CM, 2),
+            'width_cm' => round($box['w'] / self::PT_PER_CM, 2),
+            'height_cm' => round($box['h'] / self::PT_PER_CM, 2),
+            'z_index' => 1,
+            'icon_id' => 1,
+            'editable_by_customer' => false,
+        ];
+    }
+
+    /**
+     * Caja en puntos PDF (origen abajo-izquierda, como el resto de las
+     * primitivas) que ENGLOBA una o más cajas (rects/imágenes).
+     */
+    private static function combineBoxes(array $boxes): array
+    {
         $minX = min(array_column($boxes, 'x'));
         $minY = min(array_column($boxes, 'y'));
         $maxX = max(array_map(fn($b) => $b['x'] + $b['w'], $boxes));
         $maxY = max(array_map(fn($b) => $b['y'] + $b['h'], $boxes));
 
-        return [
-            'id' => 'el-imported-' . uniqid(),
-            'type' => 'icon',
-            'x_cm' => round($minX / self::PT_PER_CM, 2),
-            'y_cm' => round(($pageHeightPt - $maxY) / self::PT_PER_CM, 2),
-            'width_cm' => round(($maxX - $minX) / self::PT_PER_CM, 2),
-            'height_cm' => round(($maxY - $minY) / self::PT_PER_CM, 2),
-            'z_index' => 1,
-            'icon_id' => 1,
-            'editable_by_customer' => false,
-        ];
+        return ['x' => $minX, 'y' => $minY, 'w' => $maxX - $minX, 'h' => $maxY - $minY];
     }
 
     /**
@@ -272,7 +295,7 @@ class PdfDesignImportService
      * por espacios — total compatibilidad con cómo ya arma/parte renglones el
      * editor nuevo (max_chars_per_line), en vez de guardar cada palabra suelta.
      */
-    private static function textsToTextElement(array $lines, float $pageHeightPt, ?array $containerRect): array
+    private static function textsToTextElement(array $lines, float $pageHeightPt, ?array $containerRect, ?array $iconBox = null): array
     {
         usort($lines, fn($a, $b) => $b['y'] <=> $a['y']); // de arriba hacia abajo
 
@@ -291,11 +314,54 @@ class PdfDesignImportService
         // del texto a partir de su posición de arranque. Si no hay celda
         // (texto suelto), se estima con el tamaño de fuente.
         if ($containerRect) {
+            // Todo en coordenadas PDF (origen abajo-izquierda, Y crece hacia
+            // arriba) hasta el final — recién ahí se convierte a cm con
+            // origen arriba-izquierda, igual que el resto del archivo.
             $insetPt = $fontSizePt * 0.3;
-            $xCm = round(($containerRect['x'] + $insetPt) / self::PT_PER_CM, 2);
-            $yCm = round(($pageHeightPt - $containerRect['y'] - $containerRect['h'] + $insetPt) / self::PT_PER_CM, 2);
-            $widthCm = round(max(0.5, $containerRect['w'] - 2 * $insetPt) / self::PT_PER_CM, 2);
-            $heightCm = round(max(0.5, $containerRect['h'] - 2 * $insetPt) / self::PT_PER_CM, 2);
+            $xLeft = $containerRect['x'] + $insetPt;
+            $xRight = $containerRect['x'] + $containerRect['w'] - $insetPt;
+            $yBottomEdge = $containerRect['y'] + $insetPt;
+            $yTopEdge = $containerRect['y'] + $containerRect['h'] - $insetPt;
+
+            // Las vistas legacy dibujan el ícono y el texto como columnas (o
+            // filas) separadas de una tabla — nunca superpuestos. Si esta
+            // celda tiene ícono, hay que recortarle al texto el mismo
+            // espacio que ocupaba esa columna/fila en el HTML original, si
+            // no el texto (centrado en TODA la celda) queda pasando por
+            // encima del dibujo. El ícono casi nunca ocupa la mayoría del
+            // ancho/alto de la celda (suele ser chico, en una esquina), así
+            // que en vez de un umbral de tamaño se compara el margen libre
+            // de cada lado: el lado con MENOS margen es donde está "pegado"
+            // el ícono (esquina de icon-left/icon-top/etc.), y el texto va
+            // del otro lado. Se usa el eje (horizontal o vertical) donde esa
+            // diferencia de márgenes es más marcada.
+            if ($iconBox) {
+                $leftGap = $iconBox['x'] - $containerRect['x'];
+                $rightGap = ($containerRect['x'] + $containerRect['w']) - ($iconBox['x'] + $iconBox['w']);
+                $topGap = ($containerRect['y'] + $containerRect['h']) - ($iconBox['y'] + $iconBox['h']);
+                $bottomGap = $iconBox['y'] - $containerRect['y'];
+
+                if (abs($leftGap - $rightGap) >= abs($topGap - $bottomGap)) {
+                    if ($leftGap < $rightGap) {
+                        // Ícono pegado a la izquierda -> texto a la derecha.
+                        $xLeft = max($xLeft, $iconBox['x'] + $iconBox['w'] + $insetPt);
+                    } else {
+                        $xRight = min($xRight, $iconBox['x'] - $insetPt);
+                    }
+                } else {
+                    if ($topGap < $bottomGap) {
+                        // Ícono pegado arriba -> texto abajo.
+                        $yTopEdge = min($yTopEdge, $iconBox['y'] - $insetPt);
+                    } else {
+                        $yBottomEdge = max($yBottomEdge, $iconBox['y'] + $iconBox['h'] + $insetPt);
+                    }
+                }
+            }
+
+            $xCm = round($xLeft / self::PT_PER_CM, 2);
+            $yCm = round(($pageHeightPt - $yTopEdge) / self::PT_PER_CM, 2);
+            $widthCm = round(max(0.5, $xRight - $xLeft) / self::PT_PER_CM, 2);
+            $heightCm = round(max(0.5, $yTopEdge - $yBottomEdge) / self::PT_PER_CM, 2);
         } else {
             $xCm = round($minX / self::PT_PER_CM, 2);
             $yCm = round(($pageHeightPt - $maxY - $fontSizePt) / self::PT_PER_CM, 2);

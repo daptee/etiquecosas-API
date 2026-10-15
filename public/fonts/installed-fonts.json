@@ -1,6 +1,6 @@
 {
     "oswald": {
-        "normal": "oswald_normal_c822fe801a669c9d0277c239cdfdec63",
+        "normal": "oswald_normal_cf75f02835ffc1be269e63217d755557",
         "bold": "C:\\project\\etiquecosas-API\\public\\fonts\/oswald_bold_7dd34669e9f6ae39e64567b5d441d9a7"
     },
     "lora": {
@@ -13,5 +13,9 @@
     },
     "titanone": {
         "normal": "titanone_normal_6fdb9e652639a1b40fbee682ab65cc3a"
+    },
+    "liberation sans": {
+        "normal": "C:\\project\\etiquecosas-API\\public\\fonts\/liberation_sans_normal_9c0a654423bf3e54b03c5d58ee1a54c8",
+        "bold": "liberation_sans_bold_9c0a654423bf3e54b03c5d58ee1a54c8"
     }
 }
