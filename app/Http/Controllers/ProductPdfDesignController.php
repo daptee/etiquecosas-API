@@ -771,7 +771,10 @@ class ProductPdfDesignController extends Controller
                 [$lastName]
             );
         } catch (\Throwable $e) {
-            return $this->error('Error generando la vista previa: ' . $e->getMessage(), 500);
+            return response()->json([
+                'message' => 'Error generando la vista previa',
+                'error' => $e->getMessage(),
+            ], 500);
         }
 
         if (empty($paths[0]) || !file_exists($paths[0])) {
@@ -780,9 +783,10 @@ class ProductPdfDesignController extends Controller
             // una venta real con varios nombres por uno solo que falle) —
             // EtiquetaService::$lastRenderError guarda ese mensaje para este
             // caso (preview = un solo nombre), en vez de devolver un genérico.
-            $detalle = EtiquetaService::$lastRenderError;
-            $mensaje = 'No se pudo generar la vista previa' . ($detalle ? ": {$detalle}" : ' (sin más detalle — revisar storage/logs/laravel.log)');
-            return $this->error($mensaje, 500);
+            return response()->json([
+                'message' => 'No se pudo generar la vista previa',
+                'error' => EtiquetaService::$lastRenderError ?? 'Sin más detalle — revisar storage/logs/laravel.log',
+            ], 500);
         }
 
         return response()->file($paths[0]);
