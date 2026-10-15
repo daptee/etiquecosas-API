@@ -338,14 +338,14 @@ class EtiquetaService
      * del front (product_pdf_designs), en vez de las vistas fijas por temática.
      * No modifica generarEtiquetas(): es el equivalente para diseños nuevos.
      */
-    public static function generarEtiquetasDesdeDesign(int $ventaId, ProductPdfDesign $design, $productOrder, array $nombres, $customColor, $customIcon, $fechaCompra = null, array $firstNames = [], array $lastNames = []): array
+    public static function generarEtiquetasDesdeDesign(int $ventaId, ProductPdfDesign $design, $productOrder, array $nombres, $customColor, $customIcon, $fechaCompra = null, array $firstNames = [], array $lastNames = [], bool $cutLines = false): array
     {
         $pages = self::normalizarPaginasDesign($design->data ?? []);
         $sufijo = self::limpiarNombreArchivo(strtoupper($design->name ?: 'DESIGN'));
 
         return self::generarEtiquetasDesdePaginas(
             $ventaId, $pages, $sufijo, "design:{$design->id}", $productOrder,
-            $nombres, $customColor, $customIcon, $fechaCompra, $firstNames, $lastNames
+            $nombres, $customColor, $customIcon, $fechaCompra, $firstNames, $lastNames, $cutLines
         );
     }
 
@@ -393,8 +393,10 @@ class EtiquetaService
      * elemento, agrupar por tamaño de hoja, renderizar y fusionar con FPDI.
      * $logId es solo para identificar el origen en logs/debug (no afecta el
      * render), ya que acá puede no haber un único ProductPdfDesign detrás.
+     * $cutLines: además del arte, una capa "Líneas de corte" encima (PDF de
+     * 2 capas OCG, ver CutLinesPdf). Sin esto el PDF sale igual que siempre.
      */
-    private static function generarEtiquetasDesdePaginas(int $ventaId, array $pages, string $sufijo, string $logId, $productOrder, array $nombres, $customColor, $customIcon, $fechaCompra = null, array $firstNames = [], array $lastNames = []): array
+    private static function generarEtiquetasDesdePaginas(int $ventaId, array $pages, string $sufijo, string $logId, $productOrder, array $nombres, $customColor, $customIcon, $fechaCompra = null, array $firstNames = [], array $lastNames = [], bool $cutLines = false): array
     {
         self::$lastRenderError = null;
         $outputFiles = [];
@@ -453,7 +455,12 @@ class EtiquetaService
                     $tmpFiles[] = $tmpPath;
                 }
 
-                if (count($tmpFiles) === 1) {
+                if ($cutLines) {
+                    self::fusionarConLineasDeCorte($tmpFiles, $grupos, $filePath, $logId);
+                    foreach ($tmpFiles as $tmpFile) {
+                        @unlink($tmpFile);
+                    }
+                } elseif (count($tmpFiles) === 1) {
                     rename($tmpFiles[0], $filePath);
                 } else {
                     $fpdi = new Fpdi();
@@ -490,6 +497,38 @@ class EtiquetaService
     }
 
     /**
+     * Fusiona los PDFs temporales de cada grupo (mismo orden que $grupos y
+     * sus páginas) en un único PDF de 2 capas: "Arte" con cada página tal
+     * cual la dibujó dompdf y "Líneas de corte" encima, calculadas sobre la
+     * página resuelta correspondiente (page.cut_lines + sus backgrounds).
+     */
+    private static function fusionarConLineasDeCorte(array $tmpFiles, array $grupos, string $filePath, string $logId): void
+    {
+        $pdf = new CutLinesPdf();
+
+        foreach ($tmpFiles as $grupoIdx => $tmpFile) {
+            $paginas = $grupos[$grupoIdx]['pages'];
+            $pageCount = $pdf->setSourceFile($tmpFile);
+            if ($pageCount !== count($paginas)) {
+                // dompdf partió/juntó alguna hoja: las líneas se asignan por
+                // posición igual, pero queda avisado.
+                Log::warning('Líneas de corte: cantidad de páginas distinta a la del diseño', [
+                    'log_id' => $logId, 'grupo' => $grupoIdx, 'pdf' => $pageCount, 'diseño' => count($paginas),
+                ]);
+            }
+
+            for ($page = 1; $page <= $pageCount; $page++) {
+                $resolved = $paginas[$page - 1] ?? null;
+                $config = $resolved ? CutLineGeometry::configPagina($resolved) : null;
+                $trazados = $config ? CutLineGeometry::trazadosPagina($resolved) : [];
+                $pdf->addPaginaConCorte($pdf->importPage($page), $config, $trazados);
+            }
+        }
+
+        $pdf->Output($filePath, 'F');
+    }
+
+    /**
      * Mismo cálculo que generarEtiquetasDesdeDesign() (resolver elementos +
      * layout_groups), pero sin renderizar: devuelve las posiciones finales
      * de cada grupo, para el GET .../preview?format=layout del editor.
@@ -523,6 +562,7 @@ class EtiquetaService
             $resolved = [
                 'id' => $page['id'] ?? null,
                 'sheet' => $page['sheet'] ?? ['width_cm' => 18.5, 'height_cm' => 29],
+                'cut_lines' => $page['cut_lines'] ?? null,
                 'elements' => array_map(
                     fn($el) => self::resolverElementoDesign(
                         $el, $nombre, $firstName, $lastName, $customColor, $customIcon,
@@ -640,8 +680,53 @@ class EtiquetaService
      * propia hoja y elementos — se renderizan como páginas del mismo PDF.
      * Si un diseño viejo todavía tiene el formato de una sola página
      * (data.sheet/data.elements sueltos), se normaliza a pages[] igual.
+     * Las páginas prestadas (source = {designId, pageId}) se guardan sin
+     * contenido: se completan con la página origen.
      */
     private static function normalizarPaginasDesign(array $data): array
+    {
+        return self::resolverPaginasPrestadas(self::paginasCrudasDesign($data));
+    }
+
+    /**
+     * Páginas con source: toman sheet, elements, layout_groups y cut_lines
+     * de la página origen (un solo nivel; una consulta para todos los
+     * diseños origen). Conservan su propio id. Si la origen ya no existe,
+     * la página queda vacía.
+     */
+    private static function resolverPaginasPrestadas(array $pages): array
+    {
+        $sourceIds = collect($pages)
+            ->map(fn($p) => $p['source']['designId'] ?? null)
+            ->filter()->map(fn($id) => (int) $id)->unique()->values();
+        if ($sourceIds->isEmpty()) {
+            return $pages;
+        }
+
+        $paginasOrigen = ProductPdfDesign::whereIn('id', $sourceIds)->get(['id', 'data'])
+            ->mapWithKeys(fn($d) => [$d->id => collect(self::paginasCrudasDesign($d->data ?? []))->keyBy('id')]);
+
+        return array_map(function ($page) use ($paginasOrigen) {
+            $designId = $page['source']['designId'] ?? null;
+            if (!$designId) {
+                return $page;
+            }
+
+            $origen = $paginasOrigen->get((int) $designId)?->get($page['source']['pageId'] ?? '');
+            unset($page['cut_lines'], $page['layout_groups']);
+            $page['elements'] = [];
+            if ($origen) {
+                foreach (['sheet', 'elements', 'layout_groups', 'cut_lines'] as $key) {
+                    if (array_key_exists($key, $origen)) {
+                        $page[$key] = $origen[$key];
+                    }
+                }
+            }
+            return $page;
+        }, $pages);
+    }
+
+    private static function paginasCrudasDesign(array $data): array
     {
         if (!empty($data['pages']) && is_array($data['pages'])) {
             return $data['pages'];

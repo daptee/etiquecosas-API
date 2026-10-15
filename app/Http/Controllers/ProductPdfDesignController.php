@@ -768,7 +768,9 @@ class ProductPdfDesignController extends Controller
                 $customIcon,
                 $fechaPreview,
                 [$firstName],
-                [$lastName]
+                [$lastName],
+                // ?cut_lines=1: PDF de 2 capas ("Arte" + "Líneas de corte").
+                $request->boolean('cut_lines')
             );
         } catch (\Throwable $e) {
             return response()->json([
