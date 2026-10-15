@@ -33,6 +33,19 @@ class EtiquetaService
     public static array $debugIconLog = [];
 
     /**
+     * Último error de render atrapado en generarEtiquetasDesdePaginas() —
+     * esa función NO relanza la excepción (sigue con los demás nombres del
+     * lote aunque uno falle, para no tirar abajo la generación real de una
+     * venta completa por un solo nombre), así que no queda nada que el
+     * caller pueda capturar con un try/catch. Guardando acá el mensaje, el
+     * endpoint de preview (que genera UN solo nombre por request, no un
+     * lote) puede devolver el motivo real en vez de un genérico "no se pudo
+     * generar la vista previa". Se resetea a null al EMPEZAR cada corrida
+     * para no arrastrar el error de un request anterior.
+     */
+    public static ?string $lastRenderError = null;
+
+    /**
      * 🗑️ Elimina todos los PDFs existentes de un pedido específico
      */
     public static function limpiarPdfsDelPedido(int $ventaId, $fechaCompra = null): void
@@ -383,6 +396,7 @@ class EtiquetaService
      */
     private static function generarEtiquetasDesdePaginas(int $ventaId, array $pages, string $sufijo, string $logId, $productOrder, array $nombres, $customColor, $customIcon, $fechaCompra = null, array $firstNames = [], array $lastNames = []): array
     {
+        self::$lastRenderError = null;
         $outputFiles = [];
         $fechaCarpeta = $fechaCompra
             ? Carbon::parse($fechaCompra)->setTimezone('America/Argentina/Buenos_Aires')->format('d-m-Y')
@@ -468,6 +482,7 @@ class EtiquetaService
                     'log_id' => $logId,
                     'error' => $e->getMessage(),
                 ]);
+                self::$lastRenderError = $e->getMessage();
             }
         }
 

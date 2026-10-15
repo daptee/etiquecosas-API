@@ -775,7 +775,14 @@ class ProductPdfDesignController extends Controller
         }
 
         if (empty($paths[0]) || !file_exists($paths[0])) {
-            return $this->error('No se pudo generar la vista previa', 500);
+            // generarEtiquetasDesdeDesign() atrapa la excepción real acá
+            // adentro (no la relanza, para no tirar abajo la generación de
+            // una venta real con varios nombres por uno solo que falle) —
+            // EtiquetaService::$lastRenderError guarda ese mensaje para este
+            // caso (preview = un solo nombre), en vez de devolver un genérico.
+            $detalle = EtiquetaService::$lastRenderError;
+            $mensaje = 'No se pudo generar la vista previa' . ($detalle ? ": {$detalle}" : ' (sin más detalle — revisar storage/logs/laravel.log)');
+            return $this->error($mensaje, 500);
         }
 
         return response()->file($paths[0]);
