@@ -16,6 +16,7 @@ class ProductVariant extends Model
         'variant',
         'stock_channels',
         'img',
+        'theme_id',
     ];
 
     protected $casts = [
@@ -26,6 +27,15 @@ class ProductVariant extends Model
     public function product()
     {
         return $this->belongsTo(Product::class, 'product_id');
+    }
+
+    /**
+     * Temática de PDF sugerida para ESTA variante puntual — tiene prioridad
+     * sobre la del producto general (Product::theme()) si está seteada.
+     */
+    public function theme()
+    {
+        return $this->belongsTo(PdfTheme::class, 'theme_id');
     }
 
     public function getAttributesValuesAttribute()

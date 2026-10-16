@@ -27,6 +27,7 @@ use App\Http\Controllers\ClientTypeController;
 use App\Http\Controllers\ProvinceController;
 use App\Http\Controllers\PersonalizationColorController;
 use App\Http\Controllers\PersonalizationIconController;
+use App\Http\Controllers\PdfThemeController;
 use App\Http\Controllers\ShippingTemplateController;
 use App\Http\Controllers\TemplateCategoryController;
 use App\Http\Controllers\ProductTypeController;
@@ -292,6 +293,15 @@ Route::middleware('jwt.auth')->prefix('icons')->group(function () {
     Route::post('/', [PersonalizationIconController::class, 'store']);
     Route::put('/{id}', [PersonalizationIconController::class, 'update']);
     Route::delete('/{id}', [PersonalizationIconController::class, 'delete']);
+});
+
+// PdfTheme
+Route::middleware('jwt.auth')->prefix('pdf-themes')->group(function () {
+    Route::get('/', [PdfThemeController::class, 'index']);
+    Route::post('/', [PdfThemeController::class, 'store']);
+    Route::put('/{id}', [PdfThemeController::class, 'update']);
+    Route::delete('/{id}', [PdfThemeController::class, 'delete']);
+    Route::get('/suggest', [PdfThemeController::class, 'suggestForProduct']);
 });
 
 // ShippingTemplate

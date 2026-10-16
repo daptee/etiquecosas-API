@@ -66,6 +66,7 @@ class ProductController extends Controller
                 'attributes:id,name,type',
                 'attributeValues:id,value,attribute_id,metadata',
                 'tag:id,name,color',
+                'theme:id,name,colors',
                 'images:id,product_id,img,is_main',
             ]);
         if ($request->has('search')) {
@@ -201,6 +202,7 @@ class ProductController extends Controller
                 'attributes:id,name,type',
                 'attributeValues:id,value,attribute_id,metadata',
                 'tag:id,name,color',
+                'theme:id,name,colors',
                 'images:id,product_id,img,is_main',
             ])
             ->where('is_feature', true)
@@ -271,6 +273,7 @@ class ProductController extends Controller
                 'attributes:id,name,type',
                 'attributeValues:id,value,attribute_id,metadata',
                 'tag:id,name,color',
+                'theme:id,name,colors',
                 'images:id,product_id,img,is_main',
             ]);
         if ($request->has('search')) {
@@ -515,6 +518,7 @@ class ProductController extends Controller
             'wholesale_price' => 'nullable|numeric',
             'wholesale_min_amount' => 'nullable|integer|min:0',
             'tag_id' => 'nullable|exists:configuration_tags,id',
+            'theme_id' => 'nullable|exists:pdf_themes,id',
             'costs' => 'nullable|array',
             'costs.*' => 'exists:costs,id',
             'categories' => 'required|array|min:1',
@@ -862,6 +866,7 @@ class ProductController extends Controller
                     'wholesale_price' => 'nullable|numeric',
                     'wholesale_min_amount' => 'nullable|integer|min:0',
                     'order' => 'nullable|integer|min:0',
+                    'theme_id' => 'nullable|integer|exists:pdf_themes,id',
                     'stock_channels' => 'nullable|array',
                     'stock_channels.*.channel' => 'integer|exists:channels,id',
                     'stock_channels.*.channel_name' => 'string|max:255',
@@ -939,6 +944,7 @@ class ProductController extends Controller
                     'wholesale_price' => $variantData['wholesale_price'] ?? null,
                     'wholesale_min_amount' => $variantData['wholesale_min_amount'] ?? null,
                     'order' => $variantData['order'] ?? null,
+                    'theme_id' => $variantData['theme_id'] ?? null,
                     'stock_channels' => $variantData['stock_channels'] ?? null,
                     'img' => $imagePath ?? null,
                 ]);
@@ -1123,6 +1129,7 @@ class ProductController extends Controller
             'attributeValues',
             'variants',
             'tag',
+            'theme',
             'images',
             'costs',
             'customization',
@@ -1149,6 +1156,7 @@ class ProductController extends Controller
             'wholesale_price' => 'nullable|numeric',
             'wholesale_min_amount' => 'nullable|integer|min:0',
             'tag_id' => 'nullable|exists:configuration_tags,id',
+            'theme_id' => 'nullable|exists:pdf_themes,id',
             'costs' => 'nullable|array',
             'costs.*' => 'integer|exists:costs,id',
             'categories' => 'required|array|min:1',
@@ -1472,6 +1480,7 @@ class ProductController extends Controller
                     'wholesale_price' => 'nullable|numeric',
                     'wholesale_min_amount' => 'nullable|integer|min:0',
                     'order' => 'nullable|integer|min:0',
+                    'theme_id' => 'nullable|integer|exists:pdf_themes,id',
                     'stock_channels' => 'nullable|array',
                     'stock_channels.*.channel' => 'integer|exists:channels,id',
                     'stock_channels.*.channel_name' => 'string|max:255',
@@ -1573,6 +1582,7 @@ class ProductController extends Controller
                         'wholesale_price' => $variantData['wholesale_price'] ?? null,
                         'wholesale_min_amount' => $variantData['wholesale_min_amount'] ?? null,
                         'order' => $variantData['order'] ?? null,
+                        'theme_id' => $variantData['theme_id'] ?? null,
                         'stock_channels' => $variantData['stock_channels'] ?? null,
                         'img' => $imagePath,
                     ]);
@@ -1598,6 +1608,7 @@ class ProductController extends Controller
                         'wholesale_price' => $variantData['wholesale_price'] ?? null,
                         'wholesale_min_amount' => $variantData['wholesale_min_amount'] ?? null,
                         'order' => $variantData['order'] ?? null,
+                        'theme_id' => $variantData['theme_id'] ?? null,
                         'stock_channels' => $variantData['stock_channels'] ?? null,
                         'img' => $imagePath,
                     ]);
@@ -1793,6 +1804,7 @@ class ProductController extends Controller
             'attributeValues',
             'variants',
             'tag',
+            'theme',
             'images',
             'costs',
             'wholesales',

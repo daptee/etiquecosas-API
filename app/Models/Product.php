@@ -42,6 +42,7 @@ class Product extends Model
         'wholesale_price',
         'wholesale_min_amount',
         'tag_id',
+        'theme_id',
         'description',
         'shortDescription',
         'shipping_text',
@@ -104,6 +105,16 @@ class Product extends Model
     public function tag()
     {
         return $this->belongsTo(ConfigurationTag::class, 'tag_id');
+    }
+
+    /**
+     * Temática de PDF sugerida para este producto a nivel general (ver
+     * PdfTheme) — opcional, y de menor prioridad que la de una variante
+     * puntual (ProductVariant::theme()) si ambas están seteadas.
+     */
+    public function theme()
+    {
+        return $this->belongsTo(PdfTheme::class, 'theme_id');
     }
 
     public function wholesales()
