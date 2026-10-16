@@ -338,14 +338,14 @@ class EtiquetaService
      * del front (product_pdf_designs), en vez de las vistas fijas por temática.
      * No modifica generarEtiquetas(): es el equivalente para diseños nuevos.
      */
-    public static function generarEtiquetasDesdeDesign(int $ventaId, ProductPdfDesign $design, $productOrder, array $nombres, $customColor, $customIcon, $fechaCompra = null, array $firstNames = [], array $lastNames = [], bool $cutLines = false): array
+    public static function generarEtiquetasDesdeDesign(int $ventaId, ProductPdfDesign $design, $productOrder, array $nombres, $customColor, $customIcon, $fechaCompra = null, array $firstNames = [], array $lastNames = [], bool $cutLines = false, bool $illustrator = false): array
     {
         $pages = self::normalizarPaginasDesign($design->data ?? []);
         $sufijo = self::limpiarNombreArchivo(strtoupper($design->name ?: 'DESIGN'));
 
         return self::generarEtiquetasDesdePaginas(
             $ventaId, $pages, $sufijo, "design:{$design->id}", $productOrder,
-            $nombres, $customColor, $customIcon, $fechaCompra, $firstNames, $lastNames, $cutLines
+            $nombres, $customColor, $customIcon, $fechaCompra, $firstNames, $lastNames, $cutLines, $illustrator
         );
     }
 
@@ -395,8 +395,10 @@ class EtiquetaService
      * render), ya que acá puede no haber un único ProductPdfDesign detrás.
      * $cutLines: además del arte, una capa "Líneas de corte" encima (PDF de
      * 2 capas OCG, ver CutLinesPdf). Sin esto el PDF sale igual que siempre.
+     * $illustrator: en vez del PDF, un .ai clásico con las mismas 2 capas
+     * (arte rasterizado + líneas vectoriales, ver IllustratorExport).
      */
-    private static function generarEtiquetasDesdePaginas(int $ventaId, array $pages, string $sufijo, string $logId, $productOrder, array $nombres, $customColor, $customIcon, $fechaCompra = null, array $firstNames = [], array $lastNames = [], bool $cutLines = false): array
+    private static function generarEtiquetasDesdePaginas(int $ventaId, array $pages, string $sufijo, string $logId, $productOrder, array $nombres, $customColor, $customIcon, $fechaCompra = null, array $firstNames = [], array $lastNames = [], bool $cutLines = false, bool $illustrator = false): array
     {
         self::$lastRenderError = null;
         $outputFiles = [];
@@ -431,6 +433,10 @@ class EtiquetaService
 
             $filePath = "{$dirPath}/{$ventaId}-{$productOrder->id}-{$productOrder->product->name}-{$sufijo}-" . ($idx + 1) . ".pdf";
             $tmpFiles = [];
+            $tmpBase = $filePath;
+            if ($illustrator) {
+                $filePath = preg_replace('/\.pdf$/', '.ai', $filePath);
+            }
 
             try {
                 foreach ($grupos as $grupoIdx => $grupo) {
@@ -450,12 +456,17 @@ class EtiquetaService
                     $dompdf = $pdf->getDomPDF();
                     $dompdf->getOptions()->setFontDir(public_path('fonts'));
 
-                    $tmpPath = "{$filePath}.tmp{$grupoIdx}.pdf";
+                    $tmpPath = "{$tmpBase}.tmp{$grupoIdx}.pdf";
                     $pdf->save($tmpPath);
                     $tmpFiles[] = $tmpPath;
                 }
 
-                if ($cutLines) {
+                if ($illustrator) {
+                    IllustratorExport::export($tmpFiles, $grupos, $filePath, basename($filePath));
+                    foreach ($tmpFiles as $tmpFile) {
+                        @unlink($tmpFile);
+                    }
+                } elseif ($cutLines) {
                     self::fusionarConLineasDeCorte($tmpFiles, $grupos, $filePath, $logId);
                     foreach ($tmpFiles as $tmpFile) {
                         @unlink($tmpFile);
