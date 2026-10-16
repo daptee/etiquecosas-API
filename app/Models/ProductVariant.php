@@ -180,6 +180,11 @@ class ProductVariant extends Model
             'wholesale_min_amount' => $this->variant['wholesale_min_amount'] ?? null,
             'order' => $this->variant['order'] ?? null,
             'is_heritable' => isset($this->variant['is_heritable']) ? (int) $this->variant['is_heritable'] : null,
+            // theme_id SÍ es una columna real (no vive en el JSON variant
+            // como el resto de estos campos) — se repite acá, además de a
+            // nivel raíz del array, para que aparezca donde se espera
+            // encontrar cualquier otro dato de la variante.
+            'theme_id' => $this->theme_id,
             'attributesvalues' => self::formatAttributeValues($this->attributes_values),
             'available_attributes' => $this->available_attributes_resolved->toArray(),
         ];
