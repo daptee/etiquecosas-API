@@ -87,13 +87,22 @@ const res = await api.get(`/product-pdf-designs/${id}/preview`, {
   params: { firstName, lastName, cut_lines: 1 },
   responseType: 'blob',
 });
+// El nombre (con extensión .ai) viene en Content-Disposition. No reusar el
+// nombre ".pdf" del preview normal: el archivo se guardaría como PDF y no
+// abriría bien.
+const disposition = res.headers['content-disposition'] ?? '';
+const match = disposition.match(/filename="?([^"]+)"?/);
+const fileName = match ? match[1] : `${nombreDiseno}.ai`;
+
 const url = URL.createObjectURL(res.data);
 const a = document.createElement('a');
 a.href = url;
-a.download = `${nombreDiseno}.ai`;
+a.download = fileName;
 a.click();
 URL.revokeObjectURL(url);
 ```
+
+`Content-Disposition` está expuesto por CORS (`config/cors.php`), así que el front lo puede leer aunque esté en otro dominio.
 
 Si el servidor no tiene Ghostscript instalado, responde un 500 con `{ message, error }` y el error lo explica.
 

@@ -25,7 +25,9 @@ return [
 
     'allowed_headers' => ['*'],
 
-    'exposed_headers' => [],
+    // Content-Disposition: para que el front lea el nombre del archivo que
+    // descarga (ej. el .ai del preview con cut_lines=1).
+    'exposed_headers' => ['Content-Disposition'],
 
     'max_age' => 0,
 
