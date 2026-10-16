@@ -201,11 +201,10 @@ class IllustratorExport
         $pw = $header['width'];
         $ph = $header['height'];
 
-        $sx = $wPt / $pw;
-        $sy = $hPt / $ph;
-        $matrix = config('services.illustrator.raster_invert')
-            ? [$sx, 0, 0, -$sy, $x, $hPt]
-            : [$sx, 0, 0, $sy, $x, 0];
+        // Illustrator ubica la imagen por su esquina SUPERIOR izquierda
+        // (tx, ty) y dibuja las filas hacia abajo (verificado abriendo el
+        // archivo en Illustrator).
+        $matrix = [$wPt / $pw, 0, 0, $hPt / $ph, $x, $hPt];
 
         fwrite($out, "%AI5_File:\n%AI5_BeginRaster\n");
         fwrite($out, sprintf(
@@ -258,21 +257,31 @@ class IllustratorExport
         $pt = fn($x, $y) => self::num($offsetX + $x * self::CM_TO_PT) . ' ' . self::num($hPt - $y * self::CM_TO_PT);
         $ops = [];
         $cerrado = false;
+        $inicio = $ultimo = null;
         foreach ($trazado as $seg) {
             switch ($seg[0]) {
                 case 'M':
-                    $ops[] = $pt($seg[1], $seg[2]) . ' m';
+                    $inicio = $ultimo = $pt($seg[1], $seg[2]);
+                    $ops[] = "{$inicio} m";
                     break;
                 case 'L':
-                    $ops[] = $pt($seg[1], $seg[2]) . ' L';
+                    $ultimo = $pt($seg[1], $seg[2]);
+                    $ops[] = "{$ultimo} L";
                     break;
                 case 'C':
-                    $ops[] = $pt($seg[1], $seg[2]) . ' ' . $pt($seg[3], $seg[4]) . ' ' . $pt($seg[5], $seg[6]) . ' C';
+                    $ultimo = $pt($seg[5], $seg[6]);
+                    $ops[] = $pt($seg[1], $seg[2]) . ' ' . $pt($seg[3], $seg[4]) . " {$ultimo} C";
                     break;
                 case 'Z':
                     $cerrado = true;
                     break;
             }
+        }
+        // Como en los archivos que escribe Illustrator: el trazo cerrado
+        // vuelve explícitamente al punto inicial. Sin esto Illustrator
+        // convierte el último lado en una curva.
+        if ($cerrado && $inicio !== null && $ultimo !== $inicio) {
+            $ops[] = "{$inicio} L";
         }
         // s = cerrar y trazar; S = trazar abierto.
         return implode("\n", $ops) . "\n" . ($cerrado ? 's' : 'S') . "\n";

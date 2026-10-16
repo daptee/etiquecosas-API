@@ -43,13 +43,11 @@ return [
 
     'front_url' => env('FRONT_URL', 'http://localhost:3000'),
 
-    // Exportación .ai (preview ?format=ai): el arte se rasteriza con
+    // Exportación .ai (preview ?cut_lines=1): el arte se rasteriza con
     // Ghostscript. GHOSTSCRIPT_BIN: ruta o nombre del ejecutable (en Windows
-    // suele ser gswin64c). ILLUSTRATOR_RASTER_INVERT: dar vuelta la imagen
-    // si Illustrator la muestra invertida (ver IllustratorExport).
+    // suele ser gswin64c).
     'illustrator' => [
         'ghostscript_bin' => env('GHOSTSCRIPT_BIN', PHP_OS_FAMILY === 'Windows' ? 'gswin64c' : 'gs'),
         'dpi' => (int) env('ILLUSTRATOR_EXPORT_DPI', 300),
-        'raster_invert' => (bool) env('ILLUSTRATOR_RASTER_INVERT', false),
     ],
 ];
