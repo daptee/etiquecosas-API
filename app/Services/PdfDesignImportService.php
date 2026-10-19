@@ -475,6 +475,21 @@ class PdfDesignImportService
      */
     private static function textsToTextElement(array $lines, float $pageHeightPt, ?array $containerRect, ?array $iconBox = null): array
     {
+        // Texto girado (ej. "PEDIDO # 12345" al costado de la hoja, ver
+        // public/css/etiquetas.css ".numeroOrder p { transform:
+        // rotate(270deg) }") — el cálculo normal de abajo asume texto
+        // horizontal, y para texto realmente girado ~90°/270° el "origen"
+        // que da el PDF puede caer bien lejos de donde se ve el texto
+        // (incluso fuera de la hoja) si se lo trata como si no estuviera
+        // girado. En las vistas legacy esto SOLO pasa con texto suelto
+        // (nunca dentro de una celda), por eso se chequea acá.
+        if ($containerRect === null) {
+            $angleDeg = (float) ($lines[0]['angleDeg'] ?? 0.0);
+            if (abs($angleDeg) > 1 && abs($angleDeg) < 179) {
+                return self::rotatedTextElement($lines, $angleDeg, $pageHeightPt);
+            }
+        }
+
         usort($lines, fn($a, $b) => $b['y'] <=> $a['y']); // de arriba hacia abajo
 
         $content = trim(implode(' ', array_map(fn($l) => trim($l['text']), $lines)));
@@ -566,6 +581,81 @@ class PdfDesignImportService
             'min_lines' => 1,
             'max_lines' => max(1, count($lines)),
             'max_chars_per_line' => max(6, (int) (max(array_map('strlen', array_column($lines, 'text'))) * 1.2)),
+            'editable_by_customer' => false,
+        ];
+    }
+
+    /**
+     * Texto suelto girado (ver nota en textsToTextElement). El editor rota
+     * un elemento alrededor del CENTRO de su propia caja (ver
+     * `rotation_deg` + `transform: rotate()` en RENDER.blade.php) — así que
+     * acá se reconstruye la caja SIN girar (mismo ancho/alto que tendría
+     * ese mismo texto horizontal) centrada en el punto que resulta de girar
+     * su centro local alrededor del origen real que dio el PDF. Al
+     * aplicarle después `rotation_deg` en el editor, el texto cae
+     * visualmente en el mismo lugar que en el PDF original.
+     * En la práctica este caso es siempre UN solo renglón (un único Td+TJ
+     * en el PDF, ver "PEDIDO #") — no vale la pena generalizar el apilado
+     * vertical de varios renglones girados, que no ocurre acá.
+     */
+    private static function rotatedTextElement(array $lines, float $angleDegPdf, float $pageHeightPt): array
+    {
+        $line = $lines[0];
+        $content = trim(implode(' ', array_map(fn($l) => trim($l['text']), $lines)));
+        $fontSizePt = $line['fontSizePt'] ?? 12.0;
+        $color = $line['color'] ?? '#000000';
+
+        $estWidthPt = max(1, strlen($content) * $fontSizePt * 0.6);
+        $estHeightPt = $fontSizePt * 1.3;
+
+        $angleRad = deg2rad($angleDegPdf);
+        $cos = cos($angleRad);
+        $sin = sin($angleRad);
+
+        // Centro de la caja SIN girar, en espacio local de texto (origen en
+        // el punto de arranque del renglón que da el PDF), rotado al mismo
+        // espacio absoluto de página (Y hacia arriba) que usa ese origen.
+        $localCenterX = $estWidthPt / 2;
+        $localCenterY = 0.5 * $fontSizePt;
+        $centerX = $line['x'] + $localCenterX * $cos - $localCenterY * $sin;
+        $centerY = $line['y'] + $localCenterX * $sin + $localCenterY * $cos;
+
+        $widthCm = max(0.5, round($estWidthPt / self::PT_PER_CM, 2));
+        $heightCm = max(0.5, round($estHeightPt / self::PT_PER_CM, 2));
+        $centerXCm = $centerX / self::PT_PER_CM;
+        $centerYCm = ($pageHeightPt - $centerY) / self::PT_PER_CM; // Y hacia abajo desde arriba de la hoja
+
+        // `rotation_deg` que espera el editor: convención CSS (horaria, Y
+        // hacia abajo) — el ángulo que da el PDF está en la convención
+        // matemática contraria (antihoraria, Y hacia arriba): es la MISMA
+        // rotación vista desde el otro eje, se invierte el signo.
+        $rotationDeg = -$angleDegPdf;
+        if ($rotationDeg > 180) {
+            $rotationDeg -= 360;
+        } elseif ($rotationDeg <= -180) {
+            $rotationDeg += 360;
+        }
+
+        return [
+            'id' => 'el-imported-' . uniqid(),
+            'type' => 'text',
+            'x_cm' => round($centerXCm - $widthCm / 2, 2),
+            'y_cm' => round($centerYCm - $heightCm / 2, 2),
+            'width_cm' => $widthCm,
+            'height_cm' => $heightCm,
+            'rotation_deg' => round($rotationDeg, 1),
+            'z_index' => 2,
+            'content' => $content,
+            'value_mode' => 'fixed',
+            'font_id' => null,
+            'font_size_px' => round($fontSizePt / 0.75),
+            'font_weight' => 400,
+            'color' => ['mode' => 'hex', 'value' => $color],
+            'text_align' => 'center',
+            'vertical_align' => 'middle',
+            'min_lines' => 1,
+            'max_lines' => 1,
+            'max_chars_per_line' => max(6, (int) (strlen($content) * 1.2)),
             'editable_by_customer' => false,
         ];
     }

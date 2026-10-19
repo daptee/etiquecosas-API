@@ -54,7 +54,7 @@ Lo que **no** intenta hacer:
   - Todo ícono detectado queda con `icon_id: 1` (un placeholder fijo, solo para que la celda no se vea vacía) — hay que reemplazarlo por el ícono real en el editor.
   - Todo texto queda con `font_id: null` — se asigna a mano después en el editor.
 - **No infiere campos dinámicos.** Todo texto se importa como `value_mode: "fixed"` con el contenido literal que tenía el PDF (p. ej. el nombre real de un cliente de ese PDF de ejemplo) — si en realidad correspondía a `nombre_apellido` o similar, hay que cambiarlo a mano en el editor.
-- Texto que **no cae dentro de ninguna celda** (por ejemplo una leyenda suelta tipo "PEDIDO # 12345" al costado de la hoja) se preserva igual como elemento suelto en la página, fuera de cualquier fondo.
+- Texto que **no cae dentro de ninguna celda** (por ejemplo una leyenda suelta tipo "PEDIDO # 12345" al costado de la hoja) se preserva igual como elemento suelto en la página, fuera de cualquier fondo — **respetando su rotación real** si la vista lo dibuja girado (ver más abajo), no solo su posición.
 
 ---
 
@@ -67,6 +67,7 @@ Lo que **no** intenta hacer:
 5. Para cada texto/imagen/grupo de trazos se busca la celda (rectángulo "de afuera") más chica que lo contiene, y a esa celda se le asigna el elemento. Si una celda tiene tanto una imagen embebida como trazos vectoriales sueltos, se usa la imagen (da una caja más confiable).
 6. El elemento `icon` resultante usa la caja que ENGLOBA todos los trazos/imagen detectados en esa celda.
 7. Para el texto de cada celda, el tamaño/posición del elemento `text` resultante usa el propio rectángulo contenedor (con un margen chico según el tamaño de fuente), no una estimación a partir de las letras — da resultados más estables que tratar de medir el texto.
+8. **Texto suelto girado** (ej. "PEDIDO # 12345", dibujado en vertical al costado/abajo de la hoja en varias temáticas — ver `.numeroOrder p { transform: rotate(270deg) }` en `public/css/etiquetas.css`): el parser calcula el ángulo real del texto a partir de la matriz de transformación del PDF (`Tm`×`cm`), y el importador arma el elemento con `rotation_deg` seteado en vez de tratarlo como si fuera horizontal — antes quedaba ubicado mal (podía terminar debajo de toda la hoja, ya que el punto de "origen" de un texto girado no tiene sentido leído como si fuera horizontal). Sigue siendo una caja ESTIMADA (mismo criterio aproximado que el resto del texto suelto, por ancho de caracteres), así que puede no caer exacto — pero ahora cae en el costado/zona correcta de la hoja, con la rotación correcta, para ajustarla a mano desde ahí.
 
 ---
 

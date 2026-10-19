@@ -327,12 +327,25 @@ class PdfContentStreamParser
         $pt = self::applyMatrix($tm, 0, 0);
         $pt = self::applyMatrix($ctm, $pt[0], $pt[1]);
 
+        // Ángulo del texto (grados, convención matemática de PDF: antihoraria,
+        // 0 = horizontal normal, Y hacia arriba) — sale del eje X local ya
+        // transformado (columna a,b de la matriz combinada Tm×CTM). Es 0 en
+        // casi todos los casos; distinto de 0 en el puñado de textos legacy
+        // dibujados al costado de la hoja en vertical (ver
+        // public/css/etiquetas.css ".numeroOrder p { transform:
+        // rotate(270deg) }" — el "PEDIDO #"). Quien arma el elemento final
+        // (PdfDesignImportService) es responsable de convertir esto a la
+        // convención CSS (horaria, Y hacia abajo) que usa `rotation_deg`.
+        $combined = self::multiply($tm, $ctm);
+        $angleDeg = round(rad2deg(atan2($combined[1], $combined[0])), 2);
+
         $primitives[] = [
             'type' => 'text',
             'x' => $pt[0], 'y' => $pt[1],
             'text' => $text,
             'fontSizePt' => $fontSizePt,
             'color' => $fillColor,
+            'angleDeg' => $angleDeg,
         ];
     }
 
