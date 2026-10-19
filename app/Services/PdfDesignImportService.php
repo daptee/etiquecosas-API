@@ -128,7 +128,7 @@ class PdfDesignImportService
         // Texto suelto (ej. "PEDIDO # 12345" al costado) — no se pierde,
         // queda como elemento top-level sin celda.
         foreach (self::mergeLooseTextLines($looseTexts) as $group) {
-            $elements[] = self::textsToTextElement($group, $pageHeightPt, null);
+            $elements[] = self::textsToTextElement($group, $pageHeightPt, null, null, $pageSizePt['w']);
         }
 
         $sheet = [
@@ -473,7 +473,7 @@ class PdfDesignImportService
      * por espacios — total compatibilidad con cómo ya arma/parte renglones el
      * editor nuevo (max_chars_per_line), en vez de guardar cada palabra suelta.
      */
-    private static function textsToTextElement(array $lines, float $pageHeightPt, ?array $containerRect, ?array $iconBox = null): array
+    private static function textsToTextElement(array $lines, float $pageHeightPt, ?array $containerRect, ?array $iconBox = null, ?float $pageWidthPt = null): array
     {
         // Texto girado (ej. "PEDIDO # 12345" al costado de la hoja, ver
         // public/css/etiquetas.css ".numeroOrder p { transform:
@@ -486,7 +486,7 @@ class PdfDesignImportService
         if ($containerRect === null) {
             $angleDeg = (float) ($lines[0]['angleDeg'] ?? 0.0);
             if (abs($angleDeg) > 1 && abs($angleDeg) < 179) {
-                return self::rotatedTextElement($lines, $angleDeg, $pageHeightPt);
+                return self::rotatedTextElement($lines, $angleDeg, $pageHeightPt, $pageWidthPt ?? $pageHeightPt);
             }
         }
 
@@ -598,7 +598,7 @@ class PdfDesignImportService
      * en el PDF, ver "PEDIDO #") — no vale la pena generalizar el apilado
      * vertical de varios renglones girados, que no ocurre acá.
      */
-    private static function rotatedTextElement(array $lines, float $angleDegPdf, float $pageHeightPt): array
+    private static function rotatedTextElement(array $lines, float $angleDegPdf, float $pageHeightPt, float $pageWidthPt): array
     {
         $line = $lines[0];
         $content = trim(implode(' ', array_map(fn($l) => trim($l['text']), $lines)));
@@ -636,6 +636,24 @@ class PdfDesignImportService
             $rotationDeg += 360;
         }
 
+        // El ancho/alto de arriba son una ESTIMACIÓN (por cantidad de
+        // caracteres, no la fuente real) — con texto girado ~90°, cualquier
+        // error ahí se nota más (empuja el centro a lo largo del lado LARGO
+        // de la caja) y puede terminar pegando el texto justo al borde de
+        // la hoja, o incluso un poco afuera. Se recorta el centro para que
+        // la caja YA GIRADA (su AABB real, no la caja sin girar) quede
+        // siempre adentro con un margen chico — mismo criterio que un
+        // margen de seguridad de impresión, no afecta el caso normal (sin
+        // rotación esto no se usa).
+        $marginCm = 0.3;
+        $sheetWidthCm = $pageWidthPt / self::PT_PER_CM;
+        $sheetHeightCm = $pageHeightPt / self::PT_PER_CM;
+        $halfWidthRotatedCm = ($widthCm / 2) * abs($cos) + ($heightCm / 2) * abs($sin);
+        $halfHeightRotatedCm = ($widthCm / 2) * abs($sin) + ($heightCm / 2) * abs($cos);
+
+        $centerXCm = self::clampCenter($centerXCm, $halfWidthRotatedCm, $sheetWidthCm, $marginCm);
+        $centerYCm = self::clampCenter($centerYCm, $halfHeightRotatedCm, $sheetHeightCm, $marginCm);
+
         return [
             'id' => 'el-imported-' . uniqid(),
             'type' => 'text',
@@ -658,6 +676,23 @@ class PdfDesignImportService
             'max_chars_per_line' => max(6, (int) (strlen($content) * 1.2)),
             'editable_by_customer' => false,
         ];
+    }
+
+    /**
+     * Centro (en un solo eje) recortado para que un segmento de `$halfExtent`
+     * de radio alrededor suyo quede adentro de `[0, $axisLengthCm]` con
+     * `$marginCm` de aire de cada lado — si el segmento es más grande que la
+     * hoja (margen incluido), se lo centra en el medio en vez de forzar un
+     * recorte imposible.
+     */
+    private static function clampCenter(float $centerCm, float $halfExtentCm, float $axisLengthCm, float $marginCm): float
+    {
+        $min = $halfExtentCm + $marginCm;
+        $max = $axisLengthCm - $halfExtentCm - $marginCm;
+        if ($min > $max) {
+            return $axisLengthCm / 2;
+        }
+        return max($min, min($max, $centerCm));
     }
 
     /**
