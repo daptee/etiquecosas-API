@@ -52,6 +52,17 @@ Errores (todos `422` salvo el último):
 
 ---
 
+## Las celdas no quedan sueltas: agrupadas y con "Generar grilla" ya armado
+
+Una temática con varias secciones (ej. Unicornio: maxi 4×4, vertical 6×2, super-maxi 3×2, super-mini 6×3) importa decenas de celdas (fondo+ícono+texto cada una) — para no tener que tocarlas una por una en el editor:
+
+- **`group_id`**: los 2-3 elementos de UNA celda comparten un `group_id` — en el editor, clickear o mover cualquiera de los tres selecciona/mueve la celda entera de una (igual que si se hubiera generado a mano con "Agrupar selección").
+- **`grids`** (`data.pages[].grids[]`): además, las celdas que comparten tamaño y forma (misma combinación fondo/ícono/texto) se detectan como una grilla y se arma el mismo formato que usa "Generar grilla" en el editor (`PdfGrid`: `cols`, `rows`, `gap_x_cm`, `gap_y_cm`, `template`, `members`) — el diseño importado llega con una entrada de `grids` por cada sección distinta (ej. Unicornio importa 4). Esto permite abrir "Generar grilla" después de importar y cambiar cols/filas/separación de TODA una sección de una, en vez de reacomodar cada celda a mano.
+  - El `sig` de cada celda (que el editor usa para saber si una celda fue modificada a mano y no tocarla al reescalar) se calcula con el mismo algoritmo que el front (`PdfDesignHelper.elementSignature`, normalizar+ordenar+hash djb2) — coincide exacto para todo lo que generamos (números, hex, texto en español). Si en algún caso puntual no coincidiera (texto con caracteres fuera del rango normal), lo peor que pasa es que el editor trate esa celda como "ya modificada" y no la toque al reescalar — no rompe ni pierde nada.
+  - Esto es **metadata nueva que el backend no usaba hasta ahora** (`EtiquetaService` genera el PDF leyendo `elements` igual que siempre, ignora `grids` por completo) — es pura comodidad para el editor, no cambia en nada cómo se genera el PDF final.
+
+---
+
 ## Por qué es seguro vincularlo sin publicar
 
 `ProductPdfResolverService::resolveAndGenerate()` solo usa un vínculo si su diseño tiene `is_published = true`. Un diseño recién importado por este endpoint queda sin publicar, así que **no cambia nada en la generación real de ninguna venta** hasta que alguien lo revise en el editor y lo publique a mano — igual que con un diseño armado o importado manualmente. Si ya había otro diseño publicado para ese mismo producto/variante, conviven los dos vínculos sin pisarse: el viejo sigue siendo el que se usa hasta que se publique el nuevo (y ahí sí conviene despublicar o desvincular el anterior).

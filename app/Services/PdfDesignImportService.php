@@ -73,10 +73,12 @@ class PdfDesignImportService
         }
 
         $elements = [];
+        $cellRecords = [];
         $pageHeightPt = $pageSizePt['h'];
 
         foreach ($cellRects as $idx => $rect) {
-            $elements[] = self::rectToBackgroundElement($rect, $pageHeightPt);
+            $cellElements = [self::rectToBackgroundElement($rect, $pageHeightPt)];
+            $shape = ['background'];
 
             // El ícono real (imagen `Do`) tiene prioridad sobre los trazos
             // vectoriales sueltos — si hay ambos en la misma celda, es raro,
@@ -84,12 +86,43 @@ class PdfDesignImportService
             $iconBoxes = !empty($imagesByCell[$idx]) ? $imagesByCell[$idx] : ($iconFragmentsByCell[$idx] ?? []);
             $iconBox = !empty($iconBoxes) ? self::combineBoxes($iconBoxes) : null;
             if ($iconBox) {
-                $elements[] = self::iconBoxToElement($iconBoxes, $pageHeightPt);
+                $cellElements[] = self::iconBoxToElement($iconBoxes, $pageHeightPt);
+                $shape[] = 'icon';
             }
 
             if (!empty($textsByCell[$idx])) {
-                $elements[] = self::textsToTextElement($textsByCell[$idx], $pageHeightPt, $rect, $iconBox);
+                $cellElements[] = self::textsToTextElement($textsByCell[$idx], $pageHeightPt, $rect, $iconBox);
+                $shape[] = 'text';
             }
+
+            // Agrupamos las piezas de UNA celda (fondo + ícono + texto) bajo
+            // un group_id compartido — igual que hace el editor del front al
+            // generar una grilla (ver computeGridCells) — así en el editor
+            // clickear/mover cualquiera de las 3 selecciona/mueve la celda
+            // entera de una, en vez de tener que tocar los 3 elementos
+            // sueltos uno por uno.
+            if (count($cellElements) > 1) {
+                $groupId = 'group-imported-' . uniqid();
+                foreach ($cellElements as &$ce) {
+                    $ce['group_id'] = $groupId;
+                }
+                unset($ce);
+            } else {
+                $groupId = null;
+            }
+
+            $elements = array_merge($elements, $cellElements);
+
+            $cellElement = $cellElements[0];
+            $cellRecords[] = [
+                'shape' => implode(',', $shape),
+                'x_cm' => $cellElement['x_cm'],
+                'y_cm' => $cellElement['y_cm'],
+                'width_cm' => $cellElement['width_cm'],
+                'height_cm' => $cellElement['height_cm'],
+                'element_ids' => array_column($cellElements, 'id'),
+                'elements' => $cellElements,
+            ];
         }
 
         // Texto suelto (ej. "PEDIDO # 12345" al costado) — no se pierde,
@@ -106,14 +139,159 @@ class PdfDesignImportService
             $sheet['background_color'] = ['mode' => 'hex', 'value' => $sheetBackgroundColor];
         }
 
-        return [
-            'pages' => [[
-                'id' => 'page-imported-' . uniqid(),
-                'name' => 'Página importada',
-                'sheet' => $sheet,
-                'elements' => $elements,
-            ]],
+        $page = [
+            'id' => 'page-imported-' . uniqid(),
+            'name' => 'Página importada',
+            'sheet' => $sheet,
+            'elements' => $elements,
         ];
+
+        $grids = self::detectGrids($cellRecords);
+        if (!empty($grids)) {
+            $page['grids'] = $grids;
+        }
+
+        return [
+            'pages' => [$page],
+        ];
+    }
+
+    /**
+     * Agrupa las celdas detectadas en "grillas" (mismo ancho/alto y mismas
+     * piezas — fondo/ícono/texto en el mismo orden) y arma el `PdfGrid` que
+     * entiende el editor del front (ver "Generar grilla" en
+     * useDesignEditor.ts/PdfDesignHelper.ts) — así, una vez importado el
+     * diseño, se puede abrir esa herramienta para cambiar cols/rows/gaps de
+     * TODAS las celdas de una, en vez de reacomodar cada una a mano.
+     * No es magia: si el admin edita el contenido de una celda y la firma
+     * (`sig`) deja de coincidir, el editor la trata como "modificada" y no la
+     * vuelve a tocar — mismo comportamiento que tendría una grilla generada
+     * a mano en el front.
+     */
+    private static function detectGrids(array $cellRecords): array
+    {
+        $groups = [];
+        foreach ($cellRecords as $cell) {
+            $key = $cell['shape'] . '|' . round($cell['width_cm'], 1) . 'x' . round($cell['height_cm'], 1);
+            $groups[$key][] = $cell;
+        }
+
+        $grids = [];
+        foreach ($groups as $cells) {
+            if (count($cells) < 2) {
+                continue;
+            }
+
+            $xs = array_values(array_unique(array_map(fn($c) => $c['x_cm'], $cells)));
+            $ys = array_values(array_unique(array_map(fn($c) => $c['y_cm'], $cells)));
+            sort($xs);
+            sort($ys);
+            if (count($xs) < 2 && count($ys) < 2) {
+                continue; // ni una fila ni una columna repetida: no es una grilla.
+            }
+
+            $colOf = fn($x) => array_search($x, $xs, true);
+            $rowOf = fn($y) => array_search($y, $ys, true);
+
+            $templateIdx = 0;
+            foreach ($cells as $i => $c) {
+                $cur = [$rowOf($c['y_cm']), $colOf($c['x_cm'])];
+                $best = [$rowOf($cells[$templateIdx]['y_cm']), $colOf($cells[$templateIdx]['x_cm'])];
+                if ($cur < $best) {
+                    $templateIdx = $i;
+                }
+            }
+            $template = $cells[$templateIdx];
+            $templateCol = $colOf($template['x_cm']);
+            $templateRow = $rowOf($template['y_cm']);
+
+            $members = [];
+            foreach ($cells as $i => $c) {
+                if ($i === $templateIdx) {
+                    continue;
+                }
+                $offsetCol = $colOf($c['x_cm']) - $templateCol;
+                $offsetRow = $rowOf($c['y_cm']) - $templateRow;
+                $members["{$offsetCol},{$offsetRow}"] = array_map(
+                    fn($el) => ['id' => $el['id'], 'sig' => self::elementSignature($el)],
+                    $c['elements']
+                );
+            }
+
+            $gapX = count($xs) > 1 ? round($xs[1] - $xs[0] - $template['width_cm'], 2) : 0;
+            $gapY = count($ys) > 1 ? round($ys[1] - $ys[0] - $template['height_cm'], 2) : 0;
+
+            $grids[] = [
+                'id' => 'grid-imported-' . uniqid(),
+                'cols' => count($xs),
+                'rows' => count($ys),
+                'gap_x_cm' => $gapX,
+                'gap_y_cm' => $gapY,
+                'template' => $template['element_ids'],
+                'members' => $members,
+            ];
+        }
+
+        return $grids;
+    }
+
+    /**
+     * Replica PdfDesignHelper.elementSignature() del front (ver
+     * useDesignEditor.ts/PdfDesignHelper.ts) para que el `sig` de cada celda
+     * sea compatible con el chequeo de "¿esta celda sigue intacta?" que hace
+     * "Generar grilla" al reescalar. Mismo algoritmo (normalizar -> ordenar
+     * claves -> JSON.stringify -> djb2 en base36), con una limitación
+     * conocida: el front itera la cadena como code units UTF-16
+     * (`charCodeAt`) y acá se reproduce sobre codepoints Unicode reales — da
+     * EXACTAMENTE el mismo resultado para texto dentro del BMP (todo lo que
+     * generamos: números, hex, español sin emoji/símbolos raros), pero no
+     * está garantizado para caracteres fuera del BMP. Si el hash no
+     * coincidiera por eso, el peor caso es que el editor trate esa celda
+     * como "ya modificada" y no la toque al reescalar — no rompe ni pierde
+     * nada, solo pierde esa comodidad puntual.
+     */
+    private static function elementSignature(array $el): string
+    {
+        unset($el['id'], $el['group_id']);
+        $json = json_encode(self::normalizeForSignature($el), JSON_UNESCAPED_UNICODE);
+        $json = str_replace('\\/', '/', $json); // JSON.stringify no escapa "/".
+
+        $hash = 5381;
+        $len = mb_strlen($json, 'UTF-8');
+        for ($i = 0; $i < $len; $i++) {
+            $codepoint = mb_ord(mb_substr($json, $i, 1, 'UTF-8'), 'UTF-8');
+            $hash = self::to32BitSigned(($hash << 5) + $hash + $codepoint);
+        }
+
+        $unsigned = $hash < 0 ? $hash + 0x100000000 : $hash;
+        return base_convert((string) $unsigned, 10, 36);
+    }
+
+    private static function to32BitSigned(int $n): int
+    {
+        $n = $n & 0xFFFFFFFF;
+        return $n > 0x7FFFFFFF ? $n - 0x100000000 : $n;
+    }
+
+    /**
+     * value !== null && value !== undefined && value !== '' + orden de
+     * claves alfabético + recursivo — igual que el `normalize` del front.
+     */
+    private static function normalizeForSignature($value)
+    {
+        if (is_array($value)) {
+            if (array_is_list($value)) {
+                return array_map([self::class, 'normalizeForSignature'], $value);
+            }
+            $filtered = array_filter($value, fn($v) => $v !== null && $v !== '');
+            ksort($filtered, SORT_STRING);
+            $result = [];
+            foreach ($filtered as $k => $v) {
+                $result[$k] = self::normalizeForSignature($v);
+            }
+            return empty($result) ? new \stdClass() : $result;
+        }
+        return $value;
     }
 
     private static function splitByType(array $primitives): array

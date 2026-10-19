@@ -47,6 +47,8 @@ Para cada "celda" de etiqueta detectada en la hoja genera, por separado:
 
 Se guarda la **grilla completa**, etiqueta por etiqueta — si la hoja tiene 60 etiquetas repetidas, el diseño queda con 60 juegos de fondo/ícono/texto, no un único template reutilizable. Es intencional: así el resultado es editable celda por celda igual que cualquier diseño armado a mano.
 
+Aun así, esas 60 celdas no quedan sueltas: los 2-3 elementos de cada celda comparten un `group_id` (clickear/mover cualquiera selecciona/mueve la celda entera), y las celdas que comparten tamaño y forma se detectan como una grilla y se guardan en `data.pages[].grids[]` con el mismo formato que usa "Generar grilla" en el editor — se puede abrir esa herramienta después de importar para cambiar cols/filas/separación de todas esas celdas de una, en vez de reacomodarlas a mano una por una. Ver el detalle en [PDF_IMPORTAR_DESDE_PRODUCTO.md](PDF_IMPORTAR_DESDE_PRODUCTO.md#las-celdas-no-quedan-sueltas-agrupadas-y-con-generar-grilla-ya-armado).
+
 Lo que **no** intenta hacer:
 - **No matchea íconos ni tipografías contra los catálogos.** No hay forma confiable de reconocer qué ícono/fuente del catálogo corresponde a una imagen/letra ya rasterizada (o a un grupo de trazos vectoriales) dentro de un PDF, así que:
   - Todo ícono detectado queda con `icon_id: 1` (un placeholder fijo, solo para que la celda no se vea vacía) — hay que reemplazarlo por el ícono real en el editor.
