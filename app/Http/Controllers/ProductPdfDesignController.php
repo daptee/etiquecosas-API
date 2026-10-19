@@ -8,6 +8,8 @@ use App\Models\ProductPdf;
 use App\Models\ProductPdfDesign;
 use App\Models\ProductPdfDesignProduct;
 use App\Models\ProductVariant;
+use App\Models\Typography;
+use App\Models\TypographyFile;
 use App\Services\EtiquetaService;
 use App\Services\PdfDesignImportService;
 use App\Services\PdfDesignSanitizer;
@@ -32,6 +34,15 @@ class ProductPdfDesignController extends Controller
      * "nombre_apellido"` en vez de dejarlo como texto fijo literal.
      */
     private const SAMPLE_NOMBRE_APELLIDO = 'NOMBRE APELLIDO';
+
+    /**
+     * Ninguna vista legacy "normal" fija su propia tipografía en el
+     * .blade.php — la heredan del CSS compartido (public/css/etiquetas.css),
+     * que aplica esta fuente a TODO el texto por igual (confirmado: 113 de
+     * 115 vistas). Solo un puñado de vistas (ej. stars/TRANSFER *) declaran
+     * la suya propia — ver detectLegacyFontFamily().
+     */
+    private const DEFAULT_LEGACY_FONT_FAMILY = 'Oswald';
 
     public function index(Request $request)
     {
@@ -289,24 +300,34 @@ class ProductPdfDesignController extends Controller
             }
 
             $iconSequence = isset($viewPaths[$idx]) ? $this->extractIconFileSequence($viewPaths[$idx]) : [];
+
+            // La tipografía, a diferencia del ícono, no varía celda por celda
+            // dentro de una misma vista — está fija en el .blade.php (ver
+            // detectLegacyFontFamily()), así que se resuelve una sola vez por
+            // vista/página y se aplica a TODO el texto de esa página.
+            $fontFamily = isset($viewPaths[$idx]) ? $this->detectLegacyFontFamily($viewPaths[$idx]) : self::DEFAULT_LEGACY_FONT_FAMILY;
+            $fontId = $this->resolveTypographyIdForFamily($fontFamily);
+
             foreach ($imported['pages'] ?? [] as $page) {
                 $page['name'] = 'Página ' . (count($pages) + 1);
                 $iconPos = 0;
-                foreach ($page['elements'] as $el) {
-                    if (($el['type'] ?? null) !== 'icon') {
-                        continue;
-                    }
-                    $fileIdx = $iconSequence[$iconPos] ?? null;
-                    $file = $fileIdx !== null ? ($imagenes[$fileIdx] ?? null) : null;
-                    if ($file && is_file($file)) {
-                        $catalogPath = "icons/Tematicas/{$tematicaLimpia}/" . basename($file);
-                        $catalogId = $catalogIconIdByPath[$catalogPath] ?? null;
-                        if ($catalogId) {
-                            $exactIconIds[$el['id']] = $catalogId;
+                foreach ($page['elements'] as &$el) {
+                    if (($el['type'] ?? null) === 'icon') {
+                        $fileIdx = $iconSequence[$iconPos] ?? null;
+                        $file = $fileIdx !== null ? ($imagenes[$fileIdx] ?? null) : null;
+                        if ($file && is_file($file)) {
+                            $catalogPath = "icons/Tematicas/{$tematicaLimpia}/" . basename($file);
+                            $catalogId = $catalogIconIdByPath[$catalogPath] ?? null;
+                            if ($catalogId) {
+                                $exactIconIds[$el['id']] = $catalogId;
+                            }
                         }
+                        $iconPos++;
+                    } elseif (($el['type'] ?? null) === 'text' && $fontId) {
+                        $el['font_id'] = $fontId;
                     }
-                    $iconPos++;
                 }
+                unset($el);
                 $pages[] = $page;
             }
         }
@@ -957,6 +978,71 @@ class ProductPdfDesignController extends Controller
         }
 
         return $iconIds;
+    }
+
+    /**
+     * Nombre de familia tipográfica que efectivamente se le aplica al texto
+     * de una vista legacy (`tematica/{$viewPath}.blade.php`). Casi ninguna
+     * vista fija la suya propia: heredan `Oswald` del CSS compartido
+     * (public/css/etiquetas.css), que se aplica por igual a TODO el texto de
+     * las 113 de 115 vistas "normales" — por eso ese es el default. Las
+     * pocas vistas que SÍ declaran la suya (ej.
+     * `stars/TRANSFER MAYUSCULA.blade.php` -> Antonio,
+     * `stars/TRANSFER BOLD.blade.php` -> TitanOne) lo hacen en una regla
+     * para la clase `.name` (el texto del cliente) — se prioriza esa por
+     * sobre cualquier otra declaración de la vista (algunas, como las de
+     * "stars/*", además fijan por separado una tipografía totalmente
+     * distinta — Helvetica, sin archivo propio — para texto secundario tipo
+     * "PEDIDO #", que NO queremos confundir con la del nombre).
+     */
+    private function detectLegacyFontFamily(string $viewPath): string
+    {
+        $viewPath = str_starts_with($viewPath, 'tematica/') ? $viewPath : "tematica/{$viewPath}";
+        $bladePath = resource_path('views/' . $viewPath . '.blade.php');
+        if (!is_file($bladePath)) {
+            return self::DEFAULT_LEGACY_FONT_FAMILY;
+        }
+
+        $content = file_get_contents($bladePath);
+        // Los bloques @font-face solo DECLARAN una fuente disponible (varias
+        // vistas declaran 'Lora' sin usarla nunca en ningún lado) — no dicen
+        // cuál se aplica al texto, así que se descartan antes de buscar.
+        $withoutFontFace = preg_replace('/@font-face\s*\{[^}]*\}/s', '', $content);
+
+        if (preg_match("/\.name\s*\{[^}]*font-family:\s*['\"]([^'\"]+)['\"]/s", $withoutFontFace, $m)) {
+            return trim($m[1]);
+        }
+        if (preg_match_all("/font-family:\s*['\"]([^'\"]+)['\"]/", $withoutFontFace, $m) && !empty($m[1])) {
+            return trim($m[1][0]);
+        }
+
+        return self::DEFAULT_LEGACY_FONT_FAMILY;
+    }
+
+    /**
+     * Tipografía del catálogo nuevo (`typographies`) que corresponde a una
+     * familia detectada en una vista legacy — por nombre exacto (sin
+     * mayúsculas) primero y, si no hay ninguna cargada con ese nombre, por el
+     * nombre de archivo original que se subió (`typography_files.file_name`,
+     * ej. "Oswald-Regular.ttf") como aproximación. Null si no hay match en
+     * ningún lado — ahí el texto queda con `font_id: null` como hasta ahora,
+     * para asignar a mano en el editor (la tipografía real puede no estar
+     * cargada todavía en el catálogo).
+     */
+    private function resolveTypographyIdForFamily(string $family): ?int
+    {
+        $family = trim($family);
+        if ($family === '') {
+            return null;
+        }
+
+        $typography = Typography::whereRaw('LOWER(name) = ?', [mb_strtolower($family)])->first();
+        if ($typography) {
+            return $typography->id;
+        }
+
+        $file = TypographyFile::where('file_name', 'like', "%{$family}%")->first();
+        return $file?->typography_id;
     }
 
     /**

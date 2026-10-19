@@ -47,8 +47,21 @@ Errores (todos `422` salvo el último):
 5. **El texto nunca se superpone con el ícono de la misma celda**: cuando hay ambos, el elemento `text` no ocupa la celda entera (eso lo haría pasar por encima del ícono) — se recorta al espacio libre, igual que hace la tabla HTML del sistema viejo (`<td>ícono</td><td>texto</td>`, lado a lado o apilados según el diseño).
 6. **Reconstruye el ícono EXACTO de cada celda** (no una aproximación): las vistas `tematica/principal/*.blade.php` referencian un índice fijo tipo `$plantilla['imagen'][2]` por celda — no es aleatorio, está escrito literal en el `.blade.php`. Leyendo ese archivo y extrayendo esos índices en orden (mismo orden en que dompdf dibuja las celdas), más la misma carpeta `storage/app/pdf/Iconos/Tematicas/{TEMATICA}/` que arma `EtiquetaService::generarEtiquetas()`, se sabe EXACTAMENTE qué archivo SVG va en cada celda. Ese archivo YA está cargado en el catálogo nuevo (`personalization_icons`, ver [database/sql/personalization_icons_tematicas.sql](database/sql/personalization_icons_tematicas.sql) — un ícono por cada archivo de `public/icons/Tematicas/*`), así que el elemento se guarda con el `icon_id` correspondiente — **nunca copiando el SVG como archivo propio del elemento** (`custom_icon_path`/`pdf-element-images`): un mismo ícono de catálogo se reusa en todos los diseños que lo necesiten, sin duplicar archivos.
 7. Si para alguna celda no se pudo determinar el archivo exacto (la vista no tiene ese patrón, la temática no tiene carpeta de íconos — pasa con vistas "sin dibujo" —, o el archivo todavía no está cargado en el catálogo), esa celda puntual cae al fallback de antes: buscar en el catálogo un ícono con nombre parecido al de algún archivo de la carpeta, repartiendo los que encuentre entre las celdas sin match exacto. Si tampoco hay fallback, se queda con el placeholder `icon_id: 1`.
+7.1. **También matchea la tipografía real de esa vista** (ver sección siguiente) — el texto ya no sale siempre con `font_id: null`.
 8. Borra el/los PDF de muestra generados — son solo un paso intermedio, no quedan en disco.
 9. Crea el `ProductPdfDesign` **sin publicar** (`is_published: false`) y lo **vincula** al `productId`/`variantId` (`product_pdf_design_products`, con `theme_key = variantId` o `null` si no se mandó).
+
+---
+
+## La tipografía real de la vista, no una genérica
+
+Cada vista legacy tiene su fuente fija en el código (`@font-face` + una clase CSS, ver `resources/views/tematica/**/*.blade.php` y `public/css/etiquetas.css`) — no es aleatoria ni configurable por producto:
+- 113 de 115 vistas (`principal/*`, `vinilo/*`, `super-mini/*`, `super-maxi/*`, `maxi/*`, etc.) heredan **Oswald** del CSS compartido, aplicada por igual a TODO el texto.
+- Un puñado de vistas (`stars/TRANSFER MAYUSCULA` -> **Antonio**, `stars/TRANSFER BOLD` -> **TitanOne**) declaran la suya propia para el nombre del cliente.
+
+El importador detecta esa familia leyendo el `.blade.php` de la vista (mismo criterio que ya se usa para los íconos: leer el código fuente, no adivinar) y busca una `Typography` del catálogo nuevo con ese nombre (o, si no hay ninguna con ese nombre exacto, por el nombre de archivo original que se subió, ej. `Oswald-Regular.ttf`). Si encuentra match, el texto se guarda con ese `font_id` en vez de `null`.
+
+**Limitación**: si la tipografía detectada (ej. "Antonio", "TitanOne") todavía no está cargada en el catálogo (`typographies`), no hay nada para matchear y el texto queda con `font_id: null` como antes — hay que cargarla una vez en el ABM de tipografías para que, de ahí en más, se matchee sola. Además, se aplica UNA fuente por página/vista a TODO su texto (igual que pasa realmente en casi todas las vistas) — en los pocos casos (`stars/*`) donde el texto secundario (ej. "PEDIDO #") usa una fuente distinta a la del nombre (ahí es Helvetica, sin archivo propio), ese texto puntual puede quedar con la fuente del nombre en vez de la suya — revisar a mano en esos casos específicos.
 
 ---
 
@@ -72,7 +85,7 @@ Una temática con varias secciones (ej. Unicornio: maxi 4×4, vertical 6×2, sup
 ## Qué NO hace (mismas limitaciones que `import-from-pdf`, salvo el ícono)
 
 - El ícono sale exacto **solo cuando la vista Blade usa el patrón `$plantilla['imagen'][N]`** (las de `tematica/principal/*` lo usan) **y** el archivo correspondiente ya está cargado en `personalization_icons`. Para vistas sin ese patrón (ej. "sin dibujo", gama de colores), o un archivo nuevo que todavía no se cargó al catálogo, cae al fallback por nombre — que sigue siendo aproximado.
-- No matchea tipografías contra el catálogo: el texto queda siempre con `font_id: null`.
+- La tipografía (ver sección de arriba) sale exacta **solo si ya hay una `Typography` cargada en el catálogo con ese nombre** — si no, queda con `font_id: null` como antes. Y se aplica una sola fuente por página a todo su texto, así que el texto secundario de las pocas vistas con una fuente distinta para él (`stars/*`) puede necesitar corregirse a mano.
 - Solo el nombre del cliente se detecta como dinámico (`nombre_apellido`). El texto "PEDIDO # ..." (pie de página, cuando la temática lo trae) queda como texto FIJO con el número de muestra literal — no se convierte a `dynamic_field: "numero_pedido"` porque ese campo reemplaza todo el contenido del elemento por el número solo, y perdería el prefijo "PEDIDO #" que es parte del diseño; separarlo en dos elementos (uno fijo + uno dinámico) queda pendiente si hace falta.
 - No reconoce ni evita duplicados: si se llama dos veces para el mismo producto/variante, crea dos diseños distintos (ambos sin publicar) — conviene borrar el anterior si era una prueba.
 
