@@ -95,20 +95,27 @@ class PdfDesignImportService
                 $shape[] = 'text';
             }
 
-            // Agrupamos las piezas de UNA celda (fondo + ícono + texto) bajo
-            // un group_id compartido — igual que hace el editor del front al
-            // generar una grilla (ver computeGridCells) — así en el editor
-            // clickear/mover cualquiera de las 3 selecciona/mueve la celda
-            // entera de una, en vez de tener que tocar los 3 elementos
-            // sueltos uno por uno.
-            if (count($cellElements) > 1) {
+            // Agrupamos fondo + ícono de UNA celda bajo un group_id
+            // compartido — igual que hace el editor del front al generar una
+            // grilla (ver computeGridCells) — así clickear/mover cualquiera
+            // de los dos selecciona/mueve la celda entera de una. El TEXTO
+            // queda a propósito AFUERA del grupo: el editor trata una
+            // selección de elementos de distinto tipo como "selección
+            // mixta" y ahí el panel lateral deja de mostrar la sección
+            // Tipografía (ElementConfig.vue, isMixed/hasCommonColor) — si el
+            // texto compartiera group_id con el fondo, un clic simple sobre
+            // el texto seleccionaría los dos (fondo+texto, tipos distintos)
+            // y el admin se quedaría sin poder tocar fuente/tamaño/alineación
+            // de un texto recién importado sin antes desagruparlo a mano.
+            $groupableElements = array_filter($cellElements, fn($el) => $el['type'] !== 'text');
+            if (count($groupableElements) > 1) {
                 $groupId = 'group-imported-' . uniqid();
                 foreach ($cellElements as &$ce) {
-                    $ce['group_id'] = $groupId;
+                    if ($ce['type'] !== 'text') {
+                        $ce['group_id'] = $groupId;
+                    }
                 }
                 unset($ce);
-            } else {
-                $groupId = null;
             }
 
             $elements = array_merge($elements, $cellElements);
