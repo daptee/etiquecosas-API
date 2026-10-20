@@ -390,21 +390,19 @@ class ProductPdfDesignController extends Controller
         // elemento, perdiendo el prefijo fijo "PEDIDO #" que es parte del
         // diseño — el placeholder entre texto fijo sí lo preserva.
         foreach ($pages as &$page) {
+            $sheetWidthCm = (float) ($page['sheet']['width_cm'] ?? 21);
+            $sheetHeightCm = (float) ($page['sheet']['height_cm'] ?? 29.7);
             foreach ($page['elements'] as &$el) {
                 if (($el['type'] ?? null) === 'text' && !empty($el['content']) && str_contains($el['content'], (string) $ventaIdMuestra)) {
                     $el['content'] = str_replace((string) $ventaIdMuestra, '{{numero_pedido}}', $el['content']);
-                    // El placeholder "{{numero_pedido}}" (17 caracteres) es
-                    // más largo que el número de muestra que reemplazó (9
-                    // dígitos) — max_chars_per_line se había calculado ANTES
-                    // de este reemplazo, a partir del texto de muestra más
-                    // corto, así que quedaba de menos y el editor (que mide
-                    // el contenido tal cual está guardado, sin resolver el
-                    // placeholder) lo mostraba partido en 2 líneas. En el
-                    // PDF real no se nota (ahí se resuelve el placeholder
-                    // ANTES de contar caracteres), pero se recalcula igual
-                    // para que el editor también lo muestre en una sola
-                    // línea, como corresponde (max_lines ya es 1).
-                    $el['max_chars_per_line'] = max($el['max_chars_per_line'] ?? 6, (int) (strlen($el['content']) * 1.2));
+                    // El placeholder "{{numero_pedido}}" es más largo que el
+                    // número de muestra que reemplazó — la geometría (ancho,
+                    // max_chars_per_line) se había calculado ANTES de este
+                    // reemplazo, a partir del texto más corto, así que podía
+                    // quedar de menos y el texto terminaba partido en 2
+                    // líneas (max_lines ya pide 1 sola). Se reajusta acá,
+                    // manteniendo el mismo centro/rotación.
+                    $el = PdfDesignImportService::resizeTextElementForContent($el, $el['content'], $sheetWidthCm, $sheetHeightCm);
                 }
             }
             unset($el);

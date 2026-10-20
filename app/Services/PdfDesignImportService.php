@@ -703,6 +703,54 @@ class PdfDesignImportService
     }
 
     /**
+     * Ensancha un elemento `text` YA armado (por `import()`) para que un
+     * CONTENIDO NUEVO —más largo que el original— entre en una sola línea.
+     * Pensado para `ProductPdfDesignController::importFromProduct()`, que
+     * reemplaza el número de muestra de "PEDIDO # ..." por el placeholder
+     * `{{numero_pedido}}` (más largo) DESPUÉS de que `import()` ya calculó
+     * la geometría con el número de muestra original (más corto) — sin este
+     * reajuste, `max_chars_per_line` quedaba corto para el contenido final
+     * y, si el elemento está girado, la caja además quedaba angosta para su
+     * lado largo. Mantiene el mismo CENTRO y la misma rotación, solo
+     * agranda el ancho (nunca lo achica) y vuelve a recortarlo dentro de la
+     * hoja con el mismo margen que usa `rotatedTextElement()`. No hace nada
+     * si el contenido nuevo ya entraba en el ancho actual.
+     */
+    public static function resizeTextElementForContent(array $el, string $newContent, float $sheetWidthCm, float $sheetHeightCm): array
+    {
+        $el['max_chars_per_line'] = max($el['max_chars_per_line'] ?? 6, (int) (strlen($newContent) * 1.2));
+
+        $fontSizePt = ((float) ($el['font_size_px'] ?? 12)) * 0.75;
+        $estWidthPt = max(1, strlen($newContent) * $fontSizePt * 0.6);
+        $newWidthCm = max(0.5, round($estWidthPt / self::PT_PER_CM, 2));
+
+        $widthCm = (float) ($el['width_cm'] ?? $newWidthCm);
+        $heightCm = (float) ($el['height_cm'] ?? 0.5);
+        if ($newWidthCm <= $widthCm) {
+            return $el;
+        }
+
+        $centerXCm = $el['x_cm'] + $widthCm / 2;
+        $centerYCm = $el['y_cm'] + $heightCm / 2;
+
+        $angleRad = deg2rad((float) ($el['rotation_deg'] ?? 0));
+        $cos = cos($angleRad);
+        $sin = sin($angleRad);
+        $marginCm = 0.3;
+        $halfWidthRotatedCm = ($newWidthCm / 2) * abs($cos) + ($heightCm / 2) * abs($sin);
+        $halfHeightRotatedCm = ($newWidthCm / 2) * abs($sin) + ($heightCm / 2) * abs($cos);
+
+        $centerXCm = self::clampCenter($centerXCm, $halfWidthRotatedCm, $sheetWidthCm, $marginCm);
+        $centerYCm = self::clampCenter($centerYCm, $halfHeightRotatedCm, $sheetHeightCm, $marginCm);
+
+        $el['width_cm'] = $newWidthCm;
+        $el['x_cm'] = round($centerXCm - $newWidthCm / 2, 2);
+        $el['y_cm'] = round($centerYCm - $heightCm / 2, 2);
+
+        return $el;
+    }
+
+    /**
      * Agrupa texto suelto (sin celda) en bloques por cercanía vertical — no
      * hay un rect que lo ancle, así que se usa un umbral de salto de línea.
      */
