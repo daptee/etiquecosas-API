@@ -393,6 +393,18 @@ class ProductPdfDesignController extends Controller
             foreach ($page['elements'] as &$el) {
                 if (($el['type'] ?? null) === 'text' && !empty($el['content']) && str_contains($el['content'], (string) $ventaIdMuestra)) {
                     $el['content'] = str_replace((string) $ventaIdMuestra, '{{numero_pedido}}', $el['content']);
+                    // El placeholder "{{numero_pedido}}" (17 caracteres) es
+                    // más largo que el número de muestra que reemplazó (9
+                    // dígitos) — max_chars_per_line se había calculado ANTES
+                    // de este reemplazo, a partir del texto de muestra más
+                    // corto, así que quedaba de menos y el editor (que mide
+                    // el contenido tal cual está guardado, sin resolver el
+                    // placeholder) lo mostraba partido en 2 líneas. En el
+                    // PDF real no se nota (ahí se resuelve el placeholder
+                    // ANTES de contar caracteres), pero se recalcula igual
+                    // para que el editor también lo muestre en una sola
+                    // línea, como corresponde (max_lines ya es 1).
+                    $el['max_chars_per_line'] = max($el['max_chars_per_line'] ?? 6, (int) (strlen($el['content']) * 1.2));
                 }
             }
             unset($el);
