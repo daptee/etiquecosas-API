@@ -2,26 +2,19 @@
 
 namespace App\Services;
 
-use setasign\Fpdi\Fpdi;
+use FPDF;
 
 /**
- * PDF con 2 capas (OCG): "Arte" (las páginas que ya renderizó dompdf,
- * importadas con FPDI como vectores) y "Líneas de corte" encima, con los
- * trazos de CutLineGeometry en un spot color "CutContour" (lo que leen los
- * plotters/RIP de la imprenta). Las 2 capas existen siempre, aunque la de
- * corte quede vacía. Unidad: pt.
+ * PDF solo con las líneas de corte (sin arte): los trazos de CutLineGeometry,
+ * vectoriales, sin relleno y en un spot color "CutContour" (lo que leen los
+ * plotters/RIP de la imprenta). Una página por hoja, con el tamaño exacto de
+ * la hoja, para que se pueda superponer al PDF de arte. Unidad: pt.
  */
-class CutLinesPdf extends Fpdi
+class CutLinesPdf extends FPDF
 {
-    public const LAYER_ART = 'Arte';
-    public const LAYER_CUT = 'Líneas de corte';
     public const SPOT_NAME = 'CutContour';
     private const CM_TO_PT = 72 / 2.54;
 
-    private array $layers = [
-        'OC1' => ['name' => self::LAYER_ART, 'n' => null],
-        'OC2' => ['name' => self::LAYER_CUT, 'n' => null],
-    ];
     // clave de color => ['name' => 'CS1', 'space' => ..., 'values' => ..., 'n' => obj]
     private array $spotColors = [];
 
@@ -30,35 +23,30 @@ class CutLinesPdf extends Fpdi
         parent::__construct('P', 'pt');
         $this->SetAutoPageBreak(false);
         $this->SetMargins(0, 0, 0);
-        // OCG = PDF 1.5. FPDI lo sube solo si el PDF importado pide más.
-        $this->PDFVersion = '1.5';
     }
 
     /**
-     * Agrega una página de arte (importada) y encima su capa de corte.
-     * $cutConfig null = página sin líneas (la capa igual se marca, vacía).
+     * Agrega una hoja de $widthCm × $heightCm con sus líneas.
+     * $cutConfig null = hoja sin líneas (queda en blanco).
      */
-    public function addPaginaConCorte(string $tplId, ?array $cutConfig, array $trazados): void
+    public function addPaginaCorte(float $widthCm, float $heightCm, ?array $cutConfig, array $trazados): void
     {
-        $size = $this->getTemplateSize($tplId);
-        $this->AddPage($size['orientation'], [$size['width'], $size['height']]);
+        $w = $widthCm * self::CM_TO_PT;
+        $h = $heightCm * self::CM_TO_PT;
+        $this->AddPage($w > $h ? 'L' : 'P', [$w, $h]);
 
-        $this->_out('/OC /OC1 BDC');
-        $this->useTemplate($tplId);
-        $this->_out('EMC');
-
-        $this->_out('/OC /OC2 BDC');
-        if ($cutConfig && $trazados) {
-            $cs = $this->spotColor($cutConfig['color']);
-            $this->_out('q');
-            $this->_out('/' . $cs . ' CS 1 SCN');
-            $this->_out(sprintf('%.4F w', $cutConfig['width_cm'] * self::CM_TO_PT));
-            foreach ($trazados as $trazado) {
-                $this->_out($this->pathOps($trazado) . ' S');
-            }
-            $this->_out('Q');
+        if (!$cutConfig || !$trazados) {
+            return;
         }
-        $this->_out('EMC');
+
+        $cs = $this->spotColor($cutConfig['color']);
+        $this->_out('q');
+        $this->_out('/' . $cs . ' CS 1 SCN');
+        $this->_out(sprintf('%.4F w', $cutConfig['width_cm'] * self::CM_TO_PT));
+        foreach ($trazados as $trazado) {
+            $this->_out($this->pathOps($trazado) . ' S');
+        }
+        $this->_out('Q');
     }
 
     private function spotColor(array $color): string
@@ -96,13 +84,6 @@ class CutLinesPdf extends Fpdi
 
     protected function _putresources()
     {
-        foreach ($this->layers as $id => $layer) {
-            $this->_newobj();
-            $this->layers[$id]['n'] = $this->n;
-            $this->_put('<</Type /OCG /Name ' . $this->_textstring($layer['name']) . '>>');
-            $this->_put('endobj');
-        }
-
         foreach ($this->spotColors as $key => $spot) {
             $alt = $spot['space'] === 'cmyk' ? '/DeviceCMYK' : '/DeviceRGB';
             $c0 = $spot['space'] === 'cmyk' ? '[0 0 0 0]' : '[1 1 1]';
@@ -121,12 +102,6 @@ class CutLinesPdf extends Fpdi
     {
         parent::_putresourcedict();
 
-        $this->_put('/Properties <<');
-        foreach ($this->layers as $id => $layer) {
-            $this->_put('/' . $id . ' ' . $layer['n'] . ' 0 R');
-        }
-        $this->_put('>>');
-
         if ($this->spotColors) {
             $this->_put('/ColorSpace <<');
             foreach ($this->spotColors as $spot) {
@@ -134,16 +109,5 @@ class CutLinesPdf extends Fpdi
             }
             $this->_put('>>');
         }
-    }
-
-    protected function _putcatalog()
-    {
-        parent::_putcatalog();
-
-        $refs = array_map(fn($l) => $l['n'] . ' 0 R', $this->layers);
-        $all = implode(' ', $refs);
-        // /Order de arriba hacia abajo en el panel de capas: corte primero.
-        $order = $refs['OC2'] . ' ' . $refs['OC1'];
-        $this->_put('/OCProperties <</OCGs [' . $all . '] /D <</Order [' . $order . '] /ON [' . $all . '] /OFF []>>>>');
     }
 }

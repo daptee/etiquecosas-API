@@ -338,14 +338,14 @@ class EtiquetaService
      * del front (product_pdf_designs), en vez de las vistas fijas por temática.
      * No modifica generarEtiquetas(): es el equivalente para diseños nuevos.
      */
-    public static function generarEtiquetasDesdeDesign(int $ventaId, ProductPdfDesign $design, $productOrder, array $nombres, $customColor, $customIcon, $fechaCompra = null, array $firstNames = [], array $lastNames = [], bool $cutLines = false, bool $illustrator = false): array
+    public static function generarEtiquetasDesdeDesign(int $ventaId, ProductPdfDesign $design, $productOrder, array $nombres, $customColor, $customIcon, $fechaCompra = null, array $firstNames = [], array $lastNames = [], bool $cutLines = false): array
     {
         $pages = self::normalizarPaginasDesign($design->data ?? []);
         $sufijo = self::limpiarNombreArchivo(strtoupper($design->name ?: 'DESIGN'));
 
         return self::generarEtiquetasDesdePaginas(
             $ventaId, $pages, $sufijo, "design:{$design->id}", $productOrder,
-            $nombres, $customColor, $customIcon, $fechaCompra, $firstNames, $lastNames, $cutLines, $illustrator
+            $nombres, $customColor, $customIcon, $fechaCompra, $firstNames, $lastNames, $cutLines
         );
     }
 
@@ -393,12 +393,10 @@ class EtiquetaService
      * elemento, agrupar por tamaño de hoja, renderizar y fusionar con FPDI.
      * $logId es solo para identificar el origen en logs/debug (no afecta el
      * render), ya que acá puede no haber un único ProductPdfDesign detrás.
-     * $cutLines: además del arte, una capa "Líneas de corte" encima (PDF de
-     * 2 capas OCG, ver CutLinesPdf). Sin esto el PDF sale igual que siempre.
-     * $illustrator: en vez del PDF, un .ai clásico con las mismas 2 capas
-     * (arte rasterizado + líneas vectoriales, ver IllustratorExport).
+     * $cutLines: en vez del arte, un PDF SOLO con las líneas de corte de
+     * las etiquetas (ver generarPdfLineasDeCorte). No pasa por dompdf.
      */
-    private static function generarEtiquetasDesdePaginas(int $ventaId, array $pages, string $sufijo, string $logId, $productOrder, array $nombres, $customColor, $customIcon, $fechaCompra = null, array $firstNames = [], array $lastNames = [], bool $cutLines = false, bool $illustrator = false): array
+    private static function generarEtiquetasDesdePaginas(int $ventaId, array $pages, string $sufijo, string $logId, $productOrder, array $nombres, $customColor, $customIcon, $fechaCompra = null, array $firstNames = [], array $lastNames = [], bool $cutLines = false): array
     {
         self::$lastRenderError = null;
         $outputFiles = [];
@@ -415,6 +413,19 @@ class EtiquetaService
                 $pages, $contexto, $nombre, $firstNames[$idx] ?? null, $lastNames[$idx] ?? null,
                 $customColor, $customIcon, $logId
             );
+
+            if ($cutLines) {
+                $filePath = "{$dirPath}/{$ventaId}-{$productOrder->id}-{$productOrder->product->name}-{$sufijo}-CORTE-" . ($idx + 1) . ".pdf";
+                try {
+                    self::generarPdfLineasDeCorte($resolvedPages, $filePath);
+                    $outputFiles[] = $filePath;
+                    Log::info("✅ PDF de líneas de corte generado", ['path' => $filePath]);
+                } catch (\Throwable $e) {
+                    Log::error("❌ Error generando PDF de líneas de corte", ['log_id' => $logId, 'error' => $e->getMessage()]);
+                    self::$lastRenderError = $e->getMessage();
+                }
+                continue;
+            }
 
             // dompdf fija el tamaño físico del PDF una sola vez para todo el
             // documento: hojas con sheet.width_cm/height_cm distintos no pueden
@@ -433,10 +444,6 @@ class EtiquetaService
 
             $filePath = "{$dirPath}/{$ventaId}-{$productOrder->id}-{$productOrder->product->name}-{$sufijo}-" . ($idx + 1) . ".pdf";
             $tmpFiles = [];
-            $tmpBase = $filePath;
-            if ($illustrator) {
-                $filePath = preg_replace('/\.pdf$/', '.ai', $filePath);
-            }
 
             try {
                 foreach ($grupos as $grupoIdx => $grupo) {
@@ -456,22 +463,12 @@ class EtiquetaService
                     $dompdf = $pdf->getDomPDF();
                     $dompdf->getOptions()->setFontDir(public_path('fonts'));
 
-                    $tmpPath = "{$tmpBase}.tmp{$grupoIdx}.pdf";
+                    $tmpPath = "{$filePath}.tmp{$grupoIdx}.pdf";
                     $pdf->save($tmpPath);
                     $tmpFiles[] = $tmpPath;
                 }
 
-                if ($illustrator) {
-                    IllustratorExport::export($tmpFiles, $grupos, $filePath, basename($filePath));
-                    foreach ($tmpFiles as $tmpFile) {
-                        @unlink($tmpFile);
-                    }
-                } elseif ($cutLines) {
-                    self::fusionarConLineasDeCorte($tmpFiles, $grupos, $filePath, $logId);
-                    foreach ($tmpFiles as $tmpFile) {
-                        @unlink($tmpFile);
-                    }
-                } elseif (count($tmpFiles) === 1) {
+                if (count($tmpFiles) === 1) {
                     rename($tmpFiles[0], $filePath);
                 } else {
                     $fpdi = new Fpdi();
@@ -508,32 +505,22 @@ class EtiquetaService
     }
 
     /**
-     * Fusiona los PDFs temporales de cada grupo (mismo orden que $grupos y
-     * sus páginas) en un único PDF de 2 capas: "Arte" con cada página tal
-     * cual la dibujó dompdf y "Líneas de corte" encima, calculadas sobre la
-     * página resuelta correspondiente (page.cut_lines + sus backgrounds).
+     * PDF solo con las líneas de corte: una página por hoja del diseño, en
+     * su orden y con su tamaño, sin arte. Una hoja sin cut_lines.enabled
+     * queda en blanco (así las páginas siguen coincidiendo con el diseño).
      */
-    private static function fusionarConLineasDeCorte(array $tmpFiles, array $grupos, string $filePath, string $logId): void
+    private static function generarPdfLineasDeCorte(array $resolvedPages, string $filePath): void
     {
         $pdf = new CutLinesPdf();
 
-        foreach ($tmpFiles as $grupoIdx => $tmpFile) {
-            $paginas = $grupos[$grupoIdx]['pages'];
-            $pageCount = $pdf->setSourceFile($tmpFile);
-            if ($pageCount !== count($paginas)) {
-                // dompdf partió/juntó alguna hoja: las líneas se asignan por
-                // posición igual, pero queda avisado.
-                Log::warning('Líneas de corte: cantidad de páginas distinta a la del diseño', [
-                    'log_id' => $logId, 'grupo' => $grupoIdx, 'pdf' => $pageCount, 'diseño' => count($paginas),
-                ]);
-            }
-
-            for ($page = 1; $page <= $pageCount; $page++) {
-                $resolved = $paginas[$page - 1] ?? null;
-                $config = $resolved ? CutLineGeometry::configPagina($resolved) : null;
-                $trazados = $config ? CutLineGeometry::trazadosPagina($resolved) : [];
-                $pdf->addPaginaConCorte($pdf->importPage($page), $config, $trazados);
-            }
+        foreach ($resolvedPages as $page) {
+            $config = CutLineGeometry::configPagina($page);
+            $pdf->addPaginaCorte(
+                (float) ($page['sheet']['width_cm'] ?? 18.5),
+                (float) ($page['sheet']['height_cm'] ?? 29),
+                $config,
+                $config ? CutLineGeometry::trazadosPagina($page) : []
+            );
         }
 
         $pdf->Output($filePath, 'F');

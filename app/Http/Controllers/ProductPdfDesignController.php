@@ -779,12 +779,6 @@ class ProductPdfDesignController extends Controller
             return response()->json($layout);
         }
 
-        // ?cut_lines=1: descarga un .ai para Illustrator con 2 capas (arte
-        // rasterizado + líneas de corte vectoriales). Con &format=pdf, en
-        // cambio, devuelve el PDF de 2 capas OCG (arte vectorial).
-        $cutLines = $request->boolean('cut_lines');
-        $illustrator = $cutLines && $request->query('format') !== 'pdf';
-
         try {
             $paths = EtiquetaService::generarEtiquetasDesdeDesign(
                 $numeroPedidoPreview,
@@ -796,8 +790,8 @@ class ProductPdfDesignController extends Controller
                 $fechaPreview,
                 [$firstName],
                 [$lastName],
-                $cutLines,
-                $illustrator
+                // ?cut_lines=1: PDF solo con las líneas de corte, sin el arte.
+                $request->boolean('cut_lines')
             );
         } catch (\Throwable $e) {
             return response()->json([
@@ -816,11 +810,6 @@ class ProductPdfDesignController extends Controller
                 'message' => 'No se pudo generar la vista previa',
                 'error' => EtiquetaService::$lastRenderError ?? 'Sin más detalle — revisar storage/logs/laravel.log',
             ], 500);
-        }
-
-        if ($illustrator) {
-            $nombreArchivo = EtiquetaService::limpiarNombreArchivo($design->name ?: 'diseno') . '.ai';
-            return response()->download($paths[0], $nombreArchivo, ['Content-Type' => 'application/postscript']);
         }
 
         return response()->file($paths[0]);
