@@ -243,9 +243,11 @@ class ProductPdfDesignController extends Controller
             'product' => (object) ['name' => $product->name],
         ];
 
+        $ventaIdMuestra = random_int(900000000, 999999999);
+
         try {
             $samplePaths = EtiquetaService::generarEtiquetas(
-                random_int(900000000, 999999999),
+                $ventaIdMuestra,
                 $tematicaId,
                 [self::SAMPLE_NOMBRE_APELLIDO],
                 $productOrder,
@@ -370,6 +372,27 @@ class ProductPdfDesignController extends Controller
                 if (($el['type'] ?? null) === 'text' && ($el['content'] ?? null) === self::SAMPLE_NOMBRE_APELLIDO) {
                     $el['value_mode'] = 'dynamic';
                     $el['dynamic_field'] = 'nombre_apellido';
+                }
+            }
+            unset($el);
+        }
+        unset($page);
+
+        // El texto de "PEDIDO # ..." trae el número de la VENTA DE MUESTRA
+        // ($ventaIdMuestra) literal, tal cual lo dibujó el PDF de prueba —
+        // hay que reemplazarlo por el placeholder {{numero_pedido}} (mismo
+        // mecanismo de siempre para texto fijo con partes dinámicas, ver
+        // EtiquetaService::resolverElementoDesign, rama "esquema anterior
+        // por placeholders") para que en una venta real se vea el número de
+        // ESA venta, no siempre el mismo número de muestra fijo. A
+        // diferencia del nombre, acá NO se usa dynamic_field/value_mode
+        // "dynamic": ese mecanismo reemplaza TODO el contenido del
+        // elemento, perdiendo el prefijo fijo "PEDIDO #" que es parte del
+        // diseño — el placeholder entre texto fijo sí lo preserva.
+        foreach ($pages as &$page) {
+            foreach ($page['elements'] as &$el) {
+                if (($el['type'] ?? null) === 'text' && !empty($el['content']) && str_contains($el['content'], (string) $ventaIdMuestra)) {
+                    $el['content'] = str_replace((string) $ventaIdMuestra, '{{numero_pedido}}', $el['content']);
                 }
             }
             unset($el);
