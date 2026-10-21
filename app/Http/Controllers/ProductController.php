@@ -29,6 +29,23 @@ class ProductController extends Controller
 {
     use FindObject, ApiResponse, Auditable;
 
+    /**
+     * Relación tag para el eager load: en rutas públicas (api/v1/*)
+     * excluye las etiquetas desactivadas (status_id = 2).
+     */
+    private function tagRelation(Request $request): array
+    {
+        if (!$request->is('api/v1/*')) {
+            return ['tag:id,name,color'];
+        }
+
+        return [
+            'tag' => function ($q) {
+                $q->select('id', 'name', 'color')->where('status_id', '!=', 2);
+            },
+        ];
+    }
+
     public function index(Request $request)
     {
         $perPage = $request->query('quantity');
@@ -65,7 +82,7 @@ class ProductController extends Controller
                 'categories:id,name',
                 'attributes:id,name,type',
                 'attributeValues:id,value,attribute_id,metadata',
-                'tag:id,name,color',
+                ...$this->tagRelation($request),
                 'theme:id,name,colors',
                 'images:id,product_id,img,is_main',
             ]);
@@ -201,7 +218,7 @@ class ProductController extends Controller
                 'categories:id,name',
                 'attributes:id,name,type',
                 'attributeValues:id,value,attribute_id,metadata',
-                'tag:id,name,color',
+                ...$this->tagRelation($request),
                 'theme:id,name,colors',
                 'images:id,product_id,img,is_main',
             ])
@@ -272,7 +289,7 @@ class ProductController extends Controller
                 'categories:id,name',
                 'attributes:id,name,type',
                 'attributeValues:id,value,attribute_id,metadata',
-                'tag:id,name,color',
+                ...$this->tagRelation($request),
                 'theme:id,name,colors',
                 'images:id,product_id,img,is_main',
             ]);
@@ -382,7 +399,7 @@ class ProductController extends Controller
             'categories:id,name',
             'attributes:id,name,type',
             'attributeValues:id,value,attribute_id,metadata',
-            'tag:id,name,color',
+            ...$this->tagRelation($request),
             'images:id,product_id,img,is_main',
             'costs:id,name,price',
             'customization',
@@ -469,7 +486,7 @@ class ProductController extends Controller
             'categories:id,name',
             'attributes:id,name,type',
             'attributeValues:id,value,attribute_id,metadata',
-            'tag:id,name,color',
+            ...$this->tagRelation($request),
             'images:id,product_id,img,is_main',
             'costs:id,name',
             'customization',
