@@ -18,6 +18,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\AttributeController;
 use App\Http\Controllers\TypographyController;
 use App\Http\Controllers\LabelShapeController;
+use App\Http\Controllers\PdfSheetSizeController;
 use App\Http\Controllers\ProductPdfDesignController;
 use App\Http\Controllers\CostController;
 use App\Http\Controllers\ConfigurationTagController;
@@ -213,6 +214,16 @@ Route::middleware('jwt.auth')->prefix('label-shapes')->group(function () {
     Route::post('/{id}', [LabelShapeController::class, 'update']);
     Route::patch('/{id}/toggle-status', [LabelShapeController::class, 'toggleStatus']);
     Route::delete('/{id}', [LabelShapeController::class, 'delete']);
+});
+
+// Pdf sheet sizes (tamaños de hoja del editor de PDFs — ver PDF_TAMANOS_DE_HOJA.md)
+Route::middleware('jwt.auth')->prefix('pdf-sheet-sizes')->group(function () {
+    Route::get('/', [PdfSheetSizeController::class, 'index']);
+    Route::get('/{id}', [PdfSheetSizeController::class, 'show']);
+    Route::post('/', [PdfSheetSizeController::class, 'store']);
+    Route::post('/{id}', [PdfSheetSizeController::class, 'update']);
+    Route::patch('/{id}/toggle-status', [PdfSheetSizeController::class, 'toggleStatus']);
+    Route::delete('/{id}', [PdfSheetSizeController::class, 'delete']);
 });
 
 // Product Pdf Designs (editor de PDFs)
