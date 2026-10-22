@@ -19,10 +19,11 @@ class PdfSheetSizeController extends Controller
     {
         $search = $request->query('search');
         $statusId = $request->query('statusId');
+        $typeId = $request->query('typeId');
         $perPage = $request->query('quantity');
         $page = $request->query('page', 1);
 
-        $query = PdfSheetSize::with('generalStatus');
+        $query = PdfSheetSize::with(['generalStatus', 'type']);
 
         if ($search) {
             $query->where('name', 'like', "%{$search}%");
@@ -30,6 +31,10 @@ class PdfSheetSizeController extends Controller
 
         if ($statusId) {
             $query->where('status_id', $statusId);
+        }
+
+        if ($typeId) {
+            $query->where('type_id', $typeId);
         }
 
         $query->orderBy('name', 'asc');
@@ -54,7 +59,7 @@ class PdfSheetSizeController extends Controller
     public function show($id)
     {
         $size = $this->findObject(PdfSheetSize::class, $id);
-        $size->load('generalStatus');
+        $size->load(['generalStatus', 'type']);
         return $this->success($size, 'Tamaño de hoja obtenido');
     }
 
@@ -64,6 +69,7 @@ class PdfSheetSizeController extends Controller
             'name' => 'required|string|max:255|unique:pdf_sheet_sizes',
             'widthCm' => 'required|numeric|min:0.1',
             'heightCm' => 'required|numeric|min:0.1',
+            'typeId' => 'nullable|exists:pdf_sheet_size_types,id',
             'isSystem' => 'nullable|boolean',
             'statusId' => 'nullable|exists:general_statuses,id',
         ]);
@@ -76,11 +82,12 @@ class PdfSheetSizeController extends Controller
             'name' => $request->name,
             'width_cm' => $request->widthCm,
             'height_cm' => $request->heightCm,
+            'type_id' => $request->typeId,
             'is_system' => $request->boolean('isSystem'),
             'status_id' => $request->statusId ?? 1,
         ]);
 
-        $size->load('generalStatus');
+        $size->load(['generalStatus', 'type']);
         $this->logAudit(Auth::user(), 'Store Pdf Sheet Size', $request->all(), $size);
         return $this->success($size, 'Tamaño de hoja creado');
     }
@@ -93,6 +100,7 @@ class PdfSheetSizeController extends Controller
             'name' => ['nullable', 'string', 'max:255', Rule::unique('pdf_sheet_sizes')->ignore($size->id)],
             'widthCm' => 'nullable|numeric|min:0.1',
             'heightCm' => 'nullable|numeric|min:0.1',
+            'typeId' => 'nullable|exists:pdf_sheet_size_types,id',
             'isSystem' => 'nullable|boolean',
             'statusId' => 'nullable|exists:general_statuses,id',
         ]);
@@ -105,11 +113,12 @@ class PdfSheetSizeController extends Controller
             'name' => $request->input('name', $size->name),
             'width_cm' => $request->input('widthCm', $size->width_cm),
             'height_cm' => $request->input('heightCm', $size->height_cm),
+            'type_id' => $request->has('typeId') ? $request->typeId : $size->type_id,
             'is_system' => $request->has('isSystem') ? $request->boolean('isSystem') : $size->is_system,
             'status_id' => $request->input('statusId', $size->status_id),
         ]);
 
-        $size->load('generalStatus');
+        $size->load(['generalStatus', 'type']);
         $this->logAudit(Auth::user(), 'Update Pdf Sheet Size', $request->all(), $size);
         return $this->success($size, 'Tamaño de hoja actualizado');
     }
@@ -120,7 +129,7 @@ class PdfSheetSizeController extends Controller
         $size->update([
             'status_id' => $size->status_id === 1 ? 2 : 1,
         ]);
-        $size->load('generalStatus');
+        $size->load(['generalStatus', 'type']);
         $this->logAudit(Auth::user(), 'Toggle Pdf Sheet Size Status', $id, $size);
         return $this->success($size, 'Estado actualizado');
     }

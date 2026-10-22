@@ -19,6 +19,7 @@ use App\Http\Controllers\AttributeController;
 use App\Http\Controllers\TypographyController;
 use App\Http\Controllers\LabelShapeController;
 use App\Http\Controllers\PdfSheetSizeController;
+use App\Http\Controllers\PdfSheetSizeTypeController;
 use App\Http\Controllers\ProductPdfDesignController;
 use App\Http\Controllers\CostController;
 use App\Http\Controllers\ConfigurationTagController;
@@ -224,6 +225,14 @@ Route::middleware('jwt.auth')->prefix('pdf-sheet-sizes')->group(function () {
     Route::post('/{id}', [PdfSheetSizeController::class, 'update']);
     Route::patch('/{id}/toggle-status', [PdfSheetSizeController::class, 'toggleStatus']);
     Route::delete('/{id}', [PdfSheetSizeController::class, 'delete']);
+});
+
+// Pdf sheet size types (catálogo de "Página"/"Pliego"/... — ver PDF_TAMANOS_DE_HOJA.md)
+Route::middleware('jwt.auth')->prefix('pdf-sheet-size-types')->group(function () {
+    Route::get('/', [PdfSheetSizeTypeController::class, 'index']);
+    Route::post('/', [PdfSheetSizeTypeController::class, 'store']);
+    Route::post('/{id}', [PdfSheetSizeTypeController::class, 'update']);
+    Route::delete('/{id}', [PdfSheetSizeTypeController::class, 'delete']);
 });
 
 // Product Pdf Designs (editor de PDFs)

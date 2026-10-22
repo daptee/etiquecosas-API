@@ -14,6 +14,7 @@ class PdfSheetSize extends Model
         'name',
         'width_cm',
         'height_cm',
+        'type_id',
         'is_system',
         'status_id',
     ];
@@ -25,5 +26,10 @@ class PdfSheetSize extends Model
     public function generalStatus()
     {
         return $this->belongsTo(GeneralStatus::class, 'status_id');
+    }
+
+    public function type()
+    {
+        return $this->belongsTo(PdfSheetSizeType::class, 'type_id');
     }
 }
