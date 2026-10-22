@@ -442,6 +442,8 @@ Route::middleware('jwt.auth')->prefix('pdf-directories')->group(function () {
     Route::get('/{fecha}', [PdfDirectoryController::class, 'getPdfsByDate']);           // GET ALL PDF de una fecha
     Route::get('/{fecha}/download-zip', [PdfDirectoryController::class, 'downloadCarpetaZip']); // Descargar carpeta en ZIP
     Route::get('/{fecha}/download/{nombrePdf}', [PdfDirectoryController::class, 'downloadPdf']); // Descargar PDF individual
+    Route::get('/{fecha}/view/{nombrePdf}', [PdfDirectoryController::class, 'viewPdf']); // Ver PDF individual (vista previa, sin forzar descarga)
+    Route::post('/{fecha}/regenerate/{nombrePdf}', [PdfDirectoryController::class, 'regeneratePdf']); // Regenerar un PDF puntual
 });
 
 // Home Content - Gestión de contenido de la home

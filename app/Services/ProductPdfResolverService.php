@@ -95,6 +95,29 @@ class ProductPdfResolverService
     }
 
     /**
+     * Mismo criterio de "¿qué diseño del editor corresponde a este
+     * producto+variante?" que usa resolveAndGenerate() (arriba), pero sin
+     * generar nada — solo para saber el id. Usado por el módulo de
+     * directorios para completar `design_id` en cada PDF ya generado (ver
+     * PdfDirectoryService::getPdfsDeUnaFecha()). Es "mejor esfuerzo": devuelve
+     * el diseño VINCULADO ACTUALMENTE a ese producto+variante, no
+     * necesariamente el que estaba vinculado cuando ese PDF puntual se
+     * generó (eso no se guarda en ningún lado) — null si no hay ninguno
+     * (PDF generado por el sistema legacy, sin product_pdf_designs).
+     */
+    public static function findLinkedDesignId(int $productId, ?int $variantId): ?int
+    {
+        $link = ProductPdfDesignProduct::where('product_id', $productId)
+            ->when($variantId, fn($q) => $q->where('theme_key', $variantId))
+            ->when(!$variantId, fn($q) => $q->whereNull('theme_key'))
+            ->whereHas('design', fn($q) => $q->where('is_published', true)->where('status_id', 1))
+            ->orderBy('sort_order')
+            ->first();
+
+        return $link->product_pdf_design_id ?? null;
+    }
+
+    /**
      * Flujo legacy sin modificar: extraído tal cual estaba duplicado en cada call site.
      */
     private static function resolveLegacy(

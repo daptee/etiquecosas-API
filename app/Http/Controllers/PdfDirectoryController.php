@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Sale;
+use App\Models\SaleProduct;
 use App\Services\PdfDirectoryService;
+use App\Services\ProductPdfResolverService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -261,26 +264,11 @@ class PdfDirectoryController extends Controller
             }
 
             // Si es diseñador, verificar que el PDF pertenece a un pedido asignado
-            if ($profileId == 2) {
-                // Extraer ID de venta del nombre del archivo
-                preg_match('/^(\d+)-/', $nombrePdf, $matches);
-
-                if (!empty($matches[1])) {
-                    $ventaId = $matches[1];
-
-                    // Verificar que la venta está asignada al usuario
-                    $ventaAsignada = \DB::table('sales')
-                        ->where('id', $ventaId)
-                        ->where('user_id', $user->id)
-                        ->exists();
-
-                    if (!$ventaAsignada) {
-                        return $this->error(
-                            'No tiene permisos para descargar este PDF',
-                            403
-                        );
-                    }
-                }
+            if ($profileId == 2 && !$this->ventaDelNombrePdfPerteneceAUsuario($nombrePdf, $user->id)) {
+                return $this->error(
+                    'No tiene permisos para descargar este PDF',
+                    403
+                );
             }
 
             return response()->download($rutaPdf);
@@ -290,5 +278,146 @@ class PdfDirectoryController extends Controller
                 500
             );
         }
+    }
+
+    /**
+     * Muestra un PDF específico en el navegador (vista previa), en vez de
+     * forzar la descarga — mismo archivo/permisos que downloadPdf(), la
+     * única diferencia es `response()->file()` en vez de
+     * `response()->download()` (sin `Content-Disposition: attachment`).
+     */
+    public function viewPdf($fecha, $nombrePdf)
+    {
+        try {
+            $user = Auth::user();
+            $profileId = $user->profile_id;
+
+            if (!preg_match('/^\d{2}-\d{2}-\d{4}$/', $fecha)) {
+                return $this->error('Formato de fecha inválido. Use dd-mm-yyyy', 400);
+            }
+
+            $rutaPdf = PdfDirectoryService::getRutaPdf($fecha, $nombrePdf);
+
+            if (!$rutaPdf || !file_exists($rutaPdf)) {
+                return $this->error('PDF no encontrado', 404);
+            }
+
+            if ($profileId == 2 && !$this->ventaDelNombrePdfPerteneceAUsuario($nombrePdf, $user->id)) {
+                return $this->error('No tiene permisos para ver este PDF', 403);
+            }
+
+            return response()->file($rutaPdf);
+        } catch (\Exception $e) {
+            return $this->error('Error al mostrar el PDF: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * Regenera UN PDF puntual del listado de "pdfs_pedidos" (no aplica a
+     * "extras" — cintas/bandas/sellos son archivos consolidados por fecha,
+     * sin una línea de venta propia). El nombre ya trae
+     * "{ventaId}-{salesProductId}-..." (ver nota de
+     * PdfDirectoryService::resolveDesignIdFromFilename()) — de ahí se
+     * reconstruye la línea de venta y se vuelve a correr
+     * ProductPdfResolverService::resolveAndGenerate(), el mismo punto único
+     * que usa una venta real (toma el diseño del editor vinculado HOY a ese
+     * producto+variante si hay uno, o cae al sistema legacy si no).
+     * Solo borra los archivos de ESTA línea de venta puntual
+     * ("{ventaId}-{salesProductId}-*.pdf"), no todo el pedido.
+     */
+    public function regeneratePdf($fecha, $nombrePdf)
+    {
+        try {
+            $user = Auth::user();
+            $profileId = $user->profile_id;
+
+            if (!preg_match('/^\d{2}-\d{2}-\d{4}$/', $fecha)) {
+                return $this->error('Formato de fecha inválido. Use dd-mm-yyyy', 400);
+            }
+
+            if (!preg_match('/^(\d+)-(\d+)-/', $nombrePdf, $matches)) {
+                return $this->error('No se pudo determinar el pedido/producto de este archivo', 422);
+            }
+            [$_, $ventaId, $salesProductId] = $matches;
+
+            $sale = Sale::find($ventaId);
+            if (!$sale) {
+                return $this->error('La venta de este PDF ya no existe', 404);
+            }
+
+            if ($profileId == 2 && $sale->user_id != $user->id) {
+                return $this->error('No tiene permisos para regenerar este PDF', 403);
+            }
+
+            $productOrder = SaleProduct::with('product', 'variant')->find($salesProductId);
+            if (!$productOrder || $productOrder->sale_id != $sale->id) {
+                return $this->error('No se encontró la línea de venta de este PDF', 404);
+            }
+
+            $customData = json_decode($productOrder->customization_data, true) ?? [];
+            $form = $customData['form'] ?? [];
+            $nombreCompleto = trim(($form['name'] ?? '') . ' ' . ($form['lastName'] ?? ''));
+            $customColor = $customData['color']['color_code'] ?? null;
+            $customIcon = $customData['icon']['icon'] ?? null;
+            if ($customIcon && ($customData['icon']['name'] ?? null) == 'Sin dibujo') {
+                $customIcon = null;
+            }
+
+            // Solo los archivos de ESTA línea de venta — no limpiarPdfsDelPedido()
+            // (eso borraría los de TODAS las líneas de este mismo pedido).
+            $dirPath = storage_path("app/pdf/planchas/{$fecha}");
+            foreach (glob("{$dirPath}/{$ventaId}-{$salesProductId}-*.pdf") ?: [] as $file) {
+                @unlink($file);
+            }
+
+            $paths = ProductPdfResolverService::resolveAndGenerate(
+                (int) $ventaId,
+                $productOrder,
+                $nombreCompleto,
+                $form,
+                $customColor,
+                $customIcon,
+                $sale->created_at
+            );
+
+            if (empty($paths)) {
+                return $this->error('No se pudo regenerar el PDF — revisá que el producto tenga un diseño o temática asociada', 500);
+            }
+
+            // El flujo legacy (resolveLegacy() dentro de resolveAndGenerate)
+            // puede devolver un array CON UN SUB-ARRAY adentro (empuja el
+            // array que ya devuelve generarEtiquetas(), no sus elementos) —
+            // se aplana para no romper acá por ese detalle de implementación.
+            $flatPaths = [];
+            array_walk_recursive($paths, function ($p) use (&$flatPaths) {
+                $flatPaths[] = $p;
+            });
+
+            return $this->success(
+                ['paths' => array_map('basename', $flatPaths)],
+                'PDF regenerado correctamente'
+            );
+        } catch (\Throwable $e) {
+            return $this->error('Error al regenerar el PDF: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * Para un diseñador (profile_id 2): si el nombre del archivo trae un id
+     * de venta válido, confirma que esa venta está asignada a este usuario.
+     * Sin id de venta detectable en el nombre, no bloquea (mismo criterio
+     * ya usado en downloadPdf()).
+     */
+    private function ventaDelNombrePdfPerteneceAUsuario(string $nombrePdf, int $userId): bool
+    {
+        preg_match('/^(\d+)-/', $nombrePdf, $matches);
+        if (empty($matches[1])) {
+            return true;
+        }
+
+        return \DB::table('sales')
+            ->where('id', $matches[1])
+            ->where('user_id', $userId)
+            ->exists();
     }
 }

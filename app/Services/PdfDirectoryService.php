@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Models\SaleProduct;
+use App\Services\ProductPdfResolverService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\DB;
@@ -163,7 +165,8 @@ class PdfDirectoryService
                     'nombre' => $pdf->getFilename(),
                     'ruta' => $pdf->getPathname(),
                     'tamanio' => $pdf->getSize(),
-                    'fecha_modificacion' => date('Y-m-d H:i:s', $pdf->getMTime())
+                    'fecha_modificacion' => date('Y-m-d H:i:s', $pdf->getMTime()),
+                    'design_id' => self::resolveDesignIdFromFilename($pdf->getFilename()),
                 ];
             }
         }
@@ -283,5 +286,34 @@ class PdfDirectoryService
         }
 
         return null;
+    }
+
+    /**
+     * `product_pdf_designs.id` del diseño del editor vinculado al producto+
+     * variante que generó este PDF — null si fue generado por el sistema
+     * legacy (sin diseño) o si no se pudo determinar. El nombre del archivo
+     * siempre arranca "{ventaId}-{salesProductId}-..." (ver
+     * EtiquetaService::generarEtiquetas()/generarEtiquetasDesdeDesign()) —
+     * de ahí se saca la línea de venta (`sales_products`) y, con su
+     * producto+variante, se repite la MISMA búsqueda que usa
+     * ProductPdfResolverService::resolveAndGenerate() al generar un PDF real.
+     * Es "mejor esfuerzo": el diseño vinculado puede haber cambiado desde
+     * que este PDF puntual se generó (no se guarda esa foto histórica en
+     * ningún lado) — alcanza para el botón "editar" del módulo de
+     * directorios, que lleva al diseño que HOY correspondería a ese pedido.
+     */
+    private static function resolveDesignIdFromFilename(string $nombre): ?int
+    {
+        if (!preg_match('/^\d+-(\d+)-/', $nombre, $m)) {
+            return null;
+        }
+
+        $salesProductId = (int) $m[1];
+        $productOrder = SaleProduct::find($salesProductId);
+        if (!$productOrder) {
+            return null;
+        }
+
+        return ProductPdfResolverService::findLinkedDesignId($productOrder->product_id, $productOrder->variant_id);
     }
 }
