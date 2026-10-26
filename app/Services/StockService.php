@@ -153,8 +153,13 @@ class StockService
         }
 
         // 2. General de variante — si is_heritable: 1 cae al paso 3
+        // Misma lógica que los canales: stock_status=1 (Existente) es siempre en stock,
+        // sin importar stock_quantity.
         if ($variant) {
             $variantData = $variant->variant ?? [];
+            if (($variantData['is_heritable'] ?? 0) != 1 && ($variantData['stock_status'] ?? null) == 1) {
+                return ['always_in_stock' => true];
+            }
             if (isset($variantData['stock_quantity']) && $variantData['stock_quantity'] !== null) {
                 if (($variantData['is_heritable'] ?? 0) != 1) {
                     return [
