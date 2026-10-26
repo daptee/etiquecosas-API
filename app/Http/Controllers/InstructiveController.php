@@ -68,7 +68,7 @@ class InstructiveController extends Controller
      */
     public function getActive(Request $request)
     {
-        $perPage = $request->query('quantity', 10);
+        $perPage = $request->query('quantity');
         $page = $request->query('page', 1);
 
         $query = Instructive::with('status')->active()->orderBy('position', 'asc')->orderBy('created_at', 'desc');
