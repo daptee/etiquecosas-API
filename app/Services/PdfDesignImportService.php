@@ -291,24 +291,6 @@ class PdfDesignImportService
                 continue;
             }
 
-            // Si el fondo de cada celda tiene un color DISTINTO a propósito
-            // (ej. las vistas "COLOR RANGE": cada etiqueta de la fila es de
-            // un color distinto del rango elegido, no por error) no se arma
-            // una grilla acá: "Generar grilla" regenera cada celda a partir
-            // de la celda molde (template), así que le pisaría el color
-            // propio a TODAS las celdas por el único color de esa celda
-            // molde apenas el admin cambie filas/columnas/separación —
-            // mejor que esas celdas queden sueltas (sin la comodidad de
-            // reacomodarlas todas juntas) a que una edición de grilla les
-            // borre el color real.
-            $colorKeys = array_unique(array_map(
-                fn($c) => json_encode($c['elements'][0]['color'] ?? null),
-                $cells
-            ));
-            if (count($colorKeys) > 1) {
-                continue;
-            }
-
             $xs = array_values(array_unique(array_map(fn($c) => $c['x_cm'], $cells)));
             $ys = array_values(array_unique(array_map(fn($c) => $c['y_cm'], $cells)));
             sort($xs);
