@@ -569,6 +569,26 @@ class PdfDesignImportService
             $heightCm = round(max(0.5, ($maxY - $minY + $fontSizePt * 1.3)) / self::PT_PER_CM, 2);
         }
 
+        // Interlineado real: se mide directo de la distancia entre
+        // renglones de ESTE texto en el PDF de origen — no hace falta
+        // reconstruir la regla CSS "line-height: N" de la vista legacy. La
+        // corrección por métricas de fuente que aplica el backend al
+        // generar un PDF real (ver EtiquetaService::resolverElementoDesign,
+        // $fontRatio) existe justamente para que "line_height: N" reproduzca
+        // SIEMPRE el mismo espacio visual (N veces el tamaño de fuente), sin
+        // importar qué fuente tenga asignada el elemento — así que el valor
+        // a guardar es, literalmente, la distancia entre renglones (en pt)
+        // dividida por el tamaño de fuente (en pt), tal cual se ve acá.
+        $lineHeight = null;
+        if (count($lines) > 1) {
+            $gaps = [];
+            for ($i = 1; $i < count($lines); $i++) {
+                $gaps[] = $lines[$i - 1]['y'] - $lines[$i]['y'];
+            }
+            $avgGapPt = array_sum($gaps) / count($gaps);
+            $lineHeight = round(max(0.5, min(5, $avgGapPt / $fontSizePt)), 2);
+        }
+
         return [
             'id' => 'el-imported-' . uniqid(),
             'type' => 'text',
@@ -585,6 +605,7 @@ class PdfDesignImportService
             'color' => ['mode' => 'hex', 'value' => $color],
             'text_align' => 'center',
             'vertical_align' => 'middle',
+            'line_height' => $lineHeight,
             'min_lines' => 1,
             'max_lines' => max(1, count($lines)),
             'max_chars_per_line' => max(6, (int) (max(array_map('strlen', array_column($lines, 'text'))) * 1.2)),
