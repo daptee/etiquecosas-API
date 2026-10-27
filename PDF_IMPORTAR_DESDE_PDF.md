@@ -54,7 +54,8 @@ Lo que **no** intenta hacer:
   - Todo ícono detectado queda con `icon_id: 1` (un placeholder fijo, solo para que la celda no se vea vacía) — hay que reemplazarlo por el ícono real en el editor.
   - Todo texto queda con `font_id: null` — se asigna a mano después en el editor.
 - **No infiere campos dinámicos.** Todo texto se importa como `value_mode: "fixed"` con el contenido literal que tenía el PDF (p. ej. el nombre real de un cliente de ese PDF de ejemplo) — si en realidad correspondía a `nombre_apellido` o similar, hay que cambiarlo a mano en el editor.
-- Texto que **no cae dentro de ninguna celda** (por ejemplo una leyenda suelta tipo "PEDIDO # 12345" al costado de la hoja) se preserva igual como elemento suelto en la página, fuera de cualquier fondo — **respetando su rotación real** si la vista lo dibuja girado (ver más abajo), no solo su posición.
+- Texto que **no cae dentro de ninguna celda** (por ejemplo una leyenda suelta tipo "PEDIDO # 12345" al costado de la hoja, o una celda repetida que no tiene fondo propio — ver más abajo) se preserva igual como elemento suelto en la página, fuera de cualquier fondo — **respetando su rotación real** si la vista lo dibuja girado (ver más abajo), no solo su posición.
+- Algunas vistas legacy (ej. `stars/*`, `spot-and-super-mini/PERSONALIZABLE`) repiten una celda (ícono + texto) MUCHAS veces sin pintarle un fondo de color — sin un rect que las delimite, cada ícono+texto de esas celdas se trata como texto suelto. Para no terminar mezclando el texto de celdas distintas en un solo bloque gigante (podían compartir casi la misma altura si están en la misma fila), el agrupado de texto suelto exige que estén cerca EN SIMULTÁNEO en X y en Y — una celda vecina en la misma fila está mucho más lejos en X que un salto de línea dentro de la misma celda, así que no se confunden aunque compartan la fila.
 
 ---
 

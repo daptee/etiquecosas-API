@@ -759,24 +759,57 @@ class PdfDesignImportService
         if (empty($texts)) {
             return [];
         }
-        usort($texts, fn($a, $b) => $b['y'] <=> $a['y']);
 
-        $groups = [];
-        $current = [$texts[0]];
-        for ($i = 1; $i < count($texts); $i++) {
-            $prev = $texts[$i - 1];
-            $cur = $texts[$i];
-            $gap = $prev['y'] - $cur['y'];
-            if ($gap <= ($cur['fontSizePt'] ?? 12) * 2.2) {
-                $current[] = $cur;
-            } else {
-                $groups[] = $current;
-                $current = [$cur];
+        // Dos textos sueltos son del MISMO bloque solo si están cerca EN
+        // SIMULTÁNEO en X y en Y — no alcanza con que compartan altura (eso
+        // se probó con un ordenamiento global por X como paso previo, y se
+        // rompía: varias vistas legacy repiten una celda SIN fondo propio
+        // en la MISMA fila (ej. la fila "spot" de stars/spot-and-super-mini
+        // — un ícono + "NOMBRE"/"APELLIDO" por celda, sin rect de fondo
+        // detrás, ver findSmallestContainingRect) Y la página puede tener
+        // OTRA sección con su propia grilla de columnas en otro rango de Y
+        // — si el espaciado entre columnas de una sección coincide por
+        // casualidad con el de la otra, ordenar TODO por X mezclaba texto
+        // de dos secciones distintas (lejísimos en Y) en una sola columna.
+        // Acá se arman "componentes conectados": cada texto se une a
+        // cualquier otro que esté a la vez cerca en X (una celda vecina
+        // está mucho más lejos que el salto de línea dentro de la MISMA
+        // celda) y en Y (el salto de línea normal) — sin im portar en qué
+        // orden se los recorra ni qué otras columnas/secciones haya en el
+        // medio.
+        $n = count($texts);
+        $parent = range(0, $n - 1);
+        $find = function (int $i) use (&$find, &$parent) {
+            while ($parent[$i] !== $i) {
+                $parent[$i] = $parent[$parent[$i]];
+                $i = $parent[$i];
+            }
+            return $i;
+        };
+
+        for ($i = 0; $i < $n; $i++) {
+            for ($j = $i + 1; $j < $n; $j++) {
+                $a = $texts[$i];
+                $b = $texts[$j];
+                $fontSize = max($a['fontSizePt'] ?? 12, $b['fontSizePt'] ?? 12);
+                $gapX = abs($a['x'] - $b['x']);
+                $gapY = abs($a['y'] - $b['y']);
+                if ($gapX <= max($fontSize * 6, 40) && $gapY <= $fontSize * 2.2) {
+                    $ri = $find($i);
+                    $rj = $find($j);
+                    if ($ri !== $rj) {
+                        $parent[$ri] = $rj;
+                    }
+                }
             }
         }
-        $groups[] = $current;
 
-        return $groups;
+        $groupsByRoot = [];
+        foreach ($texts as $i => $t) {
+            $groupsByRoot[$find($i)][] = $t;
+        }
+
+        return array_values($groupsByRoot);
     }
 
     /**

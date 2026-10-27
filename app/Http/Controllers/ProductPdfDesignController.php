@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\LabelShape;
 use App\Models\PersonalizationIcon;
 use App\Models\Product;
 use App\Models\ProductPdf;
@@ -337,6 +338,17 @@ class ProductPdfDesignController extends Controller
             $fontFamily = isset($viewPaths[$idx]) ? $this->detectLegacyFontFamily($viewPaths[$idx]) : self::DEFAULT_LEGACY_FONT_FAMILY;
             $fontId = $this->resolveTypographyIdForFamily($fontFamily);
 
+            // Las vistas "*-and-spot*"/"spot-and-*"/"spot/PERSONALIZABLE*"
+            // traen una fila de celdas circulares (`circulo-personaje`, ver
+            // la vista) que el fondo detectado NO reproduce como círculo
+            // (nada en la vista le pone un color de fondo propio — el
+            // "fondo" que sale es, en realidad, el color del PROPIO ícono).
+            // Si hay un label_shape circular cargado, se lo asignamos a esas
+            // celdas puntuales para que el editor las muestre/recorte como
+            // círculo en vez de rectángulo.
+            $spotCellCount = isset($viewPaths[$idx]) ? $this->detectSpotCellCount($viewPaths[$idx]) : null;
+            $spotShapeId = $spotCellCount ? $this->resolveSpotLabelShapeId() : null;
+
             foreach ($imported['pages'] ?? [] as $page) {
                 $page['name'] = 'Página ' . (count($pages) + 1);
                 $iconPos = 0;
@@ -357,6 +369,11 @@ class ProductPdfDesignController extends Controller
                     }
                 }
                 unset($el);
+
+                if ($spotShapeId && $spotCellCount) {
+                    $this->applySpotLabelShape($page, $spotCellCount, $spotShapeId);
+                }
+
                 $pages[] = $page;
             }
         }
@@ -1118,6 +1135,188 @@ class ProductPdfDesignController extends Controller
 
         $file = TypographyFile::where('file_name', 'like', "%{$family}%")->first();
         return $file?->typography_id;
+    }
+
+    /**
+     * Cantidad de celdas circulares ("$plantilla['imagen']" + nombre, sin
+     * fondo de color propio) que arma una vista legacy — viene literal en
+     * su `.blade.php`: `<div class="circulo-principal"> @for ($i = 0; $i <
+     * N; $i++) <div class="circulo-personaje">` (ver las vistas "spot",
+     * "spot-and-maxi", "maxi-and-spot" y "spot-and-super-mini"). El número
+     * varía por vista (20, 35, 10, ...), así que se lee del archivo en vez
+     * de asumir un valor fijo.
+     * Null si la vista no tiene esta sección.
+     */
+    private function detectSpotCellCount(string $viewPath): ?int
+    {
+        $viewPath = str_starts_with($viewPath, 'tematica/') ? $viewPath : "tematica/{$viewPath}";
+        $bladePath = resource_path('views/' . $viewPath . '.blade.php');
+        if (!is_file($bladePath)) {
+            return null;
+        }
+
+        $content = file_get_contents($bladePath);
+        if (!preg_match('/circulo-principal["\'][\s\S]{0,200}?@for\s*\(\s*\$i\s*=\s*0\s*;\s*\$i\s*<\s*(\d+)/', $content, $m)) {
+            return null;
+        }
+
+        return (int) $m[1];
+    }
+
+    /**
+     * Id del label_shape circular que representa estas celdas "spot" — por
+     * nombre exacto ("Spot Grande", el que ya está cargado en el catálogo).
+     * Null si todavía no existe esa forma — ahí no se toca nada (mismo
+     * criterio que el resto de los matcheos de este importador: si no hay
+     * nada para asignar, se deja como venía).
+     */
+    private function resolveSpotLabelShapeId(): ?int
+    {
+        return LabelShape::where('name', 'Spot Grande')->value('id');
+    }
+
+    /**
+     * Le asigna `label_shape_id` (círculo) al elemento `background` de cada
+     * una de las celdas "spot" detectadas — identificadas por ser la
+     * grilla de `data.pages[].grids[]` cuya cantidad de celdas (cols×rows)
+     * coincide EXACTO con la que arma esta vista puntual
+     * (detectSpotCellCount()). El "fondo" que detecta el importador para
+     * estas celdas es, en realidad, el color del PROPIO ícono (la vista no
+     * les pinta fondo) — queda chico, pegado solo al ícono, con el nombre
+     * aparte y mal acomodado. El círculo real tiene que englobar ícono +
+     * nombre juntos (ver ejemplo real adjunto por el usuario: la etiqueta
+     * final es UNA pieza circular con el dibujo arriba y el nombre abajo,
+     * no un círculo chico pegado solo al ícono) — así que para cada celda
+     * se recalcula el fondo desde cero: un cuadrado (para que el círculo
+     * salga redondo, no ovalado) centrado en el CENTRO de la caja que
+     * engloba ícono+texto, con un margen chico alrededor.
+     */
+    private function applySpotLabelShape(array &$page, int $spotCellCount, int $spotShapeId): void
+    {
+        $grids = $page['grids'] ?? [];
+        $matchingGrid = null;
+        foreach ($grids as $grid) {
+            if (((int) $grid['cols']) * ((int) $grid['rows']) === $spotCellCount) {
+                $matchingGrid = $grid;
+                break;
+            }
+        }
+        if (!$matchingGrid) {
+            return;
+        }
+
+        $indexById = [];
+        foreach ($page['elements'] as $index => $el) {
+            $indexById[$el['id']] = $index;
+        }
+
+        $cellsIdLists = [$matchingGrid['template']];
+        foreach ($matchingGrid['members'] as $member) {
+            $ids = array_column(array_filter($member), 'id');
+            if (!empty($ids)) {
+                $cellsIdLists[] = $ids;
+            }
+        }
+
+        // El nombre de esta celda ("NOMBRE APELLIDO") NO forma parte de la
+        // grilla — la vista no le pinta fondo (ver nota de arriba), así que
+        // en import() queda como texto SUELTO (PdfDesignImportService::
+        // mergeLooseTextLines), nunca llega a asociarse a esta celda vía
+        // template/members. Hay que encontrarlo aparte: el texto suelto más
+        // cercano al ícono de la celda (en línea recta, centro a centro) es
+        // el suyo — cada texto se "reclama" una sola vez para no asignarle
+        // el mismo nombre a dos íconos distintos.
+        $griddedIds = [];
+        foreach ($grids as $g) {
+            foreach ($g['template'] as $id) {
+                $griddedIds[$id] = true;
+            }
+            foreach ($g['members'] as $member) {
+                foreach (array_filter($member) as $entry) {
+                    $griddedIds[$entry['id']] = true;
+                }
+            }
+        }
+        $looseTextIndexes = [];
+        foreach ($page['elements'] as $index => $el) {
+            if (($el['type'] ?? null) === 'text' && !isset($griddedIds[$el['id']])) {
+                $looseTextIndexes[] = $index;
+            }
+        }
+
+        $padding = 0.3; // cm de aire entre ícono+texto y el borde del círculo
+        foreach ($cellsIdLists as $ids) {
+            $backgroundIndex = null;
+            $iconBox = null; // [minX, minY, maxX, maxY]
+            foreach ($ids as $id) {
+                $index = $indexById[$id] ?? null;
+                if ($index === null) {
+                    continue;
+                }
+                $el = $page['elements'][$index];
+                if (($el['type'] ?? null) === 'background') {
+                    $backgroundIndex = $index;
+                    continue;
+                }
+                if (($el['type'] ?? null) !== 'icon') {
+                    continue;
+                }
+                $iconBox = [$el['x_cm'], $el['y_cm'], $el['x_cm'] + $el['width_cm'], $el['y_cm'] + $el['height_cm']];
+            }
+
+            if ($backgroundIndex === null || !$iconBox) {
+                continue;
+            }
+            $iconCenterX = ($iconBox[0] + $iconBox[2]) / 2;
+            $iconCenterY = ($iconBox[1] + $iconBox[3]) / 2;
+
+            // Texto suelto sin reclamar más cercano a ESTE ícono.
+            $bestTextIndex = null;
+            $bestDistance = INF;
+            $bestKey = null;
+            foreach ($looseTextIndexes as $key => $textIndex) {
+                $t = $page['elements'][$textIndex];
+                $textCenterX = $t['x_cm'] + $t['width_cm'] / 2;
+                $textCenterY = $t['y_cm'] + $t['height_cm'] / 2;
+                $distance = ($textCenterX - $iconCenterX) ** 2 + ($textCenterY - $iconCenterY) ** 2;
+                if ($distance < $bestDistance) {
+                    $bestDistance = $distance;
+                    $bestTextIndex = $textIndex;
+                    $bestKey = $key;
+                }
+            }
+
+            $unionBox = $iconBox;
+            if ($bestTextIndex !== null) {
+                unset($looseTextIndexes[$bestKey]);
+                $t = $page['elements'][$bestTextIndex];
+                // El texto se recentra horizontalmente bajo el ícono (su
+                // ancho/alto, estimados por cantidad de caracteres, se
+                // mantienen — solo se corrige la posición) — mismo eje
+                // vertical que en el PDF real de referencia.
+                $textCenterX = $t['x_cm'] + $t['width_cm'] / 2;
+                $page['elements'][$bestTextIndex]['x_cm'] = round($t['x_cm'] + ($iconCenterX - $textCenterX), 2);
+                $t = $page['elements'][$bestTextIndex];
+                $textBox = [$t['x_cm'], $t['y_cm'], $t['x_cm'] + $t['width_cm'], $t['y_cm'] + $t['height_cm']];
+                $unionBox = [
+                    min($iconBox[0], $textBox[0]),
+                    min($iconBox[1], $textBox[1]),
+                    max($iconBox[2], $textBox[2]),
+                    max($iconBox[3], $textBox[3]),
+                ];
+            }
+
+            $centerX = ($unionBox[0] + $unionBox[2]) / 2;
+            $centerY = ($unionBox[1] + $unionBox[3]) / 2;
+            $side = max($unionBox[2] - $unionBox[0], $unionBox[3] - $unionBox[1]) + $padding * 2;
+
+            $page['elements'][$backgroundIndex]['x_cm'] = round($centerX - $side / 2, 2);
+            $page['elements'][$backgroundIndex]['y_cm'] = round($centerY - $side / 2, 2);
+            $page['elements'][$backgroundIndex]['width_cm'] = round($side, 2);
+            $page['elements'][$backgroundIndex]['height_cm'] = round($side, 2);
+            $page['elements'][$backgroundIndex]['label_shape_id'] = $spotShapeId;
+            $page['elements'][$backgroundIndex]['color'] = ['mode' => 'hex', 'value' => '#FFFFFF'];
+        }
     }
 
     /**
