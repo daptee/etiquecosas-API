@@ -1340,6 +1340,31 @@ class ProductPdfDesignController extends Controller
             $page['elements'][$backgroundIndex]['height_cm'] = round($side, 2);
             $page['elements'][$backgroundIndex]['label_shape_id'] = $spotShape->id;
             $page['elements'][$backgroundIndex]['color'] = ['mode' => 'hex', 'value' => '#FFFFFF'];
+
+            // `max_chars_per_line` venía calculado a partir del renglón más
+            // largo del PDF de origen (ver PdfDesignImportService::
+            // textsToTextElement) — un ajuste MUY justo, pensado solo para
+            // que el nombre/apellido real entrara en su propio renglón. El
+            // editor, al mostrar el marcador de la variable sin una venta
+            // real detrás ("(x)Nombre y apellido", bastante más largo que
+            // cualquier nombre real), corta por ese mismo límite y termina
+            // partiéndolo en 3 renglones feos en vez de 2. El límite real
+            // de la celda no es "lo justo para el nombre de muestra", es
+            // cuántos caracteres entran de verdad en el ancho disponible
+            // del círculo a este tamaño de fuente — se recalcula geométrico
+            // (ancho disponible ÷ ancho estimado por carácter) y se usa el
+            // mayor entre ese valor y el ya calculado, nunca para achicarlo.
+            if ($bestTextIndex !== null) {
+                $textEl = $page['elements'][$bestTextIndex];
+                $fontSizePt = ((float) ($textEl['font_size_px'] ?? 12)) * 0.75;
+                $availableWidthCm = max(1.0, $side - 0.3);
+                $geometricMaxChars = max(6, (int) floor($availableWidthCm * 28.3465 / ($fontSizePt * 0.6)));
+                $page['elements'][$bestTextIndex]['max_chars_per_line'] = max(
+                    (int) ($textEl['max_chars_per_line'] ?? 6),
+                    $geometricMaxChars
+                );
+            }
+
             $resizedBackgroundBoxes[$slot] = ['x_cm' => $page['elements'][$backgroundIndex]['x_cm'], 'y_cm' => $page['elements'][$backgroundIndex]['y_cm']];
             $cellComponents[$slot] = ['background' => $backgroundIndex, 'icon' => $iconIndex, 'text' => $bestTextIndex];
 
