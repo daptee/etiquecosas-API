@@ -347,7 +347,7 @@ class ProductPdfDesignController extends Controller
             // celdas puntuales para que el editor las muestre/recorte como
             // círculo en vez de rectángulo.
             $spotCellCount = isset($viewPaths[$idx]) ? $this->detectSpotCellCount($viewPaths[$idx]) : null;
-            $spotShapeId = $spotCellCount ? $this->resolveSpotLabelShapeId() : null;
+            $spotShape = $spotCellCount ? $this->resolveSpotLabelShape() : null;
 
             foreach ($imported['pages'] ?? [] as $page) {
                 $page['name'] = 'Página ' . (count($pages) + 1);
@@ -370,8 +370,8 @@ class ProductPdfDesignController extends Controller
                 }
                 unset($el);
 
-                if ($spotShapeId && $spotCellCount) {
-                    $this->applySpotLabelShape($page, $spotCellCount, $spotShapeId);
+                if ($spotShape && $spotCellCount) {
+                    $this->applySpotLabelShape($page, $spotCellCount, $spotShape);
                 }
 
                 $pages[] = $page;
@@ -1164,15 +1164,16 @@ class ProductPdfDesignController extends Controller
     }
 
     /**
-     * Id del label_shape circular que representa estas celdas "spot" — por
-     * nombre exacto ("Spot", el que ya está cargado en el catálogo). Null
-     * si todavía no existe esa forma — ahí no se toca nada (mismo criterio
-     * que el resto de los matcheos de este importador: si no hay nada para
-     * asignar, se deja como venía).
+     * El label_shape circular que representa estas celdas "spot" — por
+     * nombre exacto ("Spot", el que ya está cargado en el catálogo, 3×3cm
+     * — el mismo tamaño que declara `.circulo-personaje` en el CSS de estas
+     * vistas). Null si todavía no existe esa forma — ahí no se toca nada
+     * (mismo criterio que el resto de los matcheos de este importador: si
+     * no hay nada para asignar, se deja como venía).
      */
-    private function resolveSpotLabelShapeId(): ?int
+    private function resolveSpotLabelShape(): ?LabelShape
     {
-        return LabelShape::where('name', 'Spot')->value('id');
+        return LabelShape::where('name', 'Spot')->first();
     }
 
     /**
@@ -1187,11 +1188,14 @@ class ProductPdfDesignController extends Controller
      * nombre juntos (ver ejemplo real adjunto por el usuario: la etiqueta
      * final es UNA pieza circular con el dibujo arriba y el nombre abajo,
      * no un círculo chico pegado solo al ícono) — así que para cada celda
-     * se recalcula el fondo desde cero: un cuadrado (para que el círculo
-     * salga redondo, no ovalado) centrado en el CENTRO de la caja que
-     * engloba ícono+texto, con un margen chico alrededor.
+     * se recalcula el fondo desde cero, centrado en el CENTRO de la caja
+     * que engloba ícono+texto. El TAMAÑO de ese cuadrado NO se calcula a
+     * partir de ícono+texto (podía salir más grande que el real, ver
+     * `.circulo-personaje { width: 3cm; height: 3cm }` en el CSS de estas
+     * vistas) — se usa directo el tamaño del label_shape del catálogo, que
+     * es ese mismo valor fijo.
      */
-    private function applySpotLabelShape(array &$page, int $spotCellCount, int $spotShapeId): void
+    private function applySpotLabelShape(array &$page, int $spotCellCount, LabelShape $spotShape): void
     {
         $grids = $page['grids'] ?? [];
         $matchingGridIndex = null;
@@ -1250,7 +1254,6 @@ class ProductPdfDesignController extends Controller
             }
         }
 
-        $padding = 0.3; // cm de aire entre ícono+texto y el borde del círculo
         foreach ($cellsIdLists as $cell) {
             $slot = $cell['slot'];
             $backgroundIndex = null;
@@ -1317,13 +1320,13 @@ class ProductPdfDesignController extends Controller
 
             $centerX = ($unionBox[0] + $unionBox[2]) / 2;
             $centerY = ($unionBox[1] + $unionBox[3]) / 2;
-            $side = max($unionBox[2] - $unionBox[0], $unionBox[3] - $unionBox[1]) + $padding * 2;
+            $side = (float) $spotShape->width_cm; // tamaño FIJO del catálogo (ver nota arriba) — no se calcula a partir de ícono+texto.
 
             $page['elements'][$backgroundIndex]['x_cm'] = round($centerX - $side / 2, 2);
             $page['elements'][$backgroundIndex]['y_cm'] = round($centerY - $side / 2, 2);
             $page['elements'][$backgroundIndex]['width_cm'] = round($side, 2);
             $page['elements'][$backgroundIndex]['height_cm'] = round($side, 2);
-            $page['elements'][$backgroundIndex]['label_shape_id'] = $spotShapeId;
+            $page['elements'][$backgroundIndex]['label_shape_id'] = $spotShape->id;
             $page['elements'][$backgroundIndex]['color'] = ['mode' => 'hex', 'value' => '#FFFFFF'];
 
             // "Relación" ícono+nombre (ver PdfDesignImportService::

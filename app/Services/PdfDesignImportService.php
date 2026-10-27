@@ -702,17 +702,46 @@ class PdfDesignImportService
             'content' => $content,
             'value_mode' => 'fixed', // literal, tal cual salía en el PDF original — pasarlo a dynamic_field es manual en el editor
             'font_id' => null, // sin matchear — completar a mano en el editor
+            'font_value_mode' => 'fixed',
             'font_size_px' => round($fontSizePt / 0.75),
             'font_weight' => 400,
             'color' => ['mode' => 'hex', 'value' => $color],
             'text_align' => 'center',
             'vertical_align' => 'middle',
+            'vertical_offset_cm' => self::computeVerticalOffsetCm($heightCm, count($lines), $fontSizePt, $lineHeight),
             'line_height' => $lineHeight,
             'min_lines' => 1,
             'max_lines' => max(1, count($lines)),
             'max_chars_per_line' => max(6, (int) (max(array_map('strlen', array_column($lines, 'text'))) * 1.2)),
             'editable_by_customer' => false,
         ];
+    }
+
+    /**
+     * Replica `PdfDesignHelper.resolveVerticalOffsetCm()` del front — el
+     * editor lo recalcula y lo "estampa" en CADA guardado (ver
+     * `pages/productPdfDesigns/edit/[id].vue`), y ESE campo entra en el
+     * cálculo de `sig` (la firma que usa "Generar grilla" para saber si una
+     * celda sigue intacta) — si el importador no lo deja ya seteado como lo
+     * haría el editor, la firma de un texto recién importado no coincide
+     * con la que el editor calcula apenas lo carga (aunque nadie haya
+     * tocado nada todavía), y "Generar grilla" trata esa celda como
+     * "modificada": mueve el fondo (sin este campo extra) pero deja el
+     * texto sin tocar. Acá, en vez de reimplementar el ajuste de renglones
+     * por ancho de caracteres del front, se usa directo la cantidad de
+     * renglones YA conocida (la del PDF real), que es lo que ese ajuste
+     * tendría que reproducir de todos modos.
+     */
+    private static function computeVerticalOffsetCm(float $heightCm, int $lineCount, float $fontSizePt, ?float $lineHeight): float
+    {
+        $fontSizePx = $fontSizePt / 0.75;
+        $effectiveLineHeight = $lineHeight ?? 1.15; // PDF_DEFAULT_LINE_HEIGHT del front
+        $lineCount = max(1, $lineCount);
+        $cmPerPx = 2.54 / 96;
+        $textBlockHeightCm = $lineCount * $fontSizePx * $effectiveLineHeight * $cmPerPx;
+        $slackCm = max(0, $heightCm - $textBlockHeightCm);
+
+        return round($slackCm / 2, 2); // vertical_align siempre 'middle' en este importador
     }
 
     /**
@@ -796,11 +825,13 @@ class PdfDesignImportService
             'content' => $content,
             'value_mode' => 'fixed',
             'font_id' => null,
+            'font_value_mode' => 'fixed',
             'font_size_px' => round($fontSizePt / 0.75),
             'font_weight' => 400,
             'color' => ['mode' => 'hex', 'value' => $color],
             'text_align' => 'center',
             'vertical_align' => 'middle',
+            'vertical_offset_cm' => self::computeVerticalOffsetCm($heightCm, 1, $fontSizePt, null),
             'min_lines' => 1,
             'max_lines' => 1,
             'max_chars_per_line' => max(6, (int) (strlen($content) * 1.2)),
