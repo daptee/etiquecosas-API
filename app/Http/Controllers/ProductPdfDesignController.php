@@ -1391,7 +1391,35 @@ class ProductPdfDesignController extends Controller
         // x de cada columna (y el y de cada fila) por separado, usando la
         // posición "col,row" de cada celda en la grilla, el resultado no
         // se arruina por esas variaciones chicas.
+        //
+        // El "ancho de celda" que usa el editor al regenerar columnas NO es
+        // el lado del círculo (`$side`): `applyGridParams` mide el
+        // rectángulo que engloba TODOS los elementos de la celda molde
+        // (fondo + ícono + texto) y avanza cada columna/fila esa medida +
+        // el gap. El texto del nombre es más ANCHO que el círculo de 3cm
+        // (se centra en él pero sobresale a los costados) aunque entra
+        // bien en su alto — por eso el paso horizontal real de la celda
+        // molde es más ancho que 3cm, y si el gap se calculara contra 3cm
+        // quedaba de más: la columna ya no caía en el lugar original.
+        $templateIds = $page['grids'][$matchingGridIndex]['template'];
+        $templateMinX = INF;
+        $templateMinY = INF;
+        $templateMaxX = -INF;
+        $templateMaxY = -INF;
+        foreach ($templateIds as $id) {
+            $index = $indexById[$id] ?? null;
+            if ($index === null) {
+                continue;
+            }
+            $el = $page['elements'][$index];
+            $templateMinX = min($templateMinX, $el['x_cm']);
+            $templateMinY = min($templateMinY, $el['y_cm']);
+            $templateMaxX = max($templateMaxX, $el['x_cm'] + $el['width_cm']);
+            $templateMaxY = max($templateMaxY, $el['y_cm'] + $el['height_cm']);
+        }
         $side = (float) $spotShape->width_cm;
+        $spanXTemplate = $templateMaxX > $templateMinX ? $templateMaxX - $templateMinX : $side;
+        $spanYTemplate = $templateMaxY > $templateMinY ? $templateMaxY - $templateMinY : $side;
         $sumXByCol = [];
         $countXByCol = [];
         $sumYByRow = [];
@@ -1416,10 +1444,10 @@ class ProductPdfDesignController extends Controller
         $avgXValues = array_values($avgXByCol);
         $avgYValues = array_values($avgYByRow);
         if (count($avgXValues) > 1) {
-            $page['grids'][$matchingGridIndex]['gap_x_cm'] = round($avgXValues[1] - $avgXValues[0] - $side, 2);
+            $page['grids'][$matchingGridIndex]['gap_x_cm'] = round($avgXValues[1] - $avgXValues[0] - $spanXTemplate, 2);
         }
         if (count($avgYValues) > 1) {
-            $page['grids'][$matchingGridIndex]['gap_y_cm'] = round($avgYValues[1] - $avgYValues[0] - $side, 2);
+            $page['grids'][$matchingGridIndex]['gap_y_cm'] = round($avgYValues[1] - $avgYValues[0] - $spanYTemplate, 2);
         }
     }
 
