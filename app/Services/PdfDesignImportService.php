@@ -74,6 +74,7 @@ class PdfDesignImportService
 
         $elements = [];
         $cellRecords = [];
+        $layoutGroups = [];
         $pageHeightPt = $pageSizePt['h'];
 
         foreach ($cellRects as $idx => $rect) {
@@ -93,6 +94,22 @@ class PdfDesignImportService
             if (!empty($textsByCell[$idx])) {
                 $cellElements[] = self::textsToTextElement($textsByCell[$idx], $pageHeightPt, $rect, $iconBox);
                 $shape[] = 'text';
+            }
+
+            // "Relación" del editor (data.pages[].layout_groups) — mantiene
+            // SIEMPRE la misma separación/alineación entre el ícono y su
+            // nombre, recentrados en el fondo de la celda, cuando el PDF
+            // real tenga un nombre más corto/largo que el de muestra (ver
+            // EtiquetaService::aplicarLayoutGroups). Solo tiene sentido
+            // cuando la celda tiene AMBOS (ícono y texto) — se arma con la
+            // misma separación/lado que ya se detectó recién arriba para no
+            // superponerlos.
+            if ($iconBox && !empty($textsByCell[$idx])) {
+                $layoutGroups[] = self::buildIconTextLayoutGroup(
+                    $cellElements[1], // [background, icon, ...]
+                    end($cellElements), // el texto siempre se agrega último arriba
+                    $cellElements[0]['id']
+                );
             }
 
             // Agrupamos fondo + ícono de UNA celda bajo un group_id
@@ -138,6 +155,14 @@ class PdfDesignImportService
             $elements[] = self::textsToTextElement($group, $pageHeightPt, null, null, $pageSizePt['w']);
         }
 
+        // Nota: algunas vistas legacy (ej. "maxi") dibujan el ícono y el
+        // nombre como DOS celdas adyacentes, cada una con su propio fondo
+        // (no una celda compartida) — a propósito NO se arma una "Relación"
+        // ahí: sin un fondo en común que los contenga a los dos, el ancla
+        // de la relación (el punto medio de ícono+texto) no siempre
+        // reproduce exacto la separación original al recentrarse en un PDF
+        // real, y terminaba superponiendo el ícono con el fondo del texto
+        // (quedan sin esta mejora, igual que antes).
         $sheet = [
             'width_cm' => round($pageSizePt['w'] / self::PT_PER_CM, 2),
             'height_cm' => round($pageSizePt['h'] / self::PT_PER_CM, 2),
@@ -157,10 +182,87 @@ class PdfDesignImportService
         if (!empty($grids)) {
             $page['grids'] = $grids;
         }
+        if (!empty($layoutGroups)) {
+            $page['layout_groups'] = $layoutGroups;
+        }
 
         return [
             'pages' => [$page],
         ];
+    }
+
+    /**
+     * "Relación" de un ícono con su texto (`PdfLayoutGroup`, ver
+     * useDesignEditor.ts::onCreateLayoutGroup/deriveLinks) — mismo criterio
+     * que ya usa el editor del front al crear una a mano: se mide el margen
+     * libre real entre el ícono y el texto en cada eje, el eje con MÁS
+     * separación es el del `gap` (y ESE valor, en cm, es la distancia que
+     * va a mantener siempre la relación) — el otro eje queda centrado. Así,
+     * si el nombre real de una venta sale más corto o más largo que el de
+     * muestra, ícono+texto se recentran juntos en vez de quedar pegados a
+     * un borde (ver EtiquetaService::aplicarLayoutGroups).
+     *
+     * Se centran en `$containerElementId` si se pasa uno (el fondo de la
+     * celda, cuando ícono y texto comparten UN mismo fondo) — si no, en el
+     * punto medio de la caja que engloba a los dos (cuando cada uno tiene
+     * su propio fondo por separado, ej. las vistas "maxi": ícono y nombre
+     * son dos celdas adyacentes, no una compartida).
+     */
+    public static function buildIconTextLayoutGroup(array $icon, array $text, ?string $containerElementId = null): array
+    {
+        $iconLeft = $icon['x_cm'];
+        $iconRight = $icon['x_cm'] + $icon['width_cm'];
+        $iconTop = $icon['y_cm'];
+        $iconBottom = $icon['y_cm'] + $icon['height_cm'];
+        $textLeft = $text['x_cm'];
+        $textRight = $text['x_cm'] + $text['width_cm'];
+        $textTop = $text['y_cm'];
+        $textBottom = $text['y_cm'] + $text['height_cm'];
+
+        // Si el ícono queda a la izquierda, el margen libre entre su borde
+        // derecho y el izquierdo del texto es textLeft-iconRight (positivo);
+        // si en realidad el texto está a la izquierda, ese cálculo da
+        // negativo y el que da positivo es el opuesto — así, sin asumir de
+        // qué lado está cada uno, el de mayor valor es el que realmente los
+        // separa en ese eje.
+        $gapIconLeftOfText = $textLeft - $iconRight;
+        $gapTextLeftOfIcon = $iconLeft - $textRight;
+        $gapIconAboveText = $textTop - $iconBottom;
+        $gapTextAboveIcon = $iconTop - $textBottom;
+
+        $horizontalGap = max($gapIconLeftOfText, $gapTextLeftOfIcon);
+        $verticalGap = max($gapIconAboveText, $gapTextAboveIcon);
+
+        if ($horizontalGap >= $verticalGap) {
+            $members = $gapIconLeftOfText >= $gapTextLeftOfIcon ? [$icon['id'], $text['id']] : [$text['id'], $icon['id']];
+            $links = [[
+                'x' => ['mode' => 'gap', 'side' => 'after', 'cm' => round(max(0, $horizontalGap), 2)],
+                'y' => ['mode' => 'align', 'value' => 'center'],
+            ]];
+        } else {
+            $members = $gapIconAboveText >= $gapTextAboveIcon ? [$icon['id'], $text['id']] : [$text['id'], $icon['id']];
+            $links = [[
+                'x' => ['mode' => 'align', 'value' => 'center'],
+                'y' => ['mode' => 'gap', 'side' => 'after', 'cm' => round(max(0, $verticalGap), 2)],
+            ]];
+        }
+
+        $group = [
+            'id' => 'layout-imported-' . uniqid(),
+            'members' => $members,
+            'links' => $links,
+        ];
+
+        if ($containerElementId) {
+            $group['container_element_id'] = $containerElementId;
+        } else {
+            $group['anchor'] = [
+                'x_cm' => round((min($iconLeft, $textLeft) + max($iconRight, $textRight)) / 2, 2),
+                'y_cm' => round((min($iconTop, $textTop) + max($iconBottom, $textBottom)) / 2, 2),
+            ];
+        }
+
+        return $group;
     }
 
     /**

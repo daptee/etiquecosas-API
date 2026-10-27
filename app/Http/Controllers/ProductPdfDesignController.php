@@ -1247,6 +1247,7 @@ class ProductPdfDesignController extends Controller
         $padding = 0.3; // cm de aire entre ícono+texto y el borde del círculo
         foreach ($cellsIdLists as $ids) {
             $backgroundIndex = null;
+            $iconIndex = null;
             $iconBox = null; // [minX, minY, maxX, maxY]
             foreach ($ids as $id) {
                 $index = $indexById[$id] ?? null;
@@ -1261,6 +1262,7 @@ class ProductPdfDesignController extends Controller
                 if (($el['type'] ?? null) !== 'icon') {
                     continue;
                 }
+                $iconIndex = $index;
                 $iconBox = [$el['x_cm'], $el['y_cm'], $el['x_cm'] + $el['width_cm'], $el['y_cm'] + $el['height_cm']];
             }
 
@@ -1316,6 +1318,17 @@ class ProductPdfDesignController extends Controller
             $page['elements'][$backgroundIndex]['height_cm'] = round($side, 2);
             $page['elements'][$backgroundIndex]['label_shape_id'] = $spotShapeId;
             $page['elements'][$backgroundIndex]['color'] = ['mode' => 'hex', 'value' => '#FFFFFF'];
+
+            // "Relación" ícono+nombre (ver PdfDesignImportService::
+            // buildIconTextLayoutGroup) — mismo criterio que el resto del
+            // importador, centrada ahora en el círculo ya redimensionado.
+            if ($bestTextIndex !== null && $iconIndex !== null) {
+                $page['layout_groups'][] = PdfDesignImportService::buildIconTextLayoutGroup(
+                    $page['elements'][$iconIndex],
+                    $page['elements'][$bestTextIndex],
+                    $page['elements'][$backgroundIndex]['id']
+                );
+            }
         }
     }
 
