@@ -374,6 +374,8 @@ class ProductPdfDesignController extends Controller
                     $this->applySpotLabelShape($page, $spotCellCount, $spotShape);
                 }
 
+                $this->applyLegacyTextSizeRules($page, $viewPaths[$idx] ?? null);
+
                 $pages[] = $page;
             }
         }
@@ -1187,6 +1189,194 @@ class ProductPdfDesignController extends Controller
     }
 
     /**
+     * Prácticamente todas las vistas legacy achican la letra a mano con CSS
+     * cuando el nombre completo es largo — un patrón idéntico en las ~115
+     * vistas: `$fontClass = strlen($nombre) > 20 ? 'extra-small-text-size' :
+     * (strlen($nombre) > 16 ? 'small-text-size' : 'normal-text-size')` (ver
+     * EtiquetaService::generarEtiquetas), clase que se le agrega al texto y
+     * que cada vista resuelve con SU PROPIO tamaño en pt según el
+     * contenedor (ej. `.circulo-personaje p.normal-text-size { font-size:
+     * 12pt }`, `.etiqueta-maxi-text p.small-text-size { font-size: 12pt }`
+     * — cada contenedor tiene los suyos). El importador reproduce esto leyendo
+     * esas 3 reglas DIRECTO del .blade.php, para cualquier contenedor de
+     * cualquier temática (no hace falta hardcodear vista por vista): devuelve
+     * `[containerClass => ['normal' => pt, 'small' => pt, 'extra_small' =>
+     * pt]]` con lo que encuentre (un contenedor puede no tener los 3
+     * niveles).
+     */
+    private function extractTextSizeTiersFromView(string $content): array
+    {
+        $tiers = [];
+        if (preg_match_all(
+            '/\.([\w-]+)\s+p\.(normal|small|extra-small)-text-size\s*\{[^}]*?font-size:\s*([\d.]+)pt/i',
+            $content,
+            $matches,
+            PREG_SET_ORDER
+        )) {
+            foreach ($matches as $m) {
+                $tier = str_replace('-', '_', $m[2]);
+                $tiers[$m[1]][$tier] = (float) $m[3];
+            }
+        }
+
+        return $tiers;
+    }
+
+    /**
+     * Cuántas veces se repite una celda de clase `$className` en la vista —
+     * generaliza `detectSpotCellCount()` (que solo sabe leer el `@for`
+     * simple de la fila "spot") a CUALQUIER contenedor, incluidos los que
+     * arman la repetición con un `@for` de filas anidado dentro de uno de
+     * columnas (ej. la tabla "maxi": `@for ($row...) @for ($col...) <div
+     * class="etiqueta-maxi-text">`, 6×3 = 18 celdas). Se ubica la primera
+     * aparición literal de `class="$className"` en el archivo y se cuentan
+     * los `@for`/`@endfor` anteriores a esa posición con una pila simple —
+     * lo que quede sin cerrar en la pila al llegar ahí son los bucles que
+     * ENGLOBAN esa clase, y el total de celdas es el producto de sus
+     * límites. Null si la clase no aparece o no está dentro de ningún `@for`.
+     */
+    private function countRepeatedClassOccurrences(string $content, string $className): ?int
+    {
+        if (!preg_match('/class=["\']' . preg_quote($className, '/') . '(?=["\'\s])/', $content, $classMatch, PREG_OFFSET_CAPTURE)) {
+            return null;
+        }
+        $targetOffset = $classMatch[0][1];
+
+        preg_match_all(
+            '/@for\s*\(\s*\$\w+\s*=\s*0\s*;\s*\$\w+\s*<\s*(\d+)\s*;[^)]*\)|@endfor/',
+            $content,
+            $loopMatches,
+            PREG_OFFSET_CAPTURE | PREG_SET_ORDER
+        );
+
+        $stack = [];
+        foreach ($loopMatches as $m) {
+            if ($m[0][1] > $targetOffset) {
+                break;
+            }
+            if (str_starts_with($m[0][0], '@endfor')) {
+                array_pop($stack);
+            } else {
+                $stack[] = (int) $m[1][0];
+            }
+        }
+
+        return empty($stack) ? null : array_product($stack);
+    }
+
+    /**
+     * Arma `font_size_rules`/`length_rules`/`length_rules_enabled` para el
+     * texto de cada grilla cuya cantidad de celdas coincide con la de un
+     * contenedor que, según el .blade.php de esta vista, varía su tamaño de
+     * letra según la longitud del nombre (ver extractTextSizeTiersFromView()
+     * / countRepeatedClassOccurrences()) — así el editor ya arranca con
+     * "Tamaño por longitud" activado y el mismo criterio que usaba la vista
+     * legacy, en vez de un tamaño fijo único para cualquier nombre. Un
+     * contenedor con un solo nivel definido (no varía nunca) se ignora: no
+     * hay nada que configurar. Si dos grillas distintas tienen la MISMA
+     * cantidad de celdas (ambiguo) se usa la primera sin reclamar, igual
+     * que ya hace `applySpotLabelShape()` para la fila "spot".
+     */
+    private function applyLegacyTextSizeRules(array &$page, ?string $viewPath): void
+    {
+        if (!$viewPath || empty($page['grids'])) {
+            return;
+        }
+        $viewPath = str_starts_with($viewPath, 'tematica/') ? $viewPath : "tematica/{$viewPath}";
+        $bladePath = resource_path('views/' . $viewPath . '.blade.php');
+        if (!is_file($bladePath)) {
+            return;
+        }
+        $content = file_get_contents($bladePath);
+
+        $tiersByClass = $this->extractTextSizeTiersFromView($content);
+        if (empty($tiersByClass)) {
+            return;
+        }
+
+        $elementsById = [];
+        foreach ($page['elements'] as $index => $el) {
+            $elementsById[$el['id']] = $index;
+        }
+
+        $pxFor = fn(float $pt) => (int) round($pt / 0.75);
+        $claimedGridIndexes = [];
+
+        foreach ($tiersByClass as $className => $tiers) {
+            if (count($tiers) < 2) {
+                continue; // un solo tamaño: no hay nada que varíe según longitud.
+            }
+            $count = $this->countRepeatedClassOccurrences($content, $className);
+            if (!$count) {
+                continue;
+            }
+
+            // Una misma cantidad de celdas puede coincidir con MÁS de una
+            // grilla (ej. la tabla "maxi" arma una grilla para el fondo del
+            // ícono y otra, aparte, para el fondo del texto — ambas 6×3,
+            // ninguna es "la" grilla de texto per se) — de las candidatas sin
+            // reclamar se prefiere la que REALMENTE tiene un elemento de
+            // texto adentro, si no no hay nada para configurar en esa celda.
+            $gridIndex = null;
+            foreach ($page['grids'] as $idx => $grid) {
+                if (in_array($idx, $claimedGridIndexes, true)) {
+                    continue;
+                }
+                if (((int) $grid['cols']) * ((int) $grid['rows']) !== $count) {
+                    continue;
+                }
+                $hasText = false;
+                foreach ($grid['template'] as $id) {
+                    if (($page['elements'][$elementsById[$id] ?? null]['type'] ?? null) === 'text') {
+                        $hasText = true;
+                        break;
+                    }
+                }
+                if ($hasText) {
+                    $gridIndex = $idx;
+                    break;
+                }
+            }
+            if ($gridIndex === null) {
+                continue;
+            }
+            $claimedGridIndexes[] = $gridIndex;
+
+            $rules = [];
+            if (isset($tiers['normal'])) {
+                $rules[] = ['max_chars' => 16, 'font_size_px' => $pxFor($tiers['normal'])];
+            }
+            if (isset($tiers['small'])) {
+                $rules[] = ['max_chars' => isset($tiers['extra_small']) ? 20 : 999, 'font_size_px' => $pxFor($tiers['small'])];
+            }
+            if (isset($tiers['extra_small'])) {
+                $rules[] = ['max_chars' => 999, 'font_size_px' => $pxFor($tiers['extra_small'])];
+            }
+            if (count($rules) < 2) {
+                continue;
+            }
+
+            $textIds = array_filter($page['grids'][$gridIndex]['template'], fn($id) => ($elementsById[$id] ?? null) !== null && ($page['elements'][$elementsById[$id]]['type'] ?? null) === 'text');
+            foreach ($page['grids'][$gridIndex]['members'] as $member) {
+                foreach (array_filter($member) as $entry) {
+                    $idx = $elementsById[$entry['id']] ?? null;
+                    if ($idx !== null && ($page['elements'][$idx]['type'] ?? null) === 'text') {
+                        $textIds[] = $entry['id'];
+                    }
+                }
+            }
+
+            foreach ($textIds as $textId) {
+                $index = $elementsById[$textId];
+                $page['elements'][$index]['font_size_rules'] = $rules;
+                $page['elements'][$index]['length_rules_enabled'] = true;
+                $page['elements'][$index]['length_rules'] = $rules;
+                $page['elements'][$index]['font_size_px'] = $rules[0]['font_size_px'];
+            }
+        }
+    }
+
+    /**
      * Le asigna `label_shape_id` (círculo) al elemento `background` de cada
      * una de las celdas "spot" detectadas — identificadas por ser la
      * grilla de `data.pages[].grids[]` cuya cantidad de celdas (cols×rows)
@@ -1378,32 +1568,13 @@ class ProductPdfDesignController extends Controller
                     $geometricMaxChars
                 );
 
-                // Las vistas "spot" achican la letra a mano con CSS cuando el
-                // nombre completo es largo (`.circulo-personaje p.normal-
-                // text-size { font-size: 12pt }` / `p.small-text-size {
-                // font-size: 10pt }`, aplicada según `$fontClass` en
-                // EtiquetaService::generarEtiquetas según la longitud TOTAL
-                // del nombre: 12pt hasta 16 caracteres, 10pt de ahí en más —
-                // ver `app/Helpers/Helpers.php` y el propio `$fontClass`).
-                // Sin esto el texto importado queda con "Tamaño por longitud"
-                // desactivado (un solo tamaño fijo para cualquier nombre),
-                // así que un nombre largo en la celda real podía quedar más
-                // grande de lo que esta vista legacy en verdad mostraba.
-                // `font_size_rules` es lo que de verdad usa el backend al
-                // generar el PDF real (EtiquetaService::resolverTamanoFuente);
-                // `length_rules`/`length_rules_enabled` son el estado propio
-                // del editor (el toggle "Tamaño por longitud" y sus reglas
-                // editables) — el editor muestra CADA regla como su propia
-                // fila (no infiere un catch-all a partir del tamaño fijo de
-                // arriba), así que van las 2 explícitas en ambos lados.
-                $sizeRules = [
-                    ['max_chars' => 16, 'font_size_px' => 16], // 12pt
-                    ['max_chars' => null, 'font_size_px' => 13], // 10pt
-                ];
-                $page['elements'][$bestTextIndex]['font_size_rules'] = $sizeRules;
-                $page['elements'][$bestTextIndex]['length_rules_enabled'] = true;
-                $page['elements'][$bestTextIndex]['length_rules'] = $sizeRules;
-                $page['elements'][$bestTextIndex]['font_size_px'] = 16; // 12pt — tamaño fijo de referencia cuando el toggle está apagado.
+                // El tamaño de letra según longitud del nombre
+                // (`font_size_rules`/`length_rules`) para esta celda circular
+                // se arma más abajo, en `applyLegacyTextSizeRules()` — es el
+                // mismo mecanismo genérico que usa CUALQUIER contenedor de
+                // CUALQUIER temática que la vista legacy achique a mano con
+                // CSS (`.circulo-personaje p.normal-text-size`/`p.small-text-
+                // size`, en este caso), no algo puntual de "spot".
             }
 
             $resizedBackgroundBoxes[$slot] = ['x_cm' => $page['elements'][$backgroundIndex]['x_cm'], 'y_cm' => $page['elements'][$backgroundIndex]['y_cm']];
