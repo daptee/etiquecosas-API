@@ -1341,23 +1341,37 @@ class ProductPdfDesignController extends Controller
             $page['elements'][$backgroundIndex]['label_shape_id'] = $spotShape->id;
             $page['elements'][$backgroundIndex]['color'] = ['mode' => 'hex', 'value' => '#FFFFFF'];
 
-            // `max_chars_per_line` venía calculado a partir del renglón más
-            // largo del PDF de origen (ver PdfDesignImportService::
-            // textsToTextElement) — un ajuste MUY justo, pensado solo para
-            // que el nombre/apellido real entrara en su propio renglón. El
-            // editor, al mostrar el marcador de la variable sin una venta
-            // real detrás ("(x)Nombre y apellido", bastante más largo que
-            // cualquier nombre real), corta por ese mismo límite y termina
-            // partiéndolo en 3 renglones feos en vez de 2. El límite real
-            // de la celda no es "lo justo para el nombre de muestra", es
-            // cuántos caracteres entran de verdad en el ancho disponible
-            // del círculo a este tamaño de fuente — se recalcula geométrico
-            // (ancho disponible ÷ ancho estimado por carácter) y se usa el
-            // mayor entre ese valor y el ya calculado, nunca para achicarlo.
+            // El ANCHO de esta caja de texto quedaba calculado "lo justo"
+            // para el renglón más largo del PDF de origen (ver
+            // PdfDesignImportService::textsToTextElement) — bien para un
+            // nombre real (ya viene partido en 2 renglones cortos), pero el
+            // editor dibuja esta caja con ESE ancho real (CSS), no con
+            // `max_chars_per_line` (ese límite solo lo usa el backend al
+            // generar el PDF real, `EtiquetaService::dividirEnRenglones`).
+            // El marcador de la variable sin venta real detrás
+            // ("(x)Nombre y apellido", mucho más largo que cualquier
+            // nombre) se envuelve dentro de esa caja angosta por su cuenta
+            // y termina partido en 3+ renglones feos (hasta la "(x)" sola
+            // en su propio renglón). Se agranda la caja al ancho disponible
+            // DEL CÍRCULO (no al del texto real) — sigue sin salirse del
+            // círculo (es justo lo que entra adentro) y le da mucho más
+            // lugar al marcador para acomodarse en 2 renglones en vez de 3.
             if ($bestTextIndex !== null) {
                 $textEl = $page['elements'][$bestTextIndex];
+                $availableWidthCm = round(max(1.0, $side - 0.3), 2);
+                if ($availableWidthCm > $textEl['width_cm']) {
+                    $textCenterX = $textEl['x_cm'] + $textEl['width_cm'] / 2;
+                    $page['elements'][$bestTextIndex]['width_cm'] = $availableWidthCm;
+                    $page['elements'][$bestTextIndex]['x_cm'] = round($textCenterX - $availableWidthCm / 2, 2);
+                    $textEl = $page['elements'][$bestTextIndex];
+                }
+
+                // `max_chars_per_line` en sí también se recalcula geométrico
+                // (cuántos caracteres entran de verdad en ese ancho a este
+                // tamaño de fuente) en vez de "lo justo para el nombre de
+                // muestra" — nunca se achica, así que un nombre real largo
+                // se sigue partiendo bien.
                 $fontSizePt = ((float) ($textEl['font_size_px'] ?? 12)) * 0.75;
-                $availableWidthCm = max(1.0, $side - 0.3);
                 $geometricMaxChars = max(6, (int) floor($availableWidthCm * 28.3465 / ($fontSizePt * 0.6)));
                 $page['elements'][$bestTextIndex]['max_chars_per_line'] = max(
                     (int) ($textEl['max_chars_per_line'] ?? 6),
