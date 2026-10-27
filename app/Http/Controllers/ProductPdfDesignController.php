@@ -1392,19 +1392,18 @@ class ProductPdfDesignController extends Controller
                 // `font_size_rules` es lo que de verdad usa el backend al
                 // generar el PDF real (EtiquetaService::resolverTamanoFuente);
                 // `length_rules`/`length_rules_enabled` son el estado propio
-                // del editor (el toggle "Tamaño por longitud" y su regla
-                // editable, sin el catch-all) — se completan los dos para
-                // que el editor también muestre el toggle ya activado con la
-                // regla cargada, no solo para que el PDF real salga bien.
-                $page['elements'][$bestTextIndex]['font_size_rules'] = [
+                // del editor (el toggle "Tamaño por longitud" y sus reglas
+                // editables) — el editor muestra CADA regla como su propia
+                // fila (no infiere un catch-all a partir del tamaño fijo de
+                // arriba), así que van las 2 explícitas en ambos lados.
+                $sizeRules = [
                     ['max_chars' => 16, 'font_size_px' => 16], // 12pt
                     ['max_chars' => null, 'font_size_px' => 13], // 10pt
                 ];
+                $page['elements'][$bestTextIndex]['font_size_rules'] = $sizeRules;
                 $page['elements'][$bestTextIndex]['length_rules_enabled'] = true;
-                $page['elements'][$bestTextIndex]['length_rules'] = [
-                    ['max_chars' => 16, 'font_size_px' => 16], // 12pt
-                ];
-                $page['elements'][$bestTextIndex]['font_size_px'] = 16; // 12pt — tamaño "para el resto" / base cuando el toggle está apagado.
+                $page['elements'][$bestTextIndex]['length_rules'] = $sizeRules;
+                $page['elements'][$bestTextIndex]['font_size_px'] = 16; // 12pt — tamaño fijo de referencia cuando el toggle está apagado.
             }
 
             $resizedBackgroundBoxes[$slot] = ['x_cm' => $page['elements'][$backgroundIndex]['x_cm'], 'y_cm' => $page['elements'][$backgroundIndex]['y_cm']];
