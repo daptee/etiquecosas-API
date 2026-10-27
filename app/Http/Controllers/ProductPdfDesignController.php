@@ -1342,12 +1342,20 @@ class ProductPdfDesignController extends Controller
             }
             $claimedGridIndexes[] = $gridIndex;
 
+            // Los umbrales van siempre los reales del `$fontClass` legacy
+            // (16 y 20 — ver EtiquetaService::generarEtiquetas), aunque este
+            // contenedor no defina los 3 niveles: si un nombre se pasa del
+            // último umbral definido y ninguna regla matchea,
+            // `resolverTamanoFuente` cae al tamaño base del elemento — por
+            // eso ese tamaño base se deja en el de la ÚLTIMA regla (no en
+            // "normal"), para que un nombre larguísimo siga respetando el
+            // último tamaño ya elegido en vez de volver a agrandarse.
             $rules = [];
             if (isset($tiers['normal'])) {
                 $rules[] = ['max_chars' => 16, 'font_size_px' => $pxFor($tiers['normal'])];
             }
             if (isset($tiers['small'])) {
-                $rules[] = ['max_chars' => isset($tiers['extra_small']) ? 20 : 999, 'font_size_px' => $pxFor($tiers['small'])];
+                $rules[] = ['max_chars' => 20, 'font_size_px' => $pxFor($tiers['small'])];
             }
             if (isset($tiers['extra_small'])) {
                 $rules[] = ['max_chars' => 999, 'font_size_px' => $pxFor($tiers['extra_small'])];
@@ -1355,6 +1363,7 @@ class ProductPdfDesignController extends Controller
             if (count($rules) < 2) {
                 continue;
             }
+            $fallbackFontSizePx = end($rules)['font_size_px'];
 
             $textIds = array_filter($page['grids'][$gridIndex]['template'], fn($id) => ($elementsById[$id] ?? null) !== null && ($page['elements'][$elementsById[$id]]['type'] ?? null) === 'text');
             foreach ($page['grids'][$gridIndex]['members'] as $member) {
@@ -1371,7 +1380,7 @@ class ProductPdfDesignController extends Controller
                 $page['elements'][$index]['font_size_rules'] = $rules;
                 $page['elements'][$index]['length_rules_enabled'] = true;
                 $page['elements'][$index]['length_rules'] = $rules;
-                $page['elements'][$index]['font_size_px'] = $rules[0]['font_size_px'];
+                $page['elements'][$index]['font_size_px'] = $fallbackFontSizePx;
             }
         }
     }
