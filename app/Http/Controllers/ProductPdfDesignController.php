@@ -1264,6 +1264,7 @@ class ProductPdfDesignController extends Controller
             }
         }
 
+        $resizedBackgroundBoxes = []; // [x_cm, y_cm] por celda, para recalcular gap_x_cm/gap_y_cm al final.
         foreach ($cellsIdLists as $cell) {
             $slot = $cell['slot'];
             $backgroundIndex = null;
@@ -1338,6 +1339,7 @@ class ProductPdfDesignController extends Controller
             $page['elements'][$backgroundIndex]['height_cm'] = round($side, 2);
             $page['elements'][$backgroundIndex]['label_shape_id'] = $spotShape->id;
             $page['elements'][$backgroundIndex]['color'] = ['mode' => 'hex', 'value' => '#FFFFFF'];
+            $resizedBackgroundBoxes[$slot] = ['x_cm' => $page['elements'][$backgroundIndex]['x_cm'], 'y_cm' => $page['elements'][$backgroundIndex]['y_cm']];
 
             // "Relación" ícono+nombre (ver PdfDesignImportService::
             // buildIconTextLayoutGroup) — mismo criterio que el resto del
@@ -1370,6 +1372,54 @@ class ProductPdfDesignController extends Controller
                     ];
                 }
             }
+        }
+
+        // El `gap_x_cm`/`gap_y_cm` de esta grilla se calculó en
+        // PdfDesignImportService::detectGrids() con la posición de los
+        // fondos ORIGINALES (chicos, pegados al ícono) — ya quedó
+        // desactualizado apenas acá arriba se agrandaron a los `$side`cm
+        // fijos del catálogo. Si no se corrige, "Generar grilla" en el
+        // editor reacomoda las columnas/filas usando un espacio mucho más
+        // grande que el real entre los fondos ya redimensionados, y las
+        // celdas terminan empujadas fuera de la hoja.
+        //
+        // No alcanza con tomar los x/y únicos de TODOS los fondos (como
+        // hace detectGrids() con las celdas originales, perfectamente
+        // alineadas): acá cada fondo se recentró según la caja propia de
+        // SU ícono+texto, así que dos celdas de la misma columna pueden
+        // quedar con un x_cm levemente distinto entre sí. Promediando el
+        // x de cada columna (y el y de cada fila) por separado, usando la
+        // posición "col,row" de cada celda en la grilla, el resultado no
+        // se arruina por esas variaciones chicas.
+        $side = (float) $spotShape->width_cm;
+        $sumXByCol = [];
+        $countXByCol = [];
+        $sumYByRow = [];
+        $countYByRow = [];
+        foreach ($resizedBackgroundBoxes as $slot => $box) {
+            [$col, $row] = $slot === 'template' ? [0, 0] : array_map('intval', explode(',', $slot));
+            $sumXByCol[$col] = ($sumXByCol[$col] ?? 0) + $box['x_cm'];
+            $countXByCol[$col] = ($countXByCol[$col] ?? 0) + 1;
+            $sumYByRow[$row] = ($sumYByRow[$row] ?? 0) + $box['y_cm'];
+            $countYByRow[$row] = ($countYByRow[$row] ?? 0) + 1;
+        }
+        $avgXByCol = [];
+        foreach ($sumXByCol as $col => $sum) {
+            $avgXByCol[$col] = $sum / $countXByCol[$col];
+        }
+        $avgYByRow = [];
+        foreach ($sumYByRow as $row => $sum) {
+            $avgYByRow[$row] = $sum / $countYByRow[$row];
+        }
+        ksort($avgXByCol, SORT_NUMERIC);
+        ksort($avgYByRow, SORT_NUMERIC);
+        $avgXValues = array_values($avgXByCol);
+        $avgYValues = array_values($avgYByRow);
+        if (count($avgXValues) > 1) {
+            $page['grids'][$matchingGridIndex]['gap_x_cm'] = round($avgXValues[1] - $avgXValues[0] - $side, 2);
+        }
+        if (count($avgYValues) > 1) {
+            $page['grids'][$matchingGridIndex]['gap_y_cm'] = round($avgYValues[1] - $avgYValues[0] - $side, 2);
         }
     }
 
