@@ -245,6 +245,23 @@ class ProductPdfDesignController extends Controller
 
         $ventaIdMuestra = random_int(900000000, 999999999);
 
+        // Las temáticas "PERSONALIZABLE" (vistas tematica/*-and-*/PERSONALIZABLE*,
+        // ej. "Maxi - Spot") no tienen un nombre real en attribute_values/tematicas
+        // detrás — en una venta real, el cliente elige un color al comprar
+        // (customColor), y generarEtiquetas() usa ESE color (CASO 1/1B). Sin
+        // customColor cae al CASO 3 ("tematica con nombre"), que para estas
+        // vistas rompe: busca un attribute_values.id con el mismo número que
+        // $tematicaId (acá es solo un índice interno de product_pdf.data.
+        // tematicas[], no un attribute_values.id real) y arma $plantilla con
+        // datos que esa vista ni espera. Para la MUESTRA (sin venta real
+        // detrás) alcanza con un color de relleno cualquiera, así entra al
+        // mismo camino (CASO 1B) que usaría una venta real.
+        $urlsMuestra = is_array($tematicaCoincidente['pdf-url'] ?? null)
+            ? $tematicaCoincidente['pdf-url']
+            : (($tematicaCoincidente['pdf-url'] ?? null) ? [$tematicaCoincidente['pdf-url']] : []);
+        $esPersonalizable = collect($urlsMuestra)->contains(fn($u) => str_contains($u, '/PERSONALIZABLE'));
+        $colorMuestra = $esPersonalizable ? ['#CCCCCC'] : null;
+
         try {
             $samplePaths = EtiquetaService::generarEtiquetas(
                 $ventaIdMuestra,
@@ -252,7 +269,7 @@ class ProductPdfDesignController extends Controller
                 [self::SAMPLE_NOMBRE_APELLIDO],
                 $productOrder,
                 $tematicaCoincidente,
-                null,
+                $colorMuestra,
                 null,
                 now(),
                 ['NOMBRE']
