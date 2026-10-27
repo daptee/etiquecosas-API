@@ -1377,6 +1377,34 @@ class ProductPdfDesignController extends Controller
                     (int) ($textEl['max_chars_per_line'] ?? 6),
                     $geometricMaxChars
                 );
+
+                // Las vistas "spot" achican la letra a mano con CSS cuando el
+                // nombre completo es largo (`.circulo-personaje p.normal-
+                // text-size { font-size: 12pt }` / `p.small-text-size {
+                // font-size: 10pt }`, aplicada según `$fontClass` en
+                // EtiquetaService::generarEtiquetas según la longitud TOTAL
+                // del nombre: 12pt hasta 16 caracteres, 10pt de ahí en más —
+                // ver `app/Helpers/Helpers.php` y el propio `$fontClass`).
+                // Sin esto el texto importado queda con "Tamaño por longitud"
+                // desactivado (un solo tamaño fijo para cualquier nombre),
+                // así que un nombre largo en la celda real podía quedar más
+                // grande de lo que esta vista legacy en verdad mostraba.
+                // `font_size_rules` es lo que de verdad usa el backend al
+                // generar el PDF real (EtiquetaService::resolverTamanoFuente);
+                // `length_rules`/`length_rules_enabled` son el estado propio
+                // del editor (el toggle "Tamaño por longitud" y su regla
+                // editable, sin el catch-all) — se completan los dos para
+                // que el editor también muestre el toggle ya activado con la
+                // regla cargada, no solo para que el PDF real salga bien.
+                $page['elements'][$bestTextIndex]['font_size_rules'] = [
+                    ['max_chars' => 16, 'font_size_px' => 16], // 12pt
+                    ['max_chars' => null, 'font_size_px' => 13], // 10pt
+                ];
+                $page['elements'][$bestTextIndex]['length_rules_enabled'] = true;
+                $page['elements'][$bestTextIndex]['length_rules'] = [
+                    ['max_chars' => 16, 'font_size_px' => 16], // 12pt
+                ];
+                $page['elements'][$bestTextIndex]['font_size_px'] = 16; // 12pt — tamaño "para el resto" / base cuando el toggle está apagado.
             }
 
             $resizedBackgroundBoxes[$slot] = ['x_cm' => $page['elements'][$backgroundIndex]['x_cm'], 'y_cm' => $page['elements'][$backgroundIndex]['y_cm']];
