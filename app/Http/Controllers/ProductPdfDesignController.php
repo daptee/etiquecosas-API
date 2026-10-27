@@ -1194,27 +1194,33 @@ class ProductPdfDesignController extends Controller
     private function applySpotLabelShape(array &$page, int $spotCellCount, int $spotShapeId): void
     {
         $grids = $page['grids'] ?? [];
-        $matchingGrid = null;
-        foreach ($grids as $grid) {
+        $matchingGridIndex = null;
+        foreach ($grids as $gridIndex => $grid) {
             if (((int) $grid['cols']) * ((int) $grid['rows']) === $spotCellCount) {
-                $matchingGrid = $grid;
+                $matchingGridIndex = $gridIndex;
                 break;
             }
         }
-        if (!$matchingGrid) {
+        if ($matchingGridIndex === null) {
             return;
         }
+        $matchingGrid = $page['grids'][$matchingGridIndex];
 
         $indexById = [];
         foreach ($page['elements'] as $index => $el) {
             $indexById[$el['id']] = $index;
         }
 
-        $cellsIdLists = [$matchingGrid['template']];
-        foreach ($matchingGrid['members'] as $member) {
+        // Cada entrada trae, además de los ids ya conocidos (fondo+ícono), en
+        // qué "casillero" de la grilla vive esa celda ('template' o una
+        // clave de `members`) — hace falta para, más abajo, agregar ahí
+        // mismo el texto que se le encuentre a cada ícono (ver nota
+        // siguiente: el texto nunca llegó a formar parte de la grilla).
+        $cellsIdLists = [['slot' => 'template', 'ids' => $matchingGrid['template']]];
+        foreach ($matchingGrid['members'] as $memberKey => $member) {
             $ids = array_column(array_filter($member), 'id');
             if (!empty($ids)) {
-                $cellsIdLists[] = $ids;
+                $cellsIdLists[] = ['slot' => $memberKey, 'ids' => $ids];
             }
         }
 
@@ -1245,11 +1251,12 @@ class ProductPdfDesignController extends Controller
         }
 
         $padding = 0.3; // cm de aire entre ícono+texto y el borde del círculo
-        foreach ($cellsIdLists as $ids) {
+        foreach ($cellsIdLists as $cell) {
+            $slot = $cell['slot'];
             $backgroundIndex = null;
             $iconIndex = null;
             $iconBox = null; // [minX, minY, maxX, maxY]
-            foreach ($ids as $id) {
+            foreach ($cell['ids'] as $id) {
                 $index = $indexById[$id] ?? null;
                 if ($index === null) {
                     continue;
@@ -1328,6 +1335,27 @@ class ProductPdfDesignController extends Controller
                     $page['elements'][$bestTextIndex],
                     $page['elements'][$backgroundIndex]['id']
                 );
+            }
+
+            // La grilla (data.pages[].grids[]) se armó en
+            // PdfDesignImportService::import() ANTES de que el texto
+            // suelto de esta celda se asociara con su ícono (recién acá
+            // arriba) — sin esto, el texto queda totalmente afuera de la
+            // grilla: al usar "Generar grilla" en el editor para cambiar
+            // cols/filas/separación, el fondo+ícono se regeneran bien pero
+            // el texto no se mueve ni se toca (el editor ni se entera de
+            // que existe). Se agrega al mismo casillero (`template` o
+            // `members[...]`) que ya tienen el fondo+ícono de esta celda.
+            if ($bestTextIndex !== null) {
+                $textEl = $page['elements'][$bestTextIndex];
+                if ($slot === 'template') {
+                    $page['grids'][$matchingGridIndex]['template'][] = $textEl['id'];
+                } else {
+                    $page['grids'][$matchingGridIndex]['members'][$slot][] = [
+                        'id' => $textEl['id'],
+                        'sig' => PdfDesignImportService::elementSignature($textEl),
+                    ];
+                }
             }
         }
     }

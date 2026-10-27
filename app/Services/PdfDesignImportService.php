@@ -359,7 +359,7 @@ class PdfDesignImportService
      * como "ya modificada" y no la toque al reescalar — no rompe ni pierde
      * nada, solo pierde esa comodidad puntual.
      */
-    private static function elementSignature(array $el): string
+    public static function elementSignature(array $el): string
     {
         unset($el['id'], $el['group_id']);
         $json = json_encode(self::normalizeForSignature($el), JSON_UNESCAPED_UNICODE);
