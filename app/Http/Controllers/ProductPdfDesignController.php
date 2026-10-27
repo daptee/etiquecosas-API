@@ -260,7 +260,17 @@ class ProductPdfDesignController extends Controller
             ? $tematicaCoincidente['pdf-url']
             : (($tematicaCoincidente['pdf-url'] ?? null) ? [$tematicaCoincidente['pdf-url']] : []);
         $esPersonalizable = collect($urlsMuestra)->contains(fn($u) => str_contains($u, '/PERSONALIZABLE'));
+        // "PERSONALIZABLE SIN ICONO" es la variante lisa (sin ícono) de esta
+        // misma temática — si el pdf-url YA apunta ahí, el producto no tiene
+        // ícono para elegir en una venta real, así que no hay que simularle uno.
+        $yaEsSinIcono = collect($urlsMuestra)->contains(fn($u) => str_contains($u, 'SIN ICONO'));
         $colorMuestra = $esPersonalizable ? ['#CCCCCC'] : null;
+        // Con $customIcon en null, generarEtiquetas() cambia la vista a la
+        // variante "SIN ICONO" (ver $getViews) — para que la muestra SÍ
+        // traiga un ícono (y el importador pueda detectarlo), hace falta un
+        // archivo real como el que elegiría un cliente en una venta real;
+        // cualquiera del catálogo sirve, es solo geometría/placeholder.
+        $iconMuestra = ($esPersonalizable && !$yaEsSinIcono) ? $this->pickSampleIconPath() : null;
 
         try {
             $samplePaths = EtiquetaService::generarEtiquetas(
@@ -270,7 +280,7 @@ class ProductPdfDesignController extends Controller
                 $productOrder,
                 $tematicaCoincidente,
                 $colorMuestra,
-                null,
+                $iconMuestra,
                 now(),
                 ['NOMBRE']
             );
@@ -1034,6 +1044,32 @@ class ProductPdfDesignController extends Controller
      * distinta — Helvetica, sin archivo propio — para texto secundario tipo
      * "PEDIDO #", que NO queremos confundir con la del nombre).
      */
+    /**
+     * Un path de ícono real y existente del catálogo (`icons/Tematicas/...`),
+     * relativo a public_path() tal como lo espera `generarEtiquetas()` CASO 1
+     * (`$customIconPath = public_path($customIcon)`) — cualquiera sirve, es
+     * solo para que la vista "PERSONALIZABLE" (con ícono) tenga ALGO real
+     * para dibujar en el PDF de muestra; no importa cuál, el admin lo va a
+     * reemplazar a mano en el editor de todos modos. Null si el catálogo
+     * está vacío o ninguno de sus archivos existe en disco (no debería
+     * pasar en un ambiente normal, pero así no rompe la muestra).
+     */
+    private function pickSampleIconPath(): ?string
+    {
+        $candidatos = PersonalizationIcon::where('icon', 'like', 'icons/Tematicas/%')
+            ->orderBy('id')
+            ->limit(20)
+            ->pluck('icon');
+
+        foreach ($candidatos as $icon) {
+            if (is_file(public_path($icon))) {
+                return $icon;
+            }
+        }
+
+        return null;
+    }
+
     private function detectLegacyFontFamily(string $viewPath): string
     {
         $viewPath = str_starts_with($viewPath, 'tematica/') ? $viewPath : "tematica/{$viewPath}";
