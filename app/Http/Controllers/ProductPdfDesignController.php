@@ -1165,14 +1165,14 @@ class ProductPdfDesignController extends Controller
 
     /**
      * Id del label_shape circular que representa estas celdas "spot" — por
-     * nombre exacto ("Spot Grande", el que ya está cargado en el catálogo).
-     * Null si todavía no existe esa forma — ahí no se toca nada (mismo
-     * criterio que el resto de los matcheos de este importador: si no hay
-     * nada para asignar, se deja como venía).
+     * nombre exacto ("Spot", el que ya está cargado en el catálogo). Null
+     * si todavía no existe esa forma — ahí no se toca nada (mismo criterio
+     * que el resto de los matcheos de este importador: si no hay nada para
+     * asignar, se deja como venía).
      */
     private function resolveSpotLabelShapeId(): ?int
     {
-        return LabelShape::where('name', 'Spot Grande')->value('id');
+        return LabelShape::where('name', 'Spot')->value('id');
     }
 
     /**
