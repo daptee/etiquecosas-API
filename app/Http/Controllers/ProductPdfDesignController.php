@@ -1265,6 +1265,7 @@ class ProductPdfDesignController extends Controller
         }
 
         $resizedBackgroundBoxes = []; // [x_cm, y_cm] por celda, para recalcular gap_x_cm/gap_y_cm al final.
+        $cellComponents = []; // índices de fondo/ícono/texto por celda, para poder correrlos en bloque al normalizar alineación.
         foreach ($cellsIdLists as $cell) {
             $slot = $cell['slot'];
             $backgroundIndex = null;
@@ -1340,6 +1341,7 @@ class ProductPdfDesignController extends Controller
             $page['elements'][$backgroundIndex]['label_shape_id'] = $spotShape->id;
             $page['elements'][$backgroundIndex]['color'] = ['mode' => 'hex', 'value' => '#FFFFFF'];
             $resizedBackgroundBoxes[$slot] = ['x_cm' => $page['elements'][$backgroundIndex]['x_cm'], 'y_cm' => $page['elements'][$backgroundIndex]['y_cm']];
+            $cellComponents[$slot] = ['background' => $backgroundIndex, 'icon' => $iconIndex, 'text' => $bestTextIndex];
 
             // "Relación" ícono+nombre (ver PdfDesignImportService::
             // buildIconTextLayoutGroup) — mismo criterio que el resto del
@@ -1372,6 +1374,57 @@ class ProductPdfDesignController extends Controller
                     ];
                 }
             }
+        }
+
+        // Cada celda se centró según la posición REAL de SU PROPIO ícono en
+        // el PDF original — y esa posición puede traer un corrimiento
+        // mínimo (1-2mm) sin ningún significado real, no es que la celda
+        // haya sido diseñada más arriba o más abajo a propósito. Es una
+        // particularidad conocida de cómo dompdf generó el PDF original:
+        // el primer elemento de una fila puede cachear las métricas de
+        // fuente de forma levemente distinta al resto (ver nota sobre
+        // `line_height` en PDF_IMPORTAR_DESDE_PDF.md) y terminar un par de
+        // mm más arriba/abajo que sus vecinos. Sin corregir esto, una fila
+        // de celdas por lo demás idénticas queda con la primera columna
+        // visiblemente desalineada del resto. Se corrige llevando cada
+        // celda a la posición MEDIANA de su fila (eje Y) y columna (eje X)
+        // — fondo, ícono y texto se mueven juntos, en bloque.
+        $rowYs = [];
+        $colXs = [];
+        foreach ($resizedBackgroundBoxes as $slot => $box) {
+            [$col, $row] = $slot === 'template' ? [0, 0] : array_map('intval', explode(',', $slot));
+            $rowYs[$row][] = $box['y_cm'];
+            $colXs[$col][] = $box['x_cm'];
+        }
+        $median = function (array $values) {
+            sort($values);
+            $count = count($values);
+            $mid = intdiv($count, 2);
+            return $count % 2 === 0 ? ($values[$mid - 1] + $values[$mid]) / 2 : $values[$mid];
+        };
+        $canonicalYByRow = array_map($median, $rowYs);
+        $canonicalXByCol = array_map($median, $colXs);
+
+        foreach ($cellComponents as $slot => $components) {
+            [$col, $row] = $slot === 'template' ? [0, 0] : array_map('intval', explode(',', $slot));
+            $box = $resizedBackgroundBoxes[$slot];
+            $deltaX = round($canonicalXByCol[$col] - $box['x_cm'], 2);
+            $deltaY = round($canonicalYByRow[$row] - $box['y_cm'], 2);
+            if ($deltaX === 0.0 && $deltaY === 0.0) {
+                continue;
+            }
+            foreach (['background', 'icon', 'text'] as $role) {
+                $index = $components[$role];
+                if ($index === null) {
+                    continue;
+                }
+                $page['elements'][$index]['x_cm'] = round($page['elements'][$index]['x_cm'] + $deltaX, 2);
+                $page['elements'][$index]['y_cm'] = round($page['elements'][$index]['y_cm'] + $deltaY, 2);
+            }
+            $resizedBackgroundBoxes[$slot] = [
+                'x_cm' => $page['elements'][$components['background']]['x_cm'],
+                'y_cm' => $page['elements'][$components['background']]['y_cm'],
+            ];
         }
 
         // El `gap_x_cm`/`gap_y_cm` de esta grilla se calculó en

@@ -711,9 +711,19 @@ class PdfDesignImportService
             $widthCm = round(max(0.5, $xRight - $xLeft) / self::PT_PER_CM, 2);
             $heightCm = round(max(0.5, $yTopEdge - $yBottomEdge) / self::PT_PER_CM, 2);
         } else {
+            // Si este texto suelto se armó juntando VARIOS renglones del PDF
+            // original (ej. "NOMBRE" + "APELLIDO", cada uno su propia línea
+            // debajo del ícono en las celdas "spot"), el ancho real que
+            // ocupa es el del renglón más largo de los dos — no el de la
+            // suma de ambos pegados con un espacio en `$content`. Medir por
+            // `strlen($content)` como si fuera un solo renglón daba una caja
+            // mucho más ancha que lo que en verdad se ve (el nombre se sale
+            // del círculo "Spot" al editarlo, aunque al generar el PDF real
+            // (EtiquetaService) sí se parte en renglones y entra bien).
+            $longestLineLength = max(array_map(fn($l) => strlen(trim($l['text'])), $lines));
             $xCm = round($minX / self::PT_PER_CM, 2);
             $yCm = round(($pageHeightPt - $maxY - $fontSizePt) / self::PT_PER_CM, 2);
-            $widthCm = round(max(1, strlen($content) * $fontSizePt * 0.6) / self::PT_PER_CM, 2);
+            $widthCm = round(max(1, $longestLineLength * $fontSizePt * 0.6) / self::PT_PER_CM, 2);
             $heightCm = round(max(0.5, ($maxY - $minY + $fontSizePt * 1.3)) / self::PT_PER_CM, 2);
         }
 
