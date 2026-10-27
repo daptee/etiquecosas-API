@@ -453,6 +453,16 @@ class ProductPdfDesignController extends Controller
         }
         unset($page);
 
+        // Recalcula el `sig` de cada celda de las grillas a partir del
+        // estado YA DEFINITIVO de los elementos (ver PdfDesignImportService::
+        // resignGrids) — tiene que ser el ÚLTIMO paso antes de guardar: los
+        // bucles de arriba (font_id, icon_id, numero_pedido) modifican
+        // elementos DESPUÉS de que import() calculó las firmas originales.
+        foreach ($pages as &$page) {
+            $page = PdfDesignImportService::resignGrids($page);
+        }
+        unset($page);
+
         $data = $this->sanitizeDesignData(['pages' => $pages]);
 
         $design = ProductPdfDesign::create([

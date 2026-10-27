@@ -15,6 +15,52 @@ class PdfDesignImportService
 {
     private const PT_PER_CM = 28.3465;
 
+    /**
+     * Recalcula el `sig` de CADA elemento referenciado en `data.pages[].
+     * grids[]` a partir del estado FINAL de `elements` — mismo paso que
+     * hace el editor del front justo antes de guardar (`pages/
+     * productPdfDesigns/edit/[id].vue`, el re-firmado que arma `resolved`
+     * antes del POST). Hace falta correrlo acá porque `import()` arma las
+     * grillas ANTES de que el controlador (`importFromProduct`) termine de
+     * completar `font_id`/`icon_id`/`label_shape_id` de cada elemento — si
+     * no se recalcula, el `sig` queda grabado con el `font_id`/`icon_id`
+     * placeholder (null/1) que tenía en ese momento, no con el real, y el
+     * editor trata CUALQUIER celda como "ya modificada a mano" desde el
+     * mismo instante en que se importa (nunca coincide, ni recién abierta):
+     * "Generar grilla" no vuelve a tocar ni fondo ni ícono ni texto de
+     * ninguna celda al reacomodar/agregar/quitar filas o columnas.
+     */
+    public static function resignGrids(array $page): array
+    {
+        if (empty($page['grids'])) {
+            return $page;
+        }
+
+        $elementsById = [];
+        foreach ($page['elements'] as $el) {
+            $elementsById[$el['id']] = $el;
+        }
+
+        $resign = function ($id) use ($elementsById) {
+            return isset($elementsById[$id]) ? self::elementSignature($elementsById[$id]) : null;
+        };
+
+        foreach ($page['grids'] as &$grid) {
+            foreach ($grid['members'] as $key => &$member) {
+                foreach ($member as &$entry) {
+                    if ($entry) {
+                        $entry['sig'] = $resign($entry['id']) ?? $entry['sig'];
+                    }
+                }
+                unset($entry);
+            }
+            unset($member);
+        }
+        unset($grid);
+
+        return $page;
+    }
+
     public static function import(string $pdfPath): array
     {
         $raw = file_get_contents($pdfPath);
