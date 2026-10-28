@@ -1238,14 +1238,54 @@ class EtiquetaService
             $el['resolved_letter_spacing_px'] = self::resolverEspaciadoLetras($el);
         }
 
+        $customColorValue = null;
         if (in_array($type, ['background', 'text'], true) && $editable && $field === 'color' && $customColor) {
-            $colorValue = is_array($customColor) ? ($customColor[0] ?? null) : $customColor;
-            if ($colorValue) {
-                $el['color'] = ['mode' => 'hex', 'value' => $colorValue];
+            $customColorValue = is_array($customColor) ? ($customColor[0] ?? null) : $customColor;
+            if ($customColorValue) {
+                $el['color'] = ['mode' => 'hex', 'value' => $customColorValue];
             }
         }
 
+        // En la etiqueta, el color elegido por el cliente es su fondo; en el
+        // texto es el de la letra, no toca el fondo.
+        $el['resolved_fill'] = self::resolverFill($el, $type === 'background' ? $customColorValue : null);
+
         return $el;
+    }
+
+    /**
+     * Fondo a dibujar (ver PDF_FONDO_ELEMENTOS.md): `fill`, o el formato viejo
+     * de la etiqueta si no viene. Con imagen agrega resolved_image_path
+     * (absoluto) y, en etiquetas con forma custom, resolved_clipped_image_path
+     * (PNG ya recortado con el contorno, si se pudo armar).
+     */
+    private static function resolverFill(array $el, ?string $customColorValue): array
+    {
+        $fill = PdfDesignSanitizer::fillDelElemento($el);
+
+        // Igual que antes con `color`: el color del cliente pisa el fondo,
+        // salvo que sea una imagen (la imagen tapaba el color).
+        if ($customColorValue && $fill['type'] !== 'image') {
+            $fill = ['type' => 'color', 'color' => ['mode' => 'hex', 'value' => $customColorValue]];
+        }
+
+        if ($fill['type'] !== 'image') {
+            return $fill;
+        }
+
+        $imagePath = public_path($fill['image']);
+        if (!is_file($imagePath)) {
+            Log::warning('[PDF-FILL] imagen de fondo inexistente, el elemento queda sin fondo', ['el_id' => $el['id'] ?? null, 'image' => $fill['image']]);
+            return ['type' => 'none'];
+        }
+        $fill['resolved_image_path'] = str_replace('\\', '/', $imagePath);
+
+        if (($el['resolved_shape_type'] ?? null) === 'custom' && !empty($el['resolved_shape_outline_svg'])) {
+            $clipped = PdfFillImage::recortarConContorno($imagePath, $el);
+            $fill['resolved_clipped_image_path'] = $clipped ? str_replace('\\', '/', $clipped) : null;
+        }
+
+        return $fill;
     }
 
     /**

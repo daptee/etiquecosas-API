@@ -147,7 +147,7 @@ class CutLineGeometry
      * width_cm × height_cm de la forma, escalado a la caja de la línea.
      * null si no se puede leer (el caller dibuja un rectángulo).
      */
-    private static function trazadoCustom(array $el, float $x, float $y, float $w, float $h): ?array
+    public static function trazadoCustom(array $el, float $x, float $y, float $w, float $h): ?array
     {
         $d = $el['resolved_shape_outline_svg'] ?? null;
         $shapeW = (float) ($el['resolved_shape_width_cm'] ?? 0);

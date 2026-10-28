@@ -148,7 +148,7 @@ class ProductPdfDesignController extends Controller
         $tmpPath = $request->file('pdf')->getRealPath();
 
         try {
-            $data = $this->sanitizeDesignData(PdfDesignImportService::import($tmpPath));
+            $data = $this->sanitizeDesignData($this->withFills(PdfDesignImportService::import($tmpPath)));
         } catch (\Throwable $e) {
             return $this->error('No se pudo analizar el PDF: ' . $e->getMessage(), 500);
         }
@@ -465,7 +465,7 @@ class ProductPdfDesignController extends Controller
         }
         unset($page);
 
-        $data = $this->sanitizeDesignData(['pages' => $pages]);
+        $data = $this->sanitizeDesignData($this->withFills(['pages' => $pages]));
 
         $design = ProductPdfDesign::create([
             'label_shape_id' => $request->labelShapeId,
@@ -967,6 +967,14 @@ class ProductPdfDesignController extends Controller
             'data' => 'required|array',
             'data.pages' => 'required|array|min:1',
             'data.pages.*.elements' => 'nullable|array',
+            // Fondo del elemento (ver PDF_FONDO_ELEMENTOS.md). El contenido
+            // lo termina de limpiar PdfDesignSanitizer::sanitizeFill().
+            'data.pages.*.elements.*.fill' => 'nullable|array',
+            'data.pages.*.elements.*.fill.type' => 'required_with:data.pages.*.elements.*.fill|in:' . implode(',', PdfDesignSanitizer::ALLOWED_FILL_TYPES),
+            'data.pages.*.elements.*.fill.color' => 'required_if:data.pages.*.elements.*.fill.type,color|array',
+            'data.pages.*.elements.*.fill.color.mode' => 'nullable|in:hex,cmyk',
+            'data.pages.*.elements.*.fill.color.value' => 'required_with:data.pages.*.elements.*.fill.color|string|max:64',
+            'data.pages.*.elements.*.fill.image' => 'required_if:data.pages.*.elements.*.fill.type,image|string|starts_with:pdf-element-images/',
             'isPublished' => 'nullable|boolean',
             'statusId' => 'nullable|exists:general_statuses,id',
         ];
@@ -1840,6 +1848,24 @@ class ProductPdfDesignController extends Controller
                 }
                 return $page;
             }, $data['pages']);
+        }
+
+        return $data;
+    }
+
+    /**
+     * Diseños importados: cada elemento sale con `fill` (derivado de
+     * color/background_image en las etiquetas, `none` en el resto). Las
+     * etiquetas conservan color/background_image para el formato viejo.
+     */
+    private function withFills(array $data): array
+    {
+        foreach ($data['pages'] ?? [] as $pageIdx => $page) {
+            foreach ($page['elements'] ?? [] as $elIdx => $el) {
+                if (is_array($el) && !isset($el['fill'])) {
+                    $data['pages'][$pageIdx]['elements'][$elIdx]['fill'] = PdfDesignSanitizer::fillDelElemento($el);
+                }
+            }
         }
 
         return $data;

@@ -16,6 +16,10 @@ class PdfDesignSanitizer
     private const ALLOWED_LAYOUT_MEMBER_TYPES = ['text', 'icon'];
     private const ALLOWED_LAYOUT_SIDES = ['after', 'before'];
     private const MAX_LAYOUT_GAP_CM = 50;
+    public const ALLOWED_FILL_TYPES = ['none', 'color', 'image'];
+    // Path que devuelve POST /product-pdf-designs/{id}/element-image. El
+    // nombre de archivo no puede arrancar con "." (descarta "..").
+    private const FILL_IMAGE_PATH_PATTERN = '#^pdf-element-images/\d+/[A-Za-z0-9_][A-Za-z0-9._-]*$#';
 
     /**
      * Deja pasar únicamente primitivos de forma SVG. Rechaza cualquier otra
@@ -171,9 +175,74 @@ class PdfDesignSanitizer
             if (isset($el['custom_icon_path']) && is_string($el['custom_icon_path'])) {
                 $el['custom_icon_path'] = strip_tags($el['custom_icon_path']);
             }
+            if (array_key_exists('fill', $el)) {
+                if ($el['fill'] === null) {
+                    unset($el['fill']);
+                } else {
+                    $el['fill'] = self::sanitizeFill($el['fill']);
+                }
+            }
 
             return $el;
         }, $elements);
+    }
+
+    /**
+     * Fondo de un elemento (data.pages[].elements[].fill): solo la opción
+     * activa, con el color/path limpios. Cualquier cosa que no se pueda
+     * dibujar (tipo desconocido, color sin value, path que no es de
+     * pdf-element-images/) queda como transparente.
+     */
+    public static function sanitizeFill($fill): array
+    {
+        $type = is_array($fill) ? ($fill['type'] ?? null) : null;
+
+        if ($type === 'color' && is_array($fill['color'] ?? null) && isset($fill['color']['value'])) {
+            $color = $fill['color'];
+            $mode = $color['mode'] ?? 'hex';
+            return [
+                'type' => 'color',
+                'color' => [
+                    'mode' => in_array($mode, ['hex', 'cmyk'], true) ? $mode : 'hex',
+                    'value' => strip_tags((string) $color['value']),
+                    'dynamic_attribute_id' => is_numeric($color['dynamic_attribute_id'] ?? null) ? (int) $color['dynamic_attribute_id'] : null,
+                    'editable_by_customer' => ($color['editable_by_customer'] ?? false) === true,
+                ],
+            ];
+        }
+
+        if ($type === 'image' && is_string($fill['image'] ?? null) && preg_match(self::FILL_IMAGE_PATH_PATTERN, $fill['image'])) {
+            return ['type' => 'image', 'image' => $fill['image']];
+        }
+
+        return ['type' => 'none'];
+    }
+
+    /**
+     * El fondo a dibujar de un elemento. Si trae `fill`, manda `fill` (y en la
+     * etiqueta se ignoran `color`/`background_image`). Si no (diseños
+     * guardados antes de `fill`), etiqueta: background_image → imagen; si no,
+     * color → color; si no, transparente. Ícono/texto/forma sin `fill`: sin
+     * fondo (su `color` es el de la letra/forma, no un fondo).
+     */
+    public static function fillDelElemento(array $el): array
+    {
+        if (isset($el['fill'])) {
+            return self::sanitizeFill($el['fill']);
+        }
+
+        if (($el['type'] ?? null) !== 'background') {
+            return ['type' => 'none'];
+        }
+
+        if (!empty($el['background_image']) && is_string($el['background_image'])) {
+            return ['type' => 'image', 'image' => $el['background_image']];
+        }
+        if (is_array($el['color'] ?? null) && isset($el['color']['value'])) {
+            return self::sanitizeFill(['type' => 'color', 'color' => $el['color']]);
+        }
+
+        return ['type' => 'none'];
     }
 
     /**

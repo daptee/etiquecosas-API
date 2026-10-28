@@ -115,6 +115,11 @@
             @continue(!empty($el['layout_hidden']))
             @php
                 $rotationDeg = (float) ($el['rotation_deg'] ?? 0);
+                $fill = $el['resolved_fill'] ?? ['type' => 'none'];
+                $fillColorCss = $fill['type'] === 'color'
+                    ? (($fill['color']['mode'] ?? 'hex') === 'cmyk' ? 'cmyk(' . $fill['color']['value'] . ')' : $fill['color']['value'])
+                    : null;
+                $fillImagePath = $fill['type'] === 'image' ? ($fill['resolved_image_path'] ?? null) : null;
             @endphp
             <div class="editor-element" style="
                 left: {{ $el['x_cm'] ?? 0 }}cm;
@@ -124,6 +129,25 @@
                 z-index: {{ $el['z_index'] ?? 0 }};
                 @if ($rotationDeg) transform: rotate({{ $rotationDeg }}deg); @endif
             ">
+                @if (($el['type'] ?? null) !== 'background' && ($fillColorCss || $fillImagePath))
+                    {{-- Fondo de ícono/texto/forma: la caja entera del elemento
+                         (rota con él), recorte rectangular. Va primero en el DOM
+                         y el contenido de abajo también es absoluto, así queda
+                         por encima del fondo. --}}
+                    <div style="
+                        position: absolute;
+                        left: 0;
+                        top: 0;
+                        width: 100%;
+                        height: 100%;
+                        overflow: hidden;
+                        @if ($fillColorCss) background: {{ $fillColorCss }}; @endif
+                    ">
+                        @if ($fillImagePath)
+                            <img src="file://{{ $fillImagePath }}" style="width: 100%; height: 100%;">
+                        @endif
+                    </div>
+                @endif
                 @switch($el['type'] ?? null)
                     @case('background')
                         @php
@@ -165,8 +189,10 @@
                                 : 'none';
                             $innerWidthCm = max(0, $declaredWidthCm - 2 * $borderWidthCm);
                             $innerHeightCm = max(0, $declaredHeightCm - 2 * $borderWidthCm);
-                            $backgroundColorCss = ($el['color']['mode'] ?? 'hex') === 'cmyk' ? 'cmyk(' . $el['color']['value'] . ')' : ($el['color']['value'] ?? '#FFFFFF');
-                            $backgroundImagePath = $el['background_image'] ?? null;
+                            // Fondo ya resuelto (fill, o color/background_image del
+                            // formato viejo): ver EtiquetaService::resolverFill().
+                            $backgroundColorCss = $fillColorCss ?? 'transparent';
+                            $backgroundImagePath = $fillImagePath;
                         @endphp
                         @if (($el['resolved_shape_type'] ?? null) === 'custom' && !empty($el['resolved_shape_outline_svg']))
                             @php
@@ -181,10 +207,17 @@
                                 $shapeViewBoxW = $el['resolved_shape_width_cm'] ?? $declaredWidthCm;
                                 $shapeViewBoxH = $el['resolved_shape_height_cm'] ?? $declaredHeightCm;
                                 $shapeSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' . $shapeViewBoxW . ' ' . $shapeViewBoxH . '" preserveAspectRatio="none">'
-                                    . '<path d="' . $el['resolved_shape_outline_svg'] . '" fill="' . $backgroundColorCss . '" /></svg>';
+                                    . '<path d="' . $el['resolved_shape_outline_svg'] . '" fill="' . ($fillColorCss ?? 'none') . '" /></svg>';
                                 $shapeSvgUri = 'data:image/svg+xml;base64,' . base64_encode($shapeSvg);
                             @endphp
-                            <img src="{{ $shapeSvgUri }}" style="width: {{ $declaredWidthCm }}cm; height: {{ $declaredHeightCm }}cm;">
+                            @if ($backgroundImagePath)
+                                {{-- PNG ya recortado con el contorno (PdfFillImage); si
+                                     no se pudo armar (contorno con curvas, SVG), va la
+                                     imagen entera sin recortar. --}}
+                                <img src="file://{{ $fill['resolved_clipped_image_path'] ?? $backgroundImagePath }}" style="width: {{ $declaredWidthCm }}cm; height: {{ $declaredHeightCm }}cm;">
+                            @elseif ($fillColorCss)
+                                <img src="{{ $shapeSvgUri }}" style="width: {{ $declaredWidthCm }}cm; height: {{ $declaredHeightCm }}cm;">
+                            @endif
                         @else
                             <div style="
                                 width: {{ $innerWidthCm }}cm;
@@ -199,7 +232,7 @@
                                          reemplaza el color de fondo. Va adentro del mismo div
                                          con overflow:hidden/border-radius de arriba, así que
                                          respeta el recorte/esquinas igual que el color. --}}
-                                    <img src="file://{{ str_replace('\\', '/', public_path($backgroundImagePath)) }}" style="
+                                    <img src="file://{{ $backgroundImagePath }}" style="
                                         width: 100%;
                                         height: 100%;
                                         object-fit: cover;
@@ -211,7 +244,7 @@
 
                     @case('icon')
                         @if (!empty($el['resolved_icon_path']))
-                            <img src="file://{{ str_replace('\\', '/', $el['resolved_icon_path']) }}" style="width:100%; height:100%; object-fit: contain;">
+                            <img src="file://{{ str_replace('\\', '/', $el['resolved_icon_path']) }}" style="position: absolute; left: 0; top: 0; width:100%; height:100%; object-fit: contain;">
                         @endif
                         @break
 
