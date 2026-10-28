@@ -374,6 +374,8 @@ class ProductPdfDesignController extends Controller
                     $this->applySpotLabelShape($page, $spotCellCount, $spotShape);
                 }
 
+                $this->applyMaxiLabelShape($page);
+
                 $this->applyLegacyTextSizeRules($page, $viewPaths[$idx] ?? null);
 
                 $pages[] = $page;
@@ -1197,6 +1199,17 @@ class ProductPdfDesignController extends Controller
     }
 
     /**
+     * El label_shape "Maxi" del catálogo (id=2, `css_class: "etiqueta-maxi"`,
+     * 4.40×2.40cm) representa el combo ícono+texto de las vistas "maxi" como
+     * UNA sola etiqueta física. Null si todavía no existe esa forma (mismo
+     * criterio que `resolveSpotLabelShape()`).
+     */
+    private function resolveMaxiLabelShape(): ?LabelShape
+    {
+        return LabelShape::where('name', 'Maxi')->first();
+    }
+
+    /**
      * Prácticamente todas las vistas legacy achican la letra a mano con CSS
      * cuando el nombre completo es largo — un patrón idéntico en las ~115
      * vistas: `$fontClass = strlen($nombre) > 20 ? 'extra-small-text-size' :
@@ -1390,6 +1403,286 @@ class ProductPdfDesignController extends Controller
                 $page['elements'][$index]['length_rules'] = $rules;
                 $page['elements'][$index]['font_size_px'] = $fallbackFontSizePx;
             }
+        }
+    }
+
+    /**
+     * Las vistas "maxi" (`maxi`, `maxi-and-spot`, `spot-and-maxi`,
+     * `maxi-and-super-mini`, etc. — ver `.etiqueta-maxi` en el CSS de esas
+     * vistas) dibujan el ícono y el nombre como DOS celdas de tabla
+     * ADYACENTES, cada una con su propio fondo: una blanca angosta (38% del
+     * ancho) para el ícono, una del color de la temática (62%) para el
+     * nombre, pegadas sin espacio entre sí — entre las dos arman, en el PDF
+     * real, UNA sola etiqueta de dos tonos. `detectGrids()` no tiene forma
+     * de saber eso: arma dos grillas SEPARADAS del mismo cols×rows, una con
+     * fondo+ícono y otra con fondo+texto, ninguna de las dos es por sí sola
+     * "la" etiqueta completa.
+     *
+     * El catálogo ya tiene una forma "Maxi" (`resolveMaxiLabelShape()`,
+     * `css_class: "etiqueta-maxi"`) — pero asignada tal cual a cualquiera de
+     * los dos fondos por separado queda recortada a la mitad: el ícono (que
+     * vive en la OTRA grilla) directamente cae afuera del contorno. Acá se
+     * fusionan ambas grillas en una sola, celda por celda: el fondo del
+     * texto pasa a cubrir la etiqueta completa (ícono + texto) y a llevar la
+     * forma "Maxi". El fondo blanco del ícono y el ícono mismo NO se tocan
+     * (ver nota más abajo sobre por qué NO conviene usar `fill` ahí) — solo
+     * pasan a compartir grupo con el fondo ya agrandado, y ese fondo blanco
+     * sube de `z_index` para seguir dibujándose POR ENCIMA del fondo grande
+     * (que ahora también pasa por abajo de esa zona). De paso, al quedar
+     * ícono y texto con un fondo en común, se arma la misma "Relación"
+     * (`layout_groups`) que ya tienen el resto de las celdas con ícono+texto
+     * compartiendo fondo — antes esta vista quedaba afuera de esa mejora
+     * (ver nota en `PdfDesignImportService::import`) justamente por no tener
+     * ese fondo en común.
+     *
+     * Por qué NO se usa `fill` en el ícono (como se probó primero): el fondo
+     * blanco de esta celda (`iconBg`) es más grande que el ícono real — la
+     * vista deja harto margen alrededor (`.etiqueta-maxi img { height:
+     * 1.2cm }`, fijo, sin importar el tamaño de la zona) — así que el ícono
+     * detectado YA viene más chico que esa zona blanca (es la medida real).
+     * Si en cambio se agranda la caja del propio ícono a la zona entera para
+     * poder pintarla de blanco con su `fill`, el ícono se dibuja con
+     * `object-fit: contain` (ver RENDER.blade.php) — que estira la imagen
+     * para ocupar la caja entera manteniendo proporción — y termina mucho
+     * más grande de lo que mide en el PDF real. Mantener el fondo blanco
+     * como elemento aparte (tal cual lo mide el PDF de muestra) evita este
+     * problema sin perder nada visual.
+     *
+     * El TAMAÑO de la etiqueta fusionada es el que mide EL PDF de muestra
+     * (la unión de los dos fondos detectados) — a diferencia de
+     * `applySpotLabelShape()` con "Spot" (que sí usa el tamaño fijo del
+     * catálogo), acá NO conviene usar el tamaño fijo de
+     * `resolveMaxiLabelShape()` (4.40×2.40cm): esa forma corresponde al
+     * `.etiqueta-maxi` de OTRA vista (`principal/SKATE.blade.php` / el
+     * `public/css/etiquetas.css` compartido), donde esa clase es apenas la
+     * celda/espaciado de una grilla con el ícono+nombre centrados chicos
+     * adentro, sin fondo de color propio — no el tamaño real de la etiqueta
+     * de dos tonos que arma `maxi-and-spot/PERSONALIZABLE.blade.php` (acá
+     * `.etiqueta-maxi` SÍ es la etiqueta visible completa, con su propio
+     * `width`/`height` en su `<style>`, 5.2×1.9cm — un valor completamente
+     * distinto al de "SKATE" pese a compartir nombre de clase). Usar el
+     * tamaño del catálogo agrandaba la etiqueta más de lo que sale en el PDF
+     * real. `label_shape_id` sigue apuntando a "Maxi" igual (es solo
+     * categoría/metadata para el selector "Forma" del editor — esta forma no
+     * tiene `outline_svg`, así que no dibuja ni recorta nada propio, no
+     * importa que su tamaño de catálogo no coincida con el de esta celda).
+     *
+     * No pasa nada si la vista no tiene este patrón (vuelve sin tocar nada).
+     */
+    private function applyMaxiLabelShape(array &$page): void
+    {
+        if (empty($page['grids']) || count($page['grids']) < 2) {
+            return;
+        }
+
+        $elementsById = [];
+        foreach ($page['elements'] as $index => $el) {
+            $elementsById[$el['id']] = $index;
+        }
+
+        $templateTypes = function (array $grid) use ($elementsById, $page): array {
+            return array_map(
+                fn($id) => $page['elements'][$elementsById[$id] ?? null]['type'] ?? null,
+                $grid['template']
+            );
+        };
+
+        $iconGridIndex = null;
+        $textGridIndex = null;
+        foreach ($page['grids'] as $i => $grid) {
+            if ($templateTypes($grid) !== ['background', 'icon']) {
+                continue;
+            }
+            foreach ($page['grids'] as $j => $other) {
+                if ($i === $j || $templateTypes($other) !== ['background', 'text']) {
+                    continue;
+                }
+                if ((int) $grid['cols'] !== (int) $other['cols'] || (int) $grid['rows'] !== (int) $other['rows']) {
+                    continue;
+                }
+                // Tienen que ser la misma grilla partida en dos: cada celda
+                // de una tiene que tener su par en la misma posición en la
+                // otra.
+                $sharedKeys = array_intersect(array_keys($grid['members']), array_keys($other['members']));
+                if (count($sharedKeys) !== count($grid['members']) || count($sharedKeys) !== count($other['members'])) {
+                    continue;
+                }
+                $iconGridIndex = $i;
+                $textGridIndex = $j;
+                break 2;
+            }
+        }
+        if ($iconGridIndex === null) {
+            return;
+        }
+
+        $iconGrid = $page['grids'][$iconGridIndex];
+        $textGrid = $page['grids'][$textGridIndex];
+        $maxiShape = $this->resolveMaxiLabelShape();
+
+        $cellKeys = array_merge(['template'], array_keys($iconGrid['members']));
+        $cellPairs = [['iconIds' => $iconGrid['template'], 'textIds' => $textGrid['template']]];
+        foreach ($iconGrid['members'] as $key => $member) {
+            $cellPairs[] = [
+                'iconIds' => array_column($member, 'id'),
+                'textIds' => array_column($textGrid['members'][$key], 'id'),
+            ];
+        }
+
+        $layoutGroups = [];
+        $resizedBackgroundBoxes = []; // slot => [x_cm, y_cm], para recalcular gap_x_cm/gap_y_cm al final.
+        foreach ($cellPairs as $cellOffset => $pair) {
+            $slot = $cellKeys[$cellOffset];
+            $iconBgIndex = $elementsById[$pair['iconIds'][0]];
+            $iconIndex = $elementsById[$pair['iconIds'][1]];
+            $textBgIndex = $elementsById[$pair['textIds'][0]];
+            $textIndex = $elementsById[$pair['textIds'][1]];
+
+            $iconBg = $page['elements'][$iconBgIndex];
+            $icon = $page['elements'][$iconIndex];
+            $textBg = $page['elements'][$textBgIndex];
+            $text = $page['elements'][$textIndex];
+
+            // La "Relación" se mide con las cajas de ANTES de tocar nada —
+            // mismo criterio que el resto del importador para celdas con un
+            // fondo en común (acá recién estamos creando ese fondo en
+            // común).
+            $layoutGroups[] = PdfDesignImportService::buildIconTextLayoutGroup($icon, $text, $pair['textIds'][0]);
+
+            // El tamaño de la etiqueta fusionada es el que REALMENTE mide
+            // este PDF de muestra (la unión de los dos fondos detectados),
+            // NO el tamaño fijo que declara `resolveMaxiLabelShape()` en el
+            // catálogo: esa forma "Maxi" (4.4×2.4cm) corresponde al
+            // `.etiqueta-maxi` de OTRA vista (`principal/SKATE.blade.php` y
+            // el `public/css/etiquetas.css` compartido) donde esa clase es
+            // apenas la CELDA/espaciado de una grilla — ahí el ícono+nombre
+            // van centrados chicos adentro, sin fondo de color propio, bien
+            // más chicos que 4.4×2.4 — no el tamaño real de la etiqueta de
+            // dos tonos que arma `maxi-and-spot/PERSONALIZABLE.blade.php`
+            // (acá sí, el `.etiqueta-maxi` de esta vista es la etiqueta
+            // visible completa, con su propio `width`/`height` en su
+            // `<style>`, 5.2×1.9cm — un valor completamente distinto al de
+            // "SKATE" a pesar de compartir nombre de clase). Usar el tamaño
+            // del catálogo acá agrandaba la etiqueta más de lo que sale en
+            // el PDF real.
+            $left = min($iconBg['x_cm'], $textBg['x_cm']);
+            $top = min($iconBg['y_cm'], $textBg['y_cm']);
+            $width = max($iconBg['x_cm'] + $iconBg['width_cm'], $textBg['x_cm'] + $textBg['width_cm']) - $left;
+            $height = max($iconBg['y_cm'] + $iconBg['height_cm'], $textBg['y_cm'] + $textBg['height_cm']) - $top;
+
+            $page['elements'][$textBgIndex]['x_cm'] = round($left, 2);
+            $page['elements'][$textBgIndex]['y_cm'] = round($top, 2);
+            $page['elements'][$textBgIndex]['width_cm'] = round($width, 2);
+            $page['elements'][$textBgIndex]['height_cm'] = round($height, 2);
+            if ($maxiShape) {
+                // Se etiqueta igual como "Maxi" (categoría/metadata del
+                // catálogo para el selector "Forma" del editor) aunque el
+                // tamaño real no coincida con el de esa forma — no dibuja
+                // nada propio (no tiene `outline_svg`), así que no distorsiona
+                // ni recorta nada.
+                $page['elements'][$textBgIndex]['label_shape_id'] = $maxiShape->id;
+            }
+
+            $groupId = $iconBg['group_id'] ?? ('group-imported-' . uniqid());
+            $page['elements'][$textBgIndex]['group_id'] = $groupId;
+
+            // El fondo blanco del ícono (`iconBg`) y el ícono NO se tocan —
+            // ver nota de arriba. Solo pasan al mismo grupo que el fondo ya
+            // agrandado (clickear/mover cualquiera mueve la celda entera), y
+            // los 4 (fondo grande, fondo blanco, ícono, texto) se renumeran
+            // 0-1-2-3 para que `iconBg` siga pintándose ARRIBA del fondo
+            // grande en su zona, sin importar el orden en que hayan quedado
+            // en `elements` (un `z_index` no entero, ej. 0.5, no lo respeta
+            // dompdf — hay que usar enteros).
+            $page['elements'][$textBgIndex]['z_index'] = 0;
+            $page['elements'][$iconBgIndex]['group_id'] = $groupId;
+            $page['elements'][$iconBgIndex]['z_index'] = 1;
+            $page['elements'][$iconIndex]['z_index'] = 2;
+            $page['elements'][$iconIndex]['group_id'] = $groupId;
+            $page['elements'][$textIndex]['z_index'] = 3;
+
+            $resizedBackgroundBoxes[$slot] = ['x_cm' => round($left, 2), 'y_cm' => round($top, 2)];
+        }
+
+        // El template/members de la grilla de texto pasan a tener también el
+        // fondo blanco del ícono y el ícono — mismo orden fondo→ícono→texto
+        // que arma el resto del importador (ver PdfDesignImportService::
+        // import, $cellElements), con la zona blanca del ícono intercalada
+        // justo después del fondo grande — así "Generar grilla" ya sabe
+        // clonar la celda completa (4 piezas en vez de 3).
+        array_splice($page['grids'][$textGridIndex]['template'], 1, 0, $iconGrid['template']);
+        foreach ($page['grids'][$textGridIndex]['members'] as $key => &$member) {
+            array_splice($member, 1, 0, $iconGrid['members'][$key]);
+        }
+        unset($member);
+
+        array_splice($page['grids'], $iconGridIndex, 1);
+        $textGridIndex = $iconGridIndex < $textGridIndex ? $textGridIndex - 1 : $textGridIndex;
+
+        if (!empty($layoutGroups)) {
+            $page['layout_groups'] = array_merge($page['layout_groups'] ?? [], $layoutGroups);
+        }
+
+        // El `gap_x_cm`/`gap_y_cm` de esta grilla se calculó en
+        // PdfDesignImportService::detectGrids() con el ancho/alto del fondo
+        // de SOLO el texto (3.22×1.9cm en el ejemplo) — quedó desactualizado
+        // apenas acá arriba cada celda se agrandó para cubrir también la
+        // zona del ícono. Mismo problema y mismo fix que ya tiene
+        // `applySpotLabelShape()` para "spot": se recalcula con el
+        // ancho/alto que realmente ocupa la celda molde ya fusionada
+        // (fondo+ícono+texto) y el PROMEDIO de posición por columna/fila.
+        $freshElementsById = [];
+        foreach ($page['elements'] as $index => $el) {
+            $freshElementsById[$el['id']] = $index;
+        }
+        $templateMinX = INF;
+        $templateMinY = INF;
+        $templateMaxX = -INF;
+        $templateMaxY = -INF;
+        foreach ($page['grids'][$textGridIndex]['template'] as $id) {
+            $index = $freshElementsById[$id] ?? null;
+            if ($index === null) {
+                continue;
+            }
+            $el = $page['elements'][$index];
+            $templateMinX = min($templateMinX, $el['x_cm']);
+            $templateMinY = min($templateMinY, $el['y_cm']);
+            $templateMaxX = max($templateMaxX, $el['x_cm'] + $el['width_cm']);
+            $templateMaxY = max($templateMaxY, $el['y_cm'] + $el['height_cm']);
+        }
+        $fallbackWidth = $maxiShape ? (float) $maxiShape->width_cm : 4.4;
+        $fallbackHeight = $maxiShape ? (float) $maxiShape->height_cm : 2.4;
+        $spanXTemplate = $templateMaxX > $templateMinX ? $templateMaxX - $templateMinX : $fallbackWidth;
+        $spanYTemplate = $templateMaxY > $templateMinY ? $templateMaxY - $templateMinY : $fallbackHeight;
+
+        $sumXByCol = [];
+        $countXByCol = [];
+        $sumYByRow = [];
+        $countYByRow = [];
+        foreach ($resizedBackgroundBoxes as $slot => $box) {
+            [$col, $row] = $slot === 'template' ? [0, 0] : array_map('intval', explode(',', $slot));
+            $sumXByCol[$col] = ($sumXByCol[$col] ?? 0) + $box['x_cm'];
+            $countXByCol[$col] = ($countXByCol[$col] ?? 0) + 1;
+            $sumYByRow[$row] = ($sumYByRow[$row] ?? 0) + $box['y_cm'];
+            $countYByRow[$row] = ($countYByRow[$row] ?? 0) + 1;
+        }
+        $avgXByCol = [];
+        foreach ($sumXByCol as $col => $sum) {
+            $avgXByCol[$col] = $sum / $countXByCol[$col];
+        }
+        $avgYByRow = [];
+        foreach ($sumYByRow as $row => $sum) {
+            $avgYByRow[$row] = $sum / $countYByRow[$row];
+        }
+        ksort($avgXByCol, SORT_NUMERIC);
+        ksort($avgYByRow, SORT_NUMERIC);
+        $avgXValues = array_values($avgXByCol);
+        $avgYValues = array_values($avgYByRow);
+        if (count($avgXValues) > 1) {
+            $page['grids'][$textGridIndex]['gap_x_cm'] = round($avgXValues[1] - $avgXValues[0] - $spanXTemplate, 2);
+        }
+        if (count($avgYValues) > 1) {
+            $page['grids'][$textGridIndex]['gap_y_cm'] = round($avgYValues[1] - $avgYValues[0] - $spanYTemplate, 2);
         }
     }
 
