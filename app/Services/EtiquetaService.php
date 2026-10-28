@@ -571,10 +571,80 @@ class EtiquetaService
                 ),
             ];
 
+            self::ajustarPorIconoAusente($resolved['elements']);
+
             $resolvedPages[] = self::aplicarLayoutGroups($resolved, $page['layout_groups'] ?? [], $logId, $pageIdx);
         }
 
         return $resolvedPages;
+    }
+
+    /**
+     * Dos ajustes puntuales de `ProductPdfDesignController::
+     * applyMaxiLabelShape()` para las etiquetas "maxi" — en ninguno de los
+     * dos se usa `layout_groups` (esa herramienta centra ícono+texto como UN
+     * bloque único en la etiqueta entera, y el ícono tiene que quedarse fijo
+     * en su propia zona, no recentrarse junto con el texto):
+     *
+     * 1. Un fondo "decorativo" puntual de un ícono (el fondo blanco angosto
+     *    de la zona del ícono) puede traer `hidden_with_icon_id` apuntando
+     *    al ícono real que acompaña — si ESE ícono queda sin imagen resuelta
+     *    (el cliente no personalizó ninguno, o eligió explícitamente "Sin
+     *    dibujo", ver `resolverElementoDesign()`), el fondo tiene que
+     *    desaparecer junto con él (si no, el nombre recentrado por el punto
+     *    2 termina superpuesto a un rectángulo que ya no tiene ningún ícono
+     *    adentro — y si encima es blanco, el propio texto blanco se vuelve
+     *    invisible ahí). Se usa `layout_hidden`, el mismo campo que ya usa
+     *    `aplicarLayoutGroups()` para ocultar un miembro ausente de un
+     *    grupo — `RENDER.blade.php` lo respeta para CUALQUIER elemento, no
+     *    solo los de un `layout_groups`.
+     *
+     * 2. Un texto con `reflow_with_icon_id`/`reflow_container_id`/
+     *    `reflow_icon_zone_width_cm` se recentra (horizontal Y vertical) en
+     *    la zona libre del contenedor (`reflow_container_id`, la etiqueta ya
+     *    fusionada) — descontando el ancho de la zona del ícono
+     *    (`reflow_icon_zone_width_cm`) SOLO si ese ícono (`reflow_with_icon_id`)
+     *    está presente; si no, se recentra en el contenedor ENTERO (la zona
+     *    del ícono, además, ya quedó oculta por el punto 1).
+     */
+    private static function ajustarPorIconoAusente(array &$elements): void
+    {
+        $iconoPresente = [];
+        $elementsById = [];
+        foreach ($elements as $index => $el) {
+            if (isset($el['id'])) {
+                $elementsById[$el['id']] = $index;
+            }
+            if (($el['type'] ?? null) === 'icon' && isset($el['id'])) {
+                $iconoPresente[$el['id']] = !empty($el['resolved_icon_path']);
+            }
+        }
+
+        foreach ($elements as &$el) {
+            $iconoAcompanianteId = $el['hidden_with_icon_id'] ?? null;
+            if (($el['type'] ?? null) === 'background' && $iconoAcompanianteId && ($iconoPresente[$iconoAcompanianteId] ?? true) === false) {
+                $el['layout_hidden'] = true;
+            }
+        }
+        unset($el);
+
+        foreach ($elements as &$el) {
+            $iconoId = $el['reflow_with_icon_id'] ?? null;
+            $containerId = $el['reflow_container_id'] ?? null;
+            if (($el['type'] ?? null) !== 'text' || !$iconoId || !$containerId || !isset($elementsById[$containerId])) {
+                continue;
+            }
+            $container = $elements[$elementsById[$containerId]];
+            $iconoPresenteAca = $iconoPresente[$iconoId] ?? false;
+            $iconZoneWidth = $iconoPresenteAca ? (float) ($el['reflow_icon_zone_width_cm'] ?? 0) : 0.0;
+
+            $zoneLeft = (float) ($container['x_cm'] ?? 0) + $iconZoneWidth;
+            $zoneWidth = (float) ($container['width_cm'] ?? 0) - $iconZoneWidth;
+
+            $el['x_cm'] = round($zoneLeft + ($zoneWidth - (float) ($el['width_cm'] ?? 0)) / 2, 2);
+            $el['y_cm'] = round((float) ($container['y_cm'] ?? 0) + ((float) ($container['height_cm'] ?? 0) - (float) ($el['height_cm'] ?? 0)) / 2, 2);
+        }
+        unset($el);
     }
 
     /**
@@ -1108,8 +1178,15 @@ class EtiquetaService
                 // ícono "libre" de customization_data cuando el elemento pide
                 // uno puntual con dynamic_attribute_id.
                 $iconPath = public_path($attributeIcon);
-            } elseif ($editable && $field === 'icon' && $customIcon) {
-                $iconPath = public_path($customIcon);
+            } elseif ($editable && $field === 'icon' && $customIcon !== null) {
+                // El cliente SÍ personalizó este campo — se respeta su
+                // elección aunque sea "ningún ícono" (ver
+                // PDF_ICONO_PERSONALIZADO.md, `icon.name === "Sin dibujo"`):
+                // los controladores de venta mandan '' (no null) en ese
+                // caso puntual, así se distingue de "no personalizó nada"
+                // (null, cae al icon_id de respaldo más abajo) y el ícono
+                // queda realmente vacío en vez de volver al de catálogo.
+                $iconPath = $customIcon !== '' ? public_path($customIcon) : null;
             } elseif (!empty($el['custom_icon_path'])) {
                 // Imagen subida puntual para ESTE elemento (no viene del
                 // catálogo personalization_icons) — mismo nivel que icon_id,

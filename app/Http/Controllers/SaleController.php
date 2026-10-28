@@ -877,7 +877,12 @@ class SaleController extends Controller
             $customIcon = $customData['icon']['icon'] ?? null;
 
             if ($customIcon && $customData['icon']['name'] == 'Sin dibujo') {
-                $customIcon = null;
+                // '' (no null): el cliente SÍ personalizó, eligiendo
+                // explícitamente no llevar ícono — EtiquetaService::
+                // resolverElementoDesign distingue esto ('' = respeta la
+                // elección, queda vacío) de null (no personalizó nada, cae
+                // al icon_id de respaldo del diseño).
+                $customIcon = '';
             }
 
             // === SELLOS PERSONALIZADOS (Producto 481) ===
@@ -1088,7 +1093,8 @@ class SaleController extends Controller
                 $customIcon = $customData['icon']['icon'] ?? null;
 
                 if ($customIcon && $customData['icon']['name'] == 'Sin dibujo') {
-                    $customIcon = null;
+                    // '' (no null): ver nota en EtiquetaService::resolverElementoDesign.
+                    $customIcon = '';
                 }
 
                 // === SELLOS PERSONALIZADOS (Producto 481) ===
@@ -1762,7 +1768,8 @@ class SaleController extends Controller
                 $customIcon = $customData['icon']['icon'] ?? null;
 
                 if ($customIcon && $customData['icon']['name'] == 'Sin dibujo') {
-                    $customIcon = null;
+                    // '' (no null): ver nota en EtiquetaService::resolverElementoDesign.
+                    $customIcon = '';
                 }
 
                 // === SELLOS PERSONALIZADOS (Producto 481) ===
@@ -1926,7 +1933,8 @@ class SaleController extends Controller
                         $customIcon = $customData['icon']['icon'] ?? null;
 
                         if ($customIcon && $customData['icon']['name'] == 'Sin dibujo') {
-                            $customIcon = null;
+                            // '' (no null): ver nota en EtiquetaService::resolverElementoDesign.
+                            $customIcon = '';
                         }
 
                         // === SELLOS PERSONALIZADOS (Producto 481) ===

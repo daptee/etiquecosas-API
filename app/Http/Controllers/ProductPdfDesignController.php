@@ -371,10 +371,10 @@ class ProductPdfDesignController extends Controller
                 unset($el);
 
                 if ($spotShape && $spotCellCount) {
-                    $this->applySpotLabelShape($page, $spotCellCount, $spotShape);
+                    $this->applySpotLabelShape($page, $spotCellCount, $spotShape, $viewPaths[$idx] ?? null);
                 }
 
-                $this->applyMaxiLabelShape($page);
+                $this->applyMaxiLabelShape($page, $viewPaths[$idx] ?? null);
 
                 $this->applyLegacyTextSizeRules($page, $viewPaths[$idx] ?? null);
 
@@ -1186,6 +1186,36 @@ class ProductPdfDesignController extends Controller
     }
 
     /**
+     * El interlineado real del nombre en las celdas "spot" — viene literal
+     * en el CSS de estas vistas: `.circulo-texto { line-height: 0.7; }`
+     * (igual en "spot", "spot-and-maxi", "maxi-and-spot" y
+     * "spot-and-super-mini", "SIN ICONO" incluidas). Medirlo de las líneas
+     * reales del PDF de muestra (lo que hace `PdfDesignImportService::
+     * textsToTextElement` para el resto del texto, ver
+     * PDF_IMPORTAR_DESDE_PDF.md) es una estimación — y en esta fila
+     * puntual, por la particularidad de dompdf que afecta la primera celda
+     * de una fila (ver más abajo, donde se normaliza por moda), puede salir
+     * bastante lejos del real. Leer el valor directo del CSS es exacto, así
+     * que tiene prioridad sobre la medición cuando está disponible. Null si
+     * la vista no declara esta regla (se sigue con el valor medido).
+     */
+    private function detectSpotLineHeight(string $viewPath): ?float
+    {
+        $viewPath = str_starts_with($viewPath, 'tematica/') ? $viewPath : "tematica/{$viewPath}";
+        $bladePath = resource_path('views/' . $viewPath . '.blade.php');
+        if (!is_file($bladePath)) {
+            return null;
+        }
+
+        $content = file_get_contents($bladePath);
+        if (!preg_match('/\.circulo-texto\s*\{[^}]*?line-height:\s*([\d.]+)/', $content, $m)) {
+            return null;
+        }
+
+        return (float) $m[1];
+    }
+
+    /**
      * El label_shape circular que representa estas celdas "spot" — por
      * nombre exacto ("Spot", el que ya está cargado en el catálogo, 3×3cm
      * — el mismo tamaño que declara `.circulo-personaje` en el CSS de estas
@@ -1424,29 +1454,37 @@ class ProductPdfDesignController extends Controller
      * vive en la OTRA grilla) directamente cae afuera del contorno. Acá se
      * fusionan ambas grillas en una sola, celda por celda: el fondo del
      * texto pasa a cubrir la etiqueta completa (ícono + texto) y a llevar la
-     * forma "Maxi". El fondo blanco del ícono y el ícono mismo NO se tocan
-     * (ver nota más abajo sobre por qué NO conviene usar `fill` ahí) — solo
-     * pasan a compartir grupo con el fondo ya agrandado, y ese fondo blanco
-     * sube de `z_index` para seguir dibujándose POR ENCIMA del fondo grande
-     * (que ahora también pasa por abajo de esa zona). De paso, al quedar
-     * ícono y texto con un fondo en común, se arma la misma "Relación"
-     * (`layout_groups`) que ya tienen el resto de las celdas con ícono+texto
-     * compartiendo fondo — antes esta vista quedaba afuera de esa mejora
-     * (ver nota en `PdfDesignImportService::import`) justamente por no tener
-     * ese fondo en común.
+     * forma "Maxi". El fondo blanco del ícono y el ícono mismo NO se tocan de
+     * posición (ver nota más abajo sobre por qué NO conviene usar `fill`
+     * ahí) — solo pasan a compartir grupo con el fondo ya agrandado, y ese
+     * fondo blanco sube de `z_index` para seguir dibujándose POR ENCIMA del
+     * fondo grande (que ahora también pasa por abajo de esa zona). El ícono
+     * sí se redimensiona (ver más abajo) y el nombre se recentra a mano en
+     * la zona que le queda libre — SIN usar `layout_groups` (ver esa nota
+     * más abajo también).
      *
-     * Por qué NO se usa `fill` en el ícono (como se probó primero): el fondo
-     * blanco de esta celda (`iconBg`) es más grande que el ícono real — la
-     * vista deja harto margen alrededor (`.etiqueta-maxi img { height:
-     * 1.2cm }`, fijo, sin importar el tamaño de la zona) — así que el ícono
-     * detectado YA viene más chico que esa zona blanca (es la medida real).
-     * Si en cambio se agranda la caja del propio ícono a la zona entera para
-     * poder pintarla de blanco con su `fill`, el ícono se dibuja con
-     * `object-fit: contain` (ver RENDER.blade.php) — que estira la imagen
-     * para ocupar la caja entera manteniendo proporción — y termina mucho
-     * más grande de lo que mide en el PDF real. Mantener el fondo blanco
-     * como elemento aparte (tal cual lo mide el PDF de muestra) evita este
-     * problema sin perder nada visual.
+     * Por qué NO se usa `fill` en el ícono (como se probó primero): si se
+     * agranda la caja del propio ícono a toda la zona blanca para poder
+     * pintarla con su `fill`, el ícono se dibuja con `object-fit: contain`
+     * (ver RENDER.blade.php) — que estira la imagen para ocupar la caja
+     * entera manteniendo proporción — y termina mucho más grande de lo que
+     * debería. Mantener el fondo blanco como elemento aparte evita este
+     * problema sin perder nada visual, y de paso dando control total sobre
+     * el tamaño del ícono (ver el padding más abajo).
+     *
+     * Por qué el nombre NO se recentra con `layout_groups` (como se probó
+     * primero, igual que el resto del importador para celdas con un fondo
+     * en común): esa herramienta trata ícono+texto como UN bloque único y
+     * centra ESE bloque en la etiqueta entera — como el bloque es más
+     * angosto que la etiqueta completa, el ícono terminaba corrido de su
+     * lugar fijo en la zona blanca (se recentraba junto con el texto, en vez
+     * de quedarse quieto). Acá el ícono nunca se mueve de su zona; el nombre
+     * solo (`reflow_with_icon_id`/`reflow_container_id`/
+     * `reflow_icon_zone_width_cm`, ver `EtiquetaService::
+     * ocultarFondosDeIconoAusente`) se recentra en la zona libre a mano, y
+     * en TODA la etiqueta si la venta real no trae ningún ícono (ahí la zona
+     * del ícono ya está oculta, ver nota de `hidden_with_icon_id` más
+     * abajo).
      *
      * El TAMAÑO de la etiqueta fusionada es el que mide EL PDF de muestra
      * (la unión de los dos fondos detectados) — a diferencia de
@@ -1468,12 +1506,25 @@ class ProductPdfDesignController extends Controller
      * importa que su tamaño de catálogo no coincida con el de esta celda).
      *
      * No pasa nada si la vista no tiene este patrón (vuelve sin tocar nada).
+     *
+     * Si `$viewPath` es una vista "PERSONALIZABLE" (ver nota en
+     * `PDF_IMPORTAR_DESDE_PRODUCTO.md`: estas vistas no tienen ícono/color
+     * real detrás, el cliente los elige al comprar), de paso el ícono y el
+     * fondo ya fusionado quedan marcados `editable_by_customer`/
+     * `editable_field` (`"icon"`/`"color"`) — así una venta real ya sale con
+     * el ícono/color que eligió el cliente (`EtiquetaService::
+     * resolverElementoDesign`) sin que haya que tocar nada a mano en el
+     * editor. `icon_id`/`color` quedan igual de fallback (si la venta no
+     * trae ninguno). El texto NO se marca editable por color: la vista
+     * legacy lo pinta siempre blanco fijo (`color:#FFF` en el `<p>`,
+     * independiente de `$plantilla['colores']`, que solo pinta el fondo).
      */
-    private function applyMaxiLabelShape(array &$page): void
+    private function applyMaxiLabelShape(array &$page, ?string $viewPath = null): void
     {
         if (empty($page['grids']) || count($page['grids']) < 2) {
             return;
         }
+        $isPersonalizable = $viewPath && str_contains($viewPath, 'PERSONALIZABLE');
 
         $elementsById = [];
         foreach ($page['elements'] as $index => $el) {
@@ -1529,7 +1580,6 @@ class ProductPdfDesignController extends Controller
             ];
         }
 
-        $layoutGroups = [];
         $resizedBackgroundBoxes = []; // slot => [x_cm, y_cm], para recalcular gap_x_cm/gap_y_cm al final.
         foreach ($cellPairs as $cellOffset => $pair) {
             $slot = $cellKeys[$cellOffset];
@@ -1542,12 +1592,6 @@ class ProductPdfDesignController extends Controller
             $icon = $page['elements'][$iconIndex];
             $textBg = $page['elements'][$textBgIndex];
             $text = $page['elements'][$textIndex];
-
-            // La "Relación" se mide con las cajas de ANTES de tocar nada —
-            // mismo criterio que el resto del importador para celdas con un
-            // fondo en común (acá recién estamos creando ese fondo en
-            // común).
-            $layoutGroups[] = PdfDesignImportService::buildIconTextLayoutGroup($icon, $text, $pair['textIds'][0]);
 
             // El tamaño de la etiqueta fusionada es el que REALMENTE mide
             // este PDF de muestra (la unión de los dos fondos detectados),
@@ -1586,6 +1630,51 @@ class ProductPdfDesignController extends Controller
             $groupId = $iconBg['group_id'] ?? ('group-imported-' . uniqid());
             $page['elements'][$textBgIndex]['group_id'] = $groupId;
 
+            // El ícono detectado puede venir chico o pegado al borde de su
+            // propia zona blanca (algunos íconos no traen margen propio en
+            // su SVG) — se lo achica O agranda (preservando proporción) al
+            // máximo que entra en esa zona, con margen fijo SOLO a los
+            // costados (el nombre real de la vista: `.etiqueta-maxi img {
+            // height: 1.2cm }`, una altura fija que no deja margen vertical
+            // de más — el ícono ocupa casi toda la altura disponible).
+            $iconHorizontalPaddingCm = 0.3;
+            $iconVerticalPaddingCm = 0.12;
+            $maxIconWidth = max(0.2, $iconBg['width_cm'] - 2 * $iconHorizontalPaddingCm);
+            $maxIconHeight = max(0.2, $iconBg['height_cm'] - 2 * $iconVerticalPaddingCm);
+            $scale = min($maxIconWidth / $icon['width_cm'], $maxIconHeight / $icon['height_cm']);
+            $iconCenterX = $iconBg['x_cm'] + $iconBg['width_cm'] / 2;
+            $iconCenterY = $iconBg['y_cm'] + $iconBg['height_cm'] / 2;
+            $icon['width_cm'] = round($icon['width_cm'] * $scale, 2);
+            $icon['height_cm'] = round($icon['height_cm'] * $scale, 2);
+            $icon['x_cm'] = round($iconCenterX - $icon['width_cm'] / 2, 2);
+            $icon['y_cm'] = round($iconCenterY - $icon['height_cm'] / 2, 2);
+            $page['elements'][$iconIndex]['x_cm'] = $icon['x_cm'];
+            $page['elements'][$iconIndex]['y_cm'] = $icon['y_cm'];
+            $page['elements'][$iconIndex]['width_cm'] = $icon['width_cm'];
+            $page['elements'][$iconIndex]['height_cm'] = $icon['height_cm'];
+
+            // El nombre se centra (horizontal Y vertical) en la zona a la
+            // derecha del ícono, SIN usar `layout_groups`: se probó primero
+            // armar una "Relación" ícono+texto ahí (mismo mecanismo que el
+            // resto del importador para celdas con un fondo en común) pero
+            // esa herramienta centra el ícono+texto como UN bloque único
+            // dentro de la etiqueta entera — como el bloque (ícono+texto)
+            // es más angosto que la etiqueta completa, el ícono terminaba
+            // corrido de su lugar fijo en la zona blanca (se recentraba con
+            // el texto, no al revés). Acá el ícono NUNCA se mueve de su
+            // zona — el nombre es el único que se reacomoda, calculando su
+            // propia zona disponible a mano. Si la venta real no trae
+            // ningún ícono, `EtiquetaService::ocultarFondosDeIconoAusente`
+            // además re-centra el nombre en la etiqueta ENTERA (sin
+            // descontar la zona del ícono, que para entonces ya está oculta).
+            $textZoneLeft = $iconBg['x_cm'] + $iconBg['width_cm'];
+            $textZoneWidth = ($left + $width) - $textZoneLeft;
+            $page['elements'][$textIndex]['x_cm'] = round($textZoneLeft + ($textZoneWidth - $text['width_cm']) / 2, 2);
+            $page['elements'][$textIndex]['y_cm'] = round($top + ($height - $text['height_cm']) / 2, 2);
+            $page['elements'][$textIndex]['reflow_with_icon_id'] = $icon['id'];
+            $page['elements'][$textIndex]['reflow_container_id'] = $textBg['id'];
+            $page['elements'][$textIndex]['reflow_icon_zone_width_cm'] = $iconBg['width_cm'];
+
             // El fondo blanco del ícono (`iconBg`) y el ícono NO se tocan —
             // ver nota de arriba. Solo pasan al mismo grupo que el fondo ya
             // agrandado (clickear/mover cualquiera mueve la celda entera), y
@@ -1600,6 +1689,24 @@ class ProductPdfDesignController extends Controller
             $page['elements'][$iconIndex]['z_index'] = 2;
             $page['elements'][$iconIndex]['group_id'] = $groupId;
             $page['elements'][$textIndex]['z_index'] = 3;
+
+            if ($isPersonalizable) {
+                $page['elements'][$iconIndex]['editable_by_customer'] = true;
+                $page['elements'][$iconIndex]['editable_field'] = 'icon';
+                $page['elements'][$textBgIndex]['editable_by_customer'] = true;
+                $page['elements'][$textBgIndex]['editable_field'] = 'color';
+
+                // Si el cliente no personaliza ningún ícono (o elige
+                // explícitamente "Sin dibujo", ver EtiquetaService::
+                // resolverElementoDesign), el ícono real de la venta
+                // queda vacío — este fondo blanco, que solo existe para
+                // esa zona, tiene que desaparecer junto con él (ver
+                // EtiquetaService::ocultarFondosDeIconoAusente) para que
+                // el nombre se pueda recentrar en toda la etiqueta sin
+                // quedar un rectángulo blanco de más (y el propio texto,
+                // blanco, invisible encima suyo).
+                $page['elements'][$iconBgIndex]['hidden_with_icon_id'] = $icon['id'];
+            }
 
             $resizedBackgroundBoxes[$slot] = ['x_cm' => round($left, 2), 'y_cm' => round($top, 2)];
         }
@@ -1618,10 +1725,6 @@ class ProductPdfDesignController extends Controller
 
         array_splice($page['grids'], $iconGridIndex, 1);
         $textGridIndex = $iconGridIndex < $textGridIndex ? $textGridIndex - 1 : $textGridIndex;
-
-        if (!empty($layoutGroups)) {
-            $page['layout_groups'] = array_merge($page['layout_groups'] ?? [], $layoutGroups);
-        }
 
         // El `gap_x_cm`/`gap_y_cm` de esta grilla se calculó en
         // PdfDesignImportService::detectGrids() con el ancho/alto del fondo
@@ -1704,9 +1807,21 @@ class ProductPdfDesignController extends Controller
      * `.circulo-personaje { width: 3cm; height: 3cm }` en el CSS de estas
      * vistas) — se usa directo el tamaño del label_shape del catálogo, que
      * es ese mismo valor fijo.
+     *
+     * Si `$viewPath` es una vista "PERSONALIZABLE" (sin ícono/color real
+     * detrás — el cliente los elige al comprar, ver nota en
+     * `PDF_IMPORTAR_DESDE_PRODUCTO.md`), el ícono y el nombre de esta celda
+     * quedan marcados `editable_by_customer`/`editable_field`
+     * (`"icon"`/`"color"`): en esta vista el color de `$plantilla` pinta el
+     * NOMBRE (`.circulo-texto`, `color:{{ $plantilla['colores'] }}`), no un
+     * fondo propio (el círculo no tiene background en el CSS legacy), así
+     * que acá el campo editable es el texto, no el fondo blanco sintético
+     * que arma este método para que el editor tenga algo que recortar.
      */
-    private function applySpotLabelShape(array &$page, int $spotCellCount, LabelShape $spotShape): void
+    private function applySpotLabelShape(array &$page, int $spotCellCount, LabelShape $spotShape, ?string $viewPath = null): void
     {
+        $isPersonalizable = $viewPath && str_contains($viewPath, 'PERSONALIZABLE');
+        $cssLineHeight = $viewPath ? $this->detectSpotLineHeight($viewPath) : null;
         $grids = $page['grids'] ?? [];
         $matchingGridIndex = null;
         foreach ($grids as $gridIndex => $grid) {
@@ -1841,6 +1956,11 @@ class ProductPdfDesignController extends Controller
             $page['elements'][$backgroundIndex]['label_shape_id'] = $spotShape->id;
             $page['elements'][$backgroundIndex]['color'] = ['mode' => 'hex', 'value' => '#FFFFFF'];
 
+            if ($isPersonalizable) {
+                $page['elements'][$iconIndex]['editable_by_customer'] = true;
+                $page['elements'][$iconIndex]['editable_field'] = 'icon';
+            }
+
             // El ANCHO de esta caja de texto quedaba calculado "lo justo"
             // para el renglón más largo del PDF de origen (ver
             // PdfDesignImportService::textsToTextElement) — bien para un
@@ -1885,6 +2005,11 @@ class ProductPdfDesignController extends Controller
                 // CUALQUIER temática que la vista legacy achique a mano con
                 // CSS (`.circulo-personaje p.normal-text-size`/`p.small-text-
                 // size`, en este caso), no algo puntual de "spot".
+
+                if ($isPersonalizable) {
+                    $page['elements'][$bestTextIndex]['editable_by_customer'] = true;
+                    $page['elements'][$bestTextIndex]['editable_field'] = 'color';
+                }
             }
 
             $resizedBackgroundBoxes[$slot] = ['x_cm' => $page['elements'][$backgroundIndex]['x_cm'], 'y_cm' => $page['elements'][$backgroundIndex]['y_cm']];
@@ -1972,6 +2097,55 @@ class ProductPdfDesignController extends Controller
                 'x_cm' => $page['elements'][$components['background']]['x_cm'],
                 'y_cm' => $page['elements'][$components['background']]['y_cm'],
             ];
+        }
+
+        // La misma particularidad de dompdf que corrige el bloque de arriba
+        // (posición) también afecta, en la o las celdas que le toque, el
+        // `line_height`/`height_cm` MEDIDO del nombre — acá sí puede salir
+        // una diferencia grande (no 1-2mm): una columna entera con un
+        // interlineado visiblemente más separado que el resto, aunque sea
+        // exactamente el mismo texto/tamaño de fuente. Como estas celdas son
+        // todas iguales por diseño, se normalizan todas al mismo
+        // `line_height`/`height_cm` — ideal el real del CSS
+        // (`detectSpotLineHeight()`, `.circulo-texto { line-height: 0.7 }`),
+        // si no se pudo leer la vista, a la moda (el valor que más se repite
+        // entre todas las celdas del renglón — no la media/mediana: acá el
+        // objetivo es "la mayoría tiene razón, las pocas distintas están mal
+        // medidas", no promediar un valor que legítimamente varía de celda a
+        // celda).
+        $moda = function (array $values) {
+            $counts = array_count_values(array_map(fn($v) => (string) $v, $values));
+            arsort($counts);
+            return (float) array_key_first($counts);
+        };
+        $lineHeights = [];
+        $textHeights = [];
+        foreach ($cellComponents as $components) {
+            $textIndex = $components['text'];
+            if ($textIndex === null) {
+                continue;
+            }
+            $lineHeights[] = $page['elements'][$textIndex]['line_height'] ?? null;
+            $textHeights[] = $page['elements'][$textIndex]['height_cm'] ?? null;
+        }
+        $lineHeights = array_filter($lineHeights, fn($v) => $v !== null);
+        $textHeights = array_filter($textHeights, fn($v) => $v !== null);
+        if (count($lineHeights) > 1) {
+            // El CSS real (`.circulo-texto { line-height: 0.7 }`) tiene
+            // prioridad sobre la moda de lo medido — es exacto, no una
+            // estimación, y la particularidad de dompdf de arriba puede
+            // hacer que hasta la moda se aleje del real si afecta a más de
+            // una celda.
+            $modalLineHeight = $cssLineHeight ?? $moda($lineHeights);
+            $modalTextHeight = $moda($textHeights);
+            foreach ($cellComponents as $components) {
+                $textIndex = $components['text'];
+                if ($textIndex === null) {
+                    continue;
+                }
+                $page['elements'][$textIndex]['line_height'] = $modalLineHeight;
+                $page['elements'][$textIndex]['height_cm'] = $modalTextHeight;
+            }
         }
 
         // El `gap_x_cm`/`gap_y_cm` de esta grilla se calculó en

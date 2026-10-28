@@ -360,7 +360,9 @@ class PdfDirectoryController extends Controller
             $customColor = $customData['color']['color_code'] ?? null;
             $customIcon = $customData['icon']['icon'] ?? null;
             if ($customIcon && ($customData['icon']['name'] ?? null) == 'Sin dibujo') {
-                $customIcon = null;
+                // '' (no null): personalización explícita de "ningún ícono" —
+                // ver nota en EtiquetaService::resolverElementoDesign.
+                $customIcon = '';
             }
 
             // Solo los archivos de ESTA línea de venta — no limpiarPdfsDelPedido()

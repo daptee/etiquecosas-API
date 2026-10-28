@@ -60,6 +60,8 @@ El storefront ya manda esto hoy en `customization_data` de cada producto de la v
 - `icon.icon`: la ruta del archivo tal como la devuelve `GET /api/icons` (un `icon_id` del catálogo de `personalization_icons`), relativa a `public/`.
 - `icon.name`: **caso especial** — si vale exactamente `"Sin dibujo"`, el backend lo interpreta como "el cliente eligió no llevar ícono" y el/los elementos editables quedan **sin ícono** (espacio en blanco), no con el `icon_id` del diseño. Si el producto permite esa opción, tiene que seguir viniendo con ese `name` literal.
 
+  (Internamente, para que esto funcione, los controladores de venta/webhook mandan `''` — no `null` — como ícono del cliente cuando pasa esto: `EtiquetaService::resolverElementoDesign` distingue "el cliente SÍ personalizó, pero eligió nada" (`''`, queda vacío) de "no personalizó nada" (`null`, cae al `icon_id` de respaldo). Antes de este fix caían los dos casos al `icon_id` de respaldo por igual, contrario a lo que ya decía este doc.)
+
 Si `customization_data` no trae `icon` en absoluto (producto sin personalización de ícono), todos los elementos —editables o no— se renderizan con su `icon_id` del diseño, como si nada.
 
 ---
