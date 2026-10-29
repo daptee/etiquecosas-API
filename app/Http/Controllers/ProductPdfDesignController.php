@@ -1534,6 +1534,28 @@ class ProductPdfDesignController extends Controller
     }
 
     /**
+     * `width`/`height` en cm de la clase CSS de la forma "externa" (ej.
+     * `.etiqueta-super-mini { width: 2.9cm; height: 1.15cm; ... }`, no su
+     * `-content-container` interno) — usado para resolver qué grilla
+     * importada corresponde a cada clase por GEOMETRÍA (ver
+     * applyLegacyTextSizeRules()/applySuperMiniLabelShape(), mismo criterio).
+     */
+    private function extractClassBoxDimensions(string $content, string $className): ?array
+    {
+        if (!preg_match('/\.' . preg_quote($className, '/') . '\s*\{([^}]*)\}/i', $content, $blockMatch)) {
+            return null;
+        }
+        if (
+            !preg_match('/width:\s*([\d.]+)cm/i', $blockMatch[1], $widthMatch)
+            || !preg_match('/height:\s*([\d.]+)cm/i', $blockMatch[1], $heightMatch)
+        ) {
+            return null;
+        }
+
+        return [(float) $widthMatch[1], (float) $heightMatch[1]];
+    }
+
+    /**
      * Cuántas veces se repite una celda de clase `$className` en la vista —
      * generaliza `detectSpotCellCount()` (que solo sabe leer el `@for`
      * simple de la fila "spot") a CUALQUIER contenedor, incluidos los que
@@ -1617,6 +1639,7 @@ class ProductPdfDesignController extends Controller
         $baseLineHeightByClass = $this->extractBaseLineHeightFromView($content);
 
         $sharedCssPath = public_path('css/etiquetas.css');
+        $sharedContent = null;
         if (is_file($sharedCssPath)) {
             $sharedContent = file_get_contents($sharedCssPath);
             foreach ($this->extractTextSizeTiersFromView($sharedContent) as $className => $tiers) {
@@ -1667,10 +1690,57 @@ class ProductPdfDesignController extends Controller
             if (count($tiers) < 2) {
                 continue; // un solo tamaño: no hay nada que varíe según longitud.
             }
-            $count = $this->countRepeatedClassOccurrences($content, $className);
 
             $gridIndex = null;
-            if ($count) {
+
+            // Prioridad 1: geometría. `$className` es siempre el contenedor
+            // INTERNO de una forma (ej. "etiqueta-super-mini-content-
+            // container") — su forma EXTERNA (sacando el sufijo) trae un
+            // `width`/`height` en cm fijos en el CSS (ver `.etiqueta-super-
+            // mini { width: 2.9cm; height: 1.15cm }`), igual que
+            // `applySuperMiniLabelShape()`. Esto resuelve vistas tipo
+            // `tematica/principal/*` que combinan maxi+vertical+super-maxi+
+            // super-mini SIN ningún `@for` (todo `<td>` repetido a mano): ahí
+            // `countRepeatedClassOccurrences()` no cuenta nada y las 3+
+            // clases con niveles ("maxi", "super-maxi", "super-mini") dejan
+            // más de una grilla sin reclamar con texto, así que el fallback
+            // de "única grilla candidata" de más abajo tampoco alcanza a
+            // resolver ninguna. La tolerancia de 0.1cm absorbe una vista
+            // puntual como "vertical", cuyo elemento medido difiere en 0.05cm
+            // del `width`/`height` declarado en el CSS (padding/borde).
+            $baseClassName = preg_replace('/-content-container$/', '', $className);
+            $boxDimensions = $this->extractClassBoxDimensions($content, $baseClassName)
+                ?? ($sharedContent !== null ? $this->extractClassBoxDimensions($sharedContent, $baseClassName) : null);
+            if ($boxDimensions) {
+                [$targetWidth, $targetHeight] = $boxDimensions;
+                foreach ($page['grids'] as $idx => $grid) {
+                    if (in_array($idx, $claimedGridIndexes, true) || !$gridHasText($grid)) {
+                        continue;
+                    }
+                    $templateBgIndex = null;
+                    foreach ($grid['template'] as $id) {
+                        $i = $elementsById[$id] ?? null;
+                        if ($i !== null && ($page['elements'][$i]['type'] ?? null) === 'background') {
+                            $templateBgIndex = $i;
+                            break;
+                        }
+                    }
+                    if ($templateBgIndex === null) {
+                        continue;
+                    }
+                    $templateBg = $page['elements'][$templateBgIndex];
+                    if (abs((float) $templateBg['width_cm'] - $targetWidth) <= 0.1 && abs((float) $templateBg['height_cm'] - $targetHeight) <= 0.1) {
+                        $gridIndex = $idx;
+                        break;
+                    }
+                }
+            }
+
+            $count = $gridIndex === null ? $this->countRepeatedClassOccurrences($content, $className) : null;
+
+            if ($gridIndex !== null) {
+                // ya resuelto por geometría.
+            } elseif ($count) {
                 // Una misma cantidad de celdas puede coincidir con MÁS de una
                 // grilla (ej. la tabla "maxi" arma una grilla para el fondo
                 // del ícono y otra, aparte, para el fondo del texto — ambas
