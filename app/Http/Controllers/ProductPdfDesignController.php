@@ -250,6 +250,13 @@ class ProductPdfDesignController extends Controller
         }
 
         $product = Product::find($productId);
+        if (!$product) {
+            // Mismo caso que la variante de arriba: el rule "exists" valida
+            // contra la tabla cruda, sin el global scope de SoftDeletes — un
+            // producto borrado pasa la validación pero Product::find() (sí
+            // soft-delete-aware) devuelve null.
+            return $this->error('El producto elegido no existe o fue eliminado', 422);
+        }
         $productOrder = (object) [
             'id' => 'import-' . uniqid(),
             'product' => (object) ['name' => $product->name],
@@ -388,6 +395,8 @@ class ProductPdfDesignController extends Controller
                 $this->applyMaxiLabelShape($page, $viewPaths[$idx] ?? null);
 
                 $this->applySuperMiniLabelShape($page, $viewPaths[$idx] ?? null);
+
+                $this->applyViniloLabelShape($page, $viewPaths[$idx] ?? null);
 
                 $this->applyLegacyTextSizeRules($page, $viewPaths[$idx] ?? null);
 
@@ -1277,6 +1286,7 @@ class ProductPdfDesignController extends Controller
             'super-maxi' => 'Super Maxi',
             'super-mini' => 'Super Mini',
             'spot' => 'Spot',
+            'vinilo' => 'Vinilo',
         ];
 
         foreach (explode('-and-', $folder) as $segment) {
@@ -1430,6 +1440,91 @@ class ProductPdfDesignController extends Controller
                         continue;
                     }
                     $page['elements'][$index]['label_shape_id'] = $superMiniShape->id;
+                }
+            }
+        }
+    }
+
+    /**
+     * El label_shape "Vinilo" del catálogo (id=8, rect, 5.40×1.80cm,
+     * `data.corner_radius_cm: 0.61`) — coincide exacto con `.icon-cuadro` de
+     * `public/css/vinilo.css` (`width: 5.4cm; height: 1.8cm; border-radius:
+     * 23px`, ≈0.61cm), la única clase que usan todas las vistas
+     * `tematica/vinilo/*.blade.php`.
+     */
+    private function resolveViniloLabelShape(): ?LabelShape
+    {
+        return LabelShape::where('name', 'Vinilo')->first();
+    }
+
+    /**
+     * Le asigna `label_shape_id` (rectángulo "Vinilo") a cada celda de las
+     * vistas `tematica/vinilo/*` — mismo criterio que
+     * `applySuperMiniLabelShape()` (el fondo que ya detecta el importador ES
+     * la etiqueta real, del mismo tamaño que el catálogo, solo hay que
+     * etiquetarlo). Sin esto el importado quedaba SIN forma asignada, así
+     * que al generar el PDF no había de dónde sacar el `corner_radius_cm`
+     * (ver `resolved_shape_corner_radius_cm` en RENDER.blade.php) y la
+     * etiqueta salía con las esquinas rectas en vez del redondeado real.
+     *
+     * A diferencia de `applySuperMiniLabelShape()`, acá no hace falta buscar
+     * una clase CSS puntual en el HTML (`.icon-cuadro` no tiene "vinilo" en
+     * el nombre) — alcanza con que la vista sea del directorio `vinilo/`
+     * (`$viewPath` ya viene de ahí para cualquier producto con esta
+     * temática) para saber que CUALQUIER grilla de esta página es esta
+     * forma.
+     */
+    private function applyViniloLabelShape(array &$page, ?string $viewPath): void
+    {
+        if (!$viewPath || empty($page['grids'])) {
+            return;
+        }
+        $normalizedViewPath = str_starts_with($viewPath, 'tematica/') ? $viewPath : "tematica/{$viewPath}";
+        if (!str_starts_with($normalizedViewPath, 'tematica/vinilo/')) {
+            return;
+        }
+        $viniloShape = $this->resolveViniloLabelShape();
+        if (!$viniloShape) {
+            return;
+        }
+
+        $targetWidth = round((float) $viniloShape->width_cm, 1);
+        $targetHeight = round((float) $viniloShape->height_cm, 1);
+
+        $indexById = [];
+        foreach ($page['elements'] as $index => $el) {
+            $indexById[$el['id']] = $index;
+        }
+
+        foreach ($page['grids'] as $grid) {
+            $templateBgIndex = null;
+            foreach ($grid['template'] as $id) {
+                $index = $indexById[$id] ?? null;
+                if ($index !== null && ($page['elements'][$index]['type'] ?? null) === 'background') {
+                    $templateBgIndex = $index;
+                    break;
+                }
+            }
+            if ($templateBgIndex === null) {
+                continue;
+            }
+            $templateBg = $page['elements'][$templateBgIndex];
+            if (round((float) $templateBg['width_cm'], 1) !== $targetWidth || round((float) $templateBg['height_cm'], 1) !== $targetHeight) {
+                continue;
+            }
+
+            $cellIdLists = [$grid['template']];
+            foreach ($grid['members'] as $member) {
+                $cellIdLists[] = array_column(array_filter($member), 'id');
+            }
+
+            foreach ($cellIdLists as $ids) {
+                foreach ($ids as $id) {
+                    $index = $indexById[$id] ?? null;
+                    if ($index === null || ($page['elements'][$index]['type'] ?? null) !== 'background') {
+                        continue;
+                    }
+                    $page['elements'][$index]['label_shape_id'] = $viniloShape->id;
                 }
             }
         }
