@@ -1476,10 +1476,11 @@ class ProductPdfDesignController extends Controller
      * acá SÍ hace falta capturar el bloque `{...}` completo (no solo
      * `font-size`), porque un nivel puede NO declarar `line-height` (ej.
      * `small-text-size` de "Super Mini" solo trae `font-size`, sin
-     * `line-height` propio — ahí ese nivel queda afuera del resultado y
-     * `applyLegacyTextSizeRules()` usa el `line_height` base del elemento
-     * para ese nivel puntual). Devuelve `[containerClass => ['normal' =>
-     * 0.8, 'extra_small' => 0.8]]` con lo que encuentre.
+     * `line-height` propio — ese nivel queda afuera del resultado y
+     * `applyLegacyTextSizeRules()` usa `extractBaseLineHeightFromView()`
+     * para ese nivel puntual, NO el `line_height` del elemento). Devuelve
+     * `[containerClass => ['normal' => 0.8, 'extra_small' => 0.8]]` con lo
+     * que encuentre.
      */
     private function extractLineHeightTiersFromView(string $content): array
     {
@@ -1500,6 +1501,36 @@ class ProductPdfDesignController extends Controller
         }
 
         return $tiers;
+    }
+
+    /**
+     * El `line-height` "de base" de un contenedor (`.container p { ...
+     * line-height: X }`, SIN sufijo `.normal/.small/.extra-small-text-size`)
+     * — es lo que de verdad termina usando un nivel que no declara su propio
+     * `line-height` (ej. `small-text-size` de "Super Mini"): por cascada CSS,
+     * `.container p.small-text-size` sin `line-height` propio no "no tiene
+     * line-height", cae al de `.container p` (MENOS específico, pero el
+     * único que sí lo declara) — es el mismo valor real que usa el PDF
+     * legacy para ese nivel, a diferencia de usar el `line_height` ya
+     * medido/guardado del elemento de muestra (un artefacto de la
+     * importación, no necesariamente el mismo número). Devuelve
+     * `[containerClass => lineHeight]`.
+     */
+    private function extractBaseLineHeightFromView(string $content): array
+    {
+        $baseLineHeights = [];
+        if (preg_match_all(
+            '/\.([\w-]+)\s+p\s*\{[^}]*?line-height:\s*([\d.]+)/i',
+            $content,
+            $matches,
+            PREG_SET_ORDER
+        )) {
+            foreach ($matches as $m) {
+                $baseLineHeights[$m[1]] = (float) $m[2];
+            }
+        }
+
+        return $baseLineHeights;
     }
 
     /**
@@ -1583,6 +1614,7 @@ class ProductPdfDesignController extends Controller
 
         $tiersByClass = $this->extractTextSizeTiersFromView($content);
         $lineHeightTiersByClass = $this->extractLineHeightTiersFromView($content);
+        $baseLineHeightByClass = $this->extractBaseLineHeightFromView($content);
 
         $sharedCssPath = public_path('css/etiquetas.css');
         if (is_file($sharedCssPath)) {
@@ -1595,6 +1627,11 @@ class ProductPdfDesignController extends Controller
             foreach ($this->extractLineHeightTiersFromView($sharedContent) as $className => $tiers) {
                 if (!isset($lineHeightTiersByClass[$className])) {
                     $lineHeightTiersByClass[$className] = $tiers;
+                }
+            }
+            foreach ($this->extractBaseLineHeightFromView($sharedContent) as $className => $lineHeight) {
+                if (!isset($baseLineHeightByClass[$className])) {
+                    $baseLineHeightByClass[$className] = $lineHeight;
                 }
             }
         }
@@ -1612,8 +1649,10 @@ class ProductPdfDesignController extends Controller
         $claimedGridIndexes = [];
         // Los umbrales van siempre los reales del `$fontClass` legacy (16 y
         // 20 — ver EtiquetaService::generarEtiquetas), en el mismo orden que
-        // los 3 niveles posibles.
-        $tierMaxChars = ['normal' => 16, 'small' => 20, 'extra_small' => 999];
+        // los 3 niveles posibles. El último usa 26 (no 999 ni null) como
+        // "para el resto": un número real y editable en el panel del editor,
+        // en vez de un sentinela que no significa nada ahí.
+        $tierMaxChars = ['normal' => 16, 'small' => 20, 'extra_small' => 26];
 
         $gridHasText = function (array $grid) use ($elementsById, $page): bool {
             foreach ($grid['template'] as $id) {
@@ -1702,11 +1741,16 @@ class ProductPdfDesignController extends Controller
             // Mismos umbrales, para el interlineado — solo si el CSS real
             // define al menos un `line-height` puntual para esta clase (ej.
             // "Super Mini": `normal`/`extra_small` sí, `small` no). El nivel
-            // que no lo define deja cada texto con el `line_height` que ya
-            // tenía (no hay un valor legacy del que copiarlo para ESE nivel
-            // puntual).
+            // que no lo define usa el `line-height` BASE del contenedor
+            // (`.container p { line-height: X }`, sin sufijo de nivel — ver
+            // extractBaseLineHeightFromView()): por cascada CSS, es lo que
+            // ese nivel usa en realidad en el PDF legacy. Si ni siquiera el
+            // contenedor define un base (no debería pasar en la práctica),
+            // se cae al `line_height` ya resuelto del elemento de muestra,
+            // como último recurso.
             $lineHeightTiers = $lineHeightTiersByClass[$className] ?? [];
             $hasLineHeightOverride = (bool) array_intersect_key($lineHeightTiers, array_flip($ruleTierKeys));
+            $baseLineHeight = $baseLineHeightByClass[$className] ?? null;
 
             $textIds = array_filter($page['grids'][$gridIndex]['template'], fn($id) => ($elementsById[$id] ?? null) !== null && ($page['elements'][$elementsById[$id]]['type'] ?? null) === 'text');
             foreach ($page['grids'][$gridIndex]['members'] as $member) {
@@ -1726,16 +1770,27 @@ class ProductPdfDesignController extends Controller
                 $page['elements'][$index]['font_size_px'] = $fallbackFontSizePx;
 
                 if ($hasLineHeightOverride) {
-                    $baseLineHeight = $page['elements'][$index]['line_height'] ?? 1.15;
+                    $fallbackLineHeight = $baseLineHeight ?? ($page['elements'][$index]['line_height'] ?? 1.15);
                     $lineHeightRules = [];
                     foreach ($ruleTierKeys as $i => $tierKey) {
                         $lineHeightRules[] = [
                             'max_chars' => $rules[$i]['max_chars'],
-                            'line_height' => $lineHeightTiers[$tierKey] ?? $baseLineHeight,
+                            'line_height' => $lineHeightTiers[$tierKey] ?? $fallbackLineHeight,
                         ];
                     }
                     $page['elements'][$index]['line_height_rules_enabled'] = true;
                     $page['elements'][$index]['line_height_rules'] = $lineHeightRules;
+                    // `line_height_rules` es el formato "wire" que el backend
+                    // de verdad lee al generar el PDF (EtiquetaService::
+                    // resolverInterlineado) — `line_height_tiers` es el campo
+                    // EDITABLE que el panel del editor muestra/edita (ver
+                    // useDesignEditor.ts, PdfDesignHelper.resolveLineHeightRulesPayload
+                    // arma el primero A PARTIR del segundo recién al guardar).
+                    // Sin este segundo campo, el editor mostraba el toggle
+                    // prendido pero la tabla de reglas vacía — y si el admin
+                    // guardaba así sin tocar nada, el próximo save mandaba
+                    // `line_height_rules` vacío y perdía esto.
+                    $page['elements'][$index]['line_height_tiers'] = $lineHeightRules;
                 }
             }
         }
