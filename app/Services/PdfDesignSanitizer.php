@@ -148,6 +148,19 @@ class PdfDesignSanitizer
             if (isset($el['padding_cm'])) {
                 $el['padding_cm'] = max(0, min(50, (float) $el['padding_cm']));
             }
+            // Ver PDF_ESCALA_ICONO_Y_COLOR_DE_LA_COMPRA.md: tamaño del ícono
+            // dibujado, en % del bloque (type:"icon" únicamente, pero acá no
+            // hace falta chequear el tipo — en cualquier otro elemento
+            // RENDER.blade.php simplemente no lo lee). Ausente = 100% (todo
+            // el bloque, comportamiento de siempre). Si no es numérico, se
+            // descarta (se trata como ausente) en vez de guardar basura.
+            if (array_key_exists('icon_scale_pct', $el)) {
+                if (is_numeric($el['icon_scale_pct'])) {
+                    $el['icon_scale_pct'] = max(10, min(100, (int) round((float) $el['icon_scale_pct'])));
+                } else {
+                    unset($el['icon_scale_pct']);
+                }
+            }
             if (isset($el['font_weight'])) {
                 $el['font_weight'] = max(100, min(900, (int) $el['font_weight']));
             }

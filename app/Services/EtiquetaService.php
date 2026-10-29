@@ -586,18 +586,21 @@ class EtiquetaService
      * bloque único en la etiqueta entera, y el ícono tiene que quedarse fijo
      * en su propia zona, no recentrarse junto con el texto):
      *
-     * 1. Un fondo "decorativo" puntual de un ícono (el fondo blanco angosto
-     *    de la zona del ícono) puede traer `hidden_with_icon_id` apuntando
-     *    al ícono real que acompaña — si ESE ícono queda sin imagen resuelta
-     *    (el cliente no personalizó ninguno, o eligió explícitamente "Sin
-     *    dibujo", ver `resolverElementoDesign()`), el fondo tiene que
-     *    desaparecer junto con él (si no, el nombre recentrado por el punto
-     *    2 termina superpuesto a un rectángulo que ya no tiene ningún ícono
-     *    adentro — y si encima es blanco, el propio texto blanco se vuelve
-     *    invisible ahí). Se usa `layout_hidden`, el mismo campo que ya usa
-     *    `aplicarLayoutGroups()` para ocultar un miembro ausente de un
-     *    grupo — `RENDER.blade.php` lo respeta para CUALQUIER elemento, no
-     *    solo los de un `layout_groups`.
+     * 1. Un fondo "decorativo" puntual de un ícono, o el propio ícono (ver
+     *    `PDF_ESCALA_ICONO_Y_COLOR_DE_LA_COMPRA.md`: desde que existe
+     *    `icon_scale_pct`, la zona blanca del ícono YA NO es un elemento
+     *    `background` aparte — es el propio `fill` blanco del elemento
+     *    `icon`, apuntándose `hidden_with_icon_id` a sí mismo), puede traer
+     *    `hidden_with_icon_id` apuntando al ícono real que acompaña — si ESE
+     *    ícono queda sin imagen resuelta (el cliente no personalizó ninguno,
+     *    o eligió explícitamente "Sin dibujo", ver `resolverElementoDesign()`),
+     *    el elemento tiene que desaparecer junto con él (si no, el nombre
+     *    recentrado por el punto 2 termina superpuesto a un rectángulo que
+     *    ya no tiene ningún ícono adentro — y si encima es blanco, el propio
+     *    texto blanco se vuelve invisible ahí). Se usa `layout_hidden`, el
+     *    mismo campo que ya usa `aplicarLayoutGroups()` para ocultar un
+     *    miembro ausente de un grupo — `RENDER.blade.php` lo respeta para
+     *    CUALQUIER elemento, no solo los de un `layout_groups`.
      *
      * 2. Un texto con `reflow_with_icon_id`/`reflow_container_id`/
      *    `reflow_icon_zone_width_cm` se recentra (horizontal Y vertical) en
@@ -622,7 +625,8 @@ class EtiquetaService
 
         foreach ($elements as &$el) {
             $iconoAcompanianteId = $el['hidden_with_icon_id'] ?? null;
-            if (($el['type'] ?? null) === 'background' && $iconoAcompanianteId && ($iconoPresente[$iconoAcompanianteId] ?? true) === false) {
+            $esCandidato = in_array($el['type'] ?? null, ['background', 'icon'], true);
+            if ($esCandidato && $iconoAcompanianteId && ($iconoPresente[$iconoAcompanianteId] ?? true) === false) {
                 $el['layout_hidden'] = true;
             }
         }

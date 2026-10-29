@@ -153,6 +153,17 @@ class ProductPdfDesignController extends Controller
             return $this->error('No se pudo analizar el PDF: ' . $e->getMessage(), 500);
         }
 
+        // Mismo motivo que en importFromProduct(): withFills()/sanitizeDesignData()
+        // todavía modifican los elementos (agregan `fill`, fijan
+        // `editable_by_customer` explícito) DESPUÉS de que import() calculó
+        // el `sig` de cada celda de grilla — hay que recalcularlo acá, al
+        // final, o "Generar grilla" nunca vuelve a tocar ninguna celda
+        // importada.
+        foreach ($data['pages'] as &$page) {
+            $page = PdfDesignImportService::resignGrids($page);
+        }
+        unset($page);
+
         $elementCount = count($data['pages'][0]['elements'] ?? []);
         if ($elementCount === 0) {
             return $this->error('No se detectó ningún elemento en el PDF — puede que no sea un PDF generado por este sistema', 422);
@@ -376,6 +387,8 @@ class ProductPdfDesignController extends Controller
 
                 $this->applyMaxiLabelShape($page, $viewPaths[$idx] ?? null);
 
+                $this->applySuperMiniLabelShape($page, $viewPaths[$idx] ?? null);
+
                 $this->applyLegacyTextSizeRules($page, $viewPaths[$idx] ?? null);
 
                 $pages[] = $page;
@@ -457,17 +470,25 @@ class ProductPdfDesignController extends Controller
         }
         unset($page);
 
+        $data = $this->sanitizeDesignData($this->withFills(['pages' => $pages]));
+
         // Recalcula el `sig` de cada celda de las grillas a partir del
         // estado YA DEFINITIVO de los elementos (ver PdfDesignImportService::
-        // resignGrids) — tiene que ser el ÚLTIMO paso antes de guardar: los
-        // bucles de arriba (font_id, icon_id, numero_pedido) modifican
-        // elementos DESPUÉS de que import() calculó las firmas originales.
-        foreach ($pages as &$page) {
+        // resignGrids) — tiene que ser el ÚLTIMO paso antes de guardar, DESPUÉS
+        // de sanitizeDesignData()/withFills(): ambos modifican todavía los
+        // elementos (withFills() agrega `fill` a cada uno; sanitizeElements()
+        // fija `editable_by_customer` explícito en false donde no estaba
+        // seteado) — si el resignGrids corriera antes (como pasaba hasta
+        // ahora), esos cambios posteriores desincronizaban el `sig` grabado
+        // del real, y el editor trataba TODAS las celdas de la grilla
+        // importada como "ya modificadas a mano" desde el instante cero:
+        // "Generar grilla" no volvía a tocar ninguna celda existente al
+        // cambiar filas/columnas/separación (quedaba como si la edición de
+        // la grilla no se aplicara).
+        foreach ($data['pages'] as &$page) {
             $page = PdfDesignImportService::resignGrids($page);
         }
         unset($page);
-
-        $data = $this->sanitizeDesignData($this->withFills(['pages' => $pages]));
 
         $design = ProductPdfDesign::create([
             'label_shape_id' => $request->labelShapeId,
@@ -1229,14 +1250,124 @@ class ProductPdfDesignController extends Controller
     }
 
     /**
-     * El label_shape "Maxi" del catálogo (id=2, `css_class: "etiqueta-maxi"`,
-     * 4.40×2.40cm) representa el combo ícono+texto de las vistas "maxi" como
-     * UNA sola etiqueta física. Null si todavía no existe esa forma (mismo
-     * criterio que `resolveSpotLabelShape()`).
+     * El label_shape "Maxi Combinada" del catálogo (id=11, `css_class:
+     * "etiqueta-maxi-combinada"`, 5.2×1.9cm) representa el combo ícono+texto
+     * de las vistas "maxi" como UNA sola etiqueta física — este tamaño SÍ es
+     * el real de `.etiqueta-maxi` en `maxi-and-spot/PERSONALIZABLE.blade.php`
+     * y vistas combo equivalentes (a diferencia del catálogo "Maxi", id 2,
+     * que corresponde a una celda sin relación en `principal/SKATE.blade.php`
+     * — ver docblock de `applyMaxiLabelShape()`). Null si todavía no existe
+     * esa forma (mismo criterio que `resolveSpotLabelShape()`).
      */
-    private function resolveMaxiLabelShape(): ?LabelShape
+    private function resolveMaxiCombinadaLabelShape(): ?LabelShape
     {
-        return LabelShape::where('name', 'Maxi')->first();
+        return LabelShape::where('name', 'Maxi Combinada')->first();
+    }
+
+    /**
+     * El label_shape "Super Mini" del catálogo (id=5, `css_class:
+     * "etiqueta-super-mini"`, 2.90×1.15cm). A diferencia de "Maxi", acá el
+     * tamaño del catálogo SÍ coincide exacto con el real de todas las vistas
+     * que dibujan esta etiqueta (confirmado contra el CSS: `.etiqueta-super-
+     * mini` en `public/css/etiquetas.css`/`tematica/principal/SKATE.blade.php`
+     * y `.super-mini` en las vistas combo, las dos declaran `width: 2.9cm;
+     * height: 1.15cm;`) — mismo criterio que `resolveSpotLabelShape()`.
+     */
+    private function resolveSuperMiniLabelShape(): ?LabelShape
+    {
+        return LabelShape::where('name', 'Super Mini')->first();
+    }
+
+    /**
+     * Le asigna `label_shape_id` (rectángulo "Super Mini") al elemento
+     * `background` de cada celda "super mini" detectada en esta vista — sin
+     * reposicionar ni redimensionar nada (a diferencia de `applySpotLabelShape()`
+     * / `applyMaxiLabelShape()`): acá el fondo que ya detecta el importador
+     * ES la etiqueta real, del mismo tamaño que el catálogo (ver
+     * `resolveSuperMiniLabelShape()`), así que no hace falta reconstruir nada,
+     * solo etiquetarlo.
+     *
+     * El nombre de la clase HTML varía según la vista: las que dibujan ESTA
+     * etiqueta como tema único (`tematica/super-mini/*`) y el combo triple
+     * (`maxi-and-super-maxi-and-super-mini`) usan `etiqueta-super-mini`; los
+     * combos de a dos (`maxi-and-super-mini`, `spot-and-super-mini`) la
+     * dibujan con una clase corta sin el prefijo, `super-mini` (mismo tamaño
+     * en CSS, ver docblock de `resolveSuperMiniLabelShape()`).
+     *
+     * A diferencia de `applySpotLabelShape()`, la grilla NO se identifica
+     * por cantidad de celdas (`countRepeatedClassOccurrences()`): varias de
+     * estas vistas (`tematica/super-mini/*`, la sección "super mini" del
+     * combo triple) repiten la fila de 6 celdas escribiendo 6 `<td>` sueltos
+     * a mano en vez de un `@for` de columnas, y la cantidad de FILAS sale de
+     * una variable PHP en runtime (`$plantilla['filas']`), no de un número
+     * literal — nada de eso se puede contar leyendo el .blade.php en
+     * estático. En cambio, se aprovecha que el tamaño real de esta etiqueta
+     * coincide EXACTO con el del catálogo (ver `resolveSuperMiniLabelShape()`):
+     * alcanza con confirmar que la vista use la clase en algún lado (para no
+     * etiquetar por error una coincidencia de tamaño en una vista sin
+     * relación) y asignarle la forma a CUALQUIER grilla cuya celda mida
+     * 2.90×1.15cm — no hace falta saber cuántas filas/columnas tiene.
+     */
+    private function applySuperMiniLabelShape(array &$page, ?string $viewPath): void
+    {
+        if (!$viewPath || empty($page['grids'])) {
+            return;
+        }
+        $superMiniShape = $this->resolveSuperMiniLabelShape();
+        if (!$superMiniShape) {
+            return;
+        }
+
+        $normalizedViewPath = str_starts_with($viewPath, 'tematica/') ? $viewPath : "tematica/{$viewPath}";
+        $bladePath = resource_path('views/' . $normalizedViewPath . '.blade.php');
+        if (!is_file($bladePath)) {
+            return;
+        }
+        $content = file_get_contents($bladePath);
+        if (!preg_match('/class=["\'][^"\']*\bsuper-mini\b[^"\']*["\']/', $content)) {
+            return;
+        }
+
+        $targetWidth = round((float) $superMiniShape->width_cm, 1);
+        $targetHeight = round((float) $superMiniShape->height_cm, 1);
+
+        $indexById = [];
+        foreach ($page['elements'] as $index => $el) {
+            $indexById[$el['id']] = $index;
+        }
+
+        foreach ($page['grids'] as $grid) {
+            $templateBgIndex = null;
+            foreach ($grid['template'] as $id) {
+                $index = $indexById[$id] ?? null;
+                if ($index !== null && ($page['elements'][$index]['type'] ?? null) === 'background') {
+                    $templateBgIndex = $index;
+                    break;
+                }
+            }
+            if ($templateBgIndex === null) {
+                continue;
+            }
+            $templateBg = $page['elements'][$templateBgIndex];
+            if (round((float) $templateBg['width_cm'], 1) !== $targetWidth || round((float) $templateBg['height_cm'], 1) !== $targetHeight) {
+                continue;
+            }
+
+            $cellIdLists = [$grid['template']];
+            foreach ($grid['members'] as $member) {
+                $cellIdLists[] = array_column(array_filter($member), 'id');
+            }
+
+            foreach ($cellIdLists as $ids) {
+                foreach ($ids as $id) {
+                    $index = $indexById[$id] ?? null;
+                    if ($index === null || ($page['elements'][$index]['type'] ?? null) !== 'background') {
+                        continue;
+                    }
+                    $page['elements'][$index]['label_shape_id'] = $superMiniShape->id;
+                }
+            }
+        }
     }
 
     /**
@@ -1437,7 +1568,7 @@ class ProductPdfDesignController extends Controller
     }
 
     /**
-     * Las vistas "maxi" (`maxi`, `maxi-and-spot`, `spot-and-maxi`,
+     * Las vistas "maxi" (`maxi-and-spot`, `spot-and-maxi`,
      * `maxi-and-super-mini`, etc. — ver `.etiqueta-maxi` en el CSS de esas
      * vistas) dibujan el ícono y el nombre como DOS celdas de tabla
      * ADYACENTES, cada una con su propio fondo: una blanca angosta (38% del
@@ -1448,29 +1579,30 @@ class ProductPdfDesignController extends Controller
      * fondo+ícono y otra con fondo+texto, ninguna de las dos es por sí sola
      * "la" etiqueta completa.
      *
-     * El catálogo ya tiene una forma "Maxi" (`resolveMaxiLabelShape()`,
-     * `css_class: "etiqueta-maxi"`) — pero asignada tal cual a cualquiera de
-     * los dos fondos por separado queda recortada a la mitad: el ícono (que
-     * vive en la OTRA grilla) directamente cae afuera del contorno. Acá se
-     * fusionan ambas grillas en una sola, celda por celda: el fondo del
-     * texto pasa a cubrir la etiqueta completa (ícono + texto) y a llevar la
-     * forma "Maxi". El fondo blanco del ícono y el ícono mismo NO se tocan de
-     * posición (ver nota más abajo sobre por qué NO conviene usar `fill`
-     * ahí) — solo pasan a compartir grupo con el fondo ya agrandado, y ese
-     * fondo blanco sube de `z_index` para seguir dibujándose POR ENCIMA del
-     * fondo grande (que ahora también pasa por abajo de esa zona). El ícono
-     * sí se redimensiona (ver más abajo) y el nombre se recentra a mano en
-     * la zona que le queda libre — SIN usar `layout_groups` (ver esa nota
-     * más abajo también).
+     * El catálogo tiene una forma para esto, "Maxi Combinada"
+     * (`resolveMaxiCombinadaLabelShape()`, `css_class: "etiqueta-maxi-
+     * combinada"`, 5.2×1.9cm — el tamaño REAL de esta etiqueta de dos tonos,
+     * a diferencia de "Maxi" (id 2), que es la celda de OTRA vista sin
+     * relación, ver nota más abajo). Acá se fusionan ambas grillas en una
+     * sola, celda por celda: el fondo del texto pasa a cubrir la etiqueta
+     * completa (ícono + texto) y a llevar esa forma.
      *
-     * Por qué NO se usa `fill` en el ícono (como se probó primero): si se
-     * agranda la caja del propio ícono a toda la zona blanca para poder
-     * pintarla con su `fill`, el ícono se dibuja con `object-fit: contain`
-     * (ver RENDER.blade.php) — que estira la imagen para ocupar la caja
-     * entera manteniendo proporción — y termina mucho más grande de lo que
-     * debería. Mantener el fondo blanco como elemento aparte evita este
-     * problema sin perder nada visual, y de paso dando control total sobre
-     * el tamaño del ícono (ver el padding más abajo).
+     * La zona blanca del ícono YA NO es un elemento `background` aparte
+     * (ver `PDF_ESCALA_ICONO_Y_COLOR_DE_LA_COMPRA.md`, `icon_scale_pct`):
+     * antes eran DOS elementos con el mismo `group_id` (fondo blanco +
+     * ícono) y, si el admin los desagrupaba en el editor (a mano o sin
+     * querer), el fondo podía quedar movido de su lugar y el ícono se
+     * dibujaba solo, sin su zona blanca detrás — mal. Ahora es UN solo
+     * elemento `icon`: su caja pasa a ser la zona blanca entera (antes era
+     * del fondo separado), con `fill` blanco (mismo mecanismo genérico que
+     * ya pinta fondo de cualquier ícono/texto/forma, ver RENDER.blade.php) y
+     * `icon_scale_pct` para que el DIBUJO del ícono se vea más chico que su
+     * caja, con aire a los costados, sin agrandar ni mover la caja (que es
+     * la que define la zona blanca y el punto de agarre para mover/agrupar).
+     * No hay nada que desagrupar: no hay dos elementos para esa zona.
+     *
+     * El nombre se recentra a mano en la zona que le queda libre — SIN usar
+     * `layout_groups` (ver nota más abajo).
      *
      * Por qué el nombre NO se recentra con `layout_groups` (como se probó
      * primero, igual que el resto del importador para celdas con un fondo
@@ -1481,29 +1613,27 @@ class ProductPdfDesignController extends Controller
      * de quedarse quieto). Acá el ícono nunca se mueve de su zona; el nombre
      * solo (`reflow_with_icon_id`/`reflow_container_id`/
      * `reflow_icon_zone_width_cm`, ver `EtiquetaService::
-     * ocultarFondosDeIconoAusente`) se recentra en la zona libre a mano, y
-     * en TODA la etiqueta si la venta real no trae ningún ícono (ahí la zona
+     * ajustarPorIconoAusente`) se recentra en la zona libre a mano, y en
+     * TODA la etiqueta si la venta real no trae ningún ícono (ahí la zona
      * del ícono ya está oculta, ver nota de `hidden_with_icon_id` más
      * abajo).
      *
      * El TAMAÑO de la etiqueta fusionada es el que mide EL PDF de muestra
-     * (la unión de los dos fondos detectados) — a diferencia de
-     * `applySpotLabelShape()` con "Spot" (que sí usa el tamaño fijo del
-     * catálogo), acá NO conviene usar el tamaño fijo de
-     * `resolveMaxiLabelShape()` (4.40×2.40cm): esa forma corresponde al
-     * `.etiqueta-maxi` de OTRA vista (`principal/SKATE.blade.php` / el
-     * `public/css/etiquetas.css` compartido), donde esa clase es apenas la
-     * celda/espaciado de una grilla con el ícono+nombre centrados chicos
-     * adentro, sin fondo de color propio — no el tamaño real de la etiqueta
-     * de dos tonos que arma `maxi-and-spot/PERSONALIZABLE.blade.php` (acá
-     * `.etiqueta-maxi` SÍ es la etiqueta visible completa, con su propio
-     * `width`/`height` en su `<style>`, 5.2×1.9cm — un valor completamente
-     * distinto al de "SKATE" pese a compartir nombre de clase). Usar el
-     * tamaño del catálogo agrandaba la etiqueta más de lo que sale en el PDF
-     * real. `label_shape_id` sigue apuntando a "Maxi" igual (es solo
-     * categoría/metadata para el selector "Forma" del editor — esta forma no
-     * tiene `outline_svg`, así que no dibuja ni recorta nada propio, no
-     * importa que su tamaño de catálogo no coincida con el de esta celda).
+     * (la unión de los dos fondos detectados), no el de "Maxi Combinada" del
+     * catálogo — en la práctica deberían coincidir (la forma se armó
+     * midiendo esta misma vista), pero por las dudas de que algún PDF de
+     * muestra puntual mida distinto (otra tipografía, otro ancho de nombre),
+     * se prioriza lo medido. `label_shape_id` igual apunta siempre a "Maxi
+     * Combinada": no tiene `outline_svg` (es un rect sin recorte propio), así
+     * que no distorsiona nada aunque el tamaño real difiera un poco.
+     *
+     * Nota histórica: el catálogo tiene OTRA forma, "Maxi" (id 2,
+     * `resolveMaxiLabelShape()`, 4.4×2.4cm) — corresponde al `.etiqueta-maxi`
+     * de `principal/SKATE.blade.php`/`public/css/etiquetas.css`, donde esa
+     * clase es apenas la celda/espaciado de una grilla con ícono+nombre
+     * centrados chicos adentro, sin fondo de color propio — nada que ver con
+     * la etiqueta de dos tonos de esta vista pese a compartir nombre de
+     * clase. No se usa acá.
      *
      * No pasa nada si la vista no tiene este patrón (vuelve sin tocar nada).
      *
@@ -1569,7 +1699,7 @@ class ProductPdfDesignController extends Controller
 
         $iconGrid = $page['grids'][$iconGridIndex];
         $textGrid = $page['grids'][$textGridIndex];
-        $maxiShape = $this->resolveMaxiLabelShape();
+        $maxiCombinadaShape = $this->resolveMaxiCombinadaLabelShape();
 
         $cellKeys = array_merge(['template'], array_keys($iconGrid['members']));
         $cellPairs = [['iconIds' => $iconGrid['template'], 'textIds' => $textGrid['template']]];
@@ -1581,6 +1711,7 @@ class ProductPdfDesignController extends Controller
         }
 
         $resizedBackgroundBoxes = []; // slot => [x_cm, y_cm], para recalcular gap_x_cm/gap_y_cm al final.
+        $iconBgIdsToRemove = []; // las zonas blancas separadas desaparecen del diseño (ver docblock).
         foreach ($cellPairs as $cellOffset => $pair) {
             $slot = $cellKeys[$cellOffset];
             $iconBgIndex = $elementsById[$pair['iconIds'][0]];
@@ -1594,21 +1725,9 @@ class ProductPdfDesignController extends Controller
             $text = $page['elements'][$textIndex];
 
             // El tamaño de la etiqueta fusionada es el que REALMENTE mide
-            // este PDF de muestra (la unión de los dos fondos detectados),
-            // NO el tamaño fijo que declara `resolveMaxiLabelShape()` en el
-            // catálogo: esa forma "Maxi" (4.4×2.4cm) corresponde al
-            // `.etiqueta-maxi` de OTRA vista (`principal/SKATE.blade.php` y
-            // el `public/css/etiquetas.css` compartido) donde esa clase es
-            // apenas la CELDA/espaciado de una grilla — ahí el ícono+nombre
-            // van centrados chicos adentro, sin fondo de color propio, bien
-            // más chicos que 4.4×2.4 — no el tamaño real de la etiqueta de
-            // dos tonos que arma `maxi-and-spot/PERSONALIZABLE.blade.php`
-            // (acá sí, el `.etiqueta-maxi` de esta vista es la etiqueta
-            // visible completa, con su propio `width`/`height` en su
-            // `<style>`, 5.2×1.9cm — un valor completamente distinto al de
-            // "SKATE" a pesar de compartir nombre de clase). Usar el tamaño
-            // del catálogo acá agrandaba la etiqueta más de lo que sale en
-            // el PDF real.
+            // este PDF de muestra (la unión de los dos fondos detectados) —
+            // ver docblock sobre por qué no se usa directo el tamaño de
+            // catálogo de "Maxi Combinada".
             $left = min($iconBg['x_cm'], $textBg['x_cm']);
             $top = min($iconBg['y_cm'], $textBg['y_cm']);
             $width = max($iconBg['x_cm'] + $iconBg['width_cm'], $textBg['x_cm'] + $textBg['width_cm']) - $left;
@@ -1618,77 +1737,56 @@ class ProductPdfDesignController extends Controller
             $page['elements'][$textBgIndex]['y_cm'] = round($top, 2);
             $page['elements'][$textBgIndex]['width_cm'] = round($width, 2);
             $page['elements'][$textBgIndex]['height_cm'] = round($height, 2);
-            if ($maxiShape) {
-                // Se etiqueta igual como "Maxi" (categoría/metadata del
-                // catálogo para el selector "Forma" del editor) aunque el
-                // tamaño real no coincida con el de esa forma — no dibuja
-                // nada propio (no tiene `outline_svg`), así que no distorsiona
-                // ni recorta nada.
-                $page['elements'][$textBgIndex]['label_shape_id'] = $maxiShape->id;
+            if ($maxiCombinadaShape) {
+                $page['elements'][$textBgIndex]['label_shape_id'] = $maxiCombinadaShape->id;
             }
 
-            $groupId = $iconBg['group_id'] ?? ('group-imported-' . uniqid());
+            $groupId = $icon['group_id'] ?? ('group-imported-' . uniqid());
             $page['elements'][$textBgIndex]['group_id'] = $groupId;
 
-            // El ícono detectado puede venir chico o pegado al borde de su
-            // propia zona blanca (algunos íconos no traen margen propio en
-            // su SVG) — se lo achica O agranda (preservando proporción) al
-            // máximo que entra en esa zona, con margen fijo SOLO a los
-            // costados (el nombre real de la vista: `.etiqueta-maxi img {
-            // height: 1.2cm }`, una altura fija que no deja margen vertical
-            // de más — el ícono ocupa casi toda la altura disponible).
+            // El ícono pasa a ocupar TODA la zona blanca (antes era la caja
+            // de `iconBg`) — ni se mueve ni se recorta: `icon_scale_pct`
+            // (ver PDF_ESCALA_ICONO_Y_COLOR_DE_LA_COMPRA.md) es lo que lo
+            // dibuja más chico ADENTRO de esa caja, con aire a los costados
+            // (mismo padding de siempre, 0.3cm por lado — el real de la
+            // vista, `.etiqueta-maxi img { height: 1.2cm }`, deja casi todo
+            // el alto disponible, así que el margen es solo horizontal).
+            // `object-fit: contain` en RENDER.blade.php preserva la
+            // proporción del ícono sea cual sea el alto de la caja, así que
+            // no hace falta acotar también por altura para que no se pase.
             $iconHorizontalPaddingCm = 0.3;
-            $iconVerticalPaddingCm = 0.12;
-            $maxIconWidth = max(0.2, $iconBg['width_cm'] - 2 * $iconHorizontalPaddingCm);
-            $maxIconHeight = max(0.2, $iconBg['height_cm'] - 2 * $iconVerticalPaddingCm);
-            $scale = min($maxIconWidth / $icon['width_cm'], $maxIconHeight / $icon['height_cm']);
-            $iconCenterX = $iconBg['x_cm'] + $iconBg['width_cm'] / 2;
-            $iconCenterY = $iconBg['y_cm'] + $iconBg['height_cm'] / 2;
-            $icon['width_cm'] = round($icon['width_cm'] * $scale, 2);
-            $icon['height_cm'] = round($icon['height_cm'] * $scale, 2);
-            $icon['x_cm'] = round($iconCenterX - $icon['width_cm'] / 2, 2);
-            $icon['y_cm'] = round($iconCenterY - $icon['height_cm'] / 2, 2);
-            $page['elements'][$iconIndex]['x_cm'] = $icon['x_cm'];
-            $page['elements'][$iconIndex]['y_cm'] = $icon['y_cm'];
-            $page['elements'][$iconIndex]['width_cm'] = $icon['width_cm'];
-            $page['elements'][$iconIndex]['height_cm'] = $icon['height_cm'];
+            $targetIconWidthCm = max(0.2, $iconBg['width_cm'] - 2 * $iconHorizontalPaddingCm);
+            $iconScalePct = (int) round(100 * min(1, $targetIconWidthCm / $iconBg['width_cm']));
+            $iconScalePct = max(10, min(100, $iconScalePct));
+
+            $page['elements'][$iconIndex]['x_cm'] = round($iconBg['x_cm'], 2);
+            $page['elements'][$iconIndex]['y_cm'] = round($iconBg['y_cm'], 2);
+            $page['elements'][$iconIndex]['width_cm'] = round($iconBg['width_cm'], 2);
+            $page['elements'][$iconIndex]['height_cm'] = round($iconBg['height_cm'], 2);
+            $page['elements'][$iconIndex]['icon_scale_pct'] = $iconScalePct;
+            $page['elements'][$iconIndex]['fill'] = ['type' => 'color', 'color' => ['mode' => 'hex', 'value' => '#FFFFFF']];
 
             // El nombre se centra (horizontal Y vertical) en la zona a la
-            // derecha del ícono, SIN usar `layout_groups`: se probó primero
-            // armar una "Relación" ícono+texto ahí (mismo mecanismo que el
-            // resto del importador para celdas con un fondo en común) pero
-            // esa herramienta centra el ícono+texto como UN bloque único
-            // dentro de la etiqueta entera — como el bloque (ícono+texto)
-            // es más angosto que la etiqueta completa, el ícono terminaba
-            // corrido de su lugar fijo en la zona blanca (se recentraba con
-            // el texto, no al revés). Acá el ícono NUNCA se mueve de su
-            // zona — el nombre es el único que se reacomoda, calculando su
-            // propia zona disponible a mano. Si la venta real no trae
-            // ningún ícono, `EtiquetaService::ocultarFondosDeIconoAusente`
-            // además re-centra el nombre en la etiqueta ENTERA (sin
-            // descontar la zona del ícono, que para entonces ya está oculta).
-            $textZoneLeft = $iconBg['x_cm'] + $iconBg['width_cm'];
+            // derecha del ícono, SIN usar `layout_groups` (ver docblock).
+            $iconZoneWidthCm = $iconBg['width_cm'];
+            $textZoneLeft = $iconBg['x_cm'] + $iconZoneWidthCm;
             $textZoneWidth = ($left + $width) - $textZoneLeft;
             $page['elements'][$textIndex]['x_cm'] = round($textZoneLeft + ($textZoneWidth - $text['width_cm']) / 2, 2);
             $page['elements'][$textIndex]['y_cm'] = round($top + ($height - $text['height_cm']) / 2, 2);
             $page['elements'][$textIndex]['reflow_with_icon_id'] = $icon['id'];
             $page['elements'][$textIndex]['reflow_container_id'] = $textBg['id'];
-            $page['elements'][$textIndex]['reflow_icon_zone_width_cm'] = $iconBg['width_cm'];
+            $page['elements'][$textIndex]['reflow_icon_zone_width_cm'] = $iconZoneWidthCm;
 
-            // El fondo blanco del ícono (`iconBg`) y el ícono NO se tocan —
-            // ver nota de arriba. Solo pasan al mismo grupo que el fondo ya
-            // agrandado (clickear/mover cualquiera mueve la celda entera), y
-            // los 4 (fondo grande, fondo blanco, ícono, texto) se renumeran
-            // 0-1-2-3 para que `iconBg` siga pintándose ARRIBA del fondo
+            // El fondo grande y el ícono comparten grupo (clickear/mover
+            // cualquiera mueve la celda entera) y se renumeran para que el
+            // ícono (con su `fill` blanco) siga dibujándose ARRIBA del fondo
             // grande en su zona, sin importar el orden en que hayan quedado
             // en `elements` (un `z_index` no entero, ej. 0.5, no lo respeta
             // dompdf — hay que usar enteros).
             $page['elements'][$textBgIndex]['z_index'] = 0;
-            $page['elements'][$iconBgIndex]['group_id'] = $groupId;
-            $page['elements'][$iconBgIndex]['z_index'] = 1;
-            $page['elements'][$iconIndex]['z_index'] = 2;
+            $page['elements'][$iconIndex]['z_index'] = 1;
             $page['elements'][$iconIndex]['group_id'] = $groupId;
-            $page['elements'][$textIndex]['z_index'] = 3;
+            $page['elements'][$textIndex]['z_index'] = 2;
 
             if ($isPersonalizable) {
                 $page['elements'][$iconIndex]['editable_by_customer'] = true;
@@ -1698,33 +1796,42 @@ class ProductPdfDesignController extends Controller
 
                 // Si el cliente no personaliza ningún ícono (o elige
                 // explícitamente "Sin dibujo", ver EtiquetaService::
-                // resolverElementoDesign), el ícono real de la venta
-                // queda vacío — este fondo blanco, que solo existe para
-                // esa zona, tiene que desaparecer junto con él (ver
-                // EtiquetaService::ocultarFondosDeIconoAusente) para que
-                // el nombre se pueda recentrar en toda la etiqueta sin
-                // quedar un rectángulo blanco de más (y el propio texto,
-                // blanco, invisible encima suyo).
-                $page['elements'][$iconBgIndex]['hidden_with_icon_id'] = $icon['id'];
+                // resolverElementoDesign), el ícono real de la venta queda
+                // vacío — este elemento (fondo blanco + dibujo, ya fusionados
+                // en uno) tiene que desaparecer ENTERO (apunta a sí mismo)
+                // para que el nombre se pueda recentrar en toda la etiqueta
+                // sin quedar un rectángulo blanco de más (y el propio texto,
+                // blanco, invisible encima suyo). Ver EtiquetaService::
+                // ajustarPorIconoAusente (ahora también mira elementos
+                // `icon`, no solo `background`).
+                $page['elements'][$iconIndex]['hidden_with_icon_id'] = $icon['id'];
             }
 
             $resizedBackgroundBoxes[$slot] = ['x_cm' => round($left, 2), 'y_cm' => round($top, 2)];
+            $iconBgIdsToRemove[] = $iconBg['id'];
         }
 
         // El template/members de la grilla de texto pasan a tener también el
-        // fondo blanco del ícono y el ícono — mismo orden fondo→ícono→texto
-        // que arma el resto del importador (ver PdfDesignImportService::
-        // import, $cellElements), con la zona blanca del ícono intercalada
-        // justo después del fondo grande — así "Generar grilla" ya sabe
-        // clonar la celda completa (4 piezas en vez de 3).
-        array_splice($page['grids'][$textGridIndex]['template'], 1, 0, $iconGrid['template']);
+        // ícono (ya con su `fill` blanco, ocupando toda la zona que antes
+        // era de `iconBg`) — mismo orden fondo→ícono→texto que arma el resto
+        // del importador, así "Generar grilla" ya sabe clonar la celda
+        // completa (3 piezas, ya no 4: la zona blanca dejó de ser un
+        // elemento aparte).
+        array_splice($page['grids'][$textGridIndex]['template'], 1, 0, [$iconGrid['template'][1]]);
         foreach ($page['grids'][$textGridIndex]['members'] as $key => &$member) {
-            array_splice($member, 1, 0, $iconGrid['members'][$key]);
+            array_splice($member, 1, 0, [$iconGrid['members'][$key][1]]);
         }
         unset($member);
 
         array_splice($page['grids'], $iconGridIndex, 1);
         $textGridIndex = $iconGridIndex < $textGridIndex ? $textGridIndex - 1 : $textGridIndex;
+
+        // Las zonas blancas separadas ya no existen como elemento propio
+        // (ver docblock) — se las saca del todo de `elements`.
+        $page['elements'] = array_values(array_filter(
+            $page['elements'],
+            fn($el) => !in_array($el['id'] ?? null, $iconBgIdsToRemove, true)
+        ));
 
         // El `gap_x_cm`/`gap_y_cm` de esta grilla se calculó en
         // PdfDesignImportService::detectGrids() con el ancho/alto del fondo
@@ -1753,8 +1860,8 @@ class ProductPdfDesignController extends Controller
             $templateMaxX = max($templateMaxX, $el['x_cm'] + $el['width_cm']);
             $templateMaxY = max($templateMaxY, $el['y_cm'] + $el['height_cm']);
         }
-        $fallbackWidth = $maxiShape ? (float) $maxiShape->width_cm : 4.4;
-        $fallbackHeight = $maxiShape ? (float) $maxiShape->height_cm : 2.4;
+        $fallbackWidth = $maxiCombinadaShape ? (float) $maxiCombinadaShape->width_cm : 5.2;
+        $fallbackHeight = $maxiCombinadaShape ? (float) $maxiCombinadaShape->height_cm : 1.9;
         $spanXTemplate = $templateMaxX > $templateMinX ? $templateMaxX - $templateMinX : $fallbackWidth;
         $spanYTemplate = $templateMaxY > $templateMinY ? $templateMaxY - $templateMinY : $fallbackHeight;
 

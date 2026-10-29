@@ -244,7 +244,15 @@
 
                     @case('icon')
                         @if (!empty($el['resolved_icon_path']))
-                            <img src="file://{{ str_replace('\\', '/', $el['resolved_icon_path']) }}" style="position: absolute; left: 0; top: 0; width:100%; height:100%; object-fit: contain;">
+                            @php
+                                // Ver PDF_ESCALA_ICONO_Y_COLOR_DE_LA_COMPRA.md: el ícono se
+                                // dibuja a `icon_scale_pct`% del bloque, centrado — el bloque
+                                // (posición/tamaño/fondo) no cambia. Ausente o fuera de rango
+                                // = 100% (todo el bloque, igual que siempre).
+                                $iconScalePct = max(10, min(100, (float) ($el['icon_scale_pct'] ?? 100)));
+                                $iconOffsetPct = (100 - $iconScalePct) / 2;
+                            @endphp
+                            <img src="file://{{ str_replace('\\', '/', $el['resolved_icon_path']) }}" style="position: absolute; left: {{ $iconOffsetPct }}%; top: {{ $iconOffsetPct }}%; width: {{ $iconScalePct }}%; height: {{ $iconScalePct }}%; object-fit: contain;">
                         @endif
                         @break
 
