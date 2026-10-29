@@ -491,7 +491,9 @@ class ProductPdfDesignController extends Controller
         unset($page);
 
         $design = ProductPdfDesign::create([
-            'label_shape_id' => $request->labelShapeId,
+            'label_shape_id' => $request->labelShapeId
+                ?: $this->detectLabelShapeIdFromViewPath($viewPaths[0] ?? null)
+                ?: $this->detectUniformLabelShapeId($data['pages']),
             'name' => $request->name ?: ($product->name . ' (importado)'),
             'data' => $data,
             'is_published' => false,
@@ -1250,6 +1252,69 @@ class ProductPdfDesignController extends Controller
     }
 
     /**
+     * El `label_shape_id` del DISEÑO entero (`product_pdf_designs.label_shape_id`,
+     * distinto del de cada elemento de fondo) — por nombre de carpeta de la
+     * vista (`$viewPaths[0]`, ej. `"maxi-and-super-mini/PERSONALIZABLE"`): se
+     * parte el primer segmento (antes de la `/`) por `"-and-"` y se usa la
+     * PRIMERA palabra que matchee una forma conocida — en un combo, la que
+     * aparece primero en el nombre "gana" (ej. `"maxi-and-super-mini"` →
+     * Maxi Combinada; `"spot-and-super-mini"`/`"spot-and-maxi"` → Spot). Para
+     * una vista sin combo (`"super-mini"`, `"spot"`, `"maxi"`) hay un solo
+     * segmento, así que no hay ambigüedad. Null si el primer segmento no
+     * matchea ninguna forma conocida, o si esa forma todavía no existe en el
+     * catálogo.
+     */
+    private function detectLabelShapeIdFromViewPath(?string $viewPath): ?int
+    {
+        if (!$viewPath) {
+            return null;
+        }
+        $viewPath = str_starts_with($viewPath, 'tematica/') ? substr($viewPath, strlen('tematica/')) : $viewPath;
+        $folder = explode('/', $viewPath)[0] ?? '';
+
+        $shapeNameBySegment = [
+            'maxi' => 'Maxi Combinada',
+            'super-maxi' => 'Super Maxi',
+            'super-mini' => 'Super Mini',
+            'spot' => 'Spot',
+        ];
+
+        foreach (explode('-and-', $folder) as $segment) {
+            if (isset($shapeNameBySegment[$segment])) {
+                $shape = LabelShape::where('name', $shapeNameBySegment[$segment])->first();
+                if ($shape) {
+                    return $shape->id;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Respaldo de `detectLabelShapeIdFromViewPath()` para cuando el nombre de
+     * la vista no matchea ninguna forma conocida: si TODOS los fondos a los
+     * que `applySpotLabelShape()`/`applyMaxiLabelShape()`/
+     * `applySuperMiniLabelShape()` les asignaron una forma (en cualquier
+     * página) coinciden en la MISMA, se usa esa. Si hay dos o más formas
+     * distintas mezcladas (no debería pasar si el nombre ya resolvió algo),
+     * se deja sin asignar (null) antes que adivinar.
+     */
+    private function detectUniformLabelShapeId(array $pages): ?int
+    {
+        $shapeIds = [];
+        foreach ($pages as $page) {
+            foreach ($page['elements'] ?? [] as $el) {
+                if (($el['type'] ?? null) === 'background' && !empty($el['label_shape_id'])) {
+                    $shapeIds[$el['label_shape_id']] = true;
+                }
+            }
+        }
+
+        return count($shapeIds) === 1 ? (int) array_key_first($shapeIds) : null;
+    }
+
+    /**
      * El label_shape "Maxi Combinada" del catálogo (id=11, `css_class:
      * "etiqueta-maxi-combinada"`, 5.2×1.9cm) representa el combo ícono+texto
      * de las vistas "maxi" como UNA sola etiqueta física — este tamaño SÍ es
@@ -1405,6 +1470,39 @@ class ProductPdfDesignController extends Controller
     }
 
     /**
+     * Mismo patrón que `extractTextSizeTiersFromView()` pero para el
+     * `line-height` de cada nivel (ej. `.etiqueta-super-mini-content-
+     * container p.normal-text-size { font-size: 9pt; line-height: 0.8 }`) —
+     * acá SÍ hace falta capturar el bloque `{...}` completo (no solo
+     * `font-size`), porque un nivel puede NO declarar `line-height` (ej.
+     * `small-text-size` de "Super Mini" solo trae `font-size`, sin
+     * `line-height` propio — ahí ese nivel queda afuera del resultado y
+     * `applyLegacyTextSizeRules()` usa el `line_height` base del elemento
+     * para ese nivel puntual). Devuelve `[containerClass => ['normal' =>
+     * 0.8, 'extra_small' => 0.8]]` con lo que encuentre.
+     */
+    private function extractLineHeightTiersFromView(string $content): array
+    {
+        $tiers = [];
+        if (preg_match_all(
+            '/\.([\w-]+)\s+p\.(normal|small|extra-small)-text-size\s*\{([^}]*)\}/i',
+            $content,
+            $matches,
+            PREG_SET_ORDER
+        )) {
+            foreach ($matches as $m) {
+                if (!preg_match('/line-height:\s*([\d.]+)/i', $m[3], $lh)) {
+                    continue;
+                }
+                $tier = str_replace('-', '_', $m[2]);
+                $tiers[$m[1]][$tier] = (float) $lh[1];
+            }
+        }
+
+        return $tiers;
+    }
+
+    /**
      * Cuántas veces se repite una celda de clase `$className` en la vista —
      * generaliza `detectSpotCellCount()` (que solo sabe leer el `@for`
      * simple de la fila "spot") a CUALQUIER contenedor, incluidos los que
@@ -1447,17 +1545,29 @@ class ProductPdfDesignController extends Controller
     }
 
     /**
-     * Arma `font_size_rules`/`length_rules`/`length_rules_enabled` para el
-     * texto de cada grilla cuya cantidad de celdas coincide con la de un
-     * contenedor que, según el .blade.php de esta vista, varía su tamaño de
-     * letra según la longitud del nombre (ver extractTextSizeTiersFromView()
-     * / countRepeatedClassOccurrences()) — así el editor ya arranca con
-     * "Tamaño por longitud" activado y el mismo criterio que usaba la vista
-     * legacy, en vez de un tamaño fijo único para cualquier nombre. Un
-     * contenedor con un solo nivel definido (no varía nunca) se ignora: no
-     * hay nada que configurar. Si dos grillas distintas tienen la MISMA
-     * cantidad de celdas (ambiguo) se usa la primera sin reclamar, igual
-     * que ya hace `applySpotLabelShape()` para la fila "spot".
+     * Arma `font_size_rules`/`length_rules`/`length_rules_enabled` (y, si el
+     * CSS trae `line-height` por nivel, también `line_height_rules`/
+     * `line_height_rules_enabled`) para el texto de cada grilla cuya
+     * cantidad de celdas coincide con la de un contenedor que, según el CSS
+     * de esta vista, varía su tamaño de letra según la longitud del nombre
+     * (ver extractTextSizeTiersFromView()/extractLineHeightTiersFromView()/
+     * countRepeatedClassOccurrences()) — así el editor ya arranca con
+     * "Tamaño por longitud"/"Interlineado por longitud" activados y el mismo
+     * criterio que usaba la vista legacy, en vez de un valor fijo único para
+     * cualquier nombre. Un contenedor con un solo nivel definido (no varía
+     * nunca) se ignora: no hay nada que configurar. Si dos grillas distintas
+     * tienen la MISMA cantidad de celdas (ambiguo) se usa la primera sin
+     * reclamar, igual que ya hace `applySpotLabelShape()` para la fila
+     * "spot".
+     *
+     * Las 3 reglas pueden estar INLINE en el `<style>` del propio
+     * `.blade.php` (la mayoría de las vistas "-and-"/"PERSONALIZABLE", ej.
+     * `.etiqueta-maxi-text p.normal-text-size`) o, para vistas más simples
+     * como `tematica/super-mini/*.blade.php`, venir del CSS COMPARTIDO que
+     * esa vista solo incluye (`{!! file_get_contents(public_path('css/
+     * etiquetas.css')) !!}`, ej. `.etiqueta-super-mini-content-container
+     * p.normal-text-size`) — si la vista no define nada inline para una
+     * clase puntual, se la busca también ahí antes de descartarla.
      */
     private function applyLegacyTextSizeRules(array &$page, ?string $viewPath): void
     {
@@ -1472,6 +1582,23 @@ class ProductPdfDesignController extends Controller
         $content = file_get_contents($bladePath);
 
         $tiersByClass = $this->extractTextSizeTiersFromView($content);
+        $lineHeightTiersByClass = $this->extractLineHeightTiersFromView($content);
+
+        $sharedCssPath = public_path('css/etiquetas.css');
+        if (is_file($sharedCssPath)) {
+            $sharedContent = file_get_contents($sharedCssPath);
+            foreach ($this->extractTextSizeTiersFromView($sharedContent) as $className => $tiers) {
+                if (!isset($tiersByClass[$className])) {
+                    $tiersByClass[$className] = $tiers;
+                }
+            }
+            foreach ($this->extractLineHeightTiersFromView($sharedContent) as $className => $tiers) {
+                if (!isset($lineHeightTiersByClass[$className])) {
+                    $lineHeightTiersByClass[$className] = $tiers;
+                }
+            }
+        }
+
         if (empty($tiersByClass)) {
             return;
         }
@@ -1483,40 +1610,68 @@ class ProductPdfDesignController extends Controller
 
         $pxFor = fn(float $pt) => (int) round($pt / 0.75);
         $claimedGridIndexes = [];
+        // Los umbrales van siempre los reales del `$fontClass` legacy (16 y
+        // 20 — ver EtiquetaService::generarEtiquetas), en el mismo orden que
+        // los 3 niveles posibles.
+        $tierMaxChars = ['normal' => 16, 'small' => 20, 'extra_small' => 999];
+
+        $gridHasText = function (array $grid) use ($elementsById, $page): bool {
+            foreach ($grid['template'] as $id) {
+                if (($page['elements'][$elementsById[$id] ?? null]['type'] ?? null) === 'text') {
+                    return true;
+                }
+            }
+            return false;
+        };
 
         foreach ($tiersByClass as $className => $tiers) {
             if (count($tiers) < 2) {
                 continue; // un solo tamaño: no hay nada que varíe según longitud.
             }
             $count = $this->countRepeatedClassOccurrences($content, $className);
-            if (!$count) {
-                continue;
-            }
 
-            // Una misma cantidad de celdas puede coincidir con MÁS de una
-            // grilla (ej. la tabla "maxi" arma una grilla para el fondo del
-            // ícono y otra, aparte, para el fondo del texto — ambas 6×3,
-            // ninguna es "la" grilla de texto per se) — de las candidatas sin
-            // reclamar se prefiere la que REALMENTE tiene un elemento de
-            // texto adentro, si no no hay nada para configurar en esa celda.
             $gridIndex = null;
-            foreach ($page['grids'] as $idx => $grid) {
-                if (in_array($idx, $claimedGridIndexes, true)) {
-                    continue;
-                }
-                if (((int) $grid['cols']) * ((int) $grid['rows']) !== $count) {
-                    continue;
-                }
-                $hasText = false;
-                foreach ($grid['template'] as $id) {
-                    if (($page['elements'][$elementsById[$id] ?? null]['type'] ?? null) === 'text') {
-                        $hasText = true;
+            if ($count) {
+                // Una misma cantidad de celdas puede coincidir con MÁS de una
+                // grilla (ej. la tabla "maxi" arma una grilla para el fondo
+                // del ícono y otra, aparte, para el fondo del texto — ambas
+                // 6×3, ninguna es "la" grilla de texto per se) — de las
+                // candidatas sin reclamar se prefiere la que REALMENTE tiene
+                // un elemento de texto adentro.
+                foreach ($page['grids'] as $idx => $grid) {
+                    if (in_array($idx, $claimedGridIndexes, true)) {
+                        continue;
+                    }
+                    if (((int) $grid['cols']) * ((int) $grid['rows']) !== $count) {
+                        continue;
+                    }
+                    if ($gridHasText($grid)) {
+                        $gridIndex = $idx;
                         break;
                     }
                 }
-                if ($hasText) {
-                    $gridIndex = $idx;
-                    break;
+            } elseif (preg_match('/class=["\']' . preg_quote($className, '/') . '(?=["\'\s])/', $content)) {
+                // `countRepeatedClassOccurrences()` no pudo contar, pero la
+                // clase SÍ aparece en ESTA vista (ej. un `@for` con límite
+                // variable en vez de un número literal, como `tematica/
+                // super-mini/*.blade.php`: `@for ($i = 0; $i <
+                // $plantilla['filas']; $i++)`) — si la página tiene una única
+                // grilla sin reclamar con texto adentro, es la única
+                // candidata posible, no hace falta el conteo para elegirla.
+                // El chequeo de que la clase aparezca acá es clave: sin él,
+                // una clase de OTRA forma sin relación (ej. "Super Maxi",
+                // que convive en el mismo `etiquetas.css` compartido pero
+                // esta vista puntual ni usa) también caería acá y se robaría
+                // la única grilla disponible con SUS tamaños, no los de la
+                // clase real de esta vista.
+                $unclaimedWithText = [];
+                foreach ($page['grids'] as $idx => $grid) {
+                    if (!in_array($idx, $claimedGridIndexes, true) && $gridHasText($grid)) {
+                        $unclaimedWithText[] = $idx;
+                    }
+                }
+                if (count($unclaimedWithText) === 1) {
+                    $gridIndex = $unclaimedWithText[0];
                 }
             }
             if ($gridIndex === null) {
@@ -1524,28 +1679,34 @@ class ProductPdfDesignController extends Controller
             }
             $claimedGridIndexes[] = $gridIndex;
 
-            // Los umbrales van siempre los reales del `$fontClass` legacy
-            // (16 y 20 — ver EtiquetaService::generarEtiquetas), aunque este
-            // contenedor no defina los 3 niveles: si un nombre se pasa del
-            // último umbral definido y ninguna regla matchea,
-            // `resolverTamanoFuente` cae al tamaño base del elemento — por
-            // eso ese tamaño base se deja en el de la ÚLTIMA regla (no en
-            // "normal"), para que un nombre larguísimo siga respetando el
-            // último tamaño ya elegido en vez de volver a agrandarse.
+            // Si un nombre se pasa del último umbral definido y ninguna
+            // regla matchea, `resolverTamanoFuente` cae al tamaño base del
+            // elemento — por eso ese tamaño base se deja en el de la ÚLTIMA
+            // regla (no en "normal"), para que un nombre larguísimo siga
+            // respetando el último tamaño ya elegido en vez de volver a
+            // agrandarse.
             $rules = [];
-            if (isset($tiers['normal'])) {
-                $rules[] = ['max_chars' => 16, 'font_size_px' => $pxFor($tiers['normal'])];
-            }
-            if (isset($tiers['small'])) {
-                $rules[] = ['max_chars' => 20, 'font_size_px' => $pxFor($tiers['small'])];
-            }
-            if (isset($tiers['extra_small'])) {
-                $rules[] = ['max_chars' => 999, 'font_size_px' => $pxFor($tiers['extra_small'])];
+            $ruleTierKeys = [];
+            foreach ($tierMaxChars as $tierKey => $maxChars) {
+                if (!isset($tiers[$tierKey])) {
+                    continue;
+                }
+                $rules[] = ['max_chars' => $maxChars, 'font_size_px' => $pxFor($tiers[$tierKey])];
+                $ruleTierKeys[] = $tierKey;
             }
             if (count($rules) < 2) {
                 continue;
             }
             $fallbackFontSizePx = end($rules)['font_size_px'];
+
+            // Mismos umbrales, para el interlineado — solo si el CSS real
+            // define al menos un `line-height` puntual para esta clase (ej.
+            // "Super Mini": `normal`/`extra_small` sí, `small` no). El nivel
+            // que no lo define deja cada texto con el `line_height` que ya
+            // tenía (no hay un valor legacy del que copiarlo para ESE nivel
+            // puntual).
+            $lineHeightTiers = $lineHeightTiersByClass[$className] ?? [];
+            $hasLineHeightOverride = (bool) array_intersect_key($lineHeightTiers, array_flip($ruleTierKeys));
 
             $textIds = array_filter($page['grids'][$gridIndex]['template'], fn($id) => ($elementsById[$id] ?? null) !== null && ($page['elements'][$elementsById[$id]]['type'] ?? null) === 'text');
             foreach ($page['grids'][$gridIndex]['members'] as $member) {
@@ -1563,6 +1724,19 @@ class ProductPdfDesignController extends Controller
                 $page['elements'][$index]['length_rules_enabled'] = true;
                 $page['elements'][$index]['length_rules'] = $rules;
                 $page['elements'][$index]['font_size_px'] = $fallbackFontSizePx;
+
+                if ($hasLineHeightOverride) {
+                    $baseLineHeight = $page['elements'][$index]['line_height'] ?? 1.15;
+                    $lineHeightRules = [];
+                    foreach ($ruleTierKeys as $i => $tierKey) {
+                        $lineHeightRules[] = [
+                            'max_chars' => $rules[$i]['max_chars'],
+                            'line_height' => $lineHeightTiers[$tierKey] ?? $baseLineHeight,
+                        ];
+                    }
+                    $page['elements'][$index]['line_height_rules_enabled'] = true;
+                    $page['elements'][$index]['line_height_rules'] = $lineHeightRules;
+                }
             }
         }
     }
