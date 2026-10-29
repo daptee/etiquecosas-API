@@ -476,6 +476,13 @@ class ProductPdfDesignController extends Controller
                 }
             }
             unset($el);
+
+            // Tiene que correr DESPUÉS del reemplazo de arriba: recién ahí el
+            // contenido trae el placeholder "{{numero_pedido}}" por el que
+            // se identifica este texto puntual (antes trae el número de
+            // venta de muestra tal cual, sin nada reconocible), y recién
+            // ahí su geometría es la DEFINITIVA (post resizeTextElementForContent).
+            $this->applyViniloOrderNumberClearance($page);
         }
         unset($page);
 
@@ -1528,6 +1535,75 @@ class ProductPdfDesignController extends Controller
                 }
             }
         }
+    }
+
+    /**
+     * El texto "PEDIDO # ..." de `tematica/vinilo/*` sale rotado -90°
+     * (`.texto3 { transform: rotate(270deg) }`), corrido al margen
+     * izquierdo de la hoja para quedar FUERA de la columna de etiquetas —
+     * pero el ancho de su caja (antes de rotar) depende del contenido
+     * real (dígitos del pedido de muestra), y el rectángulo YA ROTADO
+     * puede terminar invadiendo el borde izquierdo de esa columna aunque
+     * sea por unos milímetros (se ve "tocando" la etiqueta de al lado).
+     *
+     * Se corre la caja en el eje X (sin tocar ancho/alto/rotación) lo
+     * necesario para que el rectángulo rotado quede a `$gapCm` del borde
+     * izquierdo REAL de la columna "Vinilo" (el x_cm mínimo entre los
+     * fondos que `applyViniloLabelShape()` ya etiquetó, en vez de un
+     * número fijo a ciegas que se desactualiza si cambia el tamaño de
+     * letra o la cantidad de dígitos del pedido).
+     *
+     * No recibe `$viewPath` (a diferencia de `applyViniloLabelShape()`):
+     * tiene que correr DESPUÉS de reemplazar el número de venta de muestra
+     * por el placeholder `{{numero_pedido}}` (ver más abajo en
+     * `importFromProduct()`), momento en el que ya no se tiene a mano el
+     * `$viewPath` de cada página por separado — en cambio, usa como señal
+     * de "esta página es Vinilo" que ya tenga algún fondo con el
+     * `label_shape_id` de esa forma (lo puso `applyViniloLabelShape()` antes).
+     */
+    private function applyViniloOrderNumberClearance(array &$page): void
+    {
+        $viniloShape = $this->resolveViniloLabelShape();
+        if (!$viniloShape) {
+            return;
+        }
+
+        $columnLeftX = null;
+        foreach ($page['elements'] as $el) {
+            if (($el['type'] ?? null) === 'background' && ($el['label_shape_id'] ?? null) === $viniloShape->id) {
+                $columnLeftX = $columnLeftX === null ? (float) $el['x_cm'] : min($columnLeftX, (float) $el['x_cm']);
+            }
+        }
+        if ($columnLeftX === null) {
+            return;
+        }
+
+        $gapCm = 0.2;
+
+        foreach ($page['elements'] as &$el) {
+            if (($el['type'] ?? null) !== 'text' || (int) round((float) ($el['rotation_deg'] ?? 0)) === 0) {
+                continue;
+            }
+            if (!str_contains($el['content'] ?? '', 'numero_pedido')) {
+                continue;
+            }
+
+            $width = (float) ($el['width_cm'] ?? 0);
+            $height = (float) ($el['height_cm'] ?? 0);
+            $theta = deg2rad((float) $el['rotation_deg']);
+            // Ancho real del rectángulo ya rotado (fórmula estándar de la
+            // caja envolvente de un rectángulo rotado alrededor de su
+            // propio centro).
+            $rotatedHalfWidth = abs($width / 2 * cos($theta)) + abs($height / 2 * sin($theta));
+            $centerX = (float) $el['x_cm'] + $width / 2;
+            $rightEdge = $centerX + $rotatedHalfWidth;
+
+            $maxAllowedRightEdge = $columnLeftX - $gapCm;
+            if ($rightEdge > $maxAllowedRightEdge) {
+                $el['x_cm'] = round($el['x_cm'] - ($rightEdge - $maxAllowedRightEdge), 2);
+            }
+        }
+        unset($el);
     }
 
     /**
