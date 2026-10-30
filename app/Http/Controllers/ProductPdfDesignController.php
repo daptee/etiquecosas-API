@@ -398,6 +398,8 @@ class ProductPdfDesignController extends Controller
 
                 $this->applyViniloLabelShape($page, $viewPaths[$idx] ?? null);
 
+                $this->applyViniloTextSizeRules($page);
+
                 $this->applyLegacyTextSizeRules($page, $viewPaths[$idx] ?? null);
 
                 $pages[] = $page;
@@ -1535,6 +1537,89 @@ class ProductPdfDesignController extends Controller
                 }
             }
         }
+    }
+
+    /**
+     * `tematica/vinilo/*` NO usa el esquema de clases `p.normal/small/
+     * extra-small-text-size` por CANTIDAD DE CARACTERES que sí tienen
+     * maxi/super-maxi/super-mini (ver extractTextSizeTiersFromView()) — en
+     * su lugar, las 24 vistas eligen entre exactamente 2 tamaños fijos
+     * según la CANTIDAD DE PALABRAS del nombre (`@switch($cant)` en
+     * cualquier `tematica/vinilo/*.blade.php`): `.texto2` (`font-size:
+     * 1.05em`, 1 línea vía `formatName()`) para 1, 2 o 5+ palabras, y
+     * `.textoAplanado` (`font-size: 0.9em; line-height: 0.9em`, 2 líneas
+     * fijas) para exactamente 3 o 4.
+     *
+     * Ese esquema no es "más caracteres → más chico" de forma monótona (un
+     * nombre de 5+ palabras VUELVE a `.texto2`, más grande, aunque sea más
+     * largo que uno de 3-4) — no se puede representar exacto con
+     * `font_size_rules`/`line_height_rules` (una escalera ordenada por
+     * `max_chars`). Se arma una aproximación de 2 niveles con los mismos
+     * umbrales ya usados en el resto del import (16 / 26, ver
+     * `applyLegacyTextSizeRules()`): nombres cortos con el tamaño grande
+     * (medido tal cual lo dibujó dompdf en la muestra — la muestra usa
+     * siempre "NOMBRE APELLIDO", 2 palabras, así que el `font_size_px` ya
+     * importado ES el de `.texto2`) y nombres más largos con el chico,
+     * escalado por la MISMA proporción real entre los dos `em` del CSS
+     * (0.9/1.05) en vez de adivinar un píxel aparte. El interlineado del
+     * nivel chico sale directo del `line-height: 0.9em` de `.textoAplanado`
+     * (al ser relativo al propio font-size, equivale a un multiplicador
+     * unitless de 0.9 sin importar el tamaño real en px).
+     */
+    private function applyViniloTextSizeRules(array &$page): void
+    {
+        $viniloShape = $this->resolveViniloLabelShape();
+        if (!$viniloShape) {
+            return;
+        }
+
+        $hasViniloBackground = false;
+        foreach ($page['elements'] as $el) {
+            if (($el['type'] ?? null) === 'background' && ($el['label_shape_id'] ?? null) === $viniloShape->id) {
+                $hasViniloBackground = true;
+                break;
+            }
+        }
+        if (!$hasViniloBackground) {
+            return;
+        }
+
+        $smallToNormalRatio = 0.9 / 1.05;
+
+        foreach ($page['elements'] as &$el) {
+            if (($el['type'] ?? null) !== 'text') {
+                continue;
+            }
+            // El texto "PEDIDO # ..." es el único rotado en estas vistas —
+            // no tiene nada que ver con el nombre del comprador.
+            if ((int) round((float) ($el['rotation_deg'] ?? 0)) !== 0) {
+                continue;
+            }
+            if (empty($el['font_size_px'])) {
+                continue;
+            }
+
+            $normalFontSizePx = (int) $el['font_size_px'];
+            $smallFontSizePx = max(1, (int) round($normalFontSizePx * $smallToNormalRatio));
+
+            $el['font_size_rules'] = [
+                ['max_chars' => 16, 'font_size_px' => $normalFontSizePx],
+                ['max_chars' => 26, 'font_size_px' => $smallFontSizePx],
+            ];
+            $el['length_rules_enabled'] = true;
+            $el['length_rules'] = $el['font_size_rules'];
+            $el['font_size_px'] = $smallFontSizePx;
+
+            $el['line_height_rules'] = [
+                ['max_chars' => 16, 'line_height' => $el['line_height'] ?? 1.15],
+                ['max_chars' => 26, 'line_height' => 0.9],
+            ];
+            $el['line_height_rules_enabled'] = true;
+            // `line_height_tiers` es el campo EDITABLE que muestra el panel
+            // del editor — ver nota igual en applyLegacyTextSizeRules().
+            $el['line_height_tiers'] = $el['line_height_rules'];
+        }
+        unset($el);
     }
 
     /**
