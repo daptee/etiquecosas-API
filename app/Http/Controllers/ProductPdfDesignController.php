@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AttributeValue;
 use App\Models\LabelShape;
 use App\Models\PersonalizationIcon;
 use App\Models\Product;
@@ -224,6 +225,8 @@ class ProductPdfDesignController extends Controller
             return $this->error('Este producto no tiene temáticas cargadas en su PDF legacy', 422);
         }
 
+        $variantAttributeValueName = null;
+
         if ($variantId) {
             $variant = ProductVariant::find($variantId);
             // El rule "exists" de abajo valida contra la tabla cruda, sin el
@@ -242,6 +245,7 @@ class ProductPdfDesignController extends Controller
             if (!$tematicaCoincidente) {
                 return $this->error('La variante elegida no tiene una temática asociada en este producto', 422);
             }
+            $variantAttributeValueName = AttributeValue::find($tematicaId)?->value;
         } elseif (count($tematicasGuardadas) === 1) {
             $tematicaCoincidente = $tematicasGuardadas[0];
             $tematicaId = $tematicaCoincidente['id'] ?? null;
@@ -514,7 +518,7 @@ class ProductPdfDesignController extends Controller
             'label_shape_id' => $request->labelShapeId
                 ?: $this->detectLabelShapeIdFromViewPath($viewPaths[0] ?? null)
                 ?: $this->detectUniformLabelShapeId($data['pages']),
-            'name' => $request->name ?: ($product->name . ' (importado)'),
+            'name' => $request->name ?: ($product->name . ($variantAttributeValueName ? ' - ' . $variantAttributeValueName : '') . ' (importado)'),
             'data' => $data,
             'is_published' => false,
             'status_id' => 1,
