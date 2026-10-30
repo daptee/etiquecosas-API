@@ -518,7 +518,9 @@ class ProductPdfDesignController extends Controller
             'label_shape_id' => $request->labelShapeId
                 ?: $this->detectLabelShapeIdFromViewPath($viewPaths[0] ?? null)
                 ?: $this->detectUniformLabelShapeId($data['pages']),
-            'name' => $request->name ?: ($product->name . ($variantAttributeValueName ? ' - ' . $variantAttributeValueName : '') . ' (importado)'),
+            'name' => ($request->name ?: $product->name)
+                . ($variantAttributeValueName ? ' - ' . $variantAttributeValueName : '')
+                . ' (importado)',
             'data' => $data,
             'is_published' => false,
             'status_id' => 1,
