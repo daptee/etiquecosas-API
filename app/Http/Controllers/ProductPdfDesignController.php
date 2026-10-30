@@ -1859,6 +1859,64 @@ class ProductPdfDesignController extends Controller
     }
 
     /**
+     * Mismo patrón que `extractTextSizeTiersFromView()` pero para las reglas
+     * GENÉRICAS sin contenedor (`.normal-text-size { font-size: 12pt
+     * !important }`, `.small-text-size`, `.extra-small-text-size` — ver
+     * `public/css/etiquetas.css`), que valen para CUALQUIER `<p>` con esa
+     * clase que no tenga una regla más específica tipo `.container
+     * p.normal-text-size`. El `(?<!p)` antes del punto evita matchear la
+     * mitad de un selector contenedor real (`.etiqueta-maxi-content-
+     * container p.normal-text-size` también contiene literalmente
+     * ".normal-text-size {" — pero ahí el caracter previo es "p", así que
+     * se descarta).
+     */
+    private function extractGenericTextSizeTiers(string $content): array
+    {
+        $tiers = [];
+        if (preg_match_all(
+            '/(?<!p)\.(normal|small|extra-small)-text-size\s*\{[^}]*?font-size:\s*([\d.]+)pt/i',
+            $content,
+            $matches,
+            PREG_SET_ORDER
+        )) {
+            foreach ($matches as $m) {
+                $tier = str_replace('-', '_', $m[1]);
+                $tiers[$tier] = (float) $m[2];
+            }
+        }
+
+        return $tiers;
+    }
+
+    /**
+     * Mismo patrón que `extractGenericTextSizeTiers()` pero para el
+     * `line-height` de cada nivel genérico — igual criterio que
+     * `extractLineHeightTiersFromView()` (un nivel sin `line-height` propio
+     * queda afuera, para que `applyLegacyTextSizeRules()` use el `line-
+     * height` BASE del contenedor en su lugar).
+     */
+    private function extractGenericLineHeightTiers(string $content): array
+    {
+        $tiers = [];
+        if (preg_match_all(
+            '/(?<!p)\.(normal|small|extra-small)-text-size\s*\{([^}]*)\}/i',
+            $content,
+            $matches,
+            PREG_SET_ORDER
+        )) {
+            foreach ($matches as $m) {
+                if (!preg_match('/line-height:\s*([\d.]+)/i', $m[2], $lh)) {
+                    continue;
+                }
+                $tier = str_replace('-', '_', $m[1]);
+                $tiers[$tier] = (float) $lh[1];
+            }
+        }
+
+        return $tiers;
+    }
+
+    /**
      * `width`/`height` en cm de la clase CSS de la forma "externa" (ej.
      * `.etiqueta-super-mini { width: 2.9cm; height: 1.15cm; ... }`, no su
      * `-content-container` interno) — usado para resolver qué grilla
@@ -1980,6 +2038,32 @@ class ProductPdfDesignController extends Controller
             foreach ($this->extractBaseLineHeightFromView($sharedContent) as $className => $lineHeight) {
                 if (!isset($baseLineHeightByClass[$className])) {
                     $baseLineHeightByClass[$className] = $lineHeight;
+                }
+            }
+        }
+
+        // "Vertical" (`.etiqueta-vertical-content-container p`, ver
+        // `public/css/etiquetas.css`) es el ÚNICO contenedor de los 4 que
+        // arma `generarEtiquetas()` que NO tiene su propia regla `.container
+        // p.normal/small/extra-small-text-size` — el `<p>` de esta forma
+        // usa igual la clase `$fontClass` (normal/small/extra-small-text-
+        // size, por longitud del nombre), pero por CSS cascade cae en las
+        // reglas GENÉRICAS sin contenedor (`.normal-text-size { font-size:
+        // 12pt !important }`, etc., un poco más arriba en el mismo
+        // `etiquetas.css`) que `extractTextSizeTiersFromView()` no detecta
+        // (busca selectores ".algo p.tier-text-size", no ".tier-text-size"
+        // suelta). Sin este fallback, "Vertical" quedaba sin `font_size_
+        // rules`/`line_height_rules` pese a variar por longitud en el
+        // legacy igual que los demás.
+        if (!isset($tiersByClass['etiqueta-vertical-content-container'])) {
+            $genericTiers = $this->extractGenericTextSizeTiers($content)
+                ?: ($sharedContent !== null ? $this->extractGenericTextSizeTiers($sharedContent) : []);
+            if (count($genericTiers) >= 2) {
+                $tiersByClass['etiqueta-vertical-content-container'] = $genericTiers;
+                $genericLineHeightTiers = $this->extractGenericLineHeightTiers($content)
+                    ?: ($sharedContent !== null ? $this->extractGenericLineHeightTiers($sharedContent) : []);
+                if ($genericLineHeightTiers) {
+                    $lineHeightTiersByClass['etiqueta-vertical-content-container'] = $genericLineHeightTiers;
                 }
             }
         }
