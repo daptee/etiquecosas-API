@@ -1247,21 +1247,40 @@ class ProductPdfDesignController extends Controller
             return [];
         }
 
+        // El x_cm/y_cm del FONDO de la celda (mismo group_id que el ícono,
+        // ver PdfDesignImportService::import()) es un ancla mucho más
+        // confiable que el x_cm del propio ícono para agrupar por columna:
+        // cada imagen real tiene su propio ancho intrínseco y la celda la
+        // centra (".imagen"/"personajeAlto" en vinilo.css), así que el x_cm
+        // del ÍCONO varía unas décimas de una fila a otra DENTRO de la misma
+        // columna visual (ej. 2.49, 2.52, 2.59, 2.61, 2.65cm) — suficiente
+        // para que agrupar por esa coordenada parta una sola columna en
+        // varios grupos chicos y mezcle filas de columnas distintas. El
+        // fondo, en cambio, es un rect de tamaño fijo siempre en la misma
+        // grilla de x, así que agrupa sin ambigüedad.
+        $backgroundsByGroupId = [];
+        foreach ($elements as $el) {
+            if (($el['type'] ?? null) === 'background' && !empty($el['group_id'])) {
+                $backgroundsByGroupId[$el['group_id']] = $el;
+            }
+        }
+
         $columns = [];
         foreach ($iconEls as $el) {
+            $anchor = $backgroundsByGroupId[$el['group_id'] ?? null] ?? $el;
             // Clave entera (x_cm * 10, redondeado) en vez de un float con 1
             // decimal: un array key float se trunca silenciosamente a int en
             // PHP, así que 2.5 y 2.9 terminarían pisándose en la misma
             // clave `2` (mismo footgun ya resuelto en bumpLowLineHeight()).
-            $columns[(int) round((float) $el['x_cm'] * 10)][] = $el;
+            $columns[(int) round((float) $anchor['x_cm'] * 10)][] = ['icon' => $el, 'y_cm' => (float) $anchor['y_cm']];
         }
         ksort($columns);
 
         $map = [];
         foreach ($columns as $colEls) {
             usort($colEls, fn($a, $b) => $a['y_cm'] <=> $b['y_cm']);
-            foreach (array_values($colEls) as $row => $el) {
-                $map[$el['id']] = $iconSequence[$row % count($iconSequence)];
+            foreach (array_values($colEls) as $row => $entry) {
+                $map[$entry['icon']['id']] = $iconSequence[$row % count($iconSequence)];
             }
         }
 
