@@ -215,43 +215,13 @@ class ProductPdfDesignController extends Controller
         $productId = $request->productId;
         $variantId = $request->variantId;
 
-        $productPdf = ProductPdf::where('product_id', $productId)->first();
-        if (!$productPdf) {
-            return $this->error('Este producto no tiene un PDF legacy asociado (tabla product_pdf)', 422);
+        $resolved = $this->resolveTematicaForProduct($productId, $variantId);
+        if (isset($resolved['error'])) {
+            return $this->error($resolved['error'], 422);
         }
-
-        $tematicasGuardadas = $productPdf->data['tematicas'] ?? [];
-        if (empty($tematicasGuardadas)) {
-            return $this->error('Este producto no tiene temáticas cargadas en su PDF legacy', 422);
-        }
-
-        $variantAttributeValueName = null;
-
-        if ($variantId) {
-            $variant = ProductVariant::find($variantId);
-            // El rule "exists" de abajo valida contra la tabla cruda, sin el
-            // global scope de SoftDeletes — una variante borrada pasa la
-            // validación pero ProductVariant::find() (sí soft-delete-aware)
-            // devuelve null, así que hay que distinguir este caso del de
-            // "la variante existe pero no tiene atributos" para no confundir.
-            if (!$variant) {
-                return $this->error('La variante elegida no existe o fue eliminada', 422);
-            }
-            $tematicaId = $variant->variant['attributesvalues'][0]['id'] ?? null;
-            if (!$tematicaId) {
-                return $this->error('No se pudo determinar la temática de la variante elegida', 422);
-            }
-            $tematicaCoincidente = collect($tematicasGuardadas)->firstWhere('id', $tematicaId);
-            if (!$tematicaCoincidente) {
-                return $this->error('La variante elegida no tiene una temática asociada en este producto', 422);
-            }
-            $variantAttributeValueName = AttributeValue::find($tematicaId)?->value;
-        } elseif (count($tematicasGuardadas) === 1) {
-            $tematicaCoincidente = $tematicasGuardadas[0];
-            $tematicaId = $tematicaCoincidente['id'] ?? null;
-        } else {
-            return $this->error('Este producto tiene ' . count($tematicasGuardadas) . ' temáticas distintas — hay que elegir una variante (variantId) para saber cuál importar', 422);
-        }
+        $tematicaCoincidente = $resolved['tematicaCoincidente'];
+        $tematicaId = $resolved['tematicaId'];
+        $variantAttributeValueName = $resolved['variantAttributeValueName'];
 
         $product = Product::find($productId);
         if (!$product) {
@@ -373,10 +343,10 @@ class ProductPdfDesignController extends Controller
 
             foreach ($imported['pages'] ?? [] as $page) {
                 $page['name'] = 'Página ' . (count($pages) + 1);
-                $iconPos = 0;
+                $iconFileIdxByElementId = $this->mapIconElementsToSequenceIndexes($page['elements'], $iconSequence);
                 foreach ($page['elements'] as &$el) {
                     if (($el['type'] ?? null) === 'icon') {
-                        $fileIdx = $iconSequence[$iconPos] ?? null;
+                        $fileIdx = $iconFileIdxByElementId[$el['id']] ?? null;
                         $file = $fileIdx !== null ? ($imagenes[$fileIdx] ?? null) : null;
                         if ($file && is_file($file)) {
                             $catalogPath = "icons/Tematicas/{$tematicaLimpia}/" . basename($file);
@@ -385,7 +355,6 @@ class ProductPdfDesignController extends Controller
                                 $exactIconIds[$el['id']] = $catalogId;
                             }
                         }
-                        $iconPos++;
                     } elseif (($el['type'] ?? null) === 'text' && $fontId) {
                         $el['font_id'] = $fontId;
                     }
@@ -542,6 +511,183 @@ class ProductPdfDesignController extends Controller
         $design->load(['products:id,name,sku', 'labelShape', 'generalStatus']);
         $this->logAudit(Auth::user(), 'Import Pdf Design From Product', $request->all(), ['designId' => $design->id, 'elementCount' => $elementCount, 'pages' => count($pages)]);
         return $this->success($design, "Diseño importado del PDF legacy ({$elementCount} elementos en " . count($pages) . " página(s))");
+    }
+
+    /**
+     * Resuelve la temática del PDF legacy (product_pdf.data.tematicas) para
+     * un producto+variante — misma lógica para importar de cero
+     * (importFromProduct) y para re-resolver íconos de un diseño YA
+     * importado (fixImportedIcons), sin duplicarla en los dos lugares.
+     * Variante null solo es válida si el producto tiene UNA sola temática
+     * cargada. Devuelve ['error' => string] si no se pudo resolver.
+     */
+    private function resolveTematicaForProduct(int $productId, $variantId): array
+    {
+        $productPdf = ProductPdf::where('product_id', $productId)->first();
+        if (!$productPdf) {
+            return ['error' => 'Este producto no tiene un PDF legacy asociado (tabla product_pdf)'];
+        }
+
+        $tematicasGuardadas = $productPdf->data['tematicas'] ?? [];
+        if (empty($tematicasGuardadas)) {
+            return ['error' => 'Este producto no tiene temáticas cargadas en su PDF legacy'];
+        }
+
+        $variantAttributeValueName = null;
+
+        if ($variantId) {
+            $variant = ProductVariant::find($variantId);
+            // El rule "exists" del caller valida contra la tabla cruda, sin
+            // el global scope de SoftDeletes — una variante borrada pasa la
+            // validación pero ProductVariant::find() (sí soft-delete-aware)
+            // devuelve null, así que hay que distinguir este caso del de
+            // "la variante existe pero no tiene atributos" para no confundir.
+            if (!$variant) {
+                return ['error' => 'La variante elegida no existe o fue eliminada'];
+            }
+            $tematicaId = $variant->variant['attributesvalues'][0]['id'] ?? null;
+            if (!$tematicaId) {
+                return ['error' => 'No se pudo determinar la temática de la variante elegida'];
+            }
+            $tematicaCoincidente = collect($tematicasGuardadas)->firstWhere('id', $tematicaId);
+            if (!$tematicaCoincidente) {
+                return ['error' => 'La variante elegida no tiene una temática asociada en este producto'];
+            }
+            $variantAttributeValueName = AttributeValue::find($tematicaId)?->value;
+        } elseif (count($tematicasGuardadas) === 1) {
+            $tematicaCoincidente = $tematicasGuardadas[0];
+            $tematicaId = $tematicaCoincidente['id'] ?? null;
+        } else {
+            return ['error' => 'Este producto tiene ' . count($tematicasGuardadas) . ' temáticas distintas — hay que elegir una variante (variantId) para saber cuál importar'];
+        }
+
+        return [
+            'tematicaCoincidente' => $tematicaCoincidente,
+            'tematicaId' => $tematicaId,
+            'variantAttributeValueName' => $variantAttributeValueName,
+        ];
+    }
+
+    /**
+     * Re-resuelve SOLO el `icon_id` de los elementos `icon` de un diseño YA
+     * importado (vinculado a este producto+variante vía
+     * ProductPdfDesignProduct.theme_key = variantId), sin tocar nada más del
+     * diseño. Pensado para corregir, sin reimportar de cero, los diseños de
+     * vinilo "x2"/"x3" (varias columnas) importados ANTES del fix de
+     * mapIconElementsToSequenceIndexes(): extractIconFileSequence() lee el
+     * .blade.php crudo y solo trae UNA vuelta de la secuencia de íconos (el
+     * cuerpo del `@for` de columnas nunca usa el índice de iteración), así
+     * que con el mapeo viejo (por posición de aparición) solo la primera
+     * columna quedaba bien — de ahí en más caía al fallback por nombre
+     * aproximado (round-robin), con íconos salteados/repetidos sin relación
+     * con la celda real.
+     *
+     * A propósito NO reimporta el PDF de cero (no vuelve a tocar fondos,
+     * textos ni posiciones): solo pisa `icon_id` usando la geometría
+     * (x_cm/y_cm) YA guardada en el diseño, así que preserva cualquier
+     * edición manual hecha desde que se importó.
+     */
+    public function fixImportedIcons(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'productId' => 'required|exists:products,id',
+            'variantId' => 'nullable|exists:product_variants,id',
+        ]);
+        if ($validator->fails()) {
+            $this->logAudit(Auth::user(), 'Fix Imported Icons', $request->all(), $validator->errors());
+            return $this->validationError($validator->errors());
+        }
+
+        $productId = $request->productId;
+        $variantId = $request->variantId;
+
+        $link = ProductPdfDesignProduct::where('product_id', $productId)
+            ->when($variantId, fn($q) => $q->where('theme_key', $variantId))
+            ->when(!$variantId, fn($q) => $q->whereNull('theme_key'))
+            ->first();
+        if (!$link) {
+            return $this->error('No hay un diseño importado vinculado a este producto' . ($variantId ? ' y esta variante' : ''), 422);
+        }
+
+        $design = ProductPdfDesign::find($link->product_pdf_design_id);
+        if (!$design) {
+            return $this->error('El diseño vinculado ya no existe', 422);
+        }
+
+        $resolved = $this->resolveTematicaForProduct($productId, $variantId);
+        if (isset($resolved['error'])) {
+            return $this->error($resolved['error'], 422);
+        }
+        $tematicaCoincidente = $resolved['tematicaCoincidente'];
+
+        $urlPdf = $tematicaCoincidente['pdf-url'] ?? null;
+        $viewPaths = is_array($urlPdf) ? $urlPdf : ($urlPdf ? [$urlPdf] : []);
+        $tematicaLimpia = strtoupper(EtiquetaService::limpiarNombreArchivo($tematicaCoincidente['name'] ?? ''));
+        $imagenes = $this->buildTematicaImagenes($tematicaCoincidente['name'] ?? '');
+
+        $catalogIconIdByPath = PersonalizationIcon::where('icon', 'like', 'icons/Tematicas/%')
+            ->pluck('id', 'icon')
+            ->all();
+
+        $data = $design->data;
+        if (empty($data['pages'])) {
+            return $this->error('El diseño vinculado no tiene páginas', 422);
+        }
+
+        $fixedCount = 0;
+        // OJO: iterar "$data['pages'] ?? []" por referencia acá sería un
+        // error — el operador "??" arma un array TEMPORAL cuando la clave sí
+        // existe pero no es null, y "&$page" terminaría modificando esa
+        // copia descartable, nunca "$data['pages']" real (el `update()` de
+        // más abajo guardaría los íconos sin corregir). Por eso arriba se
+        // valida que "pages" exista ANTES del loop, en vez de usar "??" acá.
+        foreach ($data['pages'] as $idx => &$page) {
+            $iconSequence = isset($viewPaths[$idx]) ? $this->extractIconFileSequence($viewPaths[$idx]) : [];
+            if (empty($iconSequence)) {
+                continue;
+            }
+
+            $iconFileIdxByElementId = $this->mapIconElementsToSequenceIndexes($page['elements'], $iconSequence);
+            foreach ($page['elements'] as &$el) {
+                if (($el['type'] ?? null) !== 'icon') {
+                    continue;
+                }
+                $fileIdx = $iconFileIdxByElementId[$el['id']] ?? null;
+                $file = $fileIdx !== null ? ($imagenes[$fileIdx] ?? null) : null;
+                if (!$file || !is_file($file)) {
+                    continue;
+                }
+                $catalogPath = "icons/Tematicas/{$tematicaLimpia}/" . basename($file);
+                $catalogId = $catalogIconIdByPath[$catalogPath] ?? null;
+                if ($catalogId && $catalogId !== ($el['icon_id'] ?? null)) {
+                    $el['icon_id'] = $catalogId;
+                    $fixedCount++;
+                }
+            }
+            unset($el);
+        }
+        unset($page);
+
+        if ($fixedCount === 0) {
+            $design->load(['products:id,name,sku', 'labelShape', 'generalStatus']);
+            return $this->success($design, 'No se encontró ningún ícono para corregir (ya estaban bien, o esta vista no tiene el patrón $plantilla[imagen][N])');
+        }
+
+        // Recalcula el `sig` de cada celda de grilla: el `icon_id` que
+        // acabamos de pisar es parte de esa firma (ver elementSignature()) —
+        // si no se recalcula, el editor trata estas celdas como
+        // "modificadas a mano" desde antes del fix y "Generar grilla" deja
+        // de tocarlas.
+        foreach ($data['pages'] as &$page) {
+            $page = PdfDesignImportService::resignGrids($page);
+        }
+        unset($page);
+
+        $design->update(['data' => $this->sanitizeDesignData($data)]);
+        $design->load(['products:id,name,sku', 'labelShape', 'generalStatus']);
+
+        $this->logAudit(Auth::user(), 'Fix Imported Icons', $request->all(), ['designId' => $design->id, 'fixedCount' => $fixedCount]);
+        return $this->success($design, "Se corrigieron {$fixedCount} ícono(s) del diseño");
     }
 
     public function update(Request $request, $id)
@@ -1069,6 +1215,59 @@ class ProductPdfDesignController extends Controller
      * detectada en el PDF, en vez de adivinar. Si la vista no existe o no usa
      * este patrón (ej. una vista "sin dibujo" sin íconos), devuelve [].
      */
+    /**
+     * Mapea cada elemento `icon` detectado (geometría real del PDF) al índice
+     * de `$plantilla['imagen'][N]` que le corresponde, a partir de la
+     * secuencia extraída del .blade.php por `extractIconFileSequence()`.
+     *
+     * Esa secuencia trae UNA sola vuelta — el cuerpo del `@for ($i = 0; $i <
+     * $plantilla['columna']; $i++)` de las vistas de vinilo nunca usa `$i`
+     * (ver resources/views/tematica/vinilo/*.blade.php), así que cada
+     * columna repite EXACTAMENTE el mismo ícono fila por fila. Un mapeo
+     * directo por posición de aparición (`$iconSequence[$posición]`) solo
+     * cubre la primera columna: a partir de la celda número `count(
+     * $iconSequence)` ya no hay índice para esa posición y el ícono exacto
+     * se pierde (cae al fallback por nombre aproximado, round-robin) —
+     * pasaba con cualquier temática vendida "x2"/"x3" (ver
+     * product_pdf.data.tematicas[].number-columns > 1), no con "x1".
+     *
+     * Agrupando los íconos por columna (mismo x_cm) y repitiendo la
+     * secuencia fila a fila (y_cm ascendente) DENTRO de cada columna se
+     * reproduce el ícono real sea cual sea el orden en que
+     * PdfDesignImportService fue devolviendo los elementos.
+     */
+    private function mapIconElementsToSequenceIndexes(array $elements, array $iconSequence): array
+    {
+        if (empty($iconSequence)) {
+            return [];
+        }
+
+        $iconEls = array_values(array_filter($elements, fn($el) => ($el['type'] ?? null) === 'icon'));
+        if (empty($iconEls)) {
+            return [];
+        }
+
+        $columns = [];
+        foreach ($iconEls as $el) {
+            // Clave entera (x_cm * 10, redondeado) en vez de un float con 1
+            // decimal: un array key float se trunca silenciosamente a int en
+            // PHP, así que 2.5 y 2.9 terminarían pisándose en la misma
+            // clave `2` (mismo footgun ya resuelto en bumpLowLineHeight()).
+            $columns[(int) round((float) $el['x_cm'] * 10)][] = $el;
+        }
+        ksort($columns);
+
+        $map = [];
+        foreach ($columns as $colEls) {
+            usort($colEls, fn($a, $b) => $a['y_cm'] <=> $b['y_cm']);
+            foreach (array_values($colEls) as $row => $el) {
+                $map[$el['id']] = $iconSequence[$row % count($iconSequence)];
+            }
+        }
+
+        return $map;
+    }
+
     private function extractIconFileSequence(string $viewPath): array
     {
         $viewPath = str_starts_with($viewPath, 'tematica/') ? $viewPath : "tematica/{$viewPath}";
