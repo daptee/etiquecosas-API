@@ -485,6 +485,8 @@ class ProductPdfDesignController extends Controller
             // venta de muestra tal cual, sin nada reconocible), y recién
             // ahí su geometría es la DEFINITIVA (post resizeTextElementForContent).
             $this->applyViniloOrderNumberClearance($page);
+
+            $this->bumpLowLineHeight($page);
         }
         unset($page);
 
@@ -1686,6 +1688,73 @@ class ProductPdfDesignController extends Controller
             $maxAllowedRightEdge = $columnLeftX - $gapCm;
             if ($rightEdge > $maxAllowedRightEdge) {
                 $el['x_cm'] = round($el['x_cm'] - ($rightEdge - $maxAllowedRightEdge), 2);
+            }
+        }
+        unset($el);
+    }
+
+    /**
+     * Varios contenedores legacy (`.etiqueta-vertical-content-container p`,
+     * `.etiqueta-super-mini-content-container p.normal/extra-small-text-size`,
+     * etc. — ver `public/css/etiquetas.css`) declaran un interlineado
+     * reconocido como demasiado apretado para el editor: a pedido, cualquier
+     * interlineado que el import deje en alguno de estos valores (tal cual
+     * venía midiendo del CSS/PDF de muestra) se sube al reemplazo indicado:
+     *
+     * | Mide | Se sube a |
+     * |---|---|
+     * | 0.7 | 0.90 |
+     * | 0.75 | 0.95 |
+     * | 0.8 | 1.2 |
+     * | 0.9 | 1.3 |
+     *
+     * Tanto el `line_height` base del elemento (el que mide directo del PDF
+     * renderizado, para contenedores como "vertical" que no tienen reglas
+     * por longitud) como cada nivel de `line_height_rules`/
+     * `line_height_tiers` que haya quedado en alguno de esos valores (ver
+     * `applyLegacyTextSizeRules()`/`applyViniloTextSizeRules()`). Corre
+     * DESPUÉS de esas dos, que son las que dejan `line_height`/
+     * `line_height_rules` en su valor final.
+     */
+    private function bumpLowLineHeight(array &$page): void
+    {
+        // Cada valor legacy "demasiado apretado" (tal cual venía midiendo del
+        // CSS/PDF de muestra) y a qué se sube, a pedido.
+        // Pares [valor-que-mide => reemplazo], NO un array asociativo: con
+        // 0.8/0.75/0.7/0.9 como índice, PHP trunca cada clave float a int
+        // (todas terminan siendo la misma clave 0, pisándose entre sí).
+        $replacements = [
+            [0.7, 0.90],
+            [0.75, 0.95],
+            [0.8, 1.2],
+            [0.9, 1.3],
+        ];
+        $resolve = function ($value) use ($replacements) {
+            foreach ($replacements as [$from, $to]) {
+                if (abs((float) $value - $from) < 0.001) {
+                    return $to;
+                }
+            }
+            return null;
+        };
+
+        foreach ($page['elements'] as &$el) {
+            if (($el['type'] ?? null) !== 'text') {
+                continue;
+            }
+            if (isset($el['line_height']) && ($replacement = $resolve($el['line_height'])) !== null) {
+                $el['line_height'] = $replacement;
+            }
+            foreach (['line_height_rules', 'line_height_tiers'] as $field) {
+                if (empty($el[$field]) || !is_array($el[$field])) {
+                    continue;
+                }
+                foreach ($el[$field] as &$rule) {
+                    if (isset($rule['line_height']) && ($replacement = $resolve($rule['line_height'])) !== null) {
+                        $rule['line_height'] = $replacement;
+                    }
+                }
+                unset($rule);
             }
         }
         unset($el);
