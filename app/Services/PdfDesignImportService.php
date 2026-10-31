@@ -815,25 +815,70 @@ class PdfDesignImportService
      */
     private static function rotatedTextElement(array $lines, float $angleDegPdf, float $pageHeightPt, float $pageWidthPt): array
     {
-        $line = $lines[0];
-        $content = trim(implode(' ', array_map(fn($l) => trim($l['text']), $lines)));
-        $fontSizePt = $line['fontSizePt'] ?? 12.0;
-        $color = $line['color'] ?? '#000000';
-
-        $estWidthPt = max(1, strlen($content) * $fontSizePt * 0.6);
-        $estHeightPt = $fontSizePt * 1.3;
-
         $angleRad = deg2rad($angleDegPdf);
         $cos = cos($angleRad);
         $sin = sin($angleRad);
 
+        // Reproyecta cada renglón a coordenadas LOCALES del propio texto
+        // (eje de lectura / eje de salto de renglón, invirtiendo la misma
+        // rotación que aplicó el PDF) relativas al ancla del primero — así
+        // un bloque de VARIOS renglones girados (ej. un nombre de 2
+        // palabras, "NOMBRE"/"APELLIDO" apiladas y luego giradas -90°, ver
+        // mergeLooseTextLines) se puede tratar igual que el texto
+        // horizontal normal de abajo y recién al final reproyectar el
+        // resultado al espacio absoluto de la página. Con 1 solo renglón
+        // (el caso de siempre, ej. "PEDIDO #") esto da exactamente el mismo
+        // resultado que antes.
+        $origin = $lines[0];
+        $localLines = array_map(function ($l) use ($origin, $cos, $sin) {
+            $dx = $l['x'] - $origin['x'];
+            $dy = $l['y'] - $origin['y'];
+            return [
+                'text' => $l['text'],
+                'fontSizePt' => (float) ($l['fontSizePt'] ?? 12.0),
+                'color' => $l['color'] ?? '#000000',
+                'along' => $dx * $cos + $dy * $sin,
+                'perp' => -$dx * $sin + $dy * $cos,
+            ];
+        }, $lines);
+
+        // Mismo orden "de arriba hacia abajo" que usa el texto sin girar
+        // (ver textsToTextElement) pero en el eje LOCAL de salto de
+        // renglón, no en el Y absoluto de la página.
+        usort($localLines, fn($a, $b) => $b['perp'] <=> $a['perp']);
+
+        $content = trim(implode(' ', array_map(fn($l) => trim($l['text']), $localLines)));
+        $fontSizePt = $localLines[0]['fontSizePt'];
+        $color = $localLines[0]['color'];
+
+        $longestLineLength = max(array_map(fn($l) => strlen(trim($l['text'])), $localLines));
+        $estWidthPt = max(1, $longestLineLength * $fontSizePt * 0.6);
+
+        $perpValues = array_column($localLines, 'perp');
+        $perpSpan = max($perpValues) - min($perpValues);
+        $estHeightPt = $perpSpan + $fontSizePt * 1.3;
+
+        $lineHeight = null;
+        if (count($localLines) > 1) {
+            $gaps = [];
+            for ($i = 1; $i < count($localLines); $i++) {
+                $gaps[] = $localLines[$i - 1]['perp'] - $localLines[$i]['perp'];
+            }
+            $avgGapPt = array_sum($gaps) / count($gaps);
+            $lineHeight = round(max(0.5, min(5, abs($avgGapPt) / $fontSizePt)), 2);
+        }
+
         // Centro de la caja SIN girar, en espacio local de texto (origen en
-        // el punto de arranque del renglón que da el PDF), rotado al mismo
+        // el ancla del primer renglón que da el PDF), rotado al mismo
         // espacio absoluto de página (Y hacia arriba) que usa ese origen.
+        // El nudge de medio tamaño de fuente reproduce, con 1 solo renglón,
+        // el mismo ajuste baseline-a-centro que ya usaba este método antes
+        // de soportar varios; con más de uno, además centra el stack
+        // completo de renglones en el eje perpendicular.
         $localCenterX = $estWidthPt / 2;
-        $localCenterY = 0.5 * $fontSizePt;
-        $centerX = $line['x'] + $localCenterX * $cos - $localCenterY * $sin;
-        $centerY = $line['y'] + $localCenterX * $sin + $localCenterY * $cos;
+        $localCenterY = (min($perpValues) + max($perpValues)) / 2 + 0.5 * $fontSizePt;
+        $centerX = $origin['x'] + $localCenterX * $cos - $localCenterY * $sin;
+        $centerY = $origin['y'] + $localCenterX * $sin + $localCenterY * $cos;
 
         $widthCm = max(0.5, round($estWidthPt / self::PT_PER_CM, 2));
         $heightCm = max(0.5, round($estHeightPt / self::PT_PER_CM, 2));
@@ -887,10 +932,11 @@ class PdfDesignImportService
             'color' => ['mode' => 'hex', 'value' => $color],
             'text_align' => 'center',
             'vertical_align' => 'middle',
-            'vertical_offset_cm' => self::computeVerticalOffsetCm($heightCm, 1, $fontSizePt, null),
+            'vertical_offset_cm' => self::computeVerticalOffsetCm($heightCm, count($localLines), $fontSizePt, $lineHeight),
+            'line_height' => $lineHeight,
             'min_lines' => 1,
-            'max_lines' => 1,
-            'max_chars_per_line' => max(6, (int) (strlen($content) * 1.2)),
+            'max_lines' => max(1, count($localLines)),
+            'max_chars_per_line' => max(6, (int) ($longestLineLength * 1.2)),
             'editable_by_customer' => false,
         ];
     }
@@ -1001,10 +1047,35 @@ class PdfDesignImportService
             for ($j = $i + 1; $j < $n; $j++) {
                 $a = $texts[$i];
                 $b = $texts[$j];
+                $angleA = (float) ($a['angleDeg'] ?? 0.0);
+                $angleB = (float) ($b['angleDeg'] ?? 0.0);
+                if (abs($angleA - $angleB) > 1) {
+                    continue; // orientación distinta: nunca es el mismo renglón/bloque.
+                }
                 $fontSize = max($a['fontSizePt'] ?? 12, $b['fontSizePt'] ?? 12);
-                $gapX = abs($a['x'] - $b['x']);
-                $gapY = abs($a['y'] - $b['y']);
-                if ($gapX <= max($fontSize * 6, 40) && $gapY <= $fontSize * 2.2) {
+
+                // Proyectamos el desplazamiento entre los dos textos al
+                // sistema LOCAL del propio texto (eje de avance de lectura /
+                // eje perpendicular de salto de renglón) en vez de asumir
+                // que esos ejes son el X/Y absoluto de la página — con texto
+                // girado (ver rotatedTextElement, ej. nombres a -90° de
+                // stars/TRANSFER *) esos ejes NO coinciden: a 90°, el avance
+                // de lectura cae sobre el Y absoluto y el salto de renglón
+                // sobre el X absoluto, exactamente al revés que en texto
+                // horizontal (ángulo 0, donde esta fórmula se reduce
+                // exactamente al gapX/gapY de siempre). Sin este ajuste,
+                // columnas de texto GIRADO distintas (ej. 4 nombres lado a
+                // lado, mismo centro Y) se fusionaban en una sola por quedar
+                // "cerca" en X absoluto según el umbral generoso pensado
+                // para separar palabras sueltas de un mismo renglón.
+                $angleRad = deg2rad($angleA);
+                $cos = cos($angleRad);
+                $sin = sin($angleRad);
+                $dx = $b['x'] - $a['x'];
+                $dy = $b['y'] - $a['y'];
+                $gapAlong = abs($dx * $cos + $dy * $sin);
+                $gapPerp = abs(-$dx * $sin + $dy * $cos);
+                if ($gapAlong <= max($fontSize * 6, 40) && $gapPerp <= $fontSize * 2.2) {
                     $ri = $find($i);
                     $rj = $find($j);
                     if ($ri !== $rj) {

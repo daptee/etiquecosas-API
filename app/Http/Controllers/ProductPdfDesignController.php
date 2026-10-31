@@ -38,6 +38,18 @@ class ProductPdfDesignController extends Controller
     private const SAMPLE_NOMBRE_APELLIDO = 'NOMBRE APELLIDO';
 
     /**
+     * Mismo mecanismo que SAMPLE_NOMBRE_APELLIDO, pero para las vistas
+     * `tematica/stars/TRANSFER *` ("Nombres transfer con relieve"): a
+     * diferencia de maxi/vinilo (nombre Y apellido, hasta 2 renglones), este
+     * producto solo pide UN nombre de hasta 15 letras y SIEMPRE en un solo
+     * renglón — un placeholder de 2 palabras ahí simula un caso que no
+     * existe en una venta real y el nombre terminaba partido en 2 líneas
+     * (ver mergeLooseTextLines/rotatedTextElement). 15 letras, sin espacios,
+     * para ejercitar el ancho real con el nombre más largo posible.
+     */
+    private const SAMPLE_NOMBRE_SOLO = 'NOMBREDEEJEMPLO';
+
+    /**
      * Ninguna vista legacy "normal" fija su propia tipografía en el
      * .blade.php — la heredan del CSS compartido (public/css/etiquetas.css),
      * que aplica esta fuente a TODO el texto por igual (confirmado: 113 de
@@ -71,12 +83,6 @@ class ProductPdfDesignController extends Controller
         }
 
         $query->orderBy('name', 'asc');
-
-        if (!$perPage) {
-            $designs = $query->get();
-            $this->resolveSourcePages($designs->all());
-            return $this->success($designs, 'Diseños de PDF obtenidos');
-        }
 
         $designs = $query->paginate($perPage, ['*'], 'page', $page);
         $this->resolveSourcePages($designs->items());
@@ -265,17 +271,24 @@ class ProductPdfDesignController extends Controller
         // cualquiera del catálogo sirve, es solo geometría/placeholder.
         $iconMuestra = ($esPersonalizable && !$yaEsSinIcono) ? $this->pickSampleIconPath() : null;
 
+        // "stars/TRANSFER *" (ver SAMPLE_NOMBRE_SOLO) es la única familia de
+        // vistas que pide un solo nombre corto en vez de nombre+apellido —
+        // ahí no hay que simular un firstName/lastName que nunca va a existir.
+        $esSoloNombre = collect($urlsMuestra)->contains(fn($u) => str_starts_with(ltrim($u, '/'), 'stars/'));
+        $nombreMuestra = $esSoloNombre ? self::SAMPLE_NOMBRE_SOLO : self::SAMPLE_NOMBRE_APELLIDO;
+        $firstNamesMuestra = $esSoloNombre ? [] : ['NOMBRE'];
+
         try {
             $samplePaths = EtiquetaService::generarEtiquetas(
                 $ventaIdMuestra,
                 $tematicaId,
-                [self::SAMPLE_NOMBRE_APELLIDO],
+                [$nombreMuestra],
                 $productOrder,
                 $tematicaCoincidente,
                 $colorMuestra,
                 $iconMuestra,
                 now(),
-                ['NOMBRE']
+                $firstNamesMuestra
             );
         } catch (\Throwable $e) {
             return $this->error('No se pudo generar el PDF de muestra: ' . $e->getMessage(), 500);
@@ -406,17 +419,23 @@ class ProductPdfDesignController extends Controller
         unset($page);
 
         // El texto del nombre en una venta real NO es literal — es
-        // `dynamic_field: "nombre_apellido"` (ver EtiquetaService::
-        // resolverElementoDesign). El PDF de muestra usa el placeholder
-        // "NOMBRE APELLIDO" (self::SAMPLE_NOMBRE_APELLIDO) para que,
-        // detectándolo por contenido exacto, el elemento se guarde YA
-        // marcado como dinámico — así sale igual que en una venta real, no
-        // como un texto fijo que diga literalmente "NOMBRE APELLIDO".
+        // `dynamic_field: "nombre_apellido"` (o "nombre", ver más abajo) (ver
+        // EtiquetaService::resolverElementoDesign). El PDF de muestra usa un
+        // placeholder fijo (self::SAMPLE_NOMBRE_APELLIDO/SAMPLE_NOMBRE_SOLO)
+        // para que, detectándolo por contenido exacto, el elemento se guarde
+        // YA marcado como dinámico — así sale igual que en una venta real, no
+        // como un texto fijo que diga literalmente el placeholder.
         foreach ($pages as &$page) {
             foreach ($page['elements'] as &$el) {
-                if (($el['type'] ?? null) === 'text' && ($el['content'] ?? null) === self::SAMPLE_NOMBRE_APELLIDO) {
+                if (($el['type'] ?? null) !== 'text') {
+                    continue;
+                }
+                if (($el['content'] ?? null) === self::SAMPLE_NOMBRE_APELLIDO) {
                     $el['value_mode'] = 'dynamic';
                     $el['dynamic_field'] = 'nombre_apellido';
+                } elseif (($el['content'] ?? null) === self::SAMPLE_NOMBRE_SOLO) {
+                    $el['value_mode'] = 'dynamic';
+                    $el['dynamic_field'] = 'nombre';
                 }
             }
             unset($el);
