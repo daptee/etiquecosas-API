@@ -496,6 +496,9 @@ class ProductPdfDesignController extends Controller
                 }
             }
             unset($el);
+            if ($esSoloNombre) {
+                $this->applyStarsNameClearance($page);
+            }
         }
         unset($page);
 
@@ -1906,6 +1909,11 @@ class ProductPdfDesignController extends Controller
                     $el['z_index'] = 1;
                     unset($el['color'], $el['fill'], $el['border'], $el['group_id']);
                     $el['icon_id'] = $starIdByElementId[$el['id']];
+                    // ".star { transform: rotate(-22.5deg) translateY(-50%); }"
+                    // — las 4 comparten el mismo ángulo fijo (no están en
+                    // abanico, solo una fila con distinto `left`), así que se
+                    // copia literal de ese CSS, no hay nada que medir del PDF.
+                    $el['rotation_deg'] = -22.5;
                 }
             }
             unset($el);
@@ -1943,6 +1951,53 @@ class ProductPdfDesignController extends Controller
             $page['elements'],
             fn($el) => !in_array($el['id'] ?? null, $discardIds, true)
         ));
+    }
+
+    /**
+     * Los 4 nombres (girados -90°, ver mergeLooseTextLines/
+     * rotatedTextElement) quedaban pegados contra la fila de arriba
+     * (estrellas, logo, "PEDIDO #"/"Nombre Transfer -"): su caja SIN GIRAR
+     * mide bastante más que el nombre de prueba de 15 letras (ver el
+     * ensanche a 11.75cm en importFromProduct, que corre DESPUÉS de
+     * applyStarsDecoration — por eso esto va aparte y no ahí, tiene que
+     * correr con el ancho YA ensanchado) y el centro quedó calculado para
+     * ESE ancho — al girar, el borde superior real (visual) termina más
+     * arriba de lo que midió rotatedTextElement. Se calcula el borde
+     * inferior real de todo lo que NO es un nombre (estrellas/logo ya
+     * reclasificados por applyStarsDecoration, "PEDIDO #"/"Nombre Transfer
+     * -" ya con su rotation_deg=180) y se empuja cada nombre hacia abajo lo
+     * que haga falta para no pisarlo — un simple `y_cm += delta` alcanza:
+     * desplazar la caja ANTES de girarla mueve su centro (y por lo tanto el
+     * AABB ya girado) ese mismo delta en Y absoluto, sea cual sea el ángulo.
+     */
+    private function applyStarsNameClearance(array &$page): void
+    {
+        $topRowBottomCm = 0;
+        foreach ($page['elements'] as $el) {
+            $isNameText = ($el['type'] ?? null) === 'text' && ($el['dynamic_field'] ?? null) === 'nombre';
+            if ($isNameText) {
+                continue;
+            }
+            $topRowBottomCm = max($topRowBottomCm, (float) ($el['y_cm'] ?? 0) + (float) ($el['height_cm'] ?? 0));
+        }
+
+        $marginCm = 0.3;
+        $targetTopCm = $topRowBottomCm + $marginCm;
+
+        foreach ($page['elements'] as &$el) {
+            if (($el['type'] ?? null) !== 'text' || ($el['dynamic_field'] ?? null) !== 'nombre') {
+                continue;
+            }
+            $angleRad = deg2rad((float) ($el['rotation_deg'] ?? 0));
+            $halfHeightVisualCm = ((float) $el['width_cm'] / 2) * abs(sin($angleRad))
+                + ((float) $el['height_cm'] / 2) * abs(cos($angleRad));
+            $centerYCm = (float) $el['y_cm'] + (float) $el['height_cm'] / 2;
+            $currentTopCm = $centerYCm - $halfHeightVisualCm;
+            if ($currentTopCm < $targetTopCm) {
+                $el['y_cm'] = round($el['y_cm'] + ($targetTopCm - $currentTopCm), 2);
+            }
+        }
+        unset($el);
     }
 
     private function applyViniloLabelShape(array &$page, ?string $viewPath): void
