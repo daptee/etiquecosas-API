@@ -345,9 +345,26 @@ class ProductPdfDesignController extends Controller
             // La tipografía, a diferencia del ícono, no varía celda por celda
             // dentro de una misma vista — está fija en el .blade.php (ver
             // detectLegacyFontFamily()), así que se resuelve una sola vez por
-            // vista/página y se aplica a TODO el texto de esa página.
+            // vista/página y se aplica a TODO el texto de esa página. Única
+            // excepción: "stars/TRANSFER *" fija esta tipografía SOLO para
+            // `.name` (el texto del cliente) y declara otra totalmente
+            // distinta (Helvetica, sin archivo propio) para "PEDIDO #"/
+            // "Nombre Transfer -" (ver detectLegacyFontFamily) — ahí, más
+            // abajo, no se aplica a ciegas a todo el texto de la página.
             $fontFamily = isset($viewPaths[$idx]) ? $this->detectLegacyFontFamily($viewPaths[$idx]) : self::DEFAULT_LEGACY_FONT_FAMILY;
             $fontId = $this->resolveTypographyIdForFamily($fontFamily);
+            if ($esSoloNombre && !$fontId) {
+                // "stars/TRANSFER *" es la única familia donde el catálogo
+                // nuevo suele cargar la tipografía con el MISMO nombre que
+                // ya usa esta temática en product_pdf.data.tematicas[].
+                // typography ("Bold"/"Mayúscula"/"Cursiva" — ver los
+                // attribute_values del atributo "Tipografía", cuyo metadata
+                // apunta a esa misma typography), en vez del nombre del
+                // archivo/CSS (@font-face) que detecta detectLegacyFontFamily
+                // ("TitanOne"/"Antonio") — se prueba como alternativa cuando
+                // el nombre del archivo no matcheó nada.
+                $fontId = $this->resolveTypographyIdForFamily($tematicaCoincidente['typography'] ?? '');
+            }
 
             // Las vistas "*-and-spot*"/"spot-and-*"/"spot/PERSONALIZABLE*"
             // traen una fila de celdas circulares (`circulo-personaje`, ver
@@ -375,7 +392,9 @@ class ProductPdfDesignController extends Controller
                             }
                         }
                     } elseif (($el['type'] ?? null) === 'text' && $fontId) {
-                        $el['font_id'] = $fontId;
+                        if (!$esSoloNombre || ($el['content'] ?? null) === $nombreMuestra) {
+                            $el['font_id'] = $fontId;
+                        }
                     }
                 }
                 unset($el);
@@ -393,6 +412,10 @@ class ProductPdfDesignController extends Controller
                 $this->applyViniloTextSizeRules($page);
 
                 $this->applyLegacyTextSizeRules($page, $viewPaths[$idx] ?? null);
+
+                if ($esSoloNombre) {
+                    $this->applyStarsDecoration($page, $tematicaCoincidente);
+                }
 
                 $pages[] = $page;
             }
@@ -442,6 +465,22 @@ class ProductPdfDesignController extends Controller
                 } elseif (($el['content'] ?? null) === self::SAMPLE_NOMBRE_SOLO) {
                     $el['value_mode'] = 'dynamic';
                     $el['dynamic_field'] = 'nombre';
+
+                    // "stars/TRANSFER *" calcula el tamaño de letra del
+                    // nombre por cantidad de caracteres EN PHP (ver
+                    // EtiquetaService::getFontSize), no por clases CSS como
+                    // el resto de las vistas (applyLegacyTextSizeRules) — acá
+                    // no hay nada que leer de un .blade.php, los umbrales son
+                    // los mismos literales de esa función. Sin esto quedaba
+                    // un único tamaño fijo grabado (el medido para el nombre
+                    // de prueba de 15 letras — el más chico de la escala),
+                    // en vez de escalar hasta 78px para un nombre corto, como
+                    // hace la vista legacy.
+                    $rules = $this->buildStarsFontSizeRules($tematicaCoincidente['typography'] ?? '');
+                    $el['font_size_rules'] = $rules;
+                    $el['length_rules_enabled'] = true;
+                    $el['length_rules'] = $rules;
+                    $el['font_size_px'] = end($rules)['font_size_px'];
                 }
             }
             unset($el);
@@ -1734,6 +1773,141 @@ class ProductPdfDesignController extends Controller
      * temática) para saber que CUALQUIER grilla de esta página es esta
      * forma.
      */
+    /**
+     * Post-proceso específico de `tematica/stars/TRANSFER *` (ver
+     * SAMPLE_NOMBRE_SOLO/$esSoloNombre en importFromProduct): esta vista
+     * tiene 2 elementos decorativos que el importador genérico interpreta
+     * mal porque ninguno llega como imagen `Do` (dompdf los dibuja como
+     * trazos vectoriales planos, ver PdfDesignImportService::import):
+     *
+     * - Las 4 "estrellitas" de color (indicador de la combinación de
+     *   colores elegida, `$plantilla['images'][N]`) quedan como simples
+     *   rects de color (cuadrados, no estrellas) sueltos (sin ícono
+     *   emparejado) — acá se reconvierten a `icon` apuntando al ícono real
+     *   del catálogo (`icons/Tematicas/STARS/star-*.svg`, el color ya viene
+     *   pintado en el archivo). A diferencia de buildTematicaImagenes() (que
+     *   escanea una carpeta con el nombre de la temática, pensado para
+     *   vinilo/principal/etc.), acá la carpeta del ícono SIEMPRE es "STARS"
+     *   sin importar cómo se llame la temática (una combinación de colores,
+     *   ej. "Verde agua, celeste, rojo...") — el archivo exacto de cada
+     *   estrella viene directo en $tematicaCoincidente['images'], en el
+     *   mismo orden (izquierda a derecha, por x_cm) en que la vista las
+     *   dibuja.
+     * - El logo de Etiquecosas (el único `icon` real que detecta la vista:
+     *   `<img class="logo" src="{{ public_path('icons/etiquecosas.svg') }}">`)
+     *   no es elegible por el cliente ni varía por tematica — siempre el
+     *   mismo archivo fijo, así que se le asigna por `custom_icon_path` en
+     *   vez de dejarlo con el icon_id de relleno (1) de un ícono cualquiera
+     *   del catálogo editable. El rect que quedó agrupado debajo (fragmento
+     *   mal interpretado del propio SVG de 2 colores del logo — la vista no
+     *   le pone ningún fondo real) se descarta.
+     */
+    /**
+     * Reproduce EtiquetaService::getFontSize() — único caso en todo el
+     * sistema donde el tamaño de letra del nombre se calcula en PHP por
+     * cantidad de caracteres (5 escalones), no por clases CSS como el resto
+     * de las vistas (ver applyLegacyTextSizeRules). Los umbrales/tamaños son
+     * LITERALES de esa función — no hay ningún .blade.php/CSS que leer acá,
+     * por eso van a mano en vez de extraerse de un archivo.
+     */
+    private function buildStarsFontSizeRules(string $typography): array
+    {
+        $tiers = strtoupper($typography) === 'BOLD'
+            ? [5 => 78, 6 => 70, 9 => 46, 11 => 36, 15 => 32]
+            : [5 => 90, 6 => 82, 9 => 68, 11 => 52, 15 => 46];
+
+        $rules = [];
+        foreach ($tiers as $maxChars => $fontSizePx) {
+            $rules[] = ['max_chars' => $maxChars, 'font_size_px' => $fontSizePx];
+        }
+
+        return $rules;
+    }
+
+    private function applyStarsDecoration(array &$page, array $tematicaCoincidente): void
+    {
+        $images = $tematicaCoincidente['images'] ?? [];
+        $starIdByElementId = [];
+
+        if (!empty($images)) {
+            $standaloneBackgrounds = array_values(array_filter(
+                $page['elements'],
+                fn($el) => ($el['type'] ?? null) === 'background' && empty($el['group_id'])
+            ));
+
+            if (count($standaloneBackgrounds) === count($images)) {
+                usort($standaloneBackgrounds, fn($a, $b) => $a['x_cm'] <=> $b['x_cm']);
+
+                $catalogIconIdByPath = PersonalizationIcon::where('icon', 'like', 'icons/Tematicas/STARS/%')
+                    ->pluck('id', 'icon')
+                    ->all();
+
+                foreach ($standaloneBackgrounds as $i => $bg) {
+                    $catalogPath = 'icons/Tematicas/STARS/' . basename($images[$i]);
+                    $catalogId = $catalogIconIdByPath[$catalogPath] ?? null;
+                    if ($catalogId) {
+                        $starIdByElementId[$bg['id']] = $catalogId;
+                    }
+                }
+
+                foreach ($page['elements'] as &$el) {
+                    if (isset($starIdByElementId[$el['id']])) {
+                        $el['type'] = 'icon';
+                        $el['z_index'] = 1;
+                        unset($el['color'], $el['fill']);
+                        $el['icon_id'] = $starIdByElementId[$el['id']];
+                    }
+                }
+                unset($el);
+            }
+        }
+
+        $logoGroupId = null;
+        foreach ($page['elements'] as $el) {
+            if (($el['type'] ?? null) === 'icon' && !isset($starIdByElementId[$el['id']])) {
+                $logoGroupId = $el['group_id'] ?? null;
+                break;
+            }
+        }
+
+        // El fondo cuadrado (1.3x1.3cm, ver `.logo { width:1.3cm;
+        // height:1.3cm }`) es la caja REAL del logo — el ícono detectado por
+        // separado solo capta la tinta de una PARTE del SVG (ej. el texto
+        // "etiquecosas", sin el círculo que lo rodea), así que su propia
+        // caja sale angosta y no cuadrada. Se usa la del fondo para que el
+        // logo se vea redondo/completo, no ovalado.
+        $logoBackground = null;
+        if ($logoGroupId) {
+            foreach ($page['elements'] as $el) {
+                if (($el['type'] ?? null) === 'background' && ($el['group_id'] ?? null) === $logoGroupId) {
+                    $logoBackground = $el;
+                    break;
+                }
+            }
+        }
+
+        foreach ($page['elements'] as &$el) {
+            if (($el['type'] ?? null) === 'icon' && ($el['group_id'] ?? null) === $logoGroupId) {
+                unset($el['icon_id'], $el['group_id']);
+                $el['custom_icon_path'] = 'icons/etiquecosas.svg';
+                if ($logoBackground) {
+                    $el['x_cm'] = $logoBackground['x_cm'];
+                    $el['y_cm'] = $logoBackground['y_cm'];
+                    $el['width_cm'] = $logoBackground['width_cm'];
+                    $el['height_cm'] = $logoBackground['height_cm'];
+                }
+            }
+        }
+        unset($el);
+
+        if ($logoGroupId) {
+            $page['elements'] = array_values(array_filter(
+                $page['elements'],
+                fn($el) => !(($el['type'] ?? null) === 'background' && ($el['group_id'] ?? null) === $logoGroupId)
+            ));
+        }
+    }
+
     private function applyViniloLabelShape(array &$page, ?string $viewPath): void
     {
         if (!$viewPath || empty($page['grids'])) {

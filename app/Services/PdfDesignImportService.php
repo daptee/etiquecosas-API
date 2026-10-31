@@ -632,15 +632,20 @@ class PdfDesignImportService
     {
         // Texto girado (ej. "PEDIDO # 12345" al costado de la hoja, ver
         // public/css/etiquetas.css ".numeroOrder p { transform:
-        // rotate(270deg) }") — el cálculo normal de abajo asume texto
-        // horizontal, y para texto realmente girado ~90°/270° el "origen"
-        // que da el PDF puede caer bien lejos de donde se ve el texto
-        // (incluso fuera de la hoja) si se lo trata como si no estuviera
-        // girado. En las vistas legacy esto SOLO pasa con texto suelto
-        // (nunca dentro de una celda), por eso se chequea acá.
+        // rotate(270deg) }", o un texto puesto "al revés" con
+        // transform: rotate(180deg), ver stars/TRANSFER *) — el cálculo
+        // normal de abajo asume texto horizontal, y para texto realmente
+        // girado el "origen" que da el PDF puede caer bien lejos de donde se
+        // ve el texto (incluso fuera de la hoja) si se lo trata como si no
+        // estuviera girado, además de perderse el giro en sí (el texto
+        // queda derecho en el editor en vez de boca abajo). En las vistas
+        // legacy esto SOLO pasa con texto suelto (nunca dentro de una
+        // celda), por eso se chequea acá. `angleDeg` ya viene normalizado a
+        // (-180, 180] (ver PdfContentStreamParser), así que cualquier valor
+        // a más de 1° de cero es un giro real.
         if ($containerRect === null) {
             $angleDeg = (float) ($lines[0]['angleDeg'] ?? 0.0);
-            if (abs($angleDeg) > 1 && abs($angleDeg) < 179) {
+            if (abs($angleDeg) > 1) {
                 return self::rotatedTextElement($lines, $angleDeg, $pageHeightPt, $pageWidthPt ?? $pageHeightPt);
             }
         }
