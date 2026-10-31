@@ -481,6 +481,18 @@ class ProductPdfDesignController extends Controller
                     $el['length_rules_enabled'] = true;
                     $el['length_rules'] = $rules;
                     $el['font_size_px'] = end($rules)['font_size_px'];
+
+                    // El contenedor medido (7.62cm, el nombre de prueba de 15
+                    // letras a 32px) queda corto para el editor: el badge
+                    // "(X) Nombre" que marca un texto dinámico no entra en
+                    // ese ancho y el ícono termina arriba de la palabra en
+                    // vez de al lado. Se agranda a 11.75cm (pedido a mano, no
+                    // hay un cálculo real detrás — es espacio de UI, no de
+                    // impresión) manteniendo el mismo CENTRO visual que ya
+                    // tenía, para no correr el nombre de lugar en la hoja.
+                    $centerXCm = $el['x_cm'] + $el['width_cm'] / 2;
+                    $el['width_cm'] = 11.75;
+                    $el['x_cm'] = round($centerXCm - $el['width_cm'] / 2, 2);
                 }
             }
             unset($el);
@@ -1774,35 +1786,6 @@ class ProductPdfDesignController extends Controller
      * forma.
      */
     /**
-     * Post-proceso específico de `tematica/stars/TRANSFER *` (ver
-     * SAMPLE_NOMBRE_SOLO/$esSoloNombre en importFromProduct): esta vista
-     * tiene 2 elementos decorativos que el importador genérico interpreta
-     * mal porque ninguno llega como imagen `Do` (dompdf los dibuja como
-     * trazos vectoriales planos, ver PdfDesignImportService::import):
-     *
-     * - Las 4 "estrellitas" de color (indicador de la combinación de
-     *   colores elegida, `$plantilla['images'][N]`) quedan como simples
-     *   rects de color (cuadrados, no estrellas) sueltos (sin ícono
-     *   emparejado) — acá se reconvierten a `icon` apuntando al ícono real
-     *   del catálogo (`icons/Tematicas/STARS/star-*.svg`, el color ya viene
-     *   pintado en el archivo). A diferencia de buildTematicaImagenes() (que
-     *   escanea una carpeta con el nombre de la temática, pensado para
-     *   vinilo/principal/etc.), acá la carpeta del ícono SIEMPRE es "STARS"
-     *   sin importar cómo se llame la temática (una combinación de colores,
-     *   ej. "Verde agua, celeste, rojo...") — el archivo exacto de cada
-     *   estrella viene directo en $tematicaCoincidente['images'], en el
-     *   mismo orden (izquierda a derecha, por x_cm) en que la vista las
-     *   dibuja.
-     * - El logo de Etiquecosas (el único `icon` real que detecta la vista:
-     *   `<img class="logo" src="{{ public_path('icons/etiquecosas.svg') }}">`)
-     *   no es elegible por el cliente ni varía por tematica — siempre el
-     *   mismo archivo fijo, así que se le asigna por `custom_icon_path` en
-     *   vez de dejarlo con el icon_id de relleno (1) de un ícono cualquiera
-     *   del catálogo editable. El rect que quedó agrupado debajo (fragmento
-     *   mal interpretado del propio SVG de 2 colores del logo — la vista no
-     *   le pone ningún fondo real) se descarta.
-     */
-    /**
      * Reproduce EtiquetaService::getFontSize() — único caso en todo el
      * sistema donde el tamaño de letra del nombre se calcula en PHP por
      * cantidad de caracteres (5 escalones), no por clases CSS como el resto
@@ -1824,88 +1807,142 @@ class ProductPdfDesignController extends Controller
         return $rules;
     }
 
+    /**
+     * Post-proceso específico de `tematica/stars/TRANSFER *` (ver
+     * SAMPLE_NOMBRE_SOLO/$esSoloNombre en importFromProduct): esta vista
+     * tiene 2 elementos decorativos que el importador genérico interpreta
+     * mal porque ninguno llega como imagen `Do` (dompdf los dibuja como
+     * trazos vectoriales planos, ver PdfDesignImportService::import, o — si
+     * el archivo no se pudo cargar al generar el PDF de muestra — como el
+     * ícono "roto" típico del renderer):
+     *
+     * - Las 4 "estrellitas" de color (indicador de la combinación de
+     *   colores elegida, `$plantilla['images'][N]`) se identifican por
+     *   TAMAÑO/orden, no por si vienen solas o emparejadas con un ícono —
+     *   se reconvierten a `icon` apuntando al ícono real del catálogo
+     *   (`icons/Tematicas/STARS/star-*.svg`, el color ya viene pintado en el
+     *   archivo). A diferencia de buildTematicaImagenes() (que escanea una
+     *   carpeta con el nombre de la temática, pensado para vinilo/principal/
+     *   etc.), acá la carpeta del ícono SIEMPRE es "STARS" sin importar cómo
+     *   se llame la temática (una combinación de colores, ej. "Verde agua,
+     *   celeste, rojo..."); el archivo exacto de cada estrella viene directo
+     *   en $tematicaCoincidente['images'], en el mismo orden (izquierda a
+     *   derecha, por x_cm) en que la vista las dibuja.
+     * - El logo de Etiquecosas (el único `icon` real que detecta la vista:
+     *   `<img class="logo" src="{{ public_path('icons/etiquecosas.svg') }}">`)
+     *   no es elegible por el cliente ni varía por tematica — siempre el
+     *   mismo archivo fijo, así que se le asigna por `custom_icon_path` en
+     *   vez de dejarlo con el icon_id de relleno de un ícono cualquiera del
+     *   catálogo editable. Se identifica por tamaño (1.3x1.3cm, el único
+     *   más grande que cualquier estrella), NUNCA tomando "el primer ícono
+     *   que sobra" — eso agarraba cualquier estrella al azar si la cantidad
+     *   de fondos de estrella detectados no coincidía exactamente con
+     *   count(images) (ver nota en el código). El rect que queda agrupado
+     *   debajo (fragmento mal interpretado del propio SVG de 2 colores del
+     *   logo — la vista no le pone ningún fondo real) se descarta.
+     */
     private function applyStarsDecoration(array &$page, array $tematicaCoincidente): void
     {
         $images = $tematicaCoincidente['images'] ?? [];
+        if (empty($images)) {
+            return;
+        }
+
+        $backgrounds = array_values(array_filter($page['elements'], fn($el) => ($el['type'] ?? null) === 'background'));
+        if (count($backgrounds) < count($images) + 1) {
+            // Tienen que estar los fondos de las N estrellas Y el del logo —
+            // si falta alguno, mejor no tocar nada que adivinar mal.
+            return;
+        }
+
+        // El logo (1.3x1.3cm, ver ".logo { width:1.3cm; height:1.3cm }") es
+        // siempre más grande que cualquier estrella (24px=~0.63cm, ver
+        // ".star-img") — se identifica por tamaño (el más cercano a 1.3cm),
+        // nunca por "el primer ícono que sobra": si alguna vez no entran
+        // exactamente `count($images)` fondos de estrella (ver más abajo,
+        // ej. una estrella vino emparejada con un ícono roto en vez de
+        // sola), ESE criterio terminaba agarrando cualquier estrella al
+        // azar y la convertía en el logo.
+        usort($backgrounds, fn($a, $b) =>
+            abs((float) $a['width_cm'] - 1.3) <=> abs((float) $b['width_cm'] - 1.3)
+        );
+        $logoBackground = $backgrounds[0];
+        $starBackgrounds = array_values(array_filter($backgrounds, fn($el) => $el['id'] !== $logoBackground['id']));
+
+        // Las estrellas pueden llegar sueltas (sin ícono emparejado, el caso
+        // más común) o con un ícono-fragmento emparejado por group_id (ej.
+        // si el SVG de la estrella no se pudo cargar al generar el PDF de
+        // muestra y el renderer dibujó el ícono roto típico — un cuadrado
+        // con una marca adentro) — en ambos casos el FONDO reclasificado de
+        // abajo es el que pasa a ser el ícono real; si había un ícono
+        // emparejado, sobra y se descarta.
         $starIdByElementId = [];
+        $obsoleteIconIds = [];
+        if (count($starBackgrounds) === count($images)) {
+            usort($starBackgrounds, fn($a, $b) => $a['x_cm'] <=> $b['x_cm']);
 
-        if (!empty($images)) {
-            $standaloneBackgrounds = array_values(array_filter(
-                $page['elements'],
-                fn($el) => ($el['type'] ?? null) === 'background' && empty($el['group_id'])
-            ));
+            $catalogIconIdByPath = PersonalizationIcon::where('icon', 'like', 'icons/Tematicas/STARS/%')
+                ->pluck('id', 'icon')
+                ->all();
 
-            if (count($standaloneBackgrounds) === count($images)) {
-                usort($standaloneBackgrounds, fn($a, $b) => $a['x_cm'] <=> $b['x_cm']);
-
-                $catalogIconIdByPath = PersonalizationIcon::where('icon', 'like', 'icons/Tematicas/STARS/%')
-                    ->pluck('id', 'icon')
-                    ->all();
-
-                foreach ($standaloneBackgrounds as $i => $bg) {
-                    $catalogPath = 'icons/Tematicas/STARS/' . basename($images[$i]);
-                    $catalogId = $catalogIconIdByPath[$catalogPath] ?? null;
-                    if ($catalogId) {
-                        $starIdByElementId[$bg['id']] = $catalogId;
+            foreach ($starBackgrounds as $i => $bg) {
+                $catalogPath = 'icons/Tematicas/STARS/' . basename($images[$i]);
+                $catalogId = $catalogIconIdByPath[$catalogPath] ?? null;
+                if ($catalogId) {
+                    $starIdByElementId[$bg['id']] = $catalogId;
+                }
+                if (!empty($bg['group_id'])) {
+                    foreach ($page['elements'] as $el) {
+                        if (($el['type'] ?? null) === 'icon' && ($el['group_id'] ?? null) === $bg['group_id']) {
+                            $obsoleteIconIds[] = $el['id'];
+                        }
                     }
                 }
-
-                foreach ($page['elements'] as &$el) {
-                    if (isset($starIdByElementId[$el['id']])) {
-                        $el['type'] = 'icon';
-                        $el['z_index'] = 1;
-                        unset($el['color'], $el['fill']);
-                        $el['icon_id'] = $starIdByElementId[$el['id']];
-                    }
-                }
-                unset($el);
             }
-        }
 
-        $logoGroupId = null;
-        foreach ($page['elements'] as $el) {
-            if (($el['type'] ?? null) === 'icon' && !isset($starIdByElementId[$el['id']])) {
-                $logoGroupId = $el['group_id'] ?? null;
-                break;
-            }
-        }
-
-        // El fondo cuadrado (1.3x1.3cm, ver `.logo { width:1.3cm;
-        // height:1.3cm }`) es la caja REAL del logo — el ícono detectado por
-        // separado solo capta la tinta de una PARTE del SVG (ej. el texto
-        // "etiquecosas", sin el círculo que lo rodea), así que su propia
-        // caja sale angosta y no cuadrada. Se usa la del fondo para que el
-        // logo se vea redondo/completo, no ovalado.
-        $logoBackground = null;
-        if ($logoGroupId) {
-            foreach ($page['elements'] as $el) {
-                if (($el['type'] ?? null) === 'background' && ($el['group_id'] ?? null) === $logoGroupId) {
-                    $logoBackground = $el;
-                    break;
+            foreach ($page['elements'] as &$el) {
+                if (isset($starIdByElementId[$el['id']])) {
+                    $el['type'] = 'icon';
+                    $el['z_index'] = 1;
+                    unset($el['color'], $el['fill'], $el['border'], $el['group_id']);
+                    $el['icon_id'] = $starIdByElementId[$el['id']];
                 }
             }
+            unset($el);
         }
 
+        // El logo de Etiquecosas (el único `icon` real que detecta la
+        // vista) no es elegible por el cliente ni varía por temática —
+        // siempre el mismo archivo fijo, así que se le asigna por
+        // `custom_icon_path` en vez de dejarlo con el icon_id de relleno de
+        // un ícono cualquiera del catálogo editable. Se usa la caja del
+        // FONDO (cuadrada) en vez de la del ícono emparejado: ese ícono solo
+        // capta la tinta de una PARTE del SVG (ej. el texto "etiquecosas",
+        // sin el círculo que lo rodea), así que su propia caja sale angosta
+        // y no cuadrada — con la del fondo el logo se ve redondo/completo.
+        $logoGroupId = $logoBackground['group_id'] ?? null;
         foreach ($page['elements'] as &$el) {
-            if (($el['type'] ?? null) === 'icon' && ($el['group_id'] ?? null) === $logoGroupId) {
+            $isLogoIcon = ($el['type'] ?? null) === 'icon'
+                && $logoGroupId !== null
+                && ($el['group_id'] ?? null) === $logoGroupId;
+            if ($isLogoIcon) {
                 unset($el['icon_id'], $el['group_id']);
                 $el['custom_icon_path'] = 'icons/etiquecosas.svg';
-                if ($logoBackground) {
-                    $el['x_cm'] = $logoBackground['x_cm'];
-                    $el['y_cm'] = $logoBackground['y_cm'];
-                    $el['width_cm'] = $logoBackground['width_cm'];
-                    $el['height_cm'] = $logoBackground['height_cm'];
-                }
+                $el['x_cm'] = $logoBackground['x_cm'];
+                $el['y_cm'] = $logoBackground['y_cm'];
+                $el['width_cm'] = $logoBackground['width_cm'];
+                $el['height_cm'] = $logoBackground['height_cm'];
             }
         }
         unset($el);
 
-        if ($logoGroupId) {
-            $page['elements'] = array_values(array_filter(
-                $page['elements'],
-                fn($el) => !(($el['type'] ?? null) === 'background' && ($el['group_id'] ?? null) === $logoGroupId)
-            ));
-        }
+        $discardIds = $obsoleteIconIds;
+        $discardIds[] = $logoBackground['id'];
+
+        $page['elements'] = array_values(array_filter(
+            $page['elements'],
+            fn($el) => !in_array($el['id'] ?? null, $discardIds, true)
+        ));
     }
 
     private function applyViniloLabelShape(array &$page, ?string $viewPath): void
