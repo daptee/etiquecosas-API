@@ -84,6 +84,12 @@ class ProductPdfDesignController extends Controller
 
         $query->orderBy('name', 'asc');
 
+        if (!$perPage) {
+            $designs = $query->get();
+            $this->resolveSourcePages($designs->all());
+            return $this->success($designs, 'Diseños de PDF obtenidos');
+        }
+
         $designs = $query->paginate($perPage, ['*'], 'page', $page);
         $this->resolveSourcePages($designs->items());
         $metaData = [
