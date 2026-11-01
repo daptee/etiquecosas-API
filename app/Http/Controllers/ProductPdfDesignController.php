@@ -284,13 +284,39 @@ class ProductPdfDesignController extends Controller
         $nombreMuestra = $esSoloNombre ? self::SAMPLE_NOMBRE_SOLO : self::SAMPLE_NOMBRE_APELLIDO;
         $firstNamesMuestra = $esSoloNombre ? [] : ['NOMBRE'];
 
+        // Las temáticas "Blanco"/"Blanco y Negro" (ver EtiquetaService::
+        // generarEtiquetas, $isWhite) le ponen un fondo gris (#CACACA) a
+        // TODO el ".transfer-container" — incluida el área de los 4
+        // nombres, no solo el encabezado — para que el nombre en blanco
+        // (color-range trae "0,0,0,0", cmyk de blanco) se vea contra algo
+        // que no sea la hoja blanca. Ese rect (9.3x14.5cm) es demasiado
+        // chico para que PdfDesignImportService::import() lo trate como
+        // fondo de HOJA (su umbral es "cubre el 80% de la página") pero
+        // demasiado grande para ser una celda más — termina tratado como
+        // una celda normal que ENGLOBA estrellas+logo+pedido+los 4 nombres,
+        // y el agrupador los funde en un solo elemento gigante sin rotar
+        // (ver textsToTextElement: con un rect contenedor nunca se chequea
+        // el ángulo). $tematicaName es lo ÚNICO que decide $isWhite en
+        // generarEtiquetas() (no afecta color-range/images/ninguna otra
+        // geometría), así que truchar el nombre en una copia SOLO para esta
+        // llamada evita el rect sin tocar nada más — el nombre real sigue
+        // usándose para el nombre del diseño/toda otra lógica más abajo. La
+        // geometría real de ese fondo (necesaria para reconstruirlo bien,
+        // ver $grayBackgroundRect más abajo) se mide aparte, con una SEGUNDA
+        // muestra chica que sí lo dibuja.
+        $esBlancoYNegro = in_array($tematicaCoincidente['name'] ?? '', ['Blanco', 'Blanco y Negro'], true);
+        $tematicaMuestra = $tematicaCoincidente;
+        if ($esBlancoYNegro) {
+            $tematicaMuestra['name'] = $tematicaCoincidente['name'] . ' (muestra)';
+        }
+
         try {
             $samplePaths = EtiquetaService::generarEtiquetas(
                 $ventaIdMuestra,
                 $tematicaId,
                 [$nombreMuestra],
                 $productOrder,
-                $tematicaCoincidente,
+                $tematicaMuestra,
                 $colorMuestra,
                 $iconMuestra,
                 now(),
@@ -302,6 +328,50 @@ class ProductPdfDesignController extends Controller
 
         if (empty($samplePaths)) {
             return $this->error('No se pudo generar ningún PDF de muestra para esta temática — revisá que las vistas de tematica/* existan', 500);
+        }
+
+        // Para "Blanco"/"Blanco y Negro": una muestra CHICA aparte, con la
+        // temática real (sin truchar el nombre), solo para medir el rect
+        // gris real — el ancho/alto/posición vienen fijos del CSS
+        // (`.transfer-container`), pero se MIDEN del PDF en vez de calcular
+        // a mano desde ese CSS (@page margins, centrado, padding de `.hoja`,
+        // etc. — mismo criterio que el resto de este importador: parsear el
+        // PDF real, no reproducir el cálculo de layout del navegador).
+        $grayBackgroundRect = null;
+        if ($esBlancoYNegro) {
+            try {
+                $grayPaths = EtiquetaService::generarEtiquetas(
+                    random_int(900000000, 999999999),
+                    $tematicaId,
+                    [$nombreMuestra],
+                    $productOrder,
+                    $tematicaCoincidente,
+                    $colorMuestra,
+                    $iconMuestra,
+                    now(),
+                    $firstNamesMuestra
+                );
+                if (!empty($grayPaths[0])) {
+                    $grayImported = PdfDesignImportService::import($grayPaths[0]);
+                    $grayBackgrounds = array_filter(
+                        $grayImported['pages'][0]['elements'] ?? [],
+                        fn($el) => ($el['type'] ?? null) === 'background'
+                    );
+                    if (!empty($grayBackgrounds)) {
+                        usort($grayBackgrounds, fn($a, $b) =>
+                            ($b['width_cm'] * $b['height_cm']) <=> ($a['width_cm'] * $a['height_cm'])
+                        );
+                        $grayBackgroundRect = $grayBackgrounds[0];
+                    }
+                }
+                foreach ($grayPaths ?? [] as $p) {
+                    @unlink($p);
+                }
+            } catch (\Throwable $e) {
+                // Sin esta medición el fondo gris simplemente no se agrega
+                // (ver applyStarsDecoration) — no vale la pena tirar abajo
+                // toda la importación por esto.
+            }
         }
 
         // El PDF de muestra solo trae la GEOMETRÍA (dónde hay un ícono y de
@@ -498,6 +568,9 @@ class ProductPdfDesignController extends Controller
             unset($el);
             if ($esSoloNombre) {
                 $this->applyStarsNameClearance($page);
+            }
+            if ($esBlancoYNegro && $grayBackgroundRect) {
+                $this->applyGrayContainerBackground($page, $grayBackgroundRect);
             }
         }
         unset($page);
@@ -1998,6 +2071,56 @@ class ProductPdfDesignController extends Controller
             }
         }
         unset($el);
+    }
+
+    /**
+     * Reinserta, para "Blanco"/"Blanco y Negro" (ver $esBlancoYNegro en
+     * importFromProduct), el fondo gris (#CACACA) que la MUESTRA PRINCIPAL
+     * evitó a propósito (ver $tematicaMuestra) para que el importador
+     * genérico no tratara el rect de `.transfer-container` como una celda
+     * que engloba estrellas+logo+pedido+nombres — ya medido aparte
+     * ($grayBackgroundRect, con una segunda muestra chica que sí lo dibuja).
+     * Un elemento `background` normal, detrás de todo (z_index más bajo que
+     * el resto): el CSS solo le pone este color a ESE rect puntual
+     * (14.5x9.3cm), no a toda la hoja (18.5x29cm) — por eso no es
+     * `sheet.background_color`.
+     *
+     * Tiene que correr DESPUÉS de applyStarsNameClearance(): el ancho del
+     * nombre se agranda a mano a 11.75cm (ver más arriba, espacio de UI
+     * para el editor) — bastante más que los 7cm de alto que el CSS real le
+     * da a `.tranfer-names-container` — así que los 4 nombres ya no entran
+     * en el alto original del rect (9.3cm) una vez girados; se estira el
+     * alto del fondo medido hasta cubrirlos (con el mismo margen que ya usa
+     * applyStarsNameClearance) en vez de dejarlos "saliéndose" del gris.
+     */
+    private function applyGrayContainerBackground(array &$page, array $grayBackgroundRect): void
+    {
+        $marginCm = 0.3;
+        $bottomCm = (float) $grayBackgroundRect['y_cm'] + (float) $grayBackgroundRect['height_cm'];
+
+        foreach ($page['elements'] as $el) {
+            if (($el['type'] ?? null) !== 'text' || ($el['dynamic_field'] ?? null) !== 'nombre') {
+                continue;
+            }
+            $angleRad = deg2rad((float) ($el['rotation_deg'] ?? 0));
+            $halfHeightVisualCm = ((float) $el['width_cm'] / 2) * abs(sin($angleRad))
+                + ((float) $el['height_cm'] / 2) * abs(cos($angleRad));
+            $centerYCm = (float) $el['y_cm'] + (float) $el['height_cm'] / 2;
+            $bottomCm = max($bottomCm, $centerYCm + $halfHeightVisualCm + $marginCm);
+        }
+
+        $minZIndex = min(array_column($page['elements'], 'z_index') ?: [0]);
+        array_unshift($page['elements'], [
+            'id' => 'el-imported-' . uniqid(),
+            'type' => 'background',
+            'x_cm' => $grayBackgroundRect['x_cm'],
+            'y_cm' => $grayBackgroundRect['y_cm'],
+            'width_cm' => $grayBackgroundRect['width_cm'],
+            'height_cm' => round($bottomCm - (float) $grayBackgroundRect['y_cm'], 2),
+            'z_index' => $minZIndex - 1,
+            'color' => ['mode' => 'hex', 'value' => '#CACACA'],
+            'editable_by_customer' => false,
+        ]);
     }
 
     private function applyViniloLabelShape(array &$page, ?string $viewPath): void
