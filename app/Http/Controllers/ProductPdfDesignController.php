@@ -289,12 +289,12 @@ class ProductPdfDesignController extends Controller
         $nombreMuestra = $esSoloNombre ? self::SAMPLE_NOMBRE_SOLO : self::SAMPLE_NOMBRE_APELLIDO;
         $firstNamesMuestra = $esSoloNombre ? [] : ['NOMBRE'];
 
-        // Las temáticas "Blanco"/"Blanco y Negro" (ver EtiquetaService::
-        // generarEtiquetas, $isWhite) le ponen un fondo gris (#CACACA) a
-        // ".transfer-container" para que el nombre en blanco (color-range
-        // trae "0,0,0,0", cmyk de blanco) se vea contra algo que no sea la
-        // hoja blanca — acá se reproduce como fondo de TODA la hoja (pedido
-        // explícito, más simple que recortarlo al rect real), ver
+        // Las temáticas "Blanco"/"Blanco y Negro" de "stars/TRANSFER *" (ver
+        // EtiquetaService::generarEtiquetas, $isWhite) le ponen un fondo gris
+        // (#CACACA) a ".transfer-container" para que el nombre en blanco
+        // (color-range trae "0,0,0,0", cmyk de blanco) se vea contra algo que
+        // no sea la hoja blanca — acá se reproduce como fondo de TODA la hoja
+        // (pedido explícito, más simple que recortarlo al rect real), ver
         // $esBlancoYNegro más abajo. Ese rect intermedio (9.3x14.5cm) es
         // demasiado chico para que PdfDesignImportService::import() lo trate
         // como fondo de HOJA (su umbral es "cubre el 80% de la página") pero
@@ -308,7 +308,17 @@ class ProductPdfDesignController extends Controller
         // llamada evita que la vista dibuje ese rect sin tocar nada más — el
         // nombre real sigue usándose para el nombre del diseño/toda otra
         // lógica más abajo.
-        $esBlancoYNegro = in_array($tematicaCoincidente['name'] ?? '', ['Blanco', 'Blanco y Negro'], true);
+        //
+        // OJO: "Blanco"/"Blanco y Negro" tambien existen como nombre de
+        // temática en OTRAS familias de vista (ej. "super-mini/COLOR RANGE",
+        // ver CASO 2 "GAMA DE COLORES" de generarEtiquetas) que no leen
+        // $isWhite en absoluto — ahí el blanco y negro ya sale bien solo con
+        // 'colores' (celdas blancas) + 'colorText' (texto negro), SIN fondo
+        // gris ni rect que corromper. Aplicarle este truco/fondo gris a esas
+        // vistas por el solo nombre de la temática rompía la muestra (ver
+        // `$esBlancoYNegro` scoped a `$esSoloNombre`, la misma condición que
+        // ya identifica a "stars/TRANSFER *").
+        $esBlancoYNegro = $esSoloNombre && in_array($tematicaCoincidente['name'] ?? '', ['Blanco', 'Blanco y Negro'], true);
         $tematicaMuestra = $tematicaCoincidente;
         if ($esBlancoYNegro) {
             $tematicaMuestra['name'] = $tematicaCoincidente['name'] . ' (muestra)';
@@ -3670,7 +3680,7 @@ class ProductPdfDesignController extends Controller
      * reconocidos.
      */
     /**
-     * Solo para el listado: completa sheet/elements de las páginas "prestadas"
+     * Solo para el listado: completa sheet/elements/layout_groups/cut_lines de las páginas "prestadas"
      * (data.pages[].source = {designId, pageId}) con el contenido de la página
      * fuente, para que el front arme las miniaturas sin pedir cada diseño
      * fuente aparte. Los diseños fuente que no vinieron en el listado se
@@ -3731,6 +3741,15 @@ class ProductPdfDesignController extends Controller
                 $sourcePage = $pagesIndex[(int) $page['source']['designId']][$page['source']['pageId'] ?? ''] ?? null;
                 $data['pages'][$i]['sheet'] = $sourcePage['sheet'] ?? null;
                 $data['pages'][$i]['elements'] = $sourcePage['elements'] ?? null;
+                // Igual que EtiquetaService::resolverPaginasPrestadas (lo que usa el PDF):
+                // las relaciones fijas y las líneas de corte también son las de la fuente,
+                // para que la miniatura se dibuje como el PDF descargado.
+                unset($data['pages'][$i]['layout_groups'], $data['pages'][$i]['cut_lines']);
+                foreach (['layout_groups', 'cut_lines'] as $key) {
+                    if (is_array($sourcePage) && array_key_exists($key, $sourcePage)) {
+                        $data['pages'][$i][$key] = $sourcePage[$key];
+                    }
+                }
                 $changed = true;
             }
             if ($changed) {
