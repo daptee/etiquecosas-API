@@ -1832,6 +1832,18 @@ class ProductPdfDesignController extends Controller
      * etiquetar por error una coincidencia de tamaño en una vista sin
      * relación) y asignarle la forma a CUALQUIER grilla cuya celda mida
      * 2.90×1.15cm — no hace falta saber cuántas filas/columnas tiene.
+     *
+     * En los combos "PERSONALIZABLE" (`maxi-and-super-mini`,
+     * `spot-and-super-mini`) esta fila es, a diferencia de `tematica/super-
+     * mini/COLOR RANGE` (paleta fija que el cliente NO elige, ver CASO 2
+     * "GAMA DE COLORES" de EtiquetaService::generarEtiquetas), una celda
+     * lisa cuyo fondo es DIRECTAMENTE `$plantilla['colores']` — el mismo
+     * color único que el cliente elige al comprar (CASO 1B) y que
+     * `applyMaxiLabelShape()` ya marca `editable_field: "color"` en el
+     * fondo fusionado de la fila "maxi" del mismo combo. Sin esto, el fondo
+     * quedaba con el gris de muestra (#CCCCCC) fijo y nunca tomaba el color
+     * real de la compra (`EtiquetaService::resolverElementoDesign` solo
+     * resuelve `dynamic`/`editable_field` marcados).
      */
     private function applySuperMiniLabelShape(array &$page, ?string $viewPath): void
     {
@@ -1842,6 +1854,7 @@ class ProductPdfDesignController extends Controller
         if (!$superMiniShape) {
             return;
         }
+        $isPersonalizable = str_contains($viewPath, 'PERSONALIZABLE');
 
         $normalizedViewPath = str_starts_with($viewPath, 'tematica/') ? $viewPath : "tematica/{$viewPath}";
         $bladePath = resource_path('views/' . $normalizedViewPath . '.blade.php');
@@ -1890,6 +1903,10 @@ class ProductPdfDesignController extends Controller
                         continue;
                     }
                     $page['elements'][$index]['label_shape_id'] = $superMiniShape->id;
+                    if ($isPersonalizable) {
+                        $page['elements'][$index]['editable_by_customer'] = true;
+                        $page['elements'][$index]['editable_field'] = 'color';
+                    }
                 }
             }
         }
