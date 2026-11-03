@@ -1374,6 +1374,67 @@ class ProductPdfDesignController extends Controller
             }
         }
 
+        // Las vistas "tematica/principal/*" (ej. GAMER, SKATE) NO usan un
+        // `@for` de columnas: cada celda escribe su propio
+        // `$plantilla['imagen'][N]` literal en el .blade.php (ver
+        // UNICORNIO.blade.php vs. GAMER.blade.php), así que
+        // extractIconFileSequence() trae UNA entrada por cada ícono real de
+        // la página — a diferencia del caso "vinilo/*" de más abajo, donde
+        // trae menos entradas que íconos (una por fila, repetida por el
+        // `@for`). Cuando la cuenta coincide 1 a 1, agrupar por columna y
+        // aplicar `$iconSequence[$row]` por columna (como hace el resto de
+        // esta función) está mal: esas vistas mezclan varias tablas
+        // independientes (MAXI/VERTICALES/SUPER MAXI, cada una con su propio
+        // Nro de columnas) y un ícono distinto por columna EN LA MISMA fila
+        // — agrupar por columna ignora la columna real y le aplica a todas
+        // la MISMA fila de la secuencia. Ordenando los íconos detectados en
+        // el mismo orden en que dompdf los dibuja (fila por fila de arriba
+        // hacia abajo, izquierda a derecha dentro de cada fila) y
+        // apareándolos 1 a 1 con la secuencia se reproduce exactamente ese
+        // orden de documento.
+        if (count($iconSequence) === count($iconEls)) {
+            $ordered = $iconEls;
+            usort($ordered, function ($a, $b) use ($backgroundsByGroupId) {
+                $anchorA = $backgroundsByGroupId[$a['group_id'] ?? null] ?? $a;
+                $anchorB = $backgroundsByGroupId[$b['group_id'] ?? null] ?? $b;
+                return (float) $anchorA['y_cm'] <=> (float) $anchorB['y_cm'];
+            });
+
+            // Clusteriza por FILA con un umbral de salto en vez de redondear
+            // y_cm a una cantidad fija de decimales: dentro de una misma fila
+            // de tabla, el y_cm de cada celda varía unas décimas entre
+            // columnas (alineación vertical del contenido, ver nota de
+            // arriba sobre x_cm) — more que lo que un redondeo a 1 decimal
+            // tolera, pero muchísimo menos que el salto real entre una fila
+            // de tabla y la siguiente (>2cm en la práctica).
+            $rows = [];
+            $rowThresholdCm = 1.0;
+            $prevY = null;
+            $rowIdx = -1;
+            foreach ($ordered as $el) {
+                $anchor = $backgroundsByGroupId[$el['group_id'] ?? null] ?? $el;
+                $y = (float) $anchor['y_cm'];
+                if ($prevY === null || $y - $prevY > $rowThresholdCm) {
+                    $rowIdx++;
+                    $rows[$rowIdx] = [];
+                }
+                $rows[$rowIdx][] = ['icon' => $el, 'x_cm' => (float) $anchor['x_cm']];
+                $prevY = $y;
+            }
+
+            $map = [];
+            $i = 0;
+            foreach ($rows as $rowEls) {
+                usort($rowEls, fn($a, $b) => $a['x_cm'] <=> $b['x_cm']);
+                foreach ($rowEls as $entry) {
+                    $map[$entry['icon']['id']] = $iconSequence[$i];
+                    $i++;
+                }
+            }
+
+            return $map;
+        }
+
         $columns = [];
         foreach ($iconEls as $el) {
             $anchor = $backgroundsByGroupId[$el['group_id'] ?? null] ?? $el;
