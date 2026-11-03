@@ -66,6 +66,11 @@ class ProductPdfDesignController extends Controller
 
         $query = ProductPdfDesign::with(['products:id,name,sku', 'labelShape', 'generalStatus']);
 
+        // Búsqueda por nombre usando el parámetro 'search'
+        if ($search = $request->query('search')) {
+            $query->where('name', 'LIKE', '%' . $search . '%');
+        }
+        
         if ($productId) {
             $query->whereHas('products', fn($q) => $q->where('products.id', $productId));
         }
