@@ -198,7 +198,18 @@ class PdfDesignImportService
         // Texto suelto (ej. "PEDIDO # 12345" al costado) — no se pierde,
         // queda como elemento top-level sin celda.
         foreach (self::mergeLooseTextLines($looseTexts) as $group) {
-            $elements[] = self::textsToTextElement($group, $pageHeightPt, null, null, $pageSizePt['w']);
+            $el = self::textsToTextElement($group, $pageHeightPt, null, null, $pageSizePt['w']);
+            if (trim($el['content'] ?? '') === '') {
+                // Espacio en blanco entre celdas (ej. el salto de línea entre
+                // `<div class="super-mini">` consecutivos de las vistas
+                // combo) que dompdf igual dibuja como su propio trazo de
+                // texto, sin caer dentro de ningún rect de celda — no es
+                // texto real, solo ocupa lugar en el diseño (y, según la
+                // métrica de fuente del entorno, puede llegar a capturar
+                // parte de un renglón real en vez de quedar vacío).
+                continue;
+            }
+            $elements[] = $el;
         }
 
         // Nota: algunas vistas legacy (ej. "maxi") dibujan el ícono y el
