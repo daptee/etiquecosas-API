@@ -1865,6 +1865,7 @@ class ProductPdfDesignController extends Controller
         if (!preg_match('/class=["\'][^"\']*\bsuper-mini\b[^"\']*["\']/', $content)) {
             return;
         }
+        $formatNameParams = $this->extractSuperMiniFormatNameParams($content);
 
         $targetWidth = round((float) $superMiniShape->width_cm, 1);
         $targetHeight = round((float) $superMiniShape->height_cm, 1);
@@ -1899,17 +1900,54 @@ class ProductPdfDesignController extends Controller
             foreach ($cellIdLists as $ids) {
                 foreach ($ids as $id) {
                     $index = $indexById[$id] ?? null;
-                    if ($index === null || ($page['elements'][$index]['type'] ?? null) !== 'background') {
+                    if ($index === null) {
                         continue;
                     }
-                    $page['elements'][$index]['label_shape_id'] = $superMiniShape->id;
-                    if ($isPersonalizable) {
-                        $page['elements'][$index]['editable_by_customer'] = true;
-                        $page['elements'][$index]['editable_field'] = 'color';
+                    $elType = $page['elements'][$index]['type'] ?? null;
+                    if ($elType === 'background') {
+                        $page['elements'][$index]['label_shape_id'] = $superMiniShape->id;
+                        if ($isPersonalizable) {
+                            $page['elements'][$index]['editable_by_customer'] = true;
+                            $page['elements'][$index]['editable_field'] = 'color';
+                        }
+                    } elseif ($elType === 'text' && $formatNameParams && ($page['elements'][$index]['content'] ?? null) === self::SAMPLE_NOMBRE_APELLIDO) {
+                        $page['elements'][$index]['max_lines'] = $formatNameParams['max_lines'];
+                        $page['elements'][$index]['max_chars_per_line'] = $formatNameParams['max_chars_per_line'];
                     }
                 }
             }
         }
+    }
+
+    /**
+     * Extrae los literales `formatName($product_order->name, N, M, ...)` de
+     * la fila "super mini" de una vista legacy — el máximo de renglones (N)
+     * y de caracteres por renglón (M) que esa vista SIEMPRE le pide a esta
+     * celda, sea cual sea el nombre real de la venta.
+     *
+     * Sin esto, el importador deja `max_lines`/`max_chars_per_line`
+     * calculados del PDF de MUESTRA (ver `PdfDesignImportService::
+     * textsToTextElement`, `max_lines: count($lines)` de la celda ya
+     * renderizada) — que para este nombre de muestra concreto
+     * ("NOMBRE APELLIDO", ver SAMPLE_NOMBRE_APELLIDO) puede entrar ENTERO en
+     * un solo renglón (`formatName()`/`dividirEnRenglones()` devuelven el
+     * texto sin cortar si entra en `maxCharsPerLine`), aunque la vista pida
+     * hasta 2. El diseño importado quedaba con `max_lines: 1` grabado para
+     * siempre, y cualquier nombre real más largo que la muestra (la gran
+     * mayoría) se truncaba con "…" a un solo renglón en vez de partirse en 2
+     * como hace la vista legacy.
+     */
+    private function extractSuperMiniFormatNameParams(string $bladeContent): ?array
+    {
+        if (!preg_match(
+            '/class=["\'][^"\']*\bsuper-mini\b[^"\']*["\'][\s\S]{0,600}?formatName\(\s*\$product_order->name\s*,\s*(\d+)\s*,\s*(\d+)/',
+            $bladeContent,
+            $m
+        )) {
+            return null;
+        }
+
+        return ['max_lines' => (int) $m[1], 'max_chars_per_line' => (int) $m[2]];
     }
 
     /**
