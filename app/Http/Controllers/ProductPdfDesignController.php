@@ -64,7 +64,7 @@ class ProductPdfDesignController extends Controller
         $perPage = $request->query('quantity');
         $page = $request->query('page', 1);
 
-        $query = ProductPdfDesign::with(['products:id,name,sku', 'labelShape', 'generalStatus']);
+        $query = ProductPdfDesign::with(['products:id,name,sku', 'labelShape', 'generalStatus', 'user:id,name,lastName']);
 
         // Búsqueda por nombre usando el parámetro 'search'
         if ($search = $request->query('search')) {
@@ -85,6 +85,20 @@ class ProductPdfDesignController extends Controller
 
         if ($request->filled('isPublished')) {
             $query->where('is_published', $request->boolean('isPublished'));
+        }
+
+        // Usuario que creó el diseño.
+        if ($userId = $request->query('userId')) {
+            $query->where('user_id', $userId);
+        }
+
+        // Día de creación (YYYY-MM-DD).
+        if ($createdAt = $request->query('createdAt')) {
+            try {
+                $query->whereDate('created_at', Carbon::parse($createdAt)->toDateString());
+            } catch (\Exception $e) {
+                return $this->validationError(['createdAt' => ['Tiene que ser una fecha válida (YYYY-MM-DD).']]);
+            }
         }
 
         $query->orderBy('name', 'asc');
@@ -111,7 +125,7 @@ class ProductPdfDesignController extends Controller
     public function show($id)
     {
         $design = $this->findObject(ProductPdfDesign::class, $id);
-        $design->load(['products:id,name,sku', 'labelShape', 'generalStatus']);
+        $design->load(['products:id,name,sku', 'labelShape', 'generalStatus', 'user:id,name,lastName']);
         return $this->success($design, 'Diseño de PDF obtenido');
     }
 
@@ -131,13 +145,14 @@ class ProductPdfDesignController extends Controller
 
         $design = ProductPdfDesign::create([
             'label_shape_id' => $request->labelShapeId,
+            'user_id' => Auth::id(),
             'name' => $request->name,
             'data' => $data,
             'is_published' => $request->boolean('isPublished'),
             'status_id' => $request->statusId ?? 1,
         ]);
 
-        $design->load(['products:id,name,sku', 'labelShape', 'generalStatus']);
+        $design->load(['products:id,name,sku', 'labelShape', 'generalStatus', 'user:id,name,lastName']);
         $this->logAudit(Auth::user(), 'Store Product Pdf Design', $request->all(), $design);
         return $this->success($design, 'Diseño de PDF creado');
     }
@@ -189,13 +204,14 @@ class ProductPdfDesignController extends Controller
 
         $design = ProductPdfDesign::create([
             'label_shape_id' => $request->labelShapeId,
+            'user_id' => Auth::id(),
             'name' => $request->name,
             'data' => $data,
             'is_published' => false,
             'status_id' => 1,
         ]);
 
-        $design->load(['products:id,name,sku', 'labelShape', 'generalStatus']);
+        $design->load(['products:id,name,sku', 'labelShape', 'generalStatus', 'user:id,name,lastName']);
         $this->logAudit(Auth::user(), 'Import Pdf Design', ['name' => $request->name], ['designId' => $design->id, 'elementCount' => $elementCount]);
         return $this->success($design, "Diseño importado del PDF ({$elementCount} elementos detectados)");
     }
@@ -624,6 +640,7 @@ class ProductPdfDesignController extends Controller
             'label_shape_id' => $request->labelShapeId
                 ?: $this->detectLabelShapeIdFromViewPath($viewPaths[0] ?? null)
                 ?: $this->detectUniformLabelShapeId($data['pages']),
+            'user_id' => Auth::id(),
             'name' => ($request->name ?: $product->name)
                 . ($variantAttributeValueName ? ' - ' . $variantAttributeValueName : '')
                 . ' (importado)',
@@ -645,7 +662,7 @@ class ProductPdfDesignController extends Controller
         }
 
         $elementCount = array_sum(array_map(fn($p) => count($p['elements'] ?? []), $pages));
-        $design->load(['products:id,name,sku', 'labelShape', 'generalStatus']);
+        $design->load(['products:id,name,sku', 'labelShape', 'generalStatus', 'user:id,name,lastName']);
         $this->logAudit(Auth::user(), 'Import Pdf Design From Product', $request->all(), ['designId' => $design->id, 'elementCount' => $elementCount, 'pages' => count($pages)]);
         return $this->success($design, "Diseño importado del PDF legacy ({$elementCount} elementos en " . count($pages) . " página(s))");
     }
@@ -806,7 +823,7 @@ class ProductPdfDesignController extends Controller
         unset($page);
 
         if ($fixedCount === 0) {
-            $design->load(['products:id,name,sku', 'labelShape', 'generalStatus']);
+            $design->load(['products:id,name,sku', 'labelShape', 'generalStatus', 'user:id,name,lastName']);
             return $this->success($design, 'No se encontró ningún ícono para corregir (ya estaban bien, o esta vista no tiene el patrón $plantilla[imagen][N])');
         }
 
@@ -821,7 +838,7 @@ class ProductPdfDesignController extends Controller
         unset($page);
 
         $design->update(['data' => $this->sanitizeDesignData($data)]);
-        $design->load(['products:id,name,sku', 'labelShape', 'generalStatus']);
+        $design->load(['products:id,name,sku', 'labelShape', 'generalStatus', 'user:id,name,lastName']);
 
         $this->logAudit(Auth::user(), 'Fix Imported Icons', $request->all(), ['designId' => $design->id, 'fixedCount' => $fixedCount]);
         return $this->success($design, "Se corrigieron {$fixedCount} ícono(s) del diseño");
@@ -858,7 +875,7 @@ class ProductPdfDesignController extends Controller
             'status_id' => $request->input('statusId', $design->status_id),
         ]);
 
-        $design->load(['products:id,name,sku', 'labelShape', 'generalStatus']);
+        $design->load(['products:id,name,sku', 'labelShape', 'generalStatus', 'user:id,name,lastName']);
         $this->logAudit(Auth::user(), 'Update Product Pdf Design', $request->all(), $design);
         return $this->success($design, 'Diseño de PDF actualizado');
     }
@@ -869,7 +886,7 @@ class ProductPdfDesignController extends Controller
         $design->update([
             'status_id' => $design->status_id === 1 ? 2 : 1,
         ]);
-        $design->load(['products:id,name,sku', 'labelShape', 'generalStatus']);
+        $design->load(['products:id,name,sku', 'labelShape', 'generalStatus', 'user:id,name,lastName']);
         $this->logAudit(Auth::user(), 'Toggle Product Pdf Design Status', $id, $design);
         return $this->success($design, 'Estado actualizado');
     }
@@ -915,7 +932,7 @@ class ProductPdfDesignController extends Controller
             return $this->validationError(['themeKey' => ['Ya existe un vínculo idéntico (mismo producto, variante, diseño y página)']]);
         }
 
-        $design->load(['products:id,name,sku', 'labelShape', 'generalStatus']);
+        $design->load(['products:id,name,sku', 'labelShape', 'generalStatus', 'user:id,name,lastName']);
         $this->logAudit(Auth::user(), 'Attach Product to Pdf Design', $request->all(), $link);
         return $this->success($design, 'Producto vinculado al diseño');
     }
@@ -964,7 +981,7 @@ class ProductPdfDesignController extends Controller
             }
         }
 
-        $design->load(['products:id,name,sku', 'labelShape', 'generalStatus']);
+        $design->load(['products:id,name,sku', 'labelShape', 'generalStatus', 'user:id,name,lastName']);
         $this->logAudit(Auth::user(), 'Bulk Attach Products to Pdf Design', $request->all(), [
             'created' => count($created),
             'skipped' => $skipped,
@@ -1011,7 +1028,7 @@ class ProductPdfDesignController extends Controller
             })
             ->delete();
 
-        $design->load(['products:id,name,sku', 'labelShape', 'generalStatus']);
+        $design->load(['products:id,name,sku', 'labelShape', 'generalStatus', 'user:id,name,lastName']);
         $this->logAudit(Auth::user(), 'Bulk Detach Products from Pdf Design', $request->all(), ['deleted' => $deletedCount]);
 
         return $this->success($design, 'Vínculos eliminados', ['deleted' => $deletedCount]);
@@ -1062,7 +1079,7 @@ class ProductPdfDesignController extends Controller
             }
         }
 
-        $design->load(['products:id,name,sku', 'labelShape', 'generalStatus']);
+        $design->load(['products:id,name,sku', 'labelShape', 'generalStatus', 'user:id,name,lastName']);
         $this->logAudit(Auth::user(), 'Bulk Attach Many Products to Pdf Design', $request->all(), [
             'created' => count($created),
             'skipped' => $skipped,
@@ -1113,7 +1130,7 @@ class ProductPdfDesignController extends Controller
                 ->delete();
         }
 
-        $design->load(['products:id,name,sku', 'labelShape', 'generalStatus']);
+        $design->load(['products:id,name,sku', 'labelShape', 'generalStatus', 'user:id,name,lastName']);
         $this->logAudit(Auth::user(), 'Bulk Detach Many Products from Pdf Design', $request->all(), ['deleted' => $deletedCount]);
 
         return $this->success($design, 'Vínculos eliminados', ['deleted' => $deletedCount]);
@@ -1135,7 +1152,7 @@ class ProductPdfDesignController extends Controller
 
         $link->delete();
 
-        $design->load(['products:id,name,sku', 'labelShape', 'generalStatus']);
+        $design->load(['products:id,name,sku', 'labelShape', 'generalStatus', 'user:id,name,lastName']);
         $this->logAudit(Auth::user(), 'Detach Product from Pdf Design', ['designId' => $id, 'linkId' => $linkId], $design);
         return $this->success($design, 'Producto desvinculado del diseño');
     }

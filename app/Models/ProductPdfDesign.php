@@ -12,6 +12,7 @@ class ProductPdfDesign extends Model
 
     protected $fillable = [
         'label_shape_id',
+        'user_id',
         'name',
         'data',
         'is_published',
@@ -26,6 +27,12 @@ class ProductPdfDesign extends Model
     public function labelShape()
     {
         return $this->belongsTo(LabelShape::class);
+    }
+
+    /** Usuario que creó el diseño (null en los diseños anteriores a la columna). */
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 
     public function generalStatus()
