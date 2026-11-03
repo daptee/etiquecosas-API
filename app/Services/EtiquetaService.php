@@ -1258,6 +1258,13 @@ class EtiquetaService
             }
 
             $el['is_customer_name'] = $isCustomerName;
+            // `text_transform` (ver IProductPdfDesign.ts del editor,
+            // PdfDesignHelper.applyTextTransform) es una propiedad del
+            // elemento, no del dato dinámico — se aplica DESPUÉS de resolver
+            // nombre/apellido/placeholders, igual que hace el front en su
+            // propio preview, para que ambos lados cuenten/corten renglones
+            // sobre el mismo texto final.
+            $resolvedText = self::aplicarTextTransform($resolvedText, $el['text_transform'] ?? null);
             // Normalizado ANTES de cortar renglones y de contar caracteres para
             // las reglas por longitud, así el editor y el backend cuentan igual.
             $el['resolved_text'] = self::normalizarEspacios($resolvedText);
@@ -1291,11 +1298,20 @@ class EtiquetaService
 
             // Renglones sin escapar (los usa aplicarLayoutGroups para medir y
             // para rearmar el HTML sin min_lines) + el HTML final ya escapado.
+            // $firstName se pasa por SEPARADO de $resolvedText (dividirEnRenglones
+            // lo usa tal cual para armar el renglón 1, no lo recorta de
+            // $resolvedText) — sin transformarlo acá iguales a como se
+            // transformó $resolvedText, un texto en mayúsculas forzadas salía
+            // con el renglón 1 en el case original del cliente y el resto ya
+            // en mayúsculas (desprolijo, ver reporte: "esteban<br>CARRIZO").
+            $firstNameTransformado = $isCustomerName
+                ? self::aplicarTextTransform($firstName ?? '', $el['text_transform'] ?? null)
+                : null;
             $el['resolved_lines'] = self::dividirEnRenglones(
                 $el['resolved_text'],
                 (int) ($el['max_lines'] ?? 3),
                 (int) ($el['max_chars_per_line'] ?? 10),
-                $isCustomerName ? $firstName : null
+                $firstNameTransformado
             );
             $el['resolved_text_html'] = self::renglonesAHtml($el['resolved_lines'], (int) ($el['min_lines'] ?? 1));
             $el['resolved_font_size_px'] = self::resolverTamanoFuente($el);
@@ -1383,6 +1399,42 @@ class EtiquetaService
         }
 
         return implode('<br>', $html);
+    }
+
+    /**
+     * Mismo comportamiento que PdfDesignHelper.applyTextTransform() del
+     * editor (utils/PdfDesignHelper.ts): "none"/null deja el texto tal cual;
+     * cualquier placeholder "{{...}}" que haya quedado sin resolver se
+     * preserva literal (no se lo toca, para que se lo siga reconociendo);
+     * "capitalize" pone en mayúscula la primera letra de cada palabra
+     * (después de inicio de texto, espacio o guion) sobre el resto en
+     * minúsculas.
+     */
+    private static function aplicarTextTransform(string $texto, ?string $transform): string
+    {
+        if (!$transform || $transform === 'none') {
+            return $texto;
+        }
+
+        $partes = preg_split('/(\{\{[^}]*\}\})/u', $texto, -1, PREG_SPLIT_DELIM_CAPTURE) ?: [$texto];
+
+        return implode('', array_map(function ($parte) use ($transform) {
+            if (str_starts_with($parte, '{{')) {
+                return $parte;
+            }
+            if ($transform === 'uppercase') {
+                return mb_strtoupper($parte, 'UTF-8');
+            }
+            $minuscula = mb_strtolower($parte, 'UTF-8');
+            if ($transform === 'lowercase') {
+                return $minuscula;
+            }
+            return preg_replace_callback(
+                '/(^|[\s\-])(\p{L})/u',
+                fn($m) => $m[1] . mb_strtoupper($m[2], 'UTF-8'),
+                $minuscula
+            );
+        }, $partes));
     }
 
     /**

@@ -9,6 +9,7 @@ class PdfDesignSanitizer
     private const ALLOWED_EDITABLE_FIELDS = ['text', 'color', 'icon'];
     private const ALLOWED_TEXT_ALIGN = ['left', 'center', 'right'];
     private const ALLOWED_VERTICAL_ALIGN = ['top', 'middle', 'bottom'];
+    private const ALLOWED_TEXT_TRANSFORM = ['none', 'uppercase', 'lowercase', 'capitalize'];
     private const ALLOWED_DYNAMIC_FIELDS = ['nombre_apellido', 'nombre', 'apellido', 'fecha', 'numero_pedido'];
     private const ALLOWED_RADIUS_MODES = ['straight', 'rounded'];
     private const ALLOWED_LAYOUT_DIRECTIONS = ['vertical', 'horizontal'];
@@ -132,6 +133,9 @@ class PdfDesignSanitizer
             }
             if (isset($el['vertical_align']) && !in_array($el['vertical_align'], self::ALLOWED_VERTICAL_ALIGN, true)) {
                 $el['vertical_align'] = 'middle';
+            }
+            if (isset($el['text_transform']) && !in_array($el['text_transform'], self::ALLOWED_TEXT_TRANSFORM, true)) {
+                $el['text_transform'] = 'none';
             }
             if (isset($el['dynamic_field']) && !in_array($el['dynamic_field'], self::ALLOWED_DYNAMIC_FIELDS, true)) {
                 $el['dynamic_field'] = null;

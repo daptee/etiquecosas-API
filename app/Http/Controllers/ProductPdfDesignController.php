@@ -492,9 +492,22 @@ class ProductPdfDesignController extends Controller
                 if (($el['content'] ?? null) === self::SAMPLE_NOMBRE_APELLIDO) {
                     $el['value_mode'] = 'dynamic';
                     $el['dynamic_field'] = 'nombre_apellido';
+                    // La vista legacy SIEMPRE mostraba el nombre del cliente
+                    // en mayúsculas (formatName() de app/Helpers/Helpers.php
+                    // llama mb_strtoupper antes de cortar renglones, para
+                    // TODAS las vistas) — el editor nuevo, en cambio, no
+                    // fuerza mayúsculas por defecto (permite mezclar estilos),
+                    // así que sin esto un nombre real tipeado en minúsculas
+                    // saldría en minúsculas, distinto al PDF legacy. Se
+                    // reproduce ese comportamiento seteando el mismo
+                    // `text_transform` que ya expone el toggle "Mayúsculas"
+                    // del editor (ver IProductPdfDesign.ts/ElementConfig.vue),
+                    // en vez de un mecanismo aparte.
+                    $el['text_transform'] = 'uppercase';
                 } elseif (($el['content'] ?? null) === self::SAMPLE_NOMBRE_SOLO) {
                     $el['value_mode'] = 'dynamic';
                     $el['dynamic_field'] = 'nombre';
+                    $el['text_transform'] = 'uppercase';
 
                     // "stars/TRANSFER *" calcula el tamaño de letra del
                     // nombre por cantidad de caracteres EN PHP (ver
