@@ -45,6 +45,33 @@ class ProductPdfResolverService
             ->orderBy('sort_order')
             ->get();
 
+        // Diseños "acumulables" (ver AccumulatingPdfDesignService, generaliza
+        // BandaService): no generan un PDF propio por pedido, se van sumando
+        // al consolidado del día de ESE diseño — en paralelo a lo que haga el
+        // resto de los vínculos de este producto+variante, igual que bandas
+        // hoy genera su etiqueta normal Y se suma al PDF del día.
+        $accumulatingLinks = $links->filter(fn($link) => $link->design->esAcumulable());
+        $links = $links->reject(fn($link) => $link->design->esAcumulable())->values();
+
+        foreach ($accumulatingLinks as $link) {
+            try {
+                AccumulatingPdfDesignService::agregarItemAlPdf(
+                    $link->design,
+                    $ventaId,
+                    $productOrder,
+                    $nombreCompleto,
+                    $customIcon,
+                    $fecha
+                );
+            } catch (\Throwable $e) {
+                Log::error('Error agregando pedido al diseño acumulable', [
+                    'design_id' => $link->design->id,
+                    'product_order_id' => $productOrder->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
         if ($links->isNotEmpty()) {
             try {
                 // Caso más común (un solo vínculo a un diseño entero): se

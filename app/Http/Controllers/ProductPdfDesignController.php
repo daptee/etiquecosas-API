@@ -851,6 +851,15 @@ class ProductPdfDesignController extends Controller
         $rules = $this->rules();
         $rules['name'] = 'nullable|string|max:255';
         $rules['data'] = 'nullable|array';
+        // Modo "acumulable" (ver AccumulatingPdfDesignService): en vez de un
+        // PDF por pedido, la página 1 de `data` es una celda que se repite
+        // sola para cada pedido del día, agrupada por un atributo de la
+        // variante si se configura uno.
+        $rules['fillMode'] = 'nullable|in:single,accumulating';
+        $rules['accumulationGroupAttribute'] = 'nullable|string|max:191';
+        $rules['accumulationCols'] = 'nullable|integer|min:1|max:50';
+        $rules['accumulationRows'] = 'nullable|integer|min:1|max:50';
+        $rules['accumulationGapCm'] = 'nullable|numeric|min:0|max:10';
 
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
@@ -873,6 +882,11 @@ class ProductPdfDesignController extends Controller
             'data' => $data,
             'is_published' => $request->has('isPublished') ? $request->boolean('isPublished') : $design->is_published,
             'status_id' => $request->input('statusId', $design->status_id),
+            'fill_mode' => $request->input('fillMode', $design->fill_mode),
+            'accumulation_group_attribute' => $request->input('accumulationGroupAttribute', $design->accumulation_group_attribute),
+            'accumulation_cols' => $request->input('accumulationCols', $design->accumulation_cols),
+            'accumulation_rows' => $request->input('accumulationRows', $design->accumulation_rows),
+            'accumulation_gap_cm' => $request->input('accumulationGapCm', $design->accumulation_gap_cm),
         ]);
 
         $design->load(['products:id,name,sku', 'labelShape', 'generalStatus', 'user:id,name,lastName']);

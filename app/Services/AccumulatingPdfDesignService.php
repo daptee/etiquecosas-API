@@ -1,0 +1,357 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\ProductPdfDesign;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
+use setasign\Fpdi\Fpdi;
+
+/**
+ * Generaliza lo que hoy hace BandaService (un PDF por día que se va
+ * completando a medida que entran pedidos) para cualquier diseño del editor
+ * marcado como `fill_mode = 'accumulating'` (ver
+ * alter_product_pdf_designs_add_accumulation.sql), en vez de product IDs
+ * hardcodeados y una vista Blade fija.
+ *
+ * La página 1 de `design.data` define UNA celda (su `sheet.width_cm/height_cm`
+ * es el tamaño físico de esa celda, no de la hoja completa). Cada vez que
+ * entra un pedido de un producto vinculado a un diseño así (mismo vínculo
+ * product_pdf_design_products de siempre, sin nada hardcodeado),
+ * agregarItemAlPdf() lo suma al JSON del día de ESE diseño y reconstruye el
+ * PDF consolidado tileando copias de esa celda sobre hojas de impresión
+ * estándar, agrupadas en páginas separadas por `accumulation_group_attribute`
+ * si el diseño lo configuró (ej. "Color banda 1"), igual que BandaService
+ * agrupa por color — pero genérico a cualquier atributo o ningún atributo.
+ *
+ * Limitaciones de esta primera versión (no las necesita un diseño de celda
+ * simple: nombre + ícono opcional, que es todo lo que usa BandaService hoy):
+ * - Solo se usa la página 1 del diseño; el resto se ignora.
+ * - No aplica layout_groups (anclaje ícono+texto): las posiciones de los
+ *   elementos de la celda se usan tal cual las guardó el editor.
+ * - El nombre de cada ítem no tiene apellido/color de cliente/atributos
+ *   dinámicos asociados (esos datos son del pedido puntual, no tienen
+ *   sentido en un PDF que mezcla pedidos de ventas distintas).
+ */
+class AccumulatingPdfDesignService
+{
+    private const SHEET_WIDTH_CM = 18.5;
+    private const SHEET_HEIGHT_CM = 29.0;
+    private const MARGIN_X_CM = 1.0;
+    private const MARGIN_TOP_CM = 1.0;
+    private const HEADER_HEIGHT_CM = 1.0;
+    private const CM_TO_PT = 72 / 2.54;
+
+    /**
+     * Suma (o reemplaza, si ya existía) el pedido de este productOrder al PDF
+     * consolidado del día de $design, y lo regenera. No hace nada si el
+     * diseño no está en modo acumulable.
+     */
+    public static function agregarItemAlPdf(
+        ProductPdfDesign $design,
+        int $ventaId,
+        $productOrder,
+        string $nombreCompleto,
+        ?string $customIcon,
+        $fechaCompra = null
+    ): void {
+        if (!$design->esAcumulable()) {
+            return;
+        }
+
+        $nombre = trim($productOrder->comment ?? $nombreCompleto);
+        if ($nombre === '') {
+            Log::warning('AccumulatingPdfDesignService: ítem sin nombre', [
+                'design_id' => $design->id,
+                'product_order_id' => $productOrder->id,
+            ]);
+            return;
+        }
+
+        $fecha = self::fechaCarpeta($fechaCompra);
+        $items = self::leerItemsDelDia($design->id, $fecha);
+
+        // Idempotente: si este product_order ya estaba (reproceso de la
+        // venta — aprobación, cambio de estado, reenvío), se reemplaza en
+        // vez de duplicarse.
+        $items = array_values(array_filter(
+            $items,
+            fn($it) => ($it['product_order_id'] ?? null) !== $productOrder->id
+        ));
+
+        $items[] = [
+            'venta_id' => $ventaId,
+            'product_order_id' => $productOrder->id,
+            'nombre' => $nombre,
+            'cantidad' => $productOrder->quantity ?? 1,
+            'group_value' => self::resolverValorDeAgrupacion($design, $productOrder),
+            'icono' => $customIcon,
+        ];
+
+        self::guardarItemsDelDia($design->id, $fecha, $items);
+        self::generarPdfConsolidado($design, $fecha, $items);
+
+        Log::info('Ítem agregado al PDF acumulable del diseño', [
+            'design_id' => $design->id,
+            'fecha' => $fecha,
+            'nombre' => $nombre,
+            'total_items_hoy' => count($items),
+        ]);
+    }
+
+    /** Saca del consolidado del día todos los ítems de esta venta (ej. venta cancelada) y regenera. */
+    public static function limpiarItemsDeVenta(ProductPdfDesign $design, int $ventaId, $fechaCompra = null): void
+    {
+        $fecha = self::fechaCarpeta($fechaCompra);
+        $items = self::leerItemsDelDia($design->id, $fecha);
+        $items = array_values(array_filter($items, fn($it) => ($it['venta_id'] ?? null) != $ventaId));
+
+        if ($items) {
+            self::guardarItemsDelDia($design->id, $fecha, $items);
+            self::generarPdfConsolidado($design, $fecha, $items);
+            return;
+        }
+
+        @unlink(self::archivoJson($design->id, $fecha));
+        @unlink(self::archivoPdf($design->id, $fecha));
+    }
+
+    private static function resolverValorDeAgrupacion(ProductPdfDesign $design, $productOrder): ?string
+    {
+        $attributeName = $design->accumulation_group_attribute;
+        if (!$attributeName || !$productOrder->variant) {
+            return null;
+        }
+
+        foreach ($productOrder->resolved_attributes_values as $attr) {
+            $attrName = $attr['attribute']['name'] ?? '';
+            if (stripos($attrName, $attributeName) !== false) {
+                $value = trim((string) ($attr['value'] ?? ''));
+                return $value !== '' ? $value : null;
+            }
+        }
+
+        return null;
+    }
+
+    private static function generarPdfConsolidado(ProductPdfDesign $design, string $fecha, array $items): void
+    {
+        $cellPage = self::celdaDelDesign($design);
+        if (!$cellPage) {
+            Log::warning('AccumulatingPdfDesignService: el diseño no tiene una página de celda válida', ['design_id' => $design->id]);
+            return;
+        }
+
+        $cellW = (float) ($cellPage['sheet']['width_cm'] ?? 4.5);
+        $cellH = (float) ($cellPage['sheet']['height_cm'] ?? 3.5);
+        $gap = (float) ($design->accumulation_gap_cm ?? 0.3);
+        $hasGroups = !empty($design->accumulation_group_attribute);
+        $headerH = $hasGroups ? self::HEADER_HEIGHT_CM : 0.0;
+
+        $availableW = self::SHEET_WIDTH_CM - 2 * self::MARGIN_X_CM;
+        $availableH = self::SHEET_HEIGHT_CM - self::MARGIN_TOP_CM - $headerH - self::MARGIN_TOP_CM;
+        $cols = (int) ($design->accumulation_cols ?: max(1, (int) floor(($availableW + $gap) / ($cellW + $gap))));
+        $rows = (int) ($design->accumulation_rows ?: max(1, (int) floor(($availableH + $gap) / ($cellH + $gap))));
+        $porPagina = max(1, $cols * $rows);
+
+        // Agrupa manteniendo el orden de llegada de los pedidos.
+        $grupos = [];
+        foreach ($items as $item) {
+            $grupos[$item['group_value'] ?? '__sin_grupo__'][] = $item;
+        }
+
+        $pages = [];
+        foreach ($grupos as $groupValue => $itemsDelGrupo) {
+            foreach (array_chunk($itemsDelGrupo, $porPagina) as $chunk) {
+                $pages[] = self::armarPagina(
+                    $cellPage,
+                    $chunk,
+                    $cols,
+                    $cellW,
+                    $cellH,
+                    $gap,
+                    $headerH,
+                    $hasGroups ? (string) $groupValue : null
+                );
+            }
+        }
+
+        if (!$pages) {
+            return;
+        }
+
+        self::renderizarPaginas($pages, self::archivoPdf($design->id, $fecha));
+
+        Log::info('PDF consolidado del diseño acumulable regenerado', [
+            'design_id' => $design->id,
+            'fecha' => $fecha,
+            'grupos' => array_keys($grupos),
+            'total_items' => count($items),
+            'total_paginas' => count($pages),
+        ]);
+    }
+
+    /** Página 1 de data.pages, normalizada — es la celda que se repite. */
+    private static function celdaDelDesign(ProductPdfDesign $design): ?array
+    {
+        $pages = $design->data['pages'] ?? [];
+        if (empty($pages) || !is_array($pages[0] ?? null) || empty($pages[0]['elements'])) {
+            return null;
+        }
+
+        return $pages[0];
+    }
+
+    private static function armarPagina(
+        array $cellPage,
+        array $itemsDelGrupo,
+        int $cols,
+        float $cellW,
+        float $cellH,
+        float $gap,
+        float $headerH,
+        ?string $groupValue
+    ): array {
+        $elements = [];
+
+        if ($groupValue !== null) {
+            $elements[] = EtiquetaService::resolverElementoParaItemAcumulado([
+                'id' => 'accum-header',
+                'type' => 'text',
+                'x_cm' => self::MARGIN_X_CM,
+                'y_cm' => 0.15,
+                'width_cm' => self::SHEET_WIDTH_CM - 2 * self::MARGIN_X_CM,
+                'height_cm' => $headerH - 0.1,
+                'value_mode' => 'fixed',
+                'content' => mb_strtoupper($groupValue, 'UTF-8'),
+                'max_lines' => 1,
+                'max_chars_per_line' => 80,
+                'font_size_px' => 18,
+                'font_weight' => 700,
+                'text_align' => 'left',
+                'color' => ['mode' => 'hex', 'value' => '#000000'],
+            ], '');
+        }
+
+        foreach (array_values($itemsDelGrupo) as $i => $item) {
+            $row = intdiv($i, $cols);
+            $col = $i % $cols;
+            $offsetX = self::MARGIN_X_CM + $col * ($cellW + $gap);
+            $offsetY = self::MARGIN_TOP_CM + $headerH + $row * ($cellH + $gap);
+            $nombre = mb_strtoupper($item['nombre'], 'UTF-8');
+
+            foreach ($cellPage['elements'] as $elIdx => $el) {
+                $resuelto = EtiquetaService::resolverElementoParaItemAcumulado($el, $nombre, $item['icono'] ?? null);
+                $resuelto['id'] = ($resuelto['id'] ?? 'el') . "-item{$i}-{$elIdx}";
+                $resuelto['x_cm'] = (float) ($resuelto['x_cm'] ?? 0) + $offsetX;
+                $resuelto['y_cm'] = (float) ($resuelto['y_cm'] ?? 0) + $offsetY;
+                $elements[] = $resuelto;
+            }
+        }
+
+        return [
+            'id' => null,
+            'sheet' => ['width_cm' => self::SHEET_WIDTH_CM, 'height_cm' => self::SHEET_HEIGHT_CM],
+            'cut_lines' => null,
+            'elements' => $elements,
+        ];
+    }
+
+    /**
+     * Mismo mecanismo que EtiquetaService::generarEtiquetasDesdePaginas() para
+     * convertir páginas ya resueltas en un único PDF: una hoja por página
+     * (acá todas del mismo tamaño) renderizada con la vista del editor.
+     */
+    private static function renderizarPaginas(array $pages, string $filePath): void
+    {
+        $tmpFiles = [];
+
+        try {
+            foreach ($pages as $idx => $page) {
+                $plantilla = ['design' => ['pages' => [$page]]];
+                $product_order = (object) ['name' => '', 'firstName' => null, 'order' => (object) ['id_external' => null]];
+
+                $widthPt = $page['sheet']['width_cm'] * self::CM_TO_PT;
+                $heightPt = $page['sheet']['height_cm'] * self::CM_TO_PT;
+
+                $pdf = Pdf::loadView('tematica.editor.RENDER', compact('plantilla', 'product_order'))
+                    ->setPaper([0, 0, $widthPt, $heightPt]);
+                $dompdf = $pdf->getDomPDF();
+                $dompdf->getOptions()->setFontDir(public_path('fonts'));
+
+                $tmpPath = "{$filePath}.tmp{$idx}.pdf";
+                $pdf->save($tmpPath);
+                $tmpFiles[] = $tmpPath;
+            }
+
+            if (count($tmpFiles) === 1) {
+                rename($tmpFiles[0], $filePath);
+                return;
+            }
+
+            $fpdi = new Fpdi();
+            foreach ($tmpFiles as $tmpFile) {
+                $pageCount = $fpdi->setSourceFile($tmpFile);
+                for ($page = 1; $page <= $pageCount; $page++) {
+                    $tplId = $fpdi->importPage($page);
+                    $size = $fpdi->getTemplateSize($tplId);
+                    $fpdi->AddPage($size['orientation'], [$size['width'], $size['height']]);
+                    $fpdi->useTemplate($tplId);
+                }
+            }
+            $fpdi->Output($filePath, 'F');
+            foreach ($tmpFiles as $tmpFile) {
+                @unlink($tmpFile);
+            }
+        } catch (\Throwable $e) {
+            foreach ($tmpFiles as $tmpFile) {
+                @unlink($tmpFile);
+            }
+            Log::error('Error renderizando PDF consolidado acumulable', ['error' => $e->getMessage()]);
+            throw $e;
+        }
+    }
+
+    private static function fechaCarpeta($fechaCompra): string
+    {
+        return $fechaCompra
+            ? Carbon::parse($fechaCompra)->setTimezone('America/Argentina/Buenos_Aires')->format('d-m-Y')
+            : Carbon::now('America/Argentina/Buenos_Aires')->format('d-m-Y');
+    }
+
+    private static function dirDelDesign(int $designId): string
+    {
+        return storage_path("app/pdf/disenos-acumulables/{$designId}");
+    }
+
+    private static function archivoJson(int $designId, string $fecha): string
+    {
+        return self::dirDelDesign($designId) . "/{$fecha}.json";
+    }
+
+    private static function archivoPdf(int $designId, string $fecha): string
+    {
+        return self::dirDelDesign($designId) . "/{$fecha}.pdf";
+    }
+
+    private static function leerItemsDelDia(int $designId, string $fecha): array
+    {
+        $jsonFile = self::archivoJson($designId, $fecha);
+        if (!file_exists($jsonFile)) {
+            return [];
+        }
+
+        return json_decode(file_get_contents($jsonFile), true) ?? [];
+    }
+
+    private static function guardarItemsDelDia(int $designId, string $fecha, array $items): void
+    {
+        $dir = self::dirDelDesign($designId);
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+
+        file_put_contents(self::archivoJson($designId, $fecha), json_encode($items, JSON_PRETTY_PRINT));
+    }
+}

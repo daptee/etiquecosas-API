@@ -17,12 +17,26 @@ class ProductPdfDesign extends Model
         'data',
         'is_published',
         'status_id',
+        'fill_mode',
+        'accumulation_group_attribute',
+        'accumulation_cols',
+        'accumulation_rows',
+        'accumulation_gap_cm',
     ];
 
     protected $casts = [
         'data' => 'array',
         'is_published' => 'boolean',
+        'accumulation_cols' => 'integer',
+        'accumulation_rows' => 'integer',
+        'accumulation_gap_cm' => 'float',
     ];
+
+    /** Diseño que se completa solo, página a página, a medida que entran pedidos del día (ver AccumulatingPdfDesignService) en vez de generar un PDF nuevo por pedido. */
+    public function esAcumulable(): bool
+    {
+        return ($this->fill_mode ?? 'single') === 'accumulating';
+    }
 
     public function labelShape()
     {

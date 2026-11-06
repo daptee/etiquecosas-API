@@ -1351,6 +1351,19 @@ class EtiquetaService
     }
 
     /**
+     * Mismo resolverElementoDesign() de siempre, pero para UN elemento de una
+     * celda de diseño "acumulable" (ver AccumulatingPdfDesignService) — un
+     * ítem ya guardado en el JSON del día, sin $productOrder en vivo detrás.
+     * Esas celdas solo usan nombre + ícono (sin apellido/color del
+     * cliente/atributos dinámicos: no aplican a un diseño que se arma con
+     * pedidos de ventas distintas).
+     */
+    public static function resolverElementoParaItemAcumulado(array $el, string $nombre, ?string $customIcon = null): array
+    {
+        return self::resolverElementoDesign($el, $nombre, null, null, null, $customIcon);
+    }
+
+    /**
      * Fondo a dibujar (ver PDF_FONDO_ELEMENTOS.md): `fill`, o el formato viejo
      * de la etiqueta si no viene. Con imagen agrega resolved_image_path
      * (absoluto) y, en etiquetas con forma custom, resolved_clipped_image_path
