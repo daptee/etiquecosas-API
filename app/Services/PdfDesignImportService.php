@@ -663,7 +663,16 @@ class PdfDesignImportService
 
         usort($lines, fn($a, $b) => $b['y'] <=> $a['y']); // de arriba hacia abajo
 
-        $content = trim(implode(' ', array_map(fn($l) => trim($l['text']), $lines)));
+        // dompdf a veces emite un renglón extra vacío dentro de la misma
+        // celda (variación de cómo cachea las métricas de fuente entre
+        // celdas — ver nota de line_height más abajo en el archivo), que sin
+        // filtrar se traducía en un espacio de más al unir ("NOMBRE" +
+        // "" + "APELLIDO" = "NOMBRE  APELLIDO", doble espacio) en algunas
+        // celdas de una grilla y no en otras.
+        $content = trim(implode(' ', array_filter(
+            array_map(fn($l) => trim($l['text']), $lines),
+            fn($t) => $t !== ''
+        )));
         $fontSizePt = $lines[0]['fontSizePt'] ?? 12.0;
         $color = $lines[0]['color'] ?? '#000000';
 
@@ -863,7 +872,11 @@ class PdfDesignImportService
         // renglón, no en el Y absoluto de la página.
         usort($localLines, fn($a, $b) => $b['perp'] <=> $a['perp']);
 
-        $content = trim(implode(' ', array_map(fn($l) => trim($l['text']), $localLines)));
+        // Mismo filtro de renglones vacíos que textsToTextElement() (ver ahí).
+        $content = trim(implode(' ', array_filter(
+            array_map(fn($l) => trim($l['text']), $localLines),
+            fn($t) => $t !== ''
+        )));
         $fontSizePt = $localLines[0]['fontSizePt'];
         $color = $localLines[0]['color'];
 

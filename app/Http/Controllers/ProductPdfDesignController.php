@@ -462,6 +462,8 @@ class ProductPdfDesignController extends Controller
 
                 $this->applyMaxiLabelShape($page, $viewPaths[$idx] ?? null);
 
+                $this->applyPlanchableLabelShape($page, $viewPaths[$idx] ?? null);
+
                 $this->applySuperMiniLabelShape($page, $viewPaths[$idx] ?? null);
 
                 $this->applyViniloLabelShape($page, $viewPaths[$idx] ?? null);
@@ -1885,6 +1887,56 @@ class ProductPdfDesignController extends Controller
      * real de la compra (`EtiquetaService::resolverElementoDesign` solo
      * resuelve `dynamic`/`editable_field` marcados).
      */
+    /**
+     * Vistas "planchable/PERSONALIZABLE*" (ver tematica/planchable/
+     * PERSONALIZABLE.blade.php y la variante "SIN ICONO"): celda simple
+     * ícono+nombre dentro de un recuadro con borde fijo — SIN color de fondo
+     * propio, el color de `$plantilla` pinta el NOMBRE (`.texto2`), no el
+     * recuadro, igual que "spot". Es la única familia "PERSONALIZABLE" que no
+     * encaja en ninguno de los patrones de applyMaxiLabelShape() (celda
+     * fusionada en dos grillas), applySpotLabelShape() (celda circular) ni
+     * applySuperMiniLabelShape() (clase CSS "super-mini" + tamaño exacto de
+     * catálogo) — sin esto, el ícono y el color del nombre quedaban fijos
+     * (icon_id/color de catálogo) en vez de salir ya marcados
+     * `editable_by_customer`/`editable_field` para que una venta real los
+     * reemplace por lo que eligió el cliente.
+     */
+    private function applyPlanchableLabelShape(array &$page, ?string $viewPath): void
+    {
+        if (!$viewPath || !str_contains($viewPath, 'planchable') || !str_contains($viewPath, 'PERSONALIZABLE') || empty($page['grids'])) {
+            return;
+        }
+
+        $indexById = [];
+        foreach ($page['elements'] as $index => $el) {
+            $indexById[$el['id']] = $index;
+        }
+
+        foreach ($page['grids'] as $grid) {
+            $cellIdLists = [$grid['template']];
+            foreach ($grid['members'] as $member) {
+                $cellIdLists[] = array_column(array_filter($member), 'id');
+            }
+
+            foreach ($cellIdLists as $ids) {
+                foreach ($ids as $id) {
+                    $index = $indexById[$id] ?? null;
+                    if ($index === null) {
+                        continue;
+                    }
+                    $elType = $page['elements'][$index]['type'] ?? null;
+                    if ($elType === 'icon') {
+                        $page['elements'][$index]['editable_by_customer'] = true;
+                        $page['elements'][$index]['editable_field'] = 'icon';
+                    } elseif ($elType === 'text') {
+                        $page['elements'][$index]['editable_by_customer'] = true;
+                        $page['elements'][$index]['editable_field'] = 'color';
+                    }
+                }
+            }
+        }
+    }
+
     private function applySuperMiniLabelShape(array &$page, ?string $viewPath): void
     {
         if (!$viewPath || empty($page['grids'])) {
