@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Validator;
 use App\Traits\FindObject;
 use App\Traits\ApiResponse;
 use App\Traits\Auditable;
+use ZipArchive;
 
 class ProductPdfDesignController extends Controller
 {
@@ -1264,6 +1265,26 @@ class ProductPdfDesignController extends Controller
                 'message' => 'No se pudo generar la vista previa',
                 'error' => EtiquetaService::$lastRenderError ?? 'Sin más detalle — revisar storage/logs/laravel.log',
             ], 500);
+        }
+
+        // Diseño con 2+ páginas: generarEtiquetasDesdeDesign() ahora devuelve
+        // un PDF por página (ver EtiquetaService::generarEtiquetasDesdePaginas,
+        // $separarPorPagina) en vez de uno solo combinado — una respuesta HTTP
+        // normal no puede servir varios archivos, así que se empaquetan en un
+        // ZIP. Con 1 sola página se sigue devolviendo el PDF tal cual.
+        if (count($paths) > 1) {
+            $zipPath = $paths[0] . '.zip';
+            $zip = new ZipArchive();
+            if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
+                foreach ($paths as $path) {
+                    if (file_exists($path)) {
+                        $zip->addFile($path, basename($path));
+                    }
+                }
+                $zip->close();
+
+                return response()->download($zipPath, basename($zipPath))->deleteFileAfterSend(true);
+            }
         }
 
         return response()->file($paths[0]);

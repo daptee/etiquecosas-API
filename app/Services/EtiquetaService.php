@@ -343,9 +343,14 @@ class EtiquetaService
         $pages = self::normalizarPaginasDesign($design->data ?? []);
         $sufijo = self::limpiarNombreArchivo(strtoupper($design->name ?: 'DESIGN'));
 
+        // Un diseño con 2+ páginas (data.pages[]) sale en un PDF SEPARADO por
+        // página, con "-N" al final del nombre de archivo — como antes de
+        // agrupar/fusionar con FPDI (ver generarEtiquetasDesdePaginas). No se
+        // aplica a "páginas combinadas" (generarEtiquetasDesdeDesignsMultiples),
+        // que sigue armando un único PDF — ver PDF_PAGINAS_COMBINADAS.md.
         return self::generarEtiquetasDesdePaginas(
             $ventaId, $pages, $sufijo, "design:{$design->id}", $productOrder,
-            $nombres, $customColor, $customIcon, $fechaCompra, $firstNames, $lastNames, $cutLines
+            $nombres, $customColor, $customIcon, $fechaCompra, $firstNames, $lastNames, $cutLines, true
         );
     }
 
@@ -396,7 +401,7 @@ class EtiquetaService
      * $cutLines: en vez del arte, un PDF SOLO con las líneas de corte de
      * las etiquetas (ver generarPdfLineasDeCorte). No pasa por dompdf.
      */
-    private static function generarEtiquetasDesdePaginas(int $ventaId, array $pages, string $sufijo, string $logId, $productOrder, array $nombres, $customColor, $customIcon, $fechaCompra = null, array $firstNames = [], array $lastNames = [], bool $cutLines = false): array
+    private static function generarEtiquetasDesdePaginas(int $ventaId, array $pages, string $sufijo, string $logId, $productOrder, array $nombres, $customColor, $customIcon, $fechaCompra = null, array $firstNames = [], array $lastNames = [], bool $cutLines = false, bool $separarPorPagina = false): array
     {
         self::$lastRenderError = null;
         $outputFiles = [];
@@ -427,6 +432,45 @@ class EtiquetaService
                 continue;
             }
 
+            $product_order = (object)[
+                'name' => $nombre,
+                'firstName' => $firstNames[$idx] ?? null,
+                'order' => (object)['id_external' => $ventaId],
+            ];
+
+            // Un diseño de un solo producto con 2+ páginas: cada página su
+            // propio PDF (como antes del editor, cuando cada "vista" salía en
+            // un archivo aparte terminado en "-N") — en vez de combinarlas en
+            // un único documento.
+            if ($separarPorPagina && count($resolvedPages) > 1) {
+                foreach ($resolvedPages as $pageIdx => $page) {
+                    $sufijoArchivo = count($nombres) > 1 ? ($idx + 1) . '-' . ($pageIdx + 1) : (string) ($pageIdx + 1);
+                    $filePath = "{$dirPath}/{$ventaId}-{$productOrder->id}-{$productOrder->product->name}-{$sufijo}-{$sufijoArchivo}.pdf";
+
+                    $plantilla = ['design' => ['pages' => [$page]]];
+                    $widthPt = (float) ($page['sheet']['width_cm'] ?? 18.5) * self::CM_TO_PT;
+                    $heightPt = (float) ($page['sheet']['height_cm'] ?? 29) * self::CM_TO_PT;
+
+                    try {
+                        $pdf = Pdf::loadView('tematica.editor.RENDER', compact('plantilla', 'product_order'))
+                            ->setPaper([0, 0, $widthPt, $heightPt]);
+                        $dompdf = $pdf->getDomPDF();
+                        $dompdf->getOptions()->setFontDir(public_path('fonts'));
+                        $pdf->save($filePath);
+
+                        $outputFiles[] = $filePath;
+                        Log::info("✅ PDF (editor, página " . ($pageIdx + 1) . ") generado", ['path' => $filePath]);
+                    } catch (\Throwable $e) {
+                        Log::error("❌ Error generando PDF desde diseño del editor (página " . ($pageIdx + 1) . ")", [
+                            'log_id' => $logId,
+                            'error' => $e->getMessage(),
+                        ]);
+                        self::$lastRenderError = $e->getMessage();
+                    }
+                }
+                continue;
+            }
+
             // dompdf fija el tamaño físico del PDF una sola vez para todo el
             // documento: hojas con sheet.width_cm/height_cm distintos no pueden
             // convivir en el mismo archivo sin que unas se corten o queden con
@@ -435,12 +479,6 @@ class EtiquetaService
             // esa hoja) y se fusionan con FPDI en el único archivo final,
             // igual que ya hace app/Console/Commands/GenerarEtiquetas.php.
             $grupos = self::agruparPaginasPorTamano($resolvedPages);
-
-            $product_order = (object)[
-                'name' => $nombre,
-                'firstName' => $firstNames[$idx] ?? null,
-                'order' => (object)['id_external' => $ventaId],
-            ];
 
             $filePath = "{$dirPath}/{$ventaId}-{$productOrder->id}-{$productOrder->product->name}-{$sufijo}-" . ($idx + 1) . ".pdf";
             $tmpFiles = [];
