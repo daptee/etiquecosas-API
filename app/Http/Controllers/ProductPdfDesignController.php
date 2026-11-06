@@ -863,6 +863,10 @@ class ProductPdfDesignController extends Controller
         $rules['accumulationCols'] = 'nullable|integer|min:1|max:50';
         $rules['accumulationRows'] = 'nullable|integer|min:1|max:50';
         $rules['accumulationGapCm'] = 'nullable|numeric|min:0|max:10';
+        // Pedido con cantidad > 1 en un diseño acumulable: "duplicate"
+        // (default) repite la celda esa cantidad de veces; "badge" dibuja una
+        // sola celda + un cartelito "xN" al lado (como ya hace hoy Cintas).
+        $rules['accumulationQuantityMode'] = 'nullable|in:duplicate,badge';
         // Diseño con 2+ páginas (data.pages[]): "separate" (default) = un PDF
         // por página, sufijo "-1"/"-2"...; "combined" = todas en un único PDF.
         // Ver EtiquetaService::generarEtiquetasDesdeDesign().
@@ -894,6 +898,7 @@ class ProductPdfDesignController extends Controller
             'accumulation_cols' => $request->input('accumulationCols', $design->accumulation_cols),
             'accumulation_rows' => $request->input('accumulationRows', $design->accumulation_rows),
             'accumulation_gap_cm' => $request->input('accumulationGapCm', $design->accumulation_gap_cm),
+            'accumulation_quantity_mode' => $request->input('accumulationQuantityMode', $design->accumulation_quantity_mode),
             'pages_output_mode' => $request->input('pagesOutputMode', $design->pages_output_mode),
         ]);
 

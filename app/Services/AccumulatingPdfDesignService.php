@@ -25,6 +25,11 @@ use setasign\Fpdi\Fpdi;
  * si el diseño lo configuró (ej. "Color banda 1"), igual que BandaService
  * agrupa por color — pero genérico a cualquier atributo o ningún atributo.
  *
+ * Un pedido con cantidad > 1 se resuelve según
+ * `design.accumulation_quantity_mode` (ver duplicaCeldaPorCantidad()):
+ * "duplicate" (default) repite la celda N veces; "badge" deja una sola celda
+ * + un cartelito "xN" al lado, como ya hace CintaCoserService/CintaPlancharService.
+ *
  * Limitaciones de esta primera versión (no las necesita un diseño de celda
  * simple: nombre + ícono opcional, que es todo lo que usa BandaService hoy):
  * - Solo se usa la página 1 del diseño; el resto se ignora.
@@ -42,6 +47,9 @@ class AccumulatingPdfDesignService
     private const MARGIN_TOP_CM = 1.0;
     private const HEADER_HEIGHT_CM = 1.0;
     private const CM_TO_PT = 72 / 2.54;
+    // Ancho reservado al lado de la celda para el cartelito "xN", en modo
+    // accumulation_quantity_mode = "badge" (ver duplicaCeldaPorCantidad()).
+    private const BADGE_WIDTH_CM = 1.0;
 
     /**
      * Suma (o reemplaza, si ya existía) el pedido de este productOrder al PDF
@@ -149,16 +157,33 @@ class AccumulatingPdfDesignService
         $hasGroups = !empty($design->accumulation_group_attribute);
         $headerH = $hasGroups ? self::HEADER_HEIGHT_CM : 0.0;
 
+        // Un pedido con cantidad > 1 (ej. "x3" cintas del mismo nombre) se
+        // resuelve de dos formas configurables (accumulation_quantity_mode):
+        // "duplicate" (default) repite la celda esa cantidad de veces como
+        // etiquetas FÍSICAS separadas; "badge" deja UNA sola celda y le suma
+        // un cartelito "xN" al lado (como ya hace hoy Cintas Coser/Planchar),
+        // reservando ese ancho extra en cada columna de la grilla.
+        $duplicarPorCantidad = $design->duplicaCeldaPorCantidad();
+        $badgeW = $duplicarPorCantidad ? 0.0 : self::BADGE_WIDTH_CM;
+        $slotW = $cellW + $badgeW;
+
         $availableW = self::SHEET_WIDTH_CM - 2 * self::MARGIN_X_CM;
         $availableH = self::SHEET_HEIGHT_CM - self::MARGIN_TOP_CM - $headerH - self::MARGIN_TOP_CM;
-        $cols = (int) ($design->accumulation_cols ?: max(1, (int) floor(($availableW + $gap) / ($cellW + $gap))));
+        $cols = (int) ($design->accumulation_cols ?: max(1, (int) floor(($availableW + $gap) / ($slotW + $gap))));
         $rows = (int) ($design->accumulation_rows ?: max(1, (int) floor(($availableH + $gap) / ($cellH + $gap))));
         $porPagina = max(1, $cols * $rows);
 
         // Agrupa manteniendo el orden de llegada de los pedidos.
         $grupos = [];
         foreach ($items as $item) {
-            $grupos[$item['group_value'] ?? '__sin_grupo__'][] = $item;
+            if ($duplicarPorCantidad) {
+                $cantidad = max(1, (int) ($item['cantidad'] ?? 1));
+                for ($i = 0; $i < $cantidad; $i++) {
+                    $grupos[$item['group_value'] ?? '__sin_grupo__'][] = $item;
+                }
+            } else {
+                $grupos[$item['group_value'] ?? '__sin_grupo__'][] = $item;
+            }
         }
 
         $pages = [];
@@ -172,7 +197,8 @@ class AccumulatingPdfDesignService
                     $cellH,
                     $gap,
                     $headerH,
-                    $hasGroups ? (string) $groupValue : null
+                    $hasGroups ? (string) $groupValue : null,
+                    $duplicarPorCantidad ? 0.0 : $badgeW
                 );
             }
         }
@@ -211,7 +237,8 @@ class AccumulatingPdfDesignService
         float $cellH,
         float $gap,
         float $headerH,
-        ?string $groupValue
+        ?string $groupValue,
+        float $badgeW = 0.0
     ): array {
         $elements = [];
 
@@ -237,7 +264,7 @@ class AccumulatingPdfDesignService
         foreach (array_values($itemsDelGrupo) as $i => $item) {
             $row = intdiv($i, $cols);
             $col = $i % $cols;
-            $offsetX = self::MARGIN_X_CM + $col * ($cellW + $gap);
+            $offsetX = self::MARGIN_X_CM + $col * ($cellW + $badgeW + $gap);
             $offsetY = self::MARGIN_TOP_CM + $headerH + $row * ($cellH + $gap);
             $nombre = mb_strtoupper($item['nombre'], 'UTF-8');
 
@@ -247,6 +274,27 @@ class AccumulatingPdfDesignService
                 $resuelto['x_cm'] = (float) ($resuelto['x_cm'] ?? 0) + $offsetX;
                 $resuelto['y_cm'] = (float) ($resuelto['y_cm'] ?? 0) + $offsetY;
                 $elements[] = $resuelto;
+            }
+
+            $cantidad = max(1, (int) ($item['cantidad'] ?? 1));
+            if ($badgeW > 0 && $cantidad > 1) {
+                $elements[] = EtiquetaService::resolverElementoParaItemAcumulado([
+                    'id' => "accum-badge-item{$i}",
+                    'type' => 'text',
+                    'x_cm' => $offsetX + $cellW + 0.1,
+                    'y_cm' => $offsetY,
+                    'width_cm' => $badgeW - 0.1,
+                    'height_cm' => $cellH,
+                    'value_mode' => 'fixed',
+                    'content' => 'x' . $cantidad,
+                    'max_lines' => 1,
+                    'max_chars_per_line' => 10,
+                    'font_size_px' => 14,
+                    'font_weight' => 400,
+                    'text_align' => 'left',
+                    'vertical_align' => 'middle',
+                    'color' => ['mode' => 'hex', 'value' => '#333333'],
+                ], '');
             }
         }
 

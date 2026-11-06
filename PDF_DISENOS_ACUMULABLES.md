@@ -1,8 +1,8 @@
 # Diseños "acumulables": un PDF que se va completando solo con los pedidos del día
 
-Generaliza lo que hoy hace `BandaService` (un PDF por día, por producto de bandas, que se va sumando a medida que entran pedidos) para que sea un **modo más del editor**, configurable por diseño — sin IDs de producto, colores ni vista Blade hardcodeados en el backend. Sirve para cualquier producto donde la "etiqueta" de cada pedido no se imprime sola, sino que se va acomodando junto a la de otros pedidos del mismo día en una sola hoja (o varias) que se va regenerando.
+Generaliza lo que hoy hacen `BandaService`, `CintaCoserService` y `CintaPlancharService` (un PDF por día, por producto, que se va sumando a medida que entran pedidos) para que sea un **modo más del editor**, configurable por diseño — sin IDs de producto, colores ni vista Blade hardcodeados en el backend. Sirve para cualquier producto donde la "etiqueta" de cada pedido no se imprime sola, sino que se va acomodando junto a la de otros pedidos del mismo día en una sola hoja (o varias) que se va regenerando.
 
-`BandaService` sigue existiendo tal cual, sin tocarse — esto es un camino nuevo y en paralelo, pensado para probarse primero con un producto nuevo.
+`BandaService`/`CintaCoserService`/`CintaPlancharService` siguen existiendo tal cual, sin tocarse — esto es un camino nuevo y en paralelo, pensado para probarse primero con un producto nuevo (o de prueba) antes de migrar alguno de los existentes. **Ojo**: si se vincula un diseño acumulable al MISMO product ID que ya maneja uno de esos tres servicios, van a convivir los dos sistemas en paralelo (cada uno generando su propio PDF del día) — no hay nada que los una automáticamente.
 
 ---
 
@@ -27,6 +27,7 @@ En un diseño **acumulable**, `data.pages[0]` deja de ser la hoja — pasa a rep
 | `accumulationCols` | int \| `null` | `null` (se calcula solo) | Cuántas celdas por fila entran en una hoja. Si no se manda, se calcula automáticamente según el tamaño de la celda. |
 | `accumulationRows` | int \| `null` | `null` (se calcula solo) | Cuántas filas de celdas entran en una hoja. Igual que `accumulationCols`, se autocalcula si no se manda. |
 | `accumulationGapCm` | number | `0.3` | Separación en cm entre celdas (horizontal y vertical). |
+| `accumulationQuantityMode` | `"duplicate"` \| `"badge"` | `"duplicate"` | Cómo se imprime un pedido con cantidad > 1. Ver sección 1.1. |
 
 Ejemplo de request (editando un diseño ya creado, id `42`):
 
@@ -42,6 +43,28 @@ POST /api/product-pdf-designs/42
 ```
 
 La respuesta es el mismo `ProductPdfDesign` de siempre (`GET`/`POST /product-pdf-designs/{id}` ya lo devuelven con estos campos incluidos).
+
+---
+
+### 1.1. Pedidos con cantidad > 1: `accumulationQuantityMode`
+
+Si el campo del formulario permite pedir más de una unidad (ej. "cantidad: 3" de la misma banda/cinta), hay dos formas de que eso se vea en el PDF del día:
+
+| Valor | Resultado |
+|---|---|
+| `"duplicate"` (default) | Se repite la celda esa cantidad de veces — 3 celdas físicas idénticas, una al lado de la otra, para cortar por separado. |
+| `"badge"` | Una sola celda + un cartelito `"x3"` al lado (mismo criterio que usan hoy Cintas Coser/Planchar) — reserva un poco de ancho extra de cada celda para ese cartelito, así que las columnas por hoja salen un poco menos que con `"duplicate"`. |
+
+```json
+POST /api/product-pdf-designs/42
+{
+  "name": "Cinta para coser - x24",
+  "fillMode": "accumulating",
+  "accumulationQuantityMode": "badge"
+}
+```
+
+Un pedido con cantidad 1 se ve exactamente igual en los dos modos (nunca sale ningún cartelito).
 
 ---
 
@@ -72,6 +95,8 @@ POST /product-pdf-designs/{id}/products
 Esto reemplaza al chequeo hardcodeado de IDs de producto que tiene hoy `BandaService::esProductoBanda()` — acá cualquier producto+variante vinculado a un diseño `accumulating` entra en este modo solo.
 
 Un mismo producto puede tener, al mismo tiempo, un vínculo a un diseño normal (su etiqueta de siempre) Y un vínculo a un diseño acumulable (para sumarse al consolidado del día) — son dos vínculos distintos, ambos conviven sin pisarse, igual que hoy pasa con bandas (genera su etiqueta normal Y se agrega al PDF del día).
+
+**Varios "tipos" del mismo producto, cada uno con su propio consolidado** (ej. Cintas Coser/Planchar: "x24" y "x48" son hoy dos PDFs del día completamente separados): se resuelve con **dos diseños acumulables distintos**, cada uno vinculado a su propia variante (`themeKey`) del mismo producto — no hace falta nada especial, es el mismo mecanismo de vínculos de siempre, solo que cada variante apunta a un diseño (y por lo tanto un PDF del día) diferente.
 
 ---
 
@@ -127,7 +152,11 @@ No hay endpoint de "regenerar" para estos PDFs (el que existe es específico de 
 
 ## 6. Antes de poder usar esto en un entorno
 
-Hace falta aplicar `database/sql/alter_product_pdf_designs_add_accumulation.sql` en la base de ese entorno (agrega las columnas `fill_mode`/`accumulation_*` a `product_pdf_designs`) — todavía no está aplicado en ningún lado. Sin esto, `fillMode`/`accumulationGroupAttribute`/etc. no se pueden guardar.
+Hace falta aplicar, en orden, en la base de ese entorno:
+1. `database/sql/alter_product_pdf_designs_add_accumulation.sql` — agrega `fill_mode`/`accumulation_group_attribute`/`accumulation_cols`/`accumulation_rows`/`accumulation_gap_cm`.
+2. `database/sql/alter_product_pdf_designs_add_quantity_mode.sql` — agrega `accumulation_quantity_mode`.
+
+Todavía no están aplicados en ningún lado. Sin esto, ninguno de estos campos se puede guardar.
 
 ---
 

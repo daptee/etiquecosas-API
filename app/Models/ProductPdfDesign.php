@@ -22,6 +22,7 @@ class ProductPdfDesign extends Model
         'accumulation_cols',
         'accumulation_rows',
         'accumulation_gap_cm',
+        'accumulation_quantity_mode',
         'pages_output_mode',
     ];
 
@@ -43,6 +44,12 @@ class ProductPdfDesign extends Model
     public function paginasPorSeparado(): bool
     {
         return ($this->pages_output_mode ?? 'separate') !== 'combined';
+    }
+
+    /** Diseño acumulable con un pedido de cantidad > 1: ¿se repite la celda esa cantidad de veces (true), o se dibuja una sola celda + un cartelito "xN" (false)? Default repetir — ver AccumulatingPdfDesignService. */
+    public function duplicaCeldaPorCantidad(): bool
+    {
+        return ($this->accumulation_quantity_mode ?? 'duplicate') !== 'badge';
     }
 
     public function labelShape()
