@@ -22,6 +22,7 @@ class ProductPdfDesign extends Model
         'accumulation_cols',
         'accumulation_rows',
         'accumulation_gap_cm',
+        'pages_output_mode',
     ];
 
     protected $casts = [
@@ -36,6 +37,12 @@ class ProductPdfDesign extends Model
     public function esAcumulable(): bool
     {
         return ($this->fill_mode ?? 'single') === 'accumulating';
+    }
+
+    /** Un diseño con 2+ páginas: ¿cada una en su propio PDF (sufijo "-1", "-2"...) en vez de un único PDF combinado? Default sí — ver EtiquetaService::generarEtiquetasDesdeDesign(). */
+    public function paginasPorSeparado(): bool
+    {
+        return ($this->pages_output_mode ?? 'separate') !== 'combined';
     }
 
     public function labelShape()

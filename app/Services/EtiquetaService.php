@@ -344,13 +344,14 @@ class EtiquetaService
         $sufijo = self::limpiarNombreArchivo(strtoupper($design->name ?: 'DESIGN'));
 
         // Un diseño con 2+ páginas (data.pages[]) sale en un PDF SEPARADO por
-        // página, con "-N" al final del nombre de archivo — como antes de
-        // agrupar/fusionar con FPDI (ver generarEtiquetasDesdePaginas). No se
-        // aplica a "páginas combinadas" (generarEtiquetasDesdeDesignsMultiples),
-        // que sigue armando un único PDF — ver PDF_PAGINAS_COMBINADAS.md.
+        // página por defecto, con "-N" al final del nombre de archivo — como
+        // antes de agrupar/fusionar con FPDI (ver generarEtiquetasDesdePaginas)
+        // — configurable con $design->pages_output_mode ("separate"/"combined").
+        // No afecta a "páginas combinadas" (generarEtiquetasDesdeDesignsMultiples),
+        // que sigue armando un único PDF siempre — ver PDF_PAGINAS_COMBINADAS.md.
         return self::generarEtiquetasDesdePaginas(
             $ventaId, $pages, $sufijo, "design:{$design->id}", $productOrder,
-            $nombres, $customColor, $customIcon, $fechaCompra, $firstNames, $lastNames, $cutLines, true
+            $nombres, $customColor, $customIcon, $fechaCompra, $firstNames, $lastNames, $cutLines, $design->paginasPorSeparado()
         );
     }
 

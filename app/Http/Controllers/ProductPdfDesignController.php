@@ -861,6 +861,10 @@ class ProductPdfDesignController extends Controller
         $rules['accumulationCols'] = 'nullable|integer|min:1|max:50';
         $rules['accumulationRows'] = 'nullable|integer|min:1|max:50';
         $rules['accumulationGapCm'] = 'nullable|numeric|min:0|max:10';
+        // Diseño con 2+ páginas (data.pages[]): "separate" (default) = un PDF
+        // por página, sufijo "-1"/"-2"...; "combined" = todas en un único PDF.
+        // Ver EtiquetaService::generarEtiquetasDesdeDesign().
+        $rules['pagesOutputMode'] = 'nullable|in:separate,combined';
 
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
@@ -888,6 +892,7 @@ class ProductPdfDesignController extends Controller
             'accumulation_cols' => $request->input('accumulationCols', $design->accumulation_cols),
             'accumulation_rows' => $request->input('accumulationRows', $design->accumulation_rows),
             'accumulation_gap_cm' => $request->input('accumulationGapCm', $design->accumulation_gap_cm),
+            'pages_output_mode' => $request->input('pagesOutputMode', $design->pages_output_mode),
         ]);
 
         $design->load(['products:id,name,sku', 'labelShape', 'generalStatus', 'user:id,name,lastName']);
