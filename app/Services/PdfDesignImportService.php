@@ -665,14 +665,18 @@ class PdfDesignImportService
 
         // dompdf a veces emite un renglón extra vacío dentro de la misma
         // celda (variación de cómo cachea las métricas de fuente entre
-        // celdas — ver nota de line_height más abajo en el archivo), que sin
-        // filtrar se traducía en un espacio de más al unir ("NOMBRE" +
-        // "" + "APELLIDO" = "NOMBRE  APELLIDO", doble espacio) en algunas
-        // celdas de una grilla y no en otras.
-        $content = trim(implode(' ', array_filter(
-            array_map(fn($l) => trim($l['text']), $lines),
-            fn($t) => $t !== ''
-        )));
+        // celdas — ver nota de line_height más abajo en el archivo). Sin
+        // sacarlo del array ANTES de cualquier cálculo, no solo se unía con
+        // un espacio de más ("NOMBRE" + "" + "APELLIDO" = "NOMBRE  APELLIDO"),
+        // sino que además inflaba `count($lines)` (max_lines salía 3-4 en vez
+        // de 2) y arruinaba el promedio de separación entre renglones usado
+        // para `line_height` (el hueco grande real NOMBRE->APELLIDO se
+        // promediaba con el hueco casi nulo hacia el renglón vacío, dando un
+        // line_height mucho más chico que el real) — el texto terminaba
+        // viéndose amontonado/pisado en el editor aunque el contenido ya
+        // saliera bien.
+        $lines = array_values(array_filter($lines, fn($l) => trim($l['text']) !== ''));
+        $content = implode(' ', array_map(fn($l) => trim($l['text']), $lines));
         $fontSizePt = $lines[0]['fontSizePt'] ?? 12.0;
         $color = $lines[0]['color'] ?? '#000000';
 
@@ -872,11 +876,11 @@ class PdfDesignImportService
         // renglón, no en el Y absoluto de la página.
         usort($localLines, fn($a, $b) => $b['perp'] <=> $a['perp']);
 
-        // Mismo filtro de renglones vacíos que textsToTextElement() (ver ahí).
-        $content = trim(implode(' ', array_filter(
-            array_map(fn($l) => trim($l['text']), $localLines),
-            fn($t) => $t !== ''
-        )));
+        // Mismo filtro de renglones vacíos que textsToTextElement() (ver ahí) —
+        // se saca del array ANTES de calcular cantidad de renglones/line_height,
+        // no solo al armar el `content`.
+        $localLines = array_values(array_filter($localLines, fn($l) => trim($l['text']) !== ''));
+        $content = implode(' ', array_map(fn($l) => trim($l['text']), $localLines));
         $fontSizePt = $localLines[0]['fontSizePt'];
         $color = $localLines[0]['color'];
 
