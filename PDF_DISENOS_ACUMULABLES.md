@@ -81,6 +81,40 @@ Elementos típicos de esta celda:
 - `layout_groups` (el anclaje relativo ícono+texto) — las posiciones de los elementos se usan tal cual se guardaron.
 - Apellido, color elegido por el cliente o fecha/número de pedido como campos dinámicos del nombre — esos datos son de un pedido puntual y no tienen sentido en un PDF que mezcla pedidos de ventas distintas. Solo `nombre_apellido` (al nombre completo del campo del formulario) e ícono están disponibles.
 
+### 2.1. Cintas Coser/Planchar: tamaño de letra según largo del nombre
+
+`CintaCoserService`/`CintaPlancharService` achican la fuente del nombre a mano si es muy largo (si no, se sale de la etiqueta o se corta) — esto **no es automático** en el modo acumulable, hay que configurarlo en el elemento `text` del nombre con `font_size_rules` (+ `length_rules_enabled: true` para que el editor lo muestre activado), igual que cualquier otro diseño del editor (ver `PDF_EDITOR.md`, columna `font_size_rules`).
+
+Los umbrales de las vistas legacy (`resources/views/cintas-coser/consolidado.blade.php` y `cintas-planchar/consolidado.blade.php`, idénticos en ambas) son por cantidad de caracteres del nombre ya completo, sobre una base de 12pt (16px):
+
+| Caracteres | Legacy | `font_size_px` equivalente |
+|---|---|---|
+| hasta 16 | `1.1em` | `18` |
+| hasta 25 | `0.9em` | `14` |
+| más de 25 | `0.7em` | `11` |
+
+```json
+{
+  "id": "nombre", "type": "text",
+  "x_cm": 0.3, "y_cm": 1.0, "width_cm": 3.9, "height_cm": 1.0,
+  "value_mode": "dynamic", "dynamic_field": "nombre_apellido",
+  "max_lines": 1, "max_chars_per_line": 30,
+  "font_size_px": 18,
+  "length_rules_enabled": true,
+  "font_size_rules": [
+    { "max_chars": 16, "font_size_px": 18 },
+    { "max_chars": 25, "font_size_px": 14 },
+    { "max_chars": null, "font_size_px": 11 }
+  ],
+  "text_align": "center",
+  "color": { "mode": "hex", "value": "#FFFFFF" }
+}
+```
+
+`font_size_px` (el de arriba, fuera de las reglas) queda como tamaño por defecto si el nombre resuelto no matchea ninguna regla — en la práctica no pasa nunca acá porque la última regla (`max_chars: null`) ya cubre "el resto", pero conviene dejarlo en el mismo valor que la primera regla.
+
+`CintaCoserService` tiene además una variante "grande" (etiquetas de 6×2.5cm, para pegar) con sus propios umbrales/tamaños — si se necesita replicar también esa variante, es **otro diseño acumulable más** (mismo producto, otra `variantId`/`themeKey`), con su propio `font_size_rules` (10/18 caracteres, 22/18/15pt sin ícono o 20/16/14pt con ícono — ver el bloque `$esGrande` en `cintas-coser/consolidado.blade.php`).
+
 ---
 
 ## 3. Vincular el producto — sin cambios

@@ -472,6 +472,8 @@ class ProductPdfDesignController extends Controller
 
                 $this->applyLegacyTextSizeRules($page, $viewPaths[$idx] ?? null);
 
+                $this->applyInlineLengthFontSizeRules($page, $viewPaths[$idx] ?? null);
+
                 if ($esSoloNombre) {
                     $this->applyStarsDecoration($page, $tematicaCoincidente);
                 }
@@ -2784,6 +2786,313 @@ class ProductPdfDesignController extends Controller
     }
 
     /**
+     * Qué grilla de `$page['grids']` corresponde a una clase CSS que varía
+     * por longitud de nombre (`$className`) — extraído de
+     * `applyLegacyTextSizeRules()` para reusarlo también desde
+     * `applyInlineLengthFontSizeRules()` (mismo problema, dos formas
+     * distintas de detectar los NIVELES: clases `.normal/.small/.extra-
+     * small-text-size` vs. un `if/elseif/else` de PHP inline — pero una vez
+     * que se sabe el nombre de clase, encontrar SU grilla es idéntico).
+     * Devuelve `null` si no se pudo resolver una única candidata; si
+     * resuelve una, la marca en `$claimedGridIndexes` para que ninguna otra
+     * clase se la robe.
+     */
+    private function resolveGridIndexForClassName(
+        string $className,
+        array $page,
+        string $content,
+        ?string $sharedContent,
+        array $elementsById,
+        \Closure $gridHasText,
+        array &$claimedGridIndexes
+    ): ?int {
+        $gridIndex = null;
+
+        // Prioridad 1: geometría. `$className` es siempre el contenedor
+        // INTERNO de una forma (ej. "etiqueta-super-mini-content-
+        // container") — su forma EXTERNA (sacando el sufijo) trae un
+        // `width`/`height` en cm fijos en el CSS (ver `.etiqueta-super-
+        // mini { width: 2.9cm; height: 1.15cm }`), igual que
+        // `applySuperMiniLabelShape()`. Esto resuelve vistas tipo
+        // `tematica/principal/*` que combinan maxi+vertical+super-maxi+
+        // super-mini SIN ningún `@for` (todo `<td>` repetido a mano): ahí
+        // `countRepeatedClassOccurrences()` no cuenta nada y las 3+
+        // clases con niveles ("maxi", "super-maxi", "super-mini") dejan
+        // más de una grilla sin reclamar con texto, así que el fallback
+        // de "única grilla candidata" de más abajo tampoco alcanza a
+        // resolver ninguna. La tolerancia de 0.1cm absorbe una vista
+        // puntual como "vertical", cuyo elemento medido difiere en 0.05cm
+        // del `width`/`height` declarado en el CSS (padding/borde).
+        $baseClassName = preg_replace('/-content-container$/', '', $className);
+        $boxDimensions = $this->extractClassBoxDimensions($content, $baseClassName)
+            ?? ($sharedContent !== null ? $this->extractClassBoxDimensions($sharedContent, $baseClassName) : null);
+        if ($boxDimensions) {
+            [$targetWidth, $targetHeight] = $boxDimensions;
+            foreach ($page['grids'] as $idx => $grid) {
+                if (in_array($idx, $claimedGridIndexes, true) || !$gridHasText($grid)) {
+                    continue;
+                }
+                $templateBgIndex = null;
+                foreach ($grid['template'] as $id) {
+                    $i = $elementsById[$id] ?? null;
+                    if ($i !== null && ($page['elements'][$i]['type'] ?? null) === 'background') {
+                        $templateBgIndex = $i;
+                        break;
+                    }
+                }
+                if ($templateBgIndex === null) {
+                    continue;
+                }
+                $templateBg = $page['elements'][$templateBgIndex];
+                if (abs((float) $templateBg['width_cm'] - $targetWidth) <= 0.1 && abs((float) $templateBg['height_cm'] - $targetHeight) <= 0.1) {
+                    $gridIndex = $idx;
+                    break;
+                }
+            }
+        }
+
+        $count = $gridIndex === null ? $this->countRepeatedClassOccurrences($content, $className) : null;
+
+        if ($gridIndex !== null) {
+            // ya resuelto por geometría.
+        } elseif ($count) {
+            // Una misma cantidad de celdas puede coincidir con MÁS de una
+            // grilla (ej. la tabla "maxi" arma una grilla para el fondo
+            // del ícono y otra, aparte, para el fondo del texto — ambas
+            // 6×3, ninguna es "la" grilla de texto per se) — de las
+            // candidatas sin reclamar se prefiere la que REALMENTE tiene
+            // un elemento de texto adentro.
+            foreach ($page['grids'] as $idx => $grid) {
+                if (in_array($idx, $claimedGridIndexes, true)) {
+                    continue;
+                }
+                if (((int) $grid['cols']) * ((int) $grid['rows']) !== $count) {
+                    continue;
+                }
+                if ($gridHasText($grid)) {
+                    $gridIndex = $idx;
+                    break;
+                }
+            }
+        } elseif (preg_match('/class=["\']' . preg_quote($className, '/') . '(?=["\'\s])/', $content)) {
+            // `countRepeatedClassOccurrences()` no pudo contar, pero la
+            // clase SÍ aparece en ESTA vista (ej. un `@for` con límite
+            // variable en vez de un número literal, como `tematica/
+            // super-mini/*.blade.php`: `@for ($i = 0; $i <
+            // $plantilla['filas']; $i++)`) — si la página tiene una única
+            // grilla sin reclamar con texto adentro, es la única
+            // candidata posible, no hace falta el conteo para elegirla.
+            // El chequeo de que la clase aparezca acá es clave: sin él,
+            // una clase de OTRA forma sin relación (ej. "Super Maxi",
+            // que convive en el mismo `etiquetas.css` compartido pero
+            // esta vista puntual ni usa) también caería acá y se robaría
+            // la única grilla disponible con SUS tamaños, no los de la
+            // clase real de esta vista.
+            $unclaimedWithText = [];
+            foreach ($page['grids'] as $idx => $grid) {
+                if (!in_array($idx, $claimedGridIndexes, true) && $gridHasText($grid)) {
+                    $unclaimedWithText[] = $idx;
+                }
+            }
+            if (count($unclaimedWithText) === 1) {
+                $gridIndex = $unclaimedWithText[0];
+            }
+        }
+        if ($gridIndex === null) {
+            return null;
+        }
+        $claimedGridIndexes[] = $gridIndex;
+
+        return $gridIndex;
+    }
+
+    /**
+     * Mismo objetivo que `extractTextSizeTiersFromView()` (umbrales de
+     * tamaño de fuente por longitud del nombre) pero para la OTRA forma en
+     * que las vistas legacy lo escriben: no con clases CSS `.normal/.small/
+     * .extra-small-text-size`, sino con un `if/elseif/else` de PHP inline
+     * dentro del propio `.blade.php` que arma un string de font-size a mano
+     * (ej. `tematica/planchable/PERSONALIZABLE.blade.php`, `cintas-coser/
+     * consolidado.blade.php`, `cintas-planchar/consolidado.blade.php`):
+     *
+     *   $nameLength = mb_strlen($nombre, 'UTF-8'); // o Str::length(...)
+     *   if ($nameLength <= 16) { $fontsize = '1.1em'; }
+     *   elseif ($nameLength <= 25) { $fontsize = '0.9em'; }
+     *   else { $fontsize = '0.7em'; }
+     *
+     * `extractTextSizeTiersFromView()` no detecta nada acá (no hay ninguna
+     * clase `.normal-text-size` de por medio) — sin esto, el texto del
+     * nombre quedaba SIEMPRE con el `font_size_px` fijo que midió la muestra
+     * (el de UN nombre puntual), y un nombre real más largo que esa muestra
+     * se corta en vez de achicarse solo, como sí hacía la vista legacy.
+     *
+     * Devuelve una lista de `['class' => string, 'rules' => [{max_chars,
+     * font_size_px}, ...]]` — una entrada por cada bloque `if/elseif/else`
+     * encontrado (una vista puede tener más de uno, ej. "spot-and-*" calcula
+     * `$spotFontsize` para la fila "spot" Y, por separado, un tamaño fijo
+     * sin variar para "super-mini" — ese segundo caso ni matchea el patrón,
+     * no genera entrada). El valor de cada tramo tiene que ser `Npt` o
+     * `N.Mem` (convertido a px sobre la base real de dompdf, `Style::
+     * $default_font_size = 12pt` → `1em = 16px`) — un valor no numérico
+     * (`x-small`, `large`, una variable) hace descartar ESE bloque entero,
+     * no se adivina.
+     */
+    private function extractInlineLengthFontSizeTiers(string $content): array
+    {
+        $results = [];
+
+        if (!preg_match_all(
+            '/\$(\w+)\s*=\s*(?:Str::length|mb_strlen)\([^;]*\)\s*;\s*'
+            . 'if\s*\(\s*\$\1\s*<=\s*(\d+)\s*\)\s*\{\s*\$(\w+)\s*=\s*\'([^\']+)\'\s*;\s*\}\s*'
+            . 'elseif\s*\(\s*\$\1\s*<=\s*(\d+)\s*\)\s*\{\s*\$\3\s*=\s*\'([^\']+)\'\s*;\s*\}\s*'
+            . 'else\s*\{\s*\$\3\s*=\s*\'([^\']+)\'\s*;\s*\}/',
+            $content,
+            $matches,
+            PREG_SET_ORDER
+        )) {
+            return $results;
+        }
+
+        $toPx = function (string $value): ?int {
+            if (preg_match('/^([\d.]+)pt$/i', $value, $m)) {
+                return (int) round(((float) $m[1]) / 0.75);
+            }
+            if (preg_match('/^([\d.]+)em$/i', $value, $m)) {
+                return (int) round(((float) $m[1]) * 16); // 1em = 12pt base (Style::$default_font_size) = 16px
+            }
+
+            return null; // palabra clave CSS (x-small, large, ...) o variable: no se puede convertir, se descarta el bloque.
+        };
+
+        foreach ($matches as $m) {
+            [, , $maxChars1, $fontVar, $value1, $maxChars2, $value2, $value3] = $m;
+
+            $px1 = $toPx($value1);
+            $px2 = $toPx($value2);
+            $px3 = $toPx($value3);
+            if ($px1 === null || $px2 === null || $px3 === null) {
+                continue;
+            }
+
+            // La clase CSS que de verdad usa `$fontVar` en su `style=` inline
+            // (ej. `style="color:{{ $color }};font-size: {{ $fontsize }};"`)
+            // — el atributo `class` puede traer más de un token (ej.
+            // `class="circulo-texto {{ $plantilla['fontClass'] }}"`), se usa
+            // solo el primero (literal, sin blade) para matchear contra
+            // `resolveGridIndexForClassName()`/`countRepeatedClassOccurrences()`,
+            // mismo criterio que ya usan (`class=["']NOMBRE(?=["'\s])`).
+            // El atributo `style` va SIEMPRE entre comillas dobles en estas
+            // vistas, pero su contenido puede traer comillas SIMPLES (ej.
+            // `style="color:{{ $plantilla['colores'] }};font-size: {{
+            // $fontsize }};"`) — `[^"]*` (no `[^"']*`) es lo correcto para no
+            // cortar la búsqueda en esa comilla simple interna.
+            if (!preg_match(
+                '/<[a-zA-Z]+\s[^>]*?class=["\']([^"\']+)["\'][^>]*?style="[^"]*font-size:\s*\{\{\s*\$'
+                . preg_quote($fontVar, '/') . '\s*\}\}[^"]*"/s',
+                $content,
+                $tagMatch
+            ) && !preg_match(
+                '/<[a-zA-Z]+\s[^>]*?style="[^"]*font-size:\s*\{\{\s*\$'
+                . preg_quote($fontVar, '/') . '\s*\}\}[^"]*"[^>]*?class=["\']([^"\']+)["\']/s',
+                $content,
+                $tagMatch
+            )) {
+                continue; // no se encontró qué elemento usa este tamaño: no hay class a la que atribuirle las reglas.
+            }
+            $className = trim(explode(' ', trim($tagMatch[1]))[0]);
+            if ($className === '') {
+                continue;
+            }
+
+            $results[] = [
+                'class' => $className,
+                'rules' => [
+                    ['max_chars' => (int) $maxChars1, 'font_size_px' => $px1],
+                    ['max_chars' => (int) $maxChars2, 'font_size_px' => $px2],
+                    ['max_chars' => null, 'font_size_px' => $px3],
+                ],
+            ];
+        }
+
+        return $results;
+    }
+
+    /**
+     * Aplica `extractInlineLengthFontSizeTiers()` — mismo resultado final
+     * que `applyLegacyTextSizeRules()` (`font_size_rules`/
+     * `length_rules_enabled`/`length_rules`/`font_size_px` en cada texto de
+     * la grilla detectada) pero para vistas que calculan el tamaño con PHP
+     * inline en vez de clases CSS por nivel. Se corre SIEMPRE después de
+     * `applyLegacyTextSizeRules()` sobre la MISMA página — por eso no
+     * comparte `$claimedGridIndexes` con ella (cada una ve la página ya
+     * tal cual la dejó la otra, vía `$gridHasText`/`in_array` sobre grillas
+     * frescas); en la práctica nunca compiten por la misma grilla porque son
+     * patrones de vistas distintos, pero si llegaran a coincidir gana la
+     * primera que la reclame.
+     */
+    private function applyInlineLengthFontSizeRules(array &$page, ?string $viewPath): void
+    {
+        if (!$viewPath || empty($page['grids'])) {
+            return;
+        }
+        $viewPath = str_starts_with($viewPath, 'tematica/') ? $viewPath : "tematica/{$viewPath}";
+        $bladePath = resource_path('views/' . $viewPath . '.blade.php');
+        if (!is_file($bladePath)) {
+            return;
+        }
+        $content = file_get_contents($bladePath);
+
+        $tiers = $this->extractInlineLengthFontSizeTiers($content);
+        if (empty($tiers)) {
+            return;
+        }
+
+        $elementsById = [];
+        foreach ($page['elements'] as $index => $el) {
+            $elementsById[$el['id']] = $index;
+        }
+        $gridHasText = function (array $grid) use ($elementsById, $page): bool {
+            foreach ($grid['template'] as $id) {
+                if (($page['elements'][$elementsById[$id] ?? null]['type'] ?? null) === 'text') {
+                    return true;
+                }
+            }
+            return false;
+        };
+        $claimedGridIndexes = [];
+
+        foreach ($tiers as $entry) {
+            $gridIndex = $this->resolveGridIndexForClassName(
+                $entry['class'], $page, $content, null, $elementsById, $gridHasText, $claimedGridIndexes
+            );
+            if ($gridIndex === null) {
+                continue;
+            }
+
+            $rules = $entry['rules'];
+            $fallbackFontSizePx = end($rules)['font_size_px'];
+
+            $textIds = array_filter($page['grids'][$gridIndex]['template'], fn($id) => ($elementsById[$id] ?? null) !== null && ($page['elements'][$elementsById[$id]]['type'] ?? null) === 'text');
+            foreach ($page['grids'][$gridIndex]['members'] as $member) {
+                foreach (array_filter($member) as $memberEntry) {
+                    $idx = $elementsById[$memberEntry['id']] ?? null;
+                    if ($idx !== null && ($page['elements'][$idx]['type'] ?? null) === 'text') {
+                        $textIds[] = $memberEntry['id'];
+                    }
+                }
+            }
+
+            foreach ($textIds as $textId) {
+                $index = $elementsById[$textId];
+                $page['elements'][$index]['font_size_rules'] = $rules;
+                $page['elements'][$index]['length_rules_enabled'] = true;
+                $page['elements'][$index]['length_rules'] = $rules;
+                $page['elements'][$index]['font_size_px'] = $fallbackFontSizePx;
+            }
+        }
+    }
+
+    /**
      * Arma `font_size_rules`/`length_rules`/`length_rules_enabled` (y, si el
      * CSS trae `line-height` por nivel, también `line_height_rules`/
      * `line_height_rules_enabled`) para el texto de cada grilla cuya
@@ -2903,102 +3212,12 @@ class ProductPdfDesignController extends Controller
                 continue; // un solo tamaño: no hay nada que varíe según longitud.
             }
 
-            $gridIndex = null;
-
-            // Prioridad 1: geometría. `$className` es siempre el contenedor
-            // INTERNO de una forma (ej. "etiqueta-super-mini-content-
-            // container") — su forma EXTERNA (sacando el sufijo) trae un
-            // `width`/`height` en cm fijos en el CSS (ver `.etiqueta-super-
-            // mini { width: 2.9cm; height: 1.15cm }`), igual que
-            // `applySuperMiniLabelShape()`. Esto resuelve vistas tipo
-            // `tematica/principal/*` que combinan maxi+vertical+super-maxi+
-            // super-mini SIN ningún `@for` (todo `<td>` repetido a mano): ahí
-            // `countRepeatedClassOccurrences()` no cuenta nada y las 3+
-            // clases con niveles ("maxi", "super-maxi", "super-mini") dejan
-            // más de una grilla sin reclamar con texto, así que el fallback
-            // de "única grilla candidata" de más abajo tampoco alcanza a
-            // resolver ninguna. La tolerancia de 0.1cm absorbe una vista
-            // puntual como "vertical", cuyo elemento medido difiere en 0.05cm
-            // del `width`/`height` declarado en el CSS (padding/borde).
-            $baseClassName = preg_replace('/-content-container$/', '', $className);
-            $boxDimensions = $this->extractClassBoxDimensions($content, $baseClassName)
-                ?? ($sharedContent !== null ? $this->extractClassBoxDimensions($sharedContent, $baseClassName) : null);
-            if ($boxDimensions) {
-                [$targetWidth, $targetHeight] = $boxDimensions;
-                foreach ($page['grids'] as $idx => $grid) {
-                    if (in_array($idx, $claimedGridIndexes, true) || !$gridHasText($grid)) {
-                        continue;
-                    }
-                    $templateBgIndex = null;
-                    foreach ($grid['template'] as $id) {
-                        $i = $elementsById[$id] ?? null;
-                        if ($i !== null && ($page['elements'][$i]['type'] ?? null) === 'background') {
-                            $templateBgIndex = $i;
-                            break;
-                        }
-                    }
-                    if ($templateBgIndex === null) {
-                        continue;
-                    }
-                    $templateBg = $page['elements'][$templateBgIndex];
-                    if (abs((float) $templateBg['width_cm'] - $targetWidth) <= 0.1 && abs((float) $templateBg['height_cm'] - $targetHeight) <= 0.1) {
-                        $gridIndex = $idx;
-                        break;
-                    }
-                }
-            }
-
-            $count = $gridIndex === null ? $this->countRepeatedClassOccurrences($content, $className) : null;
-
-            if ($gridIndex !== null) {
-                // ya resuelto por geometría.
-            } elseif ($count) {
-                // Una misma cantidad de celdas puede coincidir con MÁS de una
-                // grilla (ej. la tabla "maxi" arma una grilla para el fondo
-                // del ícono y otra, aparte, para el fondo del texto — ambas
-                // 6×3, ninguna es "la" grilla de texto per se) — de las
-                // candidatas sin reclamar se prefiere la que REALMENTE tiene
-                // un elemento de texto adentro.
-                foreach ($page['grids'] as $idx => $grid) {
-                    if (in_array($idx, $claimedGridIndexes, true)) {
-                        continue;
-                    }
-                    if (((int) $grid['cols']) * ((int) $grid['rows']) !== $count) {
-                        continue;
-                    }
-                    if ($gridHasText($grid)) {
-                        $gridIndex = $idx;
-                        break;
-                    }
-                }
-            } elseif (preg_match('/class=["\']' . preg_quote($className, '/') . '(?=["\'\s])/', $content)) {
-                // `countRepeatedClassOccurrences()` no pudo contar, pero la
-                // clase SÍ aparece en ESTA vista (ej. un `@for` con límite
-                // variable en vez de un número literal, como `tematica/
-                // super-mini/*.blade.php`: `@for ($i = 0; $i <
-                // $plantilla['filas']; $i++)`) — si la página tiene una única
-                // grilla sin reclamar con texto adentro, es la única
-                // candidata posible, no hace falta el conteo para elegirla.
-                // El chequeo de que la clase aparezca acá es clave: sin él,
-                // una clase de OTRA forma sin relación (ej. "Super Maxi",
-                // que convive en el mismo `etiquetas.css` compartido pero
-                // esta vista puntual ni usa) también caería acá y se robaría
-                // la única grilla disponible con SUS tamaños, no los de la
-                // clase real de esta vista.
-                $unclaimedWithText = [];
-                foreach ($page['grids'] as $idx => $grid) {
-                    if (!in_array($idx, $claimedGridIndexes, true) && $gridHasText($grid)) {
-                        $unclaimedWithText[] = $idx;
-                    }
-                }
-                if (count($unclaimedWithText) === 1) {
-                    $gridIndex = $unclaimedWithText[0];
-                }
-            }
+            $gridIndex = $this->resolveGridIndexForClassName(
+                $className, $page, $content, $sharedContent, $elementsById, $gridHasText, $claimedGridIndexes
+            );
             if ($gridIndex === null) {
                 continue;
             }
-            $claimedGridIndexes[] = $gridIndex;
 
             // Si un nombre se pasa del último umbral definido y ninguna
             // regla matchea, `resolverTamanoFuente` cae al tamaño base del
