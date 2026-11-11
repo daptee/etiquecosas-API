@@ -44,8 +44,10 @@ use setasign\Fpdi\Fpdi;
  */
 class AccumulatingPdfDesignService
 {
-    private const SHEET_WIDTH_CM = 18.5;
-    private const SHEET_HEIGHT_CM = 29.0;
+    // A4 real (21 x 29.7cm) — igual que BandaService/CintaCoserService/
+    // CintaPlancharService/SelloService, que imprimen con setPaper('a4', ...).
+    private const SHEET_WIDTH_CM = 21.0;
+    private const SHEET_HEIGHT_CM = 29.7;
     private const MARGIN_X_CM = 1.0;
     private const MARGIN_TOP_CM = 1.0;
     private const HEADER_HEIGHT_CM = 1.0;
@@ -243,7 +245,7 @@ class AccumulatingPdfDesignService
                 $pages[] = self::armarPagina(
                     $cellPage,
                     $chunk,
-                    $cols,
+                    $rows,
                     $cellW,
                     $cellH,
                     $gap,
@@ -357,7 +359,7 @@ class AccumulatingPdfDesignService
     private static function armarPagina(
         array $cellPage,
         array $itemsDelGrupo,
-        int $cols,
+        int $rows,
         float $cellW,
         float $cellH,
         float $gap,
@@ -389,8 +391,12 @@ class AccumulatingPdfDesignService
         }
 
         foreach (array_values($itemsDelGrupo) as $i => $item) {
-            $row = intdiv($i, $cols);
-            $col = $i % $cols;
+            // Por columna primero: se llena la columna 0 de arriba a abajo
+            // antes de pasar a la columna 1 (al revés de un "reading order"
+            // fila por fila) — así el pedido nuevo siempre cae debajo del
+            // anterior, no al lado, salvo que la columna ya esté completa.
+            $col = intdiv($i, $rows);
+            $row = $i % $rows;
             $offsetX = self::MARGIN_X_CM + $col * ($cellW + $badgeW + $gap);
             $offsetY = self::MARGIN_TOP_CM + $headerH + $row * ($cellH + $gap);
             $nombre = mb_strtoupper($item['nombre'], 'UTF-8');
