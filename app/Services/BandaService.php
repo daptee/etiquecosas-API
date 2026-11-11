@@ -301,4 +301,42 @@ class BandaService
             ]);
         }
     }
+
+    /**
+     * Elimina SOLO las bandas de una línea de venta puntual (no todo el
+     * pedido) del PDF del día — usada al regenerar un PDF individual desde
+     * PdfDirectoryController::regeneratePdf().
+     */
+    public static function limpiarBandaDeProductOrder(int $productOrderId, $fechaCompra = null): void
+    {
+        $fechaCarpeta = $fechaCompra
+            ? Carbon::parse($fechaCompra)->setTimezone('America/Argentina/Buenos_Aires')->format('d-m-Y')
+            : Carbon::now('America/Argentina/Buenos_Aires')->format('d-m-Y');
+
+        $dirPath = storage_path("app/pdf/Bandas");
+        $jsonFile = "{$dirPath}/{$fechaCarpeta}-bandas.json";
+
+        if (file_exists($jsonFile)) {
+            $bandas = json_decode(file_get_contents($jsonFile), true) ?? [];
+
+            $bandasFiltradas = array_values(array_filter($bandas, function ($banda) use ($productOrderId) {
+                return ($banda['product_order_id'] ?? null) != $productOrderId;
+            }));
+
+            if (count($bandasFiltradas) === count($bandas)) {
+                return;
+            }
+
+            if (count($bandasFiltradas) > 0) {
+                file_put_contents($jsonFile, json_encode($bandasFiltradas, JSON_PRETTY_PRINT));
+                self::generarPdfConsolidado($fechaCarpeta, $bandasFiltradas);
+            } else {
+                unlink($jsonFile);
+                $pdfFile = "{$dirPath}/{$fechaCarpeta}-bandas.pdf";
+                if (file_exists($pdfFile)) {
+                    unlink($pdfFile);
+                }
+            }
+        }
+    }
 }

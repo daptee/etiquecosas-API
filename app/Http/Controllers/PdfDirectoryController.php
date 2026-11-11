@@ -4,9 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Sale;
 use App\Models\SaleProduct;
+use App\Services\BandaService;
+use App\Services\CintaCoserService;
+use App\Services\CintaPlancharService;
 use App\Services\PdfDirectoryService;
 use App\Services\ProductPdfResolverService;
+use App\Services\SelloService;
 use App\Traits\ApiResponse;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use ZipArchive;
@@ -313,9 +318,7 @@ class PdfDirectoryController extends Controller
     }
 
     /**
-     * Regenera UN PDF puntual del listado de "pdfs_pedidos" (no aplica a
-     * "extras" — cintas/bandas/sellos son archivos consolidados por fecha,
-     * sin una línea de venta propia). El nombre ya trae
+     * Regenera UN PDF puntual del listado de "pdfs_pedidos". El nombre ya trae
      * "{ventaId}-{salesProductId}-..." (ver nota de
      * PdfDirectoryService::resolveDesignIdFromFilename()) — de ahí se
      * reconstruye la línea de venta y se vuelve a correr
@@ -324,6 +327,12 @@ class PdfDirectoryController extends Controller
      * producto+variante si hay uno, o cae al sistema legacy si no).
      * Solo borra los archivos de ESTA línea de venta puntual
      * ("{ventaId}-{salesProductId}-*.pdf"), no todo el pedido.
+     * Si la línea es un producto Cinta Coser/Planchar/Banda/Sello, también
+     * se actualiza su consolidado de "extras" para la fecha de la carpeta
+     * (solo la entrada de esta línea, no las del resto del pedido). Los
+     * diseños "acumulables" (ProductPdfDesign::fill_mode=accumulating) no
+     * necesitan este paso acá: ya son idempotentes por product_order_id
+     * dentro de resolveAndGenerate() -> AccumulatingPdfDesignService.
      */
     public function regeneratePdf($fecha, $nombrePdf)
     {
@@ -365,11 +374,70 @@ class PdfDirectoryController extends Controller
                 $customIcon = '';
             }
 
+            // Fecha de la CARPETA que se está regenerando (no sale->created_at,
+            // que puede ser otro día si la venta se aprobó después de creada) —
+            // así los consolidados de Cinta Coser/Planchar/Bandas/Sellos quedan
+            // en el mismo archivo que ya se está viendo en pdf-directories/{fecha}.
+            $fechaCarpeta = Carbon::createFromFormat('d-m-Y', $fecha, 'America/Argentina/Buenos_Aires')->startOfDay();
+
             // Solo los archivos de ESTA línea de venta — no limpiarPdfsDelPedido()
             // (eso borraría los de TODAS las líneas de este mismo pedido).
             $dirPath = storage_path("app/pdf/planchas/{$fecha}");
             foreach (glob("{$dirPath}/{$ventaId}-{$salesProductId}-*.pdf") ?: [] as $file) {
                 @unlink($file);
+            }
+
+            // Ídem para los consolidados de Cinta Coser/Planchar/Bandas/Sellos:
+            // antes faltaba esto por completo acá, así que regenerar un PDF de
+            // alguno de estos productos desde esta pantalla no tocaba su
+            // consolidado del día. Se limpia SOLO esta línea de venta (no todo
+            // el pedido) y se vuelve a agregar con los datos actuales.
+            if (CintaCoserService::esProductoCoser($productOrder->product_id)) {
+                CintaCoserService::limpiarEtiquetaDeProductOrder($productOrder->id, $fechaCarpeta);
+                CintaCoserService::agregarEtiquetaAlPdf(
+                    (int) $ventaId,
+                    $productOrder,
+                    $nombreCompleto,
+                    $customColor,
+                    $customIcon,
+                    $fechaCarpeta
+                );
+            }
+
+            if (CintaPlancharService::esProductoPlanchar($productOrder->product_id)) {
+                CintaPlancharService::limpiarEtiquetaDeProductOrder($productOrder->id, $fechaCarpeta);
+                CintaPlancharService::agregarEtiquetaAlPdf(
+                    (int) $ventaId,
+                    $productOrder,
+                    $nombreCompleto,
+                    $customColor,
+                    $customIcon,
+                    $fechaCarpeta
+                );
+            }
+
+            if (BandaService::esProductoBanda($productOrder->product_id)) {
+                BandaService::limpiarBandaDeProductOrder($productOrder->id, $fechaCarpeta);
+                BandaService::agregarBandaAlPdf(
+                    (int) $ventaId,
+                    $productOrder,
+                    $nombreCompleto,
+                    $customColor,
+                    $customIcon,
+                    $fechaCarpeta
+                );
+            }
+
+            if (SelloService::esProductoSello($productOrder->product_id)) {
+                SelloService::limpiarSelloDeProductOrder($productOrder->id, $fechaCarpeta);
+                SelloService::agregarSelloAlPdf(
+                    (int) $ventaId,
+                    $productOrder,
+                    $nombreCompleto,
+                    $customColor,
+                    $customIcon,
+                    $fechaCarpeta
+                );
             }
 
             $paths = ProductPdfResolverService::resolveAndGenerate(
@@ -379,7 +447,7 @@ class PdfDirectoryController extends Controller
                 $form,
                 $customColor,
                 $customIcon,
-                $sale->created_at
+                $fechaCarpeta
             );
 
             if (empty($paths)) {

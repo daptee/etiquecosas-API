@@ -11,3 +11,8 @@ VALUES
 INSERT INTO `label_shapes` (`name`, `shape_type`, `width_cm`, `height_cm`, `is_system`, `data`, `status_id`)
 VALUES
   ('Maxi Combinada', 'rect', 5.2, 1.9, 1, JSON_OBJECT('css_class', 'etiqueta-maxi-combinada'), 1);
+
+
+INSERT INTO `label_shapes` (`name`, `shape_type`, `width_cm`, `height_cm`, `is_system`, `data`, `status_id`)
+VALUES
+  ('Transfer para planchar', 'rect', 6.03, 1.02, 1, JSON_OBJECT('css_class', 'etiqueta-transfer-para-planchar'), 1);

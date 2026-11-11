@@ -1750,12 +1750,17 @@ class SaleController extends Controller
             $pdfPaths = [];
             EtiquetaService::$debugIconLog = []; // TEMPORAL — ver nota en EtiquetaService
 
+            // Usar la fecha de generación (ahora), no la de creación de la venta: los
+            // PDFs consolidados (Cinta Coser/Planchar, diseños acumulables) se bucketean
+            // por día de generación/aprobación, igual que en approveSale/changeStatusAdmin.
+            $fechaAprobacion = Carbon::now();
+
             // 🗑️ Eliminar todos los PDFs anteriores de este pedido antes de generar nuevos
-            EtiquetaService::limpiarPdfsDelPedido($sale->id, $sale->created_at);
-            CintaCoserService::limpiarEtiquetasDeVenta($sale->id, $sale->created_at);
-            CintaPlancharService::limpiarEtiquetasDeVenta($sale->id, $sale->created_at);
-            BandaService::limpiarBandasDeVenta($sale->id, $sale->created_at);
-            SelloService::limpiarSellosDeVenta($sale->id, $sale->created_at);
+            EtiquetaService::limpiarPdfsDelPedido($sale->id, $fechaAprobacion);
+            CintaCoserService::limpiarEtiquetasDeVenta($sale->id, $fechaAprobacion);
+            CintaPlancharService::limpiarEtiquetasDeVenta($sale->id, $fechaAprobacion);
+            BandaService::limpiarBandasDeVenta($sale->id, $fechaAprobacion);
+            SelloService::limpiarSellosDeVenta($sale->id, $fechaAprobacion);
 
             foreach ($sale->products as $productOrder) {
                 // === 1. Datos base ===
@@ -1781,7 +1786,7 @@ class SaleController extends Controller
                             $nombreCompleto,
                             $customColor,
                             $customIcon,
-                            $sale->created_at
+                            $fechaAprobacion
                         );
                         Log::info("Sello agregado para {$nombreCompleto}");
                     } catch (\Throwable $e) {
@@ -1801,7 +1806,7 @@ class SaleController extends Controller
                             $nombreCompleto,
                             $customColor,
                             $customIcon,
-                            $sale->created_at
+                            $fechaAprobacion
                         );
                         Log::info("Banda agregada para {$nombreCompleto}");
                     } catch (\Throwable $e) {
@@ -1821,7 +1826,7 @@ class SaleController extends Controller
                             $nombreCompleto,
                             $customColor,
                             $customIcon,
-                            $sale->created_at
+                            $fechaAprobacion
                         );
                         Log::info("Etiqueta de cinta para coser agregada para {$nombreCompleto}");
                     } catch (\Throwable $e) {
@@ -1841,7 +1846,7 @@ class SaleController extends Controller
                             $nombreCompleto,
                             $customColor,
                             $customIcon,
-                            $sale->created_at
+                            $fechaAprobacion
                         );
                         Log::info("Etiqueta de cinta para planchar agregada para {$nombreCompleto}");
                     } catch (\Throwable $e) {
@@ -1859,7 +1864,7 @@ class SaleController extends Controller
                     $form,
                     $customColor,
                     $customIcon,
-                    $sale->created_at
+                    $fechaAprobacion
                 );
                 $pdfPaths = array_merge($pdfPaths, $paths);
             }
