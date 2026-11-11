@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
 class Sale extends Model
@@ -145,5 +146,21 @@ class Sale extends Model
         return $this->statusHistory()
             ->where('sale_status_id', 1)
             ->exists();
+    }
+
+    /**
+     * Fecha a usar para "bucketear" los PDFs consolidados (Cinta Coser/Planchar,
+     * Bandas, Sellos, diseños acumulables): la fecha en que la venta fue aprobada
+     * (primera vez que pasó a sale_status_id = 1), o si todavía no fue aprobada,
+     * la fecha de creación de la venta.
+     */
+    public function fechaAprobacionOCreacion(): \Carbon\Carbon
+    {
+        $aprobacion = $this->statusHistory()
+            ->where('sale_status_id', 1)
+            ->orderBy('date')
+            ->first();
+
+        return $aprobacion ? Carbon::parse($aprobacion->date) : Carbon::parse($this->created_at);
     }
 }

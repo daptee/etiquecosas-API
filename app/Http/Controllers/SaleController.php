@@ -1750,10 +1750,10 @@ class SaleController extends Controller
             $pdfPaths = [];
             EtiquetaService::$debugIconLog = []; // TEMPORAL — ver nota en EtiquetaService
 
-            // Usar la fecha de generación (ahora), no la de creación de la venta: los
-            // PDFs consolidados (Cinta Coser/Planchar, diseños acumulables) se bucketean
-            // por día de generación/aprobación, igual que en approveSale/changeStatusAdmin.
-            $fechaAprobacion = Carbon::now();
+            // Bucketear por la fecha en que la venta fue aprobada (no por la fecha en
+            // que se regenera el PDF, que puede ser días después) — si todavía no fue
+            // aprobada, usar la fecha de creación de la venta.
+            $fechaAprobacion = $sale->fechaAprobacionOCreacion();
 
             // 🗑️ Eliminar todos los PDFs anteriores de este pedido antes de generar nuevos
             EtiquetaService::limpiarPdfsDelPedido($sale->id, $fechaAprobacion);
