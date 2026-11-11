@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\LabelShape;
 use App\Models\ProductPdfDesign;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -15,10 +16,13 @@ use setasign\Fpdi\Fpdi;
  * alter_product_pdf_designs_add_accumulation.sql), en vez de product IDs
  * hardcodeados y una vista Blade fija.
  *
- * La página 1 de `design.data` define UNA celda (su `sheet.width_cm/height_cm`
- * es el tamaño físico de esa celda, no de la hoja completa). Cada vez que
- * entra un pedido de un producto vinculado a un diseño así (mismo vínculo
- * product_pdf_design_products de siempre, sin nada hardcodeado),
+ * La página 1 de `design.data` define UNA celda. Su tamaño real NO sale de
+ * `sheet.width_cm/height_cm` (eso es el lienzo de edición — puede quedar en
+ * A4 completo, como en modo normal, posicionando la etiqueta donde sea
+ * cómodo diseñarla) sino de la FORMA DE ETIQUETA (`label_shape_id`) del
+ * elemento `background` de la celda — ver resolverTamanoDeCelda(). Cada vez
+ * que entra un pedido de un producto vinculado a un diseño así (mismo
+ * vínculo product_pdf_design_products de siempre, sin nada hardcodeado),
  * agregarItemAlPdf() lo suma al JSON del día de ESE diseño y reconstruye el
  * PDF consolidado tileando copias de esa celda sobre hojas de impresión
  * estándar, agrupadas en páginas separadas por `accumulation_group_attribute`
@@ -198,8 +202,8 @@ class AccumulatingPdfDesignService
             return;
         }
 
-        $cellW = (float) ($cellPage['sheet']['width_cm'] ?? 4.5);
-        $cellH = (float) ($cellPage['sheet']['height_cm'] ?? 3.5);
+        [$cellW, $cellH] = self::resolverTamanoDeCelda($design, $cellPage);
+        [$originX, $originY] = self::resolverOrigenDeCelda($cellPage);
         $gap = (float) ($design->accumulation_gap_cm ?? 0.3);
         $hasGroups = !empty($design->accumulation_group_attribute);
         $headerH = $hasGroups ? self::HEADER_HEIGHT_CM : 0.0;
@@ -245,7 +249,9 @@ class AccumulatingPdfDesignService
                     $gap,
                     $headerH,
                     $hasGroups ? (string) $groupValue : null,
-                    $duplicarPorCantidad ? 0.0 : $badgeW
+                    $duplicarPorCantidad ? 0.0 : $badgeW,
+                    $originX,
+                    $originY
                 );
             }
         }
@@ -276,6 +282,78 @@ class AccumulatingPdfDesignService
         return $pages[0];
     }
 
+    /** Elemento `background` de la celda, si lo hay (ver resolverTamanoDeCelda/resolverOrigenDeCelda). */
+    private static function backgroundDeCelda(array $cellPage): ?array
+    {
+        foreach ($cellPage['elements'] as $el) {
+            if (($el['type'] ?? null) === 'background') {
+                return $el;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Tamaño real de UNA etiqueta — NUNCA sale de `sheet.width_cm/height_cm`
+     * si hay algo mejor: `sheet` es el lienzo de edición (puede quedar en A4
+     * completo, posicionando la etiqueta donde sea cómodo diseñarla, igual
+     * que en modo normal), no necesariamente el tamaño físico real. Orden de
+     * prioridad:
+     * 1. `label_shape_id` del elemento `background` de la celda.
+     * 2. `label_shape_id` de nivel-diseño (product_pdf_designs.label_shape_id).
+     * 3. `width_cm`/`height_cm` propios del elemento `background` (sin forma de catálogo).
+     * 4. Fallback: `sheet.width_cm/height_cm` (diseños 100% a mano, sin forma ni background).
+     */
+    private static function resolverTamanoDeCelda(ProductPdfDesign $design, array $cellPage): array
+    {
+        $background = self::backgroundDeCelda($cellPage);
+
+        if ($background && !empty($background['label_shape_id'])) {
+            $shape = LabelShape::find($background['label_shape_id']);
+            if ($shape) {
+                return [(float) $shape->width_cm, (float) $shape->height_cm];
+            }
+        }
+
+        if ($design->label_shape_id) {
+            $shape = LabelShape::find($design->label_shape_id);
+            if ($shape) {
+                return [(float) $shape->width_cm, (float) $shape->height_cm];
+            }
+        }
+
+        if ($background) {
+            return [(float) ($background['width_cm'] ?? 4.5), (float) ($background['height_cm'] ?? 3.5)];
+        }
+
+        return [
+            (float) ($cellPage['sheet']['width_cm'] ?? 4.5),
+            (float) ($cellPage['sheet']['height_cm'] ?? 3.5),
+        ];
+    }
+
+    /**
+     * Esquina superior izquierda (x_cm, y_cm) de la etiqueta tal cual quedó
+     * posicionada en el lienzo de edición — todos los elementos de la celda
+     * se guardan en coordenadas ABSOLUTAS de ese lienzo (ej. el background
+     * puede estar en x_cm=1.17 si el diseñador lo dejó cerca del margen de
+     * una hoja A4 completa), así que armarPagina() resta este origen antes
+     * de sumar el offset de columna/fila — sin esto, la etiqueta quedaría
+     * desplazada en cada copia tileada, no pegada al margen real de la hoja.
+     * (0, 0) si no hay `background` (el resto de elementos ya se asume
+     * dibujado en coordenadas relativas a la celda).
+     */
+    private static function resolverOrigenDeCelda(array $cellPage): array
+    {
+        $background = self::backgroundDeCelda($cellPage);
+
+        return [
+            (float) ($background['x_cm'] ?? 0),
+            (float) ($background['y_cm'] ?? 0),
+        ];
+    }
+
     private static function armarPagina(
         array $cellPage,
         array $itemsDelGrupo,
@@ -285,7 +363,9 @@ class AccumulatingPdfDesignService
         float $gap,
         float $headerH,
         ?string $groupValue,
-        float $badgeW = 0.0
+        float $badgeW = 0.0,
+        float $originX = 0.0,
+        float $originY = 0.0
     ): array {
         $elements = [];
 
@@ -318,8 +398,8 @@ class AccumulatingPdfDesignService
             $elementosCelda = EtiquetaService::resolverCeldaAcumulada($cellPage, $nombre, $item['icono'] ?? null, $item['color'] ?? null);
             foreach ($elementosCelda as $elIdx => $resuelto) {
                 $resuelto['id'] = ($resuelto['id'] ?? 'el') . "-item{$i}-{$elIdx}";
-                $resuelto['x_cm'] = (float) ($resuelto['x_cm'] ?? 0) + $offsetX;
-                $resuelto['y_cm'] = (float) ($resuelto['y_cm'] ?? 0) + $offsetY;
+                $resuelto['x_cm'] = (float) ($resuelto['x_cm'] ?? 0) - $originX + $offsetX;
+                $resuelto['y_cm'] = (float) ($resuelto['y_cm'] ?? 0) - $originY + $offsetY;
                 $elements[] = $resuelto;
             }
 

@@ -10,7 +10,15 @@ Generaliza lo que hoy hacen `BandaService`, `CintaCoserService` y `CintaPlanchar
 
 En un diseño normal, `data.pages[]` es la hoja completa que se genera **una vez por pedido** (con sus N etiquetas iguales, si el producto trae una plancha).
 
-En un diseño **acumulable**, `data.pages[0]` deja de ser la hoja — pasa a representar **una sola celda** (una banda, una etiqueta individual). Su `sheet.width_cm`/`height_cm` es el tamaño físico de ESA celda, no de la hoja de impresión. El backend toma esa celda y la repite sola, una vez por cada pedido que fue entrando ese día, tileándolas sobre hojas estándar (18.5×29cm, como el resto del sistema) — agrupando en páginas separadas por un atributo de la variante si así se configura (ej. una página por color, igual que hace bandas hoy).
+En un diseño **acumulable**, `data.pages[0]` deja de ser la hoja — pasa a representar **una sola celda** (una banda, una etiqueta individual). El backend toma esa celda y la repite sola, una vez por cada pedido que fue entrando ese día, tileándolas sobre hojas estándar (18.5×29cm, como el resto del sistema) — agrupando en páginas separadas por un atributo de la variante (o por la personalización ícono/color, ver sección 1) si así se configura.
+
+**El tamaño real de esa celda NO sale de `sheet.width_cm`/`height_cm`** — `sheet` sigue siendo solo el lienzo de edición, y puede quedar en el tamaño de hoja completo de siempre (A4, o lo que uses normalmente): no hace falta achicarlo. El tamaño real de la etiqueta se resuelve así, en este orden (`AccumulatingPdfDesignService::resolverTamanoDeCelda()`):
+1. `label_shape_id` del elemento `background` de la celda (la forma de etiqueta asignada desde el picker del editor — lo normal).
+2. `label_shape_id` de nivel-diseño (`product_pdf_designs.label_shape_id`), si el `background` no trae una forma propia.
+3. `width_cm`/`height_cm` del propio elemento `background`, si no hay ninguna forma de catálogo asociada.
+4. Como último fallback (diseños 100% a mano, sin ningún `background`): `sheet.width_cm`/`height_cm`.
+
+Los elementos de la celda se guardan con sus coordenadas tal cual quedaron en el lienzo (ej. el `background` puede estar en `x_cm: 1.17` si lo dejaste cerca del margen de una hoja A4 completa) — el backend resta esa posición antes de tilear cada copia, así que no hace falta que estén en `(0,0)`.
 
 **Solo se usa la página 1** del diseño — si el diseño tiene más páginas, se ignoran en este modo.
 
@@ -70,16 +78,18 @@ Un pedido con cantidad 1 se ve exactamente igual en los dos modos (nunca sale ni
 
 ## 2. Cómo armar la celda (`data.pages[0]`)
 
-Es un diseño de UNA sola etiqueta chica, con el mismo editor y el mismo JSON de elementos de siempre — nada nuevo que aprender ahí. Lo único que cambia es la intención: en vez de diagramar la hoja completa, acá `sheet.width_cm`/`height_cm` tienen que ser el tamaño real de una sola celda (ej. `4.5` × `3.5`, como la banda actual).
+Es un diseño de UNA sola etiqueta chica, con el mismo editor y el mismo JSON de elementos de siempre — nada nuevo que aprender ahí. Podés seguir diagramando sobre una hoja completa como siempre (`sheet` no necesita achicarse, ver más arriba); lo único que importa es que el `background` de la etiqueta tenga asignada su forma real (`label_shape_id`) desde el picker del editor, como en cualquier diseño normal.
 
 Elementos típicos de esta celda:
 - Un texto con `value_mode: "dynamic"`, `dynamic_field: "nombre_apellido"` — ahí va el nombre del pedido.
 - Opcionalmente, un ícono con `editable_by_customer: true`, `editable_field: "icon"` — el que el cliente haya elegido al comprar.
-- Fondo/forma fijos del diseño, si corresponde (no se pintan con el color de un atributo automáticamente — ver limitaciones).
+- Opcionalmente, un color con `editable_by_customer: true`, `editable_field: "color"` (en el texto, el fondo o el borde) — el color que el cliente haya elegido al comprar (personalización libre, `customization_data`) — SÍ se aplica (ver `agregarItemAlPdf()`). Esto es distinto de un color atado a un ATRIBUTO de variante de catálogo (`value_mode: "dynamic"` con `dynamic_attribute_id`), que no se soporta — ver limitaciones.
+- `layout_groups` (el anclaje relativo ícono+texto) para que queden bien alineados sin importar el largo del nombre — SÍ se aplica (`EtiquetaService::resolverCeldaAcumulada()`).
 
 **Lo que este modo NO soporta todavía dentro de la celda** (no hacía falta para reemplazar lo que hace bandas hoy, se puede sumar después si se necesita):
-- `layout_groups` (el anclaje relativo ícono+texto) — las posiciones de los elementos se usan tal cual se guardaron.
-- Apellido, color elegido por el cliente o fecha/número de pedido como campos dinámicos del nombre — esos datos son de un pedido puntual y no tienen sentido en un PDF que mezcla pedidos de ventas distintas. Solo `nombre_apellido` (al nombre completo del campo del formulario) e ícono están disponibles.
+- Un color o ícono atado a un ATRIBUTO de variante de catálogo (`dynamic_attribute_id`) — se imprime el color/ícono de respaldo del diseño, no el de la variante elegida.
+- Una tipografía "De la compra" (`font_value_mode: "dynamic"`) — se usa la tipografía fija del diseño.
+- Apellido o fecha/número de pedido como campos dinámicos del nombre (`dynamic_field`) — esos datos son de un pedido puntual y no tienen sentido en un PDF que mezcla pedidos de ventas distintas. Solo `nombre_apellido` (el nombre completo del campo del formulario) está disponible ahí.
 
 ### 2.1. Cintas Coser/Planchar: tamaño de letra según largo del nombre
 
@@ -187,10 +197,10 @@ No hay endpoint de "regenerar" para estos PDFs (el que existe es específico de 
 ## 6. Antes de poder usar esto en un entorno
 
 Hace falta aplicar, en orden, en la base de ese entorno:
-1. `database/sql/alter_product_pdf_designs_add_accumulation.sql` — agrega `fill_mode`/`accumulation_group_attribute`/`accumulation_cols`/`accumulation_rows`/`accumulation_gap_cm`.
-2. `database/sql/alter_product_pdf_designs_add_quantity_mode.sql` — agrega `accumulation_quantity_mode`.
+1. `database/sql/alter_product_pdf_designs_add_accumulation.sql` — agrega `fill_mode`/`accumulation_group_attribute`/`accumulation_cols`/`accumulation_rows`/`accumulation_gap_cm`. **Ya aplicado en desarrollo local** (confirmado 2026-11-11).
+2. `database/sql/alter_product_pdf_designs_add_quantity_mode.sql` — agrega `accumulation_quantity_mode`. **Todavía NO aplicado en desarrollo local** — sin esto, `accumulationQuantityMode` no se puede guardar (el modo `"badge"` de la sección 1.1).
 
-Todavía no están aplicados en ningún lado. Sin esto, ninguno de estos campos se puede guardar.
+Verificar el estado real en cada entorno antes de asumir — esto puede haber cambiado desde que se escribió esta nota.
 
 ---
 
