@@ -61,7 +61,8 @@ class ProductPdfResolverService
                     $productOrder,
                     $nombreCompleto,
                     $customIcon,
-                    $fecha
+                    $fecha,
+                    $customColor
                 );
             } catch (\Throwable $e) {
                 Log::error('Error agregando pedido al diseño acumulable', [

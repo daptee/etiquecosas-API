@@ -33,11 +33,10 @@ use setasign\Fpdi\Fpdi;
  * Limitaciones de esta primera versión (no las necesita un diseño de celda
  * simple: nombre + ícono opcional, que es todo lo que usa BandaService hoy):
  * - Solo se usa la página 1 del diseño; el resto se ignora.
- * - No aplica layout_groups (anclaje ícono+texto): las posiciones de los
- *   elementos de la celda se usan tal cual las guardó el editor.
- * - El nombre de cada ítem no tiene apellido/color de cliente/atributos
- *   dinámicos asociados (esos datos son del pedido puntual, no tienen
- *   sentido en un PDF que mezcla pedidos de ventas distintas).
+ * - El nombre de cada ítem no tiene apellido/atributos dinámicos asociados
+ *   (esos datos son del pedido puntual, no tienen sentido en un PDF que
+ *   mezcla pedidos de ventas distintas) — el color elegido por el cliente
+ *   SÍ se guarda y se aplica (ver 'color' en agregarItemAlPdf()).
  */
 class AccumulatingPdfDesignService
 {
@@ -62,7 +61,8 @@ class AccumulatingPdfDesignService
         $productOrder,
         string $nombreCompleto,
         ?string $customIcon,
-        $fechaCompra = null
+        $fechaCompra = null,
+        $customColor = null
     ): void {
         if (!$design->esAcumulable()) {
             return;
@@ -95,6 +95,7 @@ class AccumulatingPdfDesignService
             'cantidad' => $productOrder->quantity ?? 1,
             'group_value' => self::resolverValorDeAgrupacion($design, $productOrder),
             'icono' => $customIcon,
+            'color' => $customColor,
         ];
 
         self::guardarItemsDelDia($design->id, $fecha, $items);
@@ -128,7 +129,19 @@ class AccumulatingPdfDesignService
     private static function resolverValorDeAgrupacion(ProductPdfDesign $design, $productOrder): ?string
     {
         $attributeName = $design->accumulation_group_attribute;
-        if (!$attributeName || !$productOrder->variant) {
+        if (!$attributeName) {
+            return null;
+        }
+
+        // "Ícono"/"Color" no son necesariamente un atributo de variante de
+        // catálogo (ver resolverValorDePersonalizacion) — se resuelven
+        // primero porque no dependen de que el producto tenga variante.
+        $valorPersonalizacion = self::resolverValorDePersonalizacion($attributeName, $productOrder);
+        if ($valorPersonalizacion !== false) {
+            return $valorPersonalizacion;
+        }
+
+        if (!$productOrder->variant) {
             return null;
         }
 
@@ -141,6 +154,40 @@ class AccumulatingPdfDesignService
         }
 
         return null;
+    }
+
+    /**
+     * "Ícono"/"Color" como accumulation_group_attribute no apuntan a un
+     * atributo de variante de catálogo (product_variants/attribute_values):
+     * en productos como Cinta Planchar/Coser, el ícono y el color son un
+     * campo de PERSONALIZACIÓN LIBRE que cada pedido completó al comprar
+     * (customization_data), sin variante detrás — el mismo dato que ya
+     * resuelve CintaPlancharService::agregarEtiquetaAlPdf() como
+     * $customColor/$customIcon.
+     *
+     * Devuelve `false` (ningún valor de agrupación, ni siquiera `null`) si
+     * $attributeName no es ninguno de estos dos nombres reservados, para
+     * que el llamador siga con la búsqueda normal por atributo de catálogo.
+     */
+    private static function resolverValorDePersonalizacion(string $attributeName, $productOrder)
+    {
+        $normalizado = mb_strtolower(trim($attributeName), 'UTF-8');
+        $esIcono = in_array($normalizado, ['icono', 'ícono', 'icon'], true);
+        $esColor = $normalizado === 'color';
+
+        if (!$esIcono && !$esColor) {
+            return false;
+        }
+
+        $customData = json_decode($productOrder->customization_data ?? '', true) ?? [];
+
+        if ($esIcono) {
+            $nombre = trim((string) ($customData['icon']['name'] ?? ''));
+            return $nombre !== '' ? $nombre : null;
+        }
+
+        $nombre = trim((string) ($customData['color']['name'] ?? $customData['color']['color_code'] ?? ''));
+        return $nombre !== '' ? $nombre : null;
     }
 
     private static function generarPdfConsolidado(ProductPdfDesign $design, string $fecha, array $items): void
@@ -268,8 +315,8 @@ class AccumulatingPdfDesignService
             $offsetY = self::MARGIN_TOP_CM + $headerH + $row * ($cellH + $gap);
             $nombre = mb_strtoupper($item['nombre'], 'UTF-8');
 
-            foreach ($cellPage['elements'] as $elIdx => $el) {
-                $resuelto = EtiquetaService::resolverElementoParaItemAcumulado($el, $nombre, $item['icono'] ?? null);
+            $elementosCelda = EtiquetaService::resolverCeldaAcumulada($cellPage, $nombre, $item['icono'] ?? null, $item['color'] ?? null);
+            foreach ($elementosCelda as $elIdx => $resuelto) {
                 $resuelto['id'] = ($resuelto['id'] ?? 'el') . "-item{$i}-{$elIdx}";
                 $resuelto['x_cm'] = (float) ($resuelto['x_cm'] ?? 0) + $offsetX;
                 $resuelto['y_cm'] = (float) ($resuelto['y_cm'] ?? 0) + $offsetY;

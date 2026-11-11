@@ -1393,13 +1393,41 @@ class EtiquetaService
      * Mismo resolverElementoDesign() de siempre, pero para UN elemento de una
      * celda de diseño "acumulable" (ver AccumulatingPdfDesignService) — un
      * ítem ya guardado en el JSON del día, sin $productOrder en vivo detrás.
-     * Esas celdas solo usan nombre + ícono (sin apellido/color del
-     * cliente/atributos dinámicos: no aplican a un diseño que se arma con
-     * pedidos de ventas distintas).
+     * Esas celdas solo usan nombre + ícono + color elegido por el cliente
+     * (sin apellido/atributos dinámicos: no aplican a un diseño que se arma
+     * con pedidos de ventas distintas).
      */
-    public static function resolverElementoParaItemAcumulado(array $el, string $nombre, ?string $customIcon = null): array
+    public static function resolverElementoParaItemAcumulado(array $el, string $nombre, ?string $customIcon = null, ?string $customColor = null): array
     {
-        return self::resolverElementoDesign($el, $nombre, null, null, null, $customIcon);
+        return self::resolverElementoDesign($el, $nombre, null, null, $customColor, $customIcon);
+    }
+
+    /**
+     * Resuelve TODOS los elementos de la celda de un diseño "acumulable" para
+     * un ítem del día (nombre + ícono + color de ese pedido), aplicando
+     * además `layout_groups` (anclaje ícono+texto) — a diferencia de resolver
+     * cada elemento suelto con resolverElementoParaItemAcumulado(), que deja
+     * las posiciones crudas tal cual se guardaron en el editor. Devuelve los
+     * elementos ya reposicionados, listos para que
+     * AccumulatingPdfDesignService::armarPagina() les sume el offset de
+     * columna/fila y renombre los ids.
+     */
+    public static function resolverCeldaAcumulada(array $cellPage, string $nombre, ?string $customIcon = null, ?string $customColor = null): array
+    {
+        $elements = array_map(
+            fn($el) => self::resolverElementoDesign($el, $nombre, null, null, $customColor, $customIcon),
+            $cellPage['elements'] ?? []
+        );
+
+        self::ajustarPorIconoAusente($elements);
+
+        $resolved = [
+            'id' => $cellPage['id'] ?? null,
+            'sheet' => $cellPage['sheet'] ?? ['width_cm' => 18.5, 'height_cm' => 29],
+            'elements' => $elements,
+        ];
+
+        return self::aplicarLayoutGroups($resolved, $cellPage['layout_groups'] ?? [], 'accumulating', 0)['elements'];
     }
 
     /**
