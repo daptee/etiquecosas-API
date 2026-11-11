@@ -1397,7 +1397,7 @@ class EtiquetaService
      * (sin apellido/atributos dinámicos: no aplican a un diseño que se arma
      * con pedidos de ventas distintas).
      */
-    public static function resolverElementoParaItemAcumulado(array $el, string $nombre, ?string $customIcon = null, ?string $customColor = null): array
+    public static function resolverElementoParaItemAcumulado(array $el, string $nombre, ?string $customIcon = null, $customColor = null): array
     {
         return self::resolverElementoDesign($el, $nombre, null, null, $customColor, $customIcon);
     }
@@ -1412,7 +1412,7 @@ class EtiquetaService
      * AccumulatingPdfDesignService::armarPagina() les sume el offset de
      * columna/fila y renombre los ids.
      */
-    public static function resolverCeldaAcumulada(array $cellPage, string $nombre, ?string $customIcon = null, ?string $customColor = null): array
+    public static function resolverCeldaAcumulada(array $cellPage, string $nombre, ?string $customIcon = null, $customColor = null): array
     {
         $elements = array_map(
             fn($el) => self::resolverElementoDesign($el, $nombre, null, null, $customColor, $customIcon),
