@@ -311,7 +311,15 @@ class PdfDirectoryController extends Controller
                 return $this->error('No tiene permisos para ver este PDF', 403);
             }
 
-            return response()->file($rutaPdf);
+            // El nombre de archivo (y por lo tanto la URL) no cambia cuando se
+            // regenera un PDF (ej. consolidados acumulables, re-generar desde
+            // regeneratePdf()) — sin estos headers el navegador puede seguir
+            // mostrando la versión vieja que ya tenía en caché para esa URL.
+            return response()->file($rutaPdf, [
+                'Cache-Control' => 'no-cache, no-store, must-revalidate',
+                'Pragma' => 'no-cache',
+                'Expires' => '0',
+            ]);
         } catch (\Exception $e) {
             return $this->error('Error al mostrar el PDF: ' . $e->getMessage(), 500);
         }
