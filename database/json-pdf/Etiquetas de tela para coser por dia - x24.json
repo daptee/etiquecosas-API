@@ -189,7 +189,7 @@
           "x_cm": 2.63,
           "y_cm": 2.53,
           "z_index": 2,
-          "width_cm": 3.85,
+          "width_cm": 3.7,
           "height_cm": 1.53,
           "content": "{{customer_name}}",
           "font_id": 11,
@@ -244,11 +244,11 @@
           "length_rules_enabled": true,
           "length_rules": [
             {
-              "max_chars": 10,
+              "max_chars": 16,
               "font_size_px": 26
             },
             {
-              "max_chars": 18,
+              "max_chars": 25,
               "font_size_px": 21
             },
             {
@@ -264,11 +264,11 @@
           "vertical_offset_cm": 0.45,
           "font_size_rules": [
             {
-              "max_chars": 10,
+              "max_chars": 16,
               "font_size_px": 26
             },
             {
-              "max_chars": 18,
+              "max_chars": 25,
               "font_size_px": 21
             },
             {
@@ -315,7 +315,7 @@
               "x": {
                 "mode": "gap",
                 "side": "after",
-                "cm": 0
+                "cm": 0.14
               },
               "y": {
                 "mode": "align",
