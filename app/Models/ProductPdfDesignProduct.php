@@ -13,6 +13,7 @@ class ProductPdfDesignProduct extends Model
         'product_id',
         'theme_key',
         'page_id',
+        'label_element_id',
         'sort_order',
     ];
 

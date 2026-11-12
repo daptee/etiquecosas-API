@@ -16,27 +16,40 @@ use setasign\Fpdi\Fpdi;
  * alter_product_pdf_designs_add_accumulation.sql), en vez de product IDs
  * hardcodeados y una vista Blade fija.
  *
- * La página 1 de `design.data` define UNA celda. Su tamaño real NO sale de
- * `sheet.width_cm/height_cm` (eso es el lienzo de edición — puede quedar en
- * A4 completo, como en modo normal, posicionando la etiqueta donde sea
- * cómodo diseñarla) sino de la FORMA DE ETIQUETA (`label_shape_id`) del
- * elemento `background` de la celda — ver resolverTamanoDeCelda(). Cada vez
- * que entra un pedido de un producto vinculado a un diseño así (mismo
- * vínculo product_pdf_design_products de siempre, sin nada hardcodeado),
- * agregarItemAlPdf() lo suma al JSON del día de ESE diseño y reconstruye el
- * PDF consolidado tileando copias de esa celda sobre hojas de impresión
- * estándar, agrupadas en páginas separadas por `accumulation_group_attribute`
- * si el diseño lo configuró (ej. "Color banda 1"), igual que BandaService
- * agrupa por color — pero genérico a cualquier atributo o ningún atributo.
+ * La página 1 de `design.data` define una o varias celdas ("etiquetas"): cada
+ * elemento `background` de esa página es una etiqueta distinta, con su propio
+ * tamaño/layout. El tamaño real de cada una NO sale de `sheet.width_cm/
+ * height_cm` (eso es el lienzo de edición — puede quedar en A4 completo, como
+ * en modo normal, posicionando las etiquetas donde sea cómodo diseñarlas)
+ * sino de la FORMA DE ETIQUETA (`label_shape_id`) de CADA `background` — ver
+ * resolverTamanoDeCelda(). Cada vez que entra un pedido de un producto
+ * vinculado a un diseño así (mismo vínculo product_pdf_design_products de
+ * siempre, sin nada hardcodeado), agregarItemAlPdf() lo suma al JSON del día
+ * de ESE diseño y reconstruye el PDF consolidado tileando copias de la celda
+ * que le corresponda sobre hojas de impresión estándar, agrupadas en páginas
+ * separadas por `accumulation_group_attribute` si el diseño lo configuró (ej.
+ * "Color banda 1"), igual que BandaService agrupa por color — pero genérico a
+ * cualquier atributo o ningún atributo.
  *
  * Un pedido con cantidad > 1 se resuelve según
  * `design.accumulation_quantity_mode` (ver duplicaCeldaPorCantidad()):
  * "duplicate" (default) repite la celda N veces; "badge" deja una sola celda
  * + un cartelito "xN" al lado, como ya hace CintaCoserService/CintaPlancharService.
  *
+ * Si la página tiene VARIOS `background` (varias etiquetas de tamaño/layout
+ * distinto, ej. una chica y una grande), qué etiqueta usa cada pedido lo
+ * decide el vínculo product_pdf_design_products.label_element_id que lo
+ * generó (el id de ESE background puntual) — viaja como 'label_element_id' en
+ * cada ítem (ver agregarItemAlPdf()) y generarPdfConsolidado() resuelve cada
+ * grupo con su propia celda/tamaño/grilla, recortando SOLO los elementos que
+ * le pertenecen a ese background (ver celdaPorBackground()) — pero todas las
+ * páginas resultantes, de cualquier etiqueta, se concatenan en el MISMO PDF
+ * del día (celdaDelDesign()). Así un mismo diseño puede ofrecer varias
+ * etiquetas distintas y cada producto elegir la suya, sin que eso implique
+ * PDFs separados.
+ *
  * Limitaciones de esta primera versión (no las necesita un diseño de celda
  * simple: nombre + ícono opcional, que es todo lo que usa BandaService hoy):
- * - Solo se usa la página 1 del diseño; el resto se ignora.
  * - El nombre de cada ítem no tiene apellido/atributos dinámicos asociados
  *   (esos datos son del pedido puntual, no tienen sentido en un PDF que
  *   mezcla pedidos de ventas distintas) — el color elegido por el cliente
@@ -68,7 +81,8 @@ class AccumulatingPdfDesignService
         string $nombreCompleto,
         ?string $customIcon,
         $fechaCompra = null,
-        $customColor = null
+        $customColor = null,
+        ?string $labelElementId = null
     ): void {
         if (!$design->esAcumulable()) {
             return;
@@ -102,6 +116,15 @@ class AccumulatingPdfDesignService
             'group_value' => self::resolverValorDeAgrupacion($design, $productOrder),
             'icono' => $customIcon,
             'color' => $customColor,
+            // Qué elemento `background` (qué "etiqueta") de la página usa este
+            // ítem — ver celdaDelDesign()/celdaPorBackground()/generarPdfConsolidado().
+            // null = la primera etiqueta de la página (default, diseños de una sola
+            // etiqueta, como siempre). Viene del vínculo producto→diseño
+            // (product_pdf_design_products.label_element_id) que generó este ítem,
+            // para que un mismo diseño pueda tener varias etiquetas distintas (varios
+            // backgrounds en la MISMA página) y cada producto elija la suya, todas en
+            // el mismo PDF.
+            'label_element_id' => $labelElementId,
         ];
 
         self::guardarItemsDelDia($design->id, $fecha, $items);
@@ -196,16 +219,20 @@ class AccumulatingPdfDesignService
         return $nombre !== '' ? $nombre : null;
     }
 
+    /**
+     * Un diseño acumulable puede tener varias "etiquetas" distintas (varias
+     * elementos `background`, cada uno su propio tamaño/layout) en la MISMA
+     * página: cada ítem trae su propio `label_element_id` (ver
+     * agregarItemAlPdf) según qué background eligió el vínculo
+     * producto→diseño que lo generó. Acá se parte primero por
+     * `label_element_id` (cada grupo resuelve su PROPIA celda/tamaño/grilla,
+     * como si fuera un diseño aparte) y recién dentro de cada uno se aplica
+     * agrupación por atributo + cantidad, igual que antes — pero todas las
+     * páginas resultantes (de cualquier etiqueta) se concatenan en el MISMO
+     * PDF del día.
+     */
     private static function generarPdfConsolidado(ProductPdfDesign $design, string $fecha, array $items): void
     {
-        $cellPage = self::celdaDelDesign($design);
-        if (!$cellPage) {
-            Log::warning('AccumulatingPdfDesignService: el diseño no tiene una página de celda válida', ['design_id' => $design->id]);
-            return;
-        }
-
-        [$cellW, $cellH] = self::resolverTamanoDeCelda($design, $cellPage);
-        [$originX, $originY] = self::resolverOrigenDeCelda($cellPage);
         $gap = (float) ($design->accumulation_gap_cm ?? 0.3);
         $hasGroups = !empty($design->accumulation_group_attribute);
         $headerH = $hasGroups ? self::HEADER_HEIGHT_CM : 0.0;
@@ -217,45 +244,69 @@ class AccumulatingPdfDesignService
         // un cartelito "xN" al lado (como ya hace hoy Cintas Coser/Planchar),
         // reservando ese ancho extra en cada columna de la grilla.
         $duplicarPorCantidad = $design->duplicaCeldaPorCantidad();
-        $badgeW = $duplicarPorCantidad ? 0.0 : self::BADGE_WIDTH_CM;
-        $slotW = $cellW + $badgeW;
 
-        $availableW = self::SHEET_WIDTH_CM - 2 * self::MARGIN_X_CM;
-        $availableH = self::SHEET_HEIGHT_CM - self::MARGIN_TOP_CM - $headerH - self::MARGIN_TOP_CM;
-        $cols = (int) ($design->accumulation_cols ?: max(1, (int) floor(($availableW + $gap) / ($slotW + $gap))));
-        $rows = (int) ($design->accumulation_rows ?: max(1, (int) floor(($availableH + $gap) / ($cellH + $gap))));
-        $porPagina = max(1, $cols * $rows);
-
-        // Agrupa manteniendo el orden de llegada de los pedidos.
-        $grupos = [];
+        $itemsPorEtiqueta = [];
         foreach ($items as $item) {
-            if ($duplicarPorCantidad) {
-                $cantidad = max(1, (int) ($item['cantidad'] ?? 1));
-                for ($i = 0; $i < $cantidad; $i++) {
-                    $grupos[$item['group_value'] ?? '__sin_grupo__'][] = $item;
-                }
-            } else {
-                $grupos[$item['group_value'] ?? '__sin_grupo__'][] = $item;
-            }
+            $itemsPorEtiqueta[$item['label_element_id'] ?? ''][] = $item;
         }
 
         $pages = [];
-        foreach ($grupos as $groupValue => $itemsDelGrupo) {
-            foreach (array_chunk($itemsDelGrupo, $porPagina) as $chunk) {
-                $pages[] = self::armarPagina(
-                    $cellPage,
-                    $chunk,
-                    $rows,
-                    $cellW,
-                    $cellH,
-                    $gap,
-                    $headerH,
-                    $hasGroups ? (string) $groupValue : null,
-                    $duplicarPorCantidad ? 0.0 : $badgeW,
-                    $originX,
-                    $originY
-                );
+        $gruposUsados = [];
+
+        foreach ($itemsPorEtiqueta as $labelElementId => $itemsDeEstaEtiqueta) {
+            $cellPage = self::celdaDelDesign($design, $labelElementId !== '' ? $labelElementId : null);
+            if (!$cellPage) {
+                Log::warning('AccumulatingPdfDesignService: no se encontró la etiqueta (background) para estos ítems', [
+                    'design_id' => $design->id,
+                    'label_element_id' => $labelElementId,
+                ]);
+                continue;
             }
+
+            [$cellW, $cellH] = self::resolverTamanoDeCelda($design, $cellPage);
+            [$originX, $originY] = self::resolverOrigenDeCelda($cellPage);
+
+            $badgeW = $duplicarPorCantidad ? 0.0 : self::BADGE_WIDTH_CM;
+            $slotW = $cellW + $badgeW;
+
+            $availableW = self::SHEET_WIDTH_CM - 2 * self::MARGIN_X_CM;
+            $availableH = self::SHEET_HEIGHT_CM - self::MARGIN_TOP_CM - $headerH - self::MARGIN_TOP_CM;
+            $cols = (int) ($design->accumulation_cols ?: max(1, (int) floor(($availableW + $gap) / ($slotW + $gap))));
+            $rows = (int) ($design->accumulation_rows ?: max(1, (int) floor(($availableH + $gap) / ($cellH + $gap))));
+            $porPagina = max(1, $cols * $rows);
+
+            // Agrupa manteniendo el orden de llegada de los pedidos.
+            $grupos = [];
+            foreach ($itemsDeEstaEtiqueta as $item) {
+                if ($duplicarPorCantidad) {
+                    $cantidad = max(1, (int) ($item['cantidad'] ?? 1));
+                    for ($i = 0; $i < $cantidad; $i++) {
+                        $grupos[$item['group_value'] ?? '__sin_grupo__'][] = $item;
+                    }
+                } else {
+                    $grupos[$item['group_value'] ?? '__sin_grupo__'][] = $item;
+                }
+            }
+
+            foreach ($grupos as $groupValue => $itemsDelGrupo) {
+                foreach (array_chunk($itemsDelGrupo, $porPagina) as $chunk) {
+                    $pages[] = self::armarPagina(
+                        $cellPage,
+                        $chunk,
+                        $rows,
+                        $cellW,
+                        $cellH,
+                        $gap,
+                        $headerH,
+                        $hasGroups ? (string) $groupValue : null,
+                        $duplicarPorCantidad ? 0.0 : $badgeW,
+                        $originX,
+                        $originY
+                    );
+                }
+            }
+
+            $gruposUsados = array_merge($gruposUsados, array_keys($grupos));
         }
 
         if (!$pages) {
@@ -267,24 +318,48 @@ class AccumulatingPdfDesignService
         Log::info('PDF consolidado del diseño acumulable regenerado', [
             'design_id' => $design->id,
             'fecha' => $fecha,
-            'grupos' => array_keys($grupos),
+            'grupos' => array_values(array_unique($gruposUsados)),
             'total_items' => count($items),
             'total_paginas' => count($pages),
         ]);
     }
 
-    /** Página 1 de data.pages, normalizada — es la celda que se repite. */
-    private static function celdaDelDesign(ProductPdfDesign $design): ?array
+    /**
+     * "Celda" (etiqueta) a usar para estos ítems: la página 1 del diseño,
+     * recortada a SOLO el elemento `background` elegido (y lo que esté
+     * anclado/dibujado sobre él — ver celdaPorBackground()) — así un diseño
+     * con varias etiquetas en la misma página (varios `background`) no mezcla
+     * los elementos de una con los de otra.
+     *
+     * $labelElementId null (o no encontrado) = la primera etiqueta
+     * (background) de la página — compat con diseños de una sola etiqueta,
+     * de siempre. Si la página no tiene NINGÚN background (diseño 100% a
+     * mano, previo a que existiera esta forma de armar la celda), se usa la
+     * página entera tal cual (comportamiento legacy).
+     */
+    private static function celdaDelDesign(ProductPdfDesign $design, ?string $labelElementId = null): ?array
     {
         $pages = $design->data['pages'] ?? [];
         if (empty($pages) || !is_array($pages[0] ?? null) || empty($pages[0]['elements'])) {
             return null;
         }
 
-        return $pages[0];
+        $page = $pages[0];
+
+        if (!$labelElementId) {
+            $primerBackground = self::backgroundDeCelda($page);
+            $labelElementId = $primerBackground['id'] ?? null;
+        }
+
+        if (!$labelElementId) {
+            // Sin ningún background en la página: no hay nada que recortar.
+            return $page;
+        }
+
+        return self::celdaPorBackground($page, $labelElementId) ?? $page;
     }
 
-    /** Elemento `background` de la celda, si lo hay (ver resolverTamanoDeCelda/resolverOrigenDeCelda). */
+    /** Primer elemento `background` de la página, si lo hay (ver celdaDelDesign/resolverTamanoDeCelda/resolverOrigenDeCelda). */
     private static function backgroundDeCelda(array $cellPage): ?array
     {
         foreach ($cellPage['elements'] as $el) {
@@ -294,6 +369,81 @@ class AccumulatingPdfDesignService
         }
 
         return null;
+    }
+
+    /**
+     * Recorta una página a UNA sola etiqueta: el elemento `background` con
+     * este id, más todo lo que le pertenece —
+     * 1. Los miembros de cualquier `layout_groups` cuyo `container_element_id`
+     *    sea este background (ícono/texto anclados — ver EtiquetaService::
+     *    aplicarLayoutGroups), y
+     * 2. Cualquier otro elemento suelto (sin layout_group) cuyo centro caiga
+     *    DENTRO del rectángulo de este background — ej. un texto fijo
+     *    colocado a mano sobre la etiqueta, sin anclaje.
+     * Otros `background` de la misma página (y lo que les pertenezca a
+     * ELLOS) quedan afuera. Devuelve null si $labelElementId no es un
+     * background real de esta página.
+     */
+    private static function celdaPorBackground(array $page, string $labelElementId): ?array
+    {
+        $elements = $page['elements'] ?? [];
+
+        $indexById = [];
+        foreach ($elements as $i => $el) {
+            if (isset($el['id']) && (string) $el['id'] !== '') {
+                $indexById[(string) $el['id']] = $i;
+            }
+        }
+
+        if (!isset($indexById[$labelElementId])) {
+            return null;
+        }
+
+        $background = $elements[$indexById[$labelElementId]];
+        if (($background['type'] ?? null) !== 'background') {
+            return null;
+        }
+
+        $miembros = [$labelElementId => true];
+        $groupsDeEstaEtiqueta = [];
+        foreach ($page['layout_groups'] ?? [] as $group) {
+            if (($group['container_element_id'] ?? null) !== $labelElementId) {
+                continue;
+            }
+            $groupsDeEstaEtiqueta[] = $group;
+            foreach ($group['members'] ?? [] as $memberId) {
+                $miembros[(string) $memberId] = true;
+            }
+        }
+
+        $bx1 = (float) ($background['x_cm'] ?? 0);
+        $by1 = (float) ($background['y_cm'] ?? 0);
+        $bx2 = $bx1 + (float) ($background['width_cm'] ?? 0);
+        $by2 = $by1 + (float) ($background['height_cm'] ?? 0);
+
+        foreach ($elements as $el) {
+            $id = (string) ($el['id'] ?? '');
+            if ($id === '' || isset($miembros[$id]) || ($el['type'] ?? null) === 'background') {
+                continue;
+            }
+            $cx = (float) ($el['x_cm'] ?? 0) + (float) ($el['width_cm'] ?? 0) / 2;
+            $cy = (float) ($el['y_cm'] ?? 0) + (float) ($el['height_cm'] ?? 0) / 2;
+            if ($cx >= $bx1 && $cx <= $bx2 && $cy >= $by1 && $cy <= $by2) {
+                $miembros[$id] = true;
+            }
+        }
+
+        $elementosDeLaEtiqueta = array_values(array_filter(
+            $elements,
+            fn($el) => isset($miembros[(string) ($el['id'] ?? '')])
+        ));
+
+        return [
+            'id' => $page['id'] ?? null,
+            'sheet' => $page['sheet'] ?? null,
+            'elements' => $elementosDeLaEtiqueta,
+            'layout_groups' => $groupsDeEstaEtiqueta,
+        ];
     }
 
     /**

@@ -10,7 +10,7 @@ Generaliza lo que hoy hacen `BandaService`, `CintaCoserService` y `CintaPlanchar
 
 En un diseño normal, `data.pages[]` es la hoja completa que se genera **una vez por pedido** (con sus N etiquetas iguales, si el producto trae una plancha).
 
-En un diseño **acumulable**, `data.pages[0]` deja de ser la hoja — pasa a representar **una sola celda** (una banda, una etiqueta individual). El backend toma esa celda y la repite sola, una vez por cada pedido que fue entrando ese día, tileándolas sobre hojas estándar (18.5×29cm, como el resto del sistema) — agrupando en páginas separadas por un atributo de la variante (o por la personalización ícono/color, ver sección 1) si así se configura.
+En un diseño **acumulable**, cada página de `data.pages[]` deja de ser una hoja — pasa a representar **una sola celda** (una banda, una etiqueta individual). El backend toma la celda que corresponda (ver sección 2.1 si el diseño tiene más de una) y la repite sola, una vez por cada pedido que fue entrando ese día, tileándolas sobre hojas estándar (21×29.7cm — A4 real, como el resto del sistema) — agrupando en páginas separadas por un atributo de la variante (o por la personalización ícono/color, ver sección 1) si así se configura.
 
 **El tamaño real de esa celda NO sale de `sheet.width_cm`/`height_cm`** — `sheet` sigue siendo solo el lienzo de edición, y puede quedar en el tamaño de hoja completo de siempre (A4, o lo que uses normalmente): no hace falta achicarlo. El tamaño real de la etiqueta se resuelve así, en este orden (`AccumulatingPdfDesignService::resolverTamanoDeCelda()`):
 1. `label_shape_id` del elemento `background` de la celda (la forma de etiqueta asignada desde el picker del editor — lo normal).
@@ -20,7 +20,7 @@ En un diseño **acumulable**, `data.pages[0]` deja de ser la hoja — pasa a rep
 
 Los elementos de la celda se guardan con sus coordenadas tal cual quedaron en el lienzo (ej. el `background` puede estar en `x_cm: 1.17` si lo dejaste cerca del margen de una hoja A4 completa) — el backend resta esa posición antes de tilear cada copia, así que no hace falta que estén en `(0,0)`.
 
-**Solo se usa la página 1** del diseño — si el diseño tiene más páginas, se ignoran en este modo.
+Un diseño puede tener **varias páginas/celdas distintas** (ej. una etiqueta chica y una grande) — ver sección 2.1 para cómo se elige cuál usa cada producto. Si el diseño tiene una sola página, es siempre esa (comportamiento de siempre).
 
 ---
 
@@ -78,7 +78,7 @@ Un pedido con cantidad 1 se ve exactamente igual en los dos modos (nunca sale ni
 
 ## 2. Cómo armar la celda (`data.pages[0]`)
 
-Es un diseño de UNA sola etiqueta chica, con el mismo editor y el mismo JSON de elementos de siempre — nada nuevo que aprender ahí. Podés seguir diagramando sobre una hoja completa como siempre (`sheet` no necesita achicarse, ver más arriba); lo único que importa es que el `background` de la etiqueta tenga asignada su forma real (`label_shape_id`) desde el picker del editor, como en cualquier diseño normal.
+Es un diseño de UNA (o varias, ver 2.1) etiqueta chica, con el mismo editor y el mismo JSON de elementos de siempre — nada nuevo que aprender ahí. Podés seguir diagramando sobre una hoja completa como siempre (`sheet` no necesita achicarse, ver más arriba); lo único que importa es que el `background` de la etiqueta tenga asignada su forma real (`label_shape_id`) desde el picker del editor, como en cualquier diseño normal.
 
 Elementos típicos de esta celda:
 - Un texto con `value_mode: "dynamic"`, `dynamic_field: "nombre_apellido"` — ahí va el nombre del pedido.
@@ -91,7 +91,32 @@ Elementos típicos de esta celda:
 - Una tipografía "De la compra" (`font_value_mode: "dynamic"`) — se usa la tipografía fija del diseño.
 - Apellido o fecha/número de pedido como campos dinámicos del nombre (`dynamic_field`) — esos datos son de un pedido puntual y no tienen sentido en un PDF que mezcla pedidos de ventas distintas. Solo `nombre_apellido` (el nombre completo del campo del formulario) está disponible ahí.
 
-### 2.1. Cintas Coser/Planchar: tamaño de letra según largo del nombre
+### 2.1. Un mismo diseño con varias etiquetas (mismo PDF del día)
+
+La página 1 puede tener **más de un elemento `background`** — cada uno es una etiqueta distinta (su propio tamaño/forma vía `label_shape_id`, su propio texto/ícono). Las páginas en sí NO son la unidad acá (eligiéndolas se movería todo el contenido de la página junto, sin poder elegir una etiqueta puntual dentro) — la unidad es el elemento `background`.
+
+Cada etiqueta de la página se arma con:
+- Su `background` (con su `label_shape_id` propio).
+- El texto/ícono que le pertenece, de dos formas (se pueden combinar):
+  - Anclado vía `layout_groups`, con `container_element_id` igual al `id` de ESE `background` (ver `PDF_LAYOUT_GROUPS.md`) — lo normal para nombre + ícono.
+  - Suelto, sin `layout_groups`, con su `x_cm`/`y_cm` cayendo DENTRO del rectángulo de ese `background` (ej. un texto fijo tipo "PARA PEGAR" puesto a mano sobre la etiqueta) — se asigna por posición.
+
+Al vincular un producto al diseño (sección 3), el vínculo indica **qué etiqueta le corresponde** mandando `labelElementId` (el `id` de ESE `background` puntual) en vez de dejarlo vacío:
+
+```
+POST /product-pdf-designs/{id}/products
+{ "productId": 500, "themeKey": null, "labelElementId": "bg-etiqueta-grande" }
+```
+
+Sin `labelElementId` (o `null`), el vínculo usa la primera etiqueta (el primer `background`) de la página — comportamiento de siempre para un diseño de una sola etiqueta.
+
+Cada pedido que entra recuerda con qué etiqueta fue generado — el PDF consolidado del día resuelve el tamaño/layout de cada ítem según SU PROPIO `background` (y SOLO los elementos que le pertenecen a ese background — los de otra etiqueta de la misma página no se mezclan), pero todos (sin importar cuál les tocó) terminan en el **mismo archivo PDF**, cada etiqueta en sus propias hojas dentro de ese PDF (cada una arma su propia grilla, no comparten celdas entre sí).
+
+Esto es distinto del caso de la sección 3 ("varios tipos, cada uno con su propio consolidado" — ej. Cinta Coser x24/x48): ahí cada tipo necesita un **PDF separado** y por eso se resuelve con dos diseños distintos. Acá el requisito es al revés — **un solo PDF** que mezcle etiquetas de tamaños/layouts distintos según qué se compró — por eso se resuelve con un solo diseño de varias etiquetas (varios `background` en la misma página), no con varios diseños.
+
+Requiere la migración `database/sql/alter_product_pdf_design_products_add_label_element.sql` (agrega `product_pdf_design_products.label_element_id`) — ver sección 6.
+
+### 2.2. Cintas Coser/Planchar: tamaño de letra según largo del nombre
 
 `CintaCoserService`/`CintaPlancharService` achican la fuente del nombre a mano si es muy largo (si no, se sale de la etiqueta o se corta) — esto **no es automático** en el modo acumulable, hay que configurarlo en el elemento `text` del nombre con `font_size_rules` (+ `length_rules_enabled: true` para que el editor lo muestre activado), igual que cualquier otro diseño del editor (ver `PDF_EDITOR.md`, columna `font_size_rules`).
 
@@ -123,13 +148,13 @@ Los umbrales de las vistas legacy (`resources/views/cintas-coser/consolidado.bla
 
 `font_size_px` (el de arriba, fuera de las reglas) queda como tamaño por defecto si el nombre resuelto no matchea ninguna regla — en la práctica no pasa nunca acá porque la última regla (`max_chars: null`) ya cubre "el resto", pero conviene dejarlo en el mismo valor que la primera regla.
 
-`CintaCoserService` tiene además una variante "grande" (etiquetas de 6×2.5cm, para pegar) con sus propios umbrales/tamaños — si se necesita replicar también esa variante, es **otro diseño acumulable más** (mismo producto, otra `variantId`/`themeKey`), con su propio `font_size_rules` (10/18 caracteres, 22/18/15pt sin ícono o 20/16/14pt con ícono — ver el bloque `$esGrande` en `cintas-coser/consolidado.blade.php`).
+`CintaCoserService` tiene además una variante "grande" (etiquetas de 6×2.5cm, para pegar) con sus propios umbrales/tamaños — si se necesita replicar también esa variante **en un PDF aparte**, es otro diseño acumulable más (mismo producto, otra `variantId`/`themeKey`), con su propio `font_size_rules` (10/18 caracteres, 22/18/15pt sin ícono o 20/16/14pt con ícono — ver el bloque `$esGrande` en `cintas-coser/consolidado.blade.php`). Si en cambio tiene que caer **en el mismo PDF** que la etiqueta chica, se arma como un segundo `background` en la misma página del mismo diseño y se vincula ese producto puntual con `labelElementId` — ver sección 2.1.
 
 ---
 
 ## 3. Vincular el producto — sin cambios
 
-Se usa exactamente el mismo endpoint de siempre, sin ningún campo nuevo:
+Se usa exactamente el mismo endpoint de siempre, sin ningún campo nuevo (salvo `labelElementId`, opcional — ver sección 2.1 si el diseño tiene varias etiquetas en la misma página):
 
 ```
 POST /product-pdf-designs/{id}/products
@@ -199,6 +224,7 @@ No hay endpoint de "regenerar" para estos PDFs (el que existe es específico de 
 Hace falta aplicar, en orden, en la base de ese entorno:
 1. `database/sql/alter_product_pdf_designs_add_accumulation.sql` — agrega `fill_mode`/`accumulation_group_attribute`/`accumulation_cols`/`accumulation_rows`/`accumulation_gap_cm`. **Ya aplicado en desarrollo local** (confirmado 2026-11-11).
 2. `database/sql/alter_product_pdf_designs_add_quantity_mode.sql` — agrega `accumulation_quantity_mode`. **Todavía NO aplicado en desarrollo local** — sin esto, `accumulationQuantityMode` no se puede guardar (el modo `"badge"` de la sección 1.1).
+3. `database/sql/alter_product_pdf_design_products_add_label_element.sql` — agrega `product_pdf_design_products.label_element_id`. **Todavía NO aplicado en ningún entorno** (2026-11-12) — sin esto, `labelElementId` no se puede guardar (varias etiquetas en una misma página, sección 2.1).
 
 Verificar el estado real en cada entorno antes de asumir — esto puede haber cambiado desde que se escribió esta nota.
 

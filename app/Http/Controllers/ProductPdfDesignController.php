@@ -942,6 +942,10 @@ class ProductPdfDesignController extends Controller
             'themeKey' => 'nullable|integer',
             // id de data.pages[].id de ESTE diseño — null = usa todas sus páginas.
             'pageId' => 'nullable|string|max:255',
+            // id de un elemento `background` de ESTE diseño (diseño acumulable con
+            // varias etiquetas en la misma página) — null = la primera etiqueta de
+            // la página. Ver AccumulatingPdfDesignService.
+            'labelElementId' => 'nullable|string|max:255',
             'sortOrder' => 'nullable|integer',
         ]);
         if ($validator->fails()) {
@@ -955,10 +959,11 @@ class ProductPdfDesignController extends Controller
                 'product_id' => $request->productId,
                 'theme_key' => $request->themeKey,
                 'page_id' => $request->pageId,
+                'label_element_id' => $request->labelElementId,
                 'sort_order' => $request->sortOrder ?? 0,
             ]);
         } catch (QueryException $e) {
-            return $this->validationError(['themeKey' => ['Ya existe un vínculo idéntico (mismo producto, variante, diseño y página)']]);
+            return $this->validationError(['themeKey' => ['Ya existe un vínculo idéntico (mismo producto, variante, diseño, página y etiqueta)']]);
         }
 
         $design->load(['products:id,name,sku', 'labelShape', 'generalStatus', 'user:id,name,lastName']);
@@ -982,6 +987,8 @@ class ProductPdfDesignController extends Controller
             'themeKeys.*' => 'nullable|integer',
             // Misma página (o diseño entero) para TODAS las temáticas de esta llamada.
             'pageId' => 'nullable|string|max:255',
+            // Misma etiqueta (ver attachProduct) para TODAS las temáticas de esta llamada.
+            'labelElementId' => 'nullable|string|max:255',
             'sortOrder' => 'nullable|integer',
         ]);
         if ($validator->fails()) {
@@ -999,13 +1006,14 @@ class ProductPdfDesignController extends Controller
                     'product_id' => $request->productId,
                     'theme_key' => $themeKey,
                     'page_id' => $request->pageId,
+                    'label_element_id' => $request->labelElementId,
                     'sort_order' => $request->sortOrder ?? 0,
                 ]);
                 $created[] = $link;
             } catch (QueryException $e) {
                 $skipped[] = [
                     'themeKey' => $themeKey,
-                    'reason' => 'Ya existe un vínculo idéntico (mismo producto, variante, diseño y página)',
+                    'reason' => 'Ya existe un vínculo idéntico (mismo producto, variante, diseño, página y etiqueta)',
                 ];
             }
         }
@@ -1078,6 +1086,8 @@ class ProductPdfDesignController extends Controller
             'links.*.themeKeys.*' => 'nullable|integer',
             // Misma página (o diseño entero) para todas las temáticas de ESE producto.
             'links.*.pageId' => 'nullable|string|max:255',
+            // Misma etiqueta (ver attachProduct) para todas las temáticas de ESE producto.
+            'links.*.labelElementId' => 'nullable|string|max:255',
             'links.*.sortOrder' => 'nullable|integer',
         ]);
         if ($validator->fails()) {
@@ -1096,13 +1106,14 @@ class ProductPdfDesignController extends Controller
                         'product_id' => $link['productId'],
                         'theme_key' => $themeKey,
                         'page_id' => $link['pageId'] ?? null,
+                        'label_element_id' => $link['labelElementId'] ?? null,
                         'sort_order' => $link['sortOrder'] ?? 0,
                     ]);
                 } catch (QueryException $e) {
                     $skipped[] = [
                         'productId' => $link['productId'],
                         'themeKey' => $themeKey,
-                        'reason' => 'Ya existe un vínculo idéntico (mismo producto, variante, diseño y página)',
+                        'reason' => 'Ya existe un vínculo idéntico (mismo producto, variante, diseño, página y etiqueta)',
                     ];
                 }
             }
