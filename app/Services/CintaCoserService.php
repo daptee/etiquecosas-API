@@ -200,4 +200,44 @@ class CintaCoserService
             }
         }
     }
+
+    /**
+     * Elimina SOLO la etiqueta de una línea de venta puntual (no todo el
+     * pedido) del PDF del día — usada al regenerar un PDF individual desde
+     * PdfDirectoryController::regeneratePdf().
+     */
+    public static function limpiarEtiquetaDeProductOrder(int $productOrderId, $fechaCompra = null): void
+    {
+        $fechaCarpeta = $fechaCompra
+            ? Carbon::parse($fechaCompra)->setTimezone('America/Argentina/Buenos_Aires')->format('d-m-Y')
+            : Carbon::now('America/Argentina/Buenos_Aires')->format('d-m-Y');
+        $dirPath = storage_path("app/pdf/Cintas - Coser");
+
+        foreach (['x24', 'x48'] as $tipo) {
+            $jsonFile = "{$dirPath}/{$fechaCarpeta}-{$tipo}.json";
+
+            if (file_exists($jsonFile)) {
+                $etiquetas = json_decode(file_get_contents($jsonFile), true) ?? [];
+
+                $etiquetasFiltradas = array_values(array_filter($etiquetas, function ($etiqueta) use ($productOrderId) {
+                    return ($etiqueta['product_order_id'] ?? null) != $productOrderId;
+                }));
+
+                if (count($etiquetasFiltradas) === count($etiquetas)) {
+                    continue;
+                }
+
+                if (count($etiquetasFiltradas) > 0) {
+                    file_put_contents($jsonFile, json_encode($etiquetasFiltradas, JSON_PRETTY_PRINT));
+                    self::generarPdfConsolidado($fechaCarpeta, $tipo, $etiquetasFiltradas);
+                } else {
+                    unlink($jsonFile);
+                    $pdfFile = "{$dirPath}/{$fechaCarpeta}-coser-{$tipo}.pdf";
+                    if (file_exists($pdfFile)) {
+                        unlink($pdfFile);
+                    }
+                }
+            }
+        }
+    }
 }

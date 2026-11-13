@@ -66,7 +66,12 @@ class GenerateSalePdfsJob implements ShouldQueue
                 $customIcon = $customData['icon']['icon'] ?? null;
 
                 if ($customIcon && $customData['icon']['name'] == 'Sin dibujo') {
-                    $customIcon = null;
+                    // '' (no null): el cliente SÍ personalizó, eligiendo
+                    // explícitamente no llevar ícono — EtiquetaService::
+                    // resolverElementoDesign distingue esto ('' = respeta la
+                    // elección, queda vacío) de null (no personalizó nada,
+                    // cae al icon_id de respaldo del diseño).
+                    $customIcon = '';
                 }
 
                 // === CINTAS PARA COSER (Producto 1291) ===

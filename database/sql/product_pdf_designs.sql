@@ -6,7 +6,8 @@
 CREATE TABLE `product_pdf_designs` (
   `id`             BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   `label_shape_id` BIGINT UNSIGNED NULL,
-  `name`           VARCHAR(255) NOT NULL,
+  `user_id`        BIGINT UNSIGNED NULL,
+  `name`          VARCHAR(255) NOT NULL,
   `data`           JSON NOT NULL,
   `is_published`   TINYINT(1) NOT NULL DEFAULT 0,
   `status_id`      BIGINT UNSIGNED NOT NULL DEFAULT 1,
@@ -16,6 +17,8 @@ CREATE TABLE `product_pdf_designs` (
   PRIMARY KEY (`id`),
   CONSTRAINT `product_pdf_designs_label_shape_id_foreign`
     FOREIGN KEY (`label_shape_id`) REFERENCES `label_shapes` (`id`),
+  CONSTRAINT `product_pdf_designs_user_id_foreign`
+    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL,
   CONSTRAINT `product_pdf_designs_status_id_foreign`
     FOREIGN KEY (`status_id`) REFERENCES `general_statuses` (`id`)
 );

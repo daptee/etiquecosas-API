@@ -1,0 +1,168 @@
+{
+  "pages": [
+    {
+      "id": "page-1794545296920-18-1893",
+      "name": "P\u00e1gina 1",
+      "sheet": {
+        "width_cm": 21,
+        "height_cm": 29.7,
+        "columns": 3,
+        "rows": 5
+      },
+      "elements": [
+        {
+          "id": "el-1794546325265-1-6537",
+          "type": "background",
+          "x_cm": 0.5,
+          "y_cm": 1.66,
+          "z_index": 0,
+          "width_cm": 4.5,
+          "height_cm": 3.5,
+          "label_shape_id": 22,
+          "fill": {
+            "type": "none"
+          },
+          "group_id": "group-1794553276369-7-1610",
+          "editable_by_customer": false
+        },
+        {
+          "id": "el-1794546352747-2-6273",
+          "type": "text",
+          "x_cm": 0.67,
+          "y_cm": 2.01,
+          "z_index": 2,
+          "width_cm": 3.08,
+          "height_cm": 2.81,
+          "content": "{{customer_first_name}}",
+          "font_id": 14,
+          "font_size_px": 12,
+          "line_height": 1.15,
+          "letter_spacing_px": 0,
+          "letter_spacing_rules_enabled": false,
+          "letter_spacing_tiers": [
+            {
+              "max_chars": 10,
+              "letter_spacing_px": 0
+            },
+            {
+              "max_chars": 18,
+              "letter_spacing_px": 0
+            },
+            {
+              "max_chars": 99,
+              "letter_spacing_px": 0
+            }
+          ],
+          "line_height_rules_enabled": false,
+          "line_height_tiers": [
+            {
+              "max_chars": 10,
+              "line_height": 1.15
+            },
+            {
+              "max_chars": 18,
+              "line_height": 1.15
+            },
+            {
+              "max_chars": 99,
+              "line_height": 1.15
+            }
+          ],
+          "font_value_mode": "fixed",
+          "color": {
+            "mode": "hex",
+            "value": "#2C2A2D",
+            "dynamic_attribute_id": null,
+            "editable_by_customer": false
+          },
+          "value_mode": "dynamic",
+          "font_weight": 400,
+          "text_align": "center",
+          "vertical_align": "middle",
+          "min_lines": 1,
+          "max_lines": 1,
+          "max_chars_per_line": 11,
+          "length_rules_enabled": true,
+          "length_rules": [
+            {
+              "max_chars": 3,
+              "font_size_px": 36
+            },
+            {
+              "max_chars": 5,
+              "font_size_px": 30
+            },
+            {
+              "max_chars": 7,
+              "font_size_px": 22
+            },
+            {
+              "max_chars": 9,
+              "font_size_px": 21
+            },
+            {
+              "max_chars": 11,
+              "font_size_px": 19
+            },
+            {
+              "max_chars": 99,
+              "font_size_px": 17
+            }
+          ],
+          "group_id": "group-1794553276369-7-1610",
+          "dynamic_field": "nombre",
+          "fill": {
+            "type": "none"
+          },
+          "dynamic_attribute_id": null,
+          "vertical_offset_cm": 1.07,
+          "font_size_rules": [
+            {
+              "max_chars": 3,
+              "font_size_px": 36
+            },
+            {
+              "max_chars": 5,
+              "font_size_px": 30
+            },
+            {
+              "max_chars": 7,
+              "font_size_px": 22
+            },
+            {
+              "max_chars": 9,
+              "font_size_px": 21
+            },
+            {
+              "max_chars": 11,
+              "font_size_px": 19
+            },
+            {
+              "max_chars": null,
+              "font_size_px": 17
+            }
+          ],
+          "editable_by_customer": true
+        },
+        {
+          "id": "el-1794546372372-3-313",
+          "type": "icon",
+          "x_cm": 3.58,
+          "y_cm": 2.81,
+          "z_index": 1,
+          "width_cm": 1.2,
+          "height_cm": 1.2,
+          "icon_id": null,
+          "value_mode": "dynamic",
+          "group_id": "group-1794553276369-7-1610",
+          "fill": {
+            "type": "none"
+          },
+          "dynamic_attribute_id": null,
+          "editable_by_customer": true,
+          "editable_field": "icon"
+        }
+      ]
+    }
+  ]
+}

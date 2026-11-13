@@ -1,0 +1,110 @@
+# Interlineado y espacio entre letras en el diseñador de PDF
+
+Igual que ya se puede elegir en cuántos renglones parte un texto (`max_lines`/`min_lines`) o el tamaño de fuente según la longitud (`font_size_rules`), ahora también se puede configurar por elemento de texto:
+
+- **`line_height`** — el interlineado (espacio entre renglones).
+- **`letter_spacing_px`** — el espacio extra entre letras.
+
+Ninguno de los dos es obligatorio — si no se mandan, el texto se comporta exactamente igual que antes.
+
+---
+
+## `line_height`
+
+```json
+{ "type": "text", "content": "EJEMPLO", "font_size_px": 40, "line_height": 1.8 }
+```
+
+- Es el mismo número que CSS `line-height` **sin unidad**: multiplica el tamaño de fuente. `1.0` = renglones pegados (sin aire extra), `2.0` = el doble de alto que el tamaño de fuente entre renglón y renglón.
+- **Default: `1.15`** — es el valor que ya se usaba fijo antes de poder configurarlo, así que un diseño viejo sin este campo se ve exactamente igual que siempre.
+- Se clampea entre `0.5` y `5`.
+- Solo tiene efecto visible en textos de **más de un renglón** — con nombre/apellido en una sola línea no se nota.
+
+**Importante — corrección automática por tipografía**: dompdf no interpreta `line-height` como un multiplicador puro del tamaño de fuente — lo combina con las métricas verticales propias de cada archivo de fuente (`hhea.ascent`/`descent`), que varían mucho de una tipografía a otra (una fuente "display" puede tener hasta 60-70% más métrica vertical que una genérica). Sin corregir esto, el mismo `line_height: 1.15` se vería con MUCHO más aire en una tipografía que en otra. El backend ahora lee esas métricas del archivo de fuente real que usa cada elemento y ajusta el valor antes de mandarlo a dompdf, para que el mismo número de `line_height` se vea igual sin importar qué tipografía (`font_id` o la de un atributo) esté usando ese texto. No hay que hacer nada para esto — es automático y transparente.
+
+### `line_height_rules` — interlineado según la longitud del texto
+
+Igual que `font_size_rules` (tamaño de fuente según cantidad de caracteres), `line_height_rules` cambia el **interlineado** según cuántos caracteres tiene el texto ya resuelto (con el nombre/apellido real del cliente, no el texto de ejemplo del editor):
+
+```json
+{
+  "type": "text",
+  "content": "{{customer_name}}",
+  "font_size_px": 40,
+  "line_height": 1.0,
+  "line_height_rules": [
+    { "max_chars": 7, "line_height": 1.0 },
+    { "max_chars": 15, "line_height": 1.8 },
+    { "max_chars": null, "line_height": 2.0 }
+  ]
+}
+```
+
+Con esa config: "ANA" (3 caracteres) usa `line_height: 1.0`, "ROBERTITO" (9 caracteres) usa `1.8`, "GUILLERMINA CASTRO" (18 caracteres) usa `2.0`.
+
+- Es una lista ordenada por `max_chars` (de menor a mayor); se usa la primera regla cuyo `max_chars` sea mayor o igual a la cantidad de caracteres. Una regla sin `max_chars` (o `null`) actúa como "para el resto" — conviene ponerla al final.
+- Cada `line_height` de la lista se clampea igual que el campo suelto (0.5 a 5).
+- Si no se manda `line_height_rules` (o ninguna regla matchea), se usa el `line_height` fijo del elemento — total compatibilidad con diseños que no usan esto.
+## `letter_spacing_px`
+
+```json
+{ "type": "text", "content": "ESCRIBI VOS", "font_size_px": 40, "letter_spacing_px": 4 }
+```
+
+- Espacio **extra** (en px) que se suma entre cada **letra** (no entre palabras), además del espacio normal de esa tipografía. `0` = sin cambios. Puede ser negativo para juntar más las letras.
+- **Default: `0`**.
+- Se clampea entre `-50` y `200`.
+- A diferencia de un espaciado por palabra, esto afecta a **todo el texto**, tenga una palabra sola o varias.
+
+### `letter_spacing_rules` — espaciado entre letras según la longitud del texto
+
+Mismo esquema que `font_size_rules`/`line_height_rules`: cambia el espaciado entre letras según cuántos caracteres tiene el texto ya resuelto:
+
+```json
+{
+  "type": "text",
+  "content": "{{customer_name}}",
+  "font_size_px": 40,
+  "letter_spacing_px": 0,
+  "letter_spacing_rules": [
+    { "max_chars": 7, "letter_spacing_px": 0 },
+    { "max_chars": 15, "letter_spacing_px": -1 },
+    { "max_chars": null, "letter_spacing_px": -2 }
+  ]
+}
+```
+
+Con esa config: "ANA" (3 caracteres) usa `0`, "ROBERTITO" (9 caracteres) usa `-1` (un poco más juntas las letras para ganar espacio), "GUILLERMINA CASTRO" (18 caracteres) usa `-2`.
+
+- Misma lógica que `line_height_rules`: lista ordenada por `max_chars`, se usa la primera regla cuyo `max_chars` sea mayor o igual a la cantidad de caracteres, una regla sin `max_chars` (o `null`) es "para el resto".
+- Cada `letter_spacing_px` de la lista se clampea igual que el campo suelto (-50 a 200).
+- Si no se manda `letter_spacing_rules` (o ninguna regla matchea), se usa el `letter_spacing_px` fijo del elemento (o `0`) — total compatibilidad con diseños que no usan esto.
+
+---
+
+## Verificación
+
+Ambas propiedades se probaron generando un PDF real y leyendo los operadores de dibujo del PDF resultante (no a simple vista):
+
+- `letter_spacing_px` se traduce al operador `Tc` de PDF (espaciado de carácter nativo del formato) — confirmado que con `10px` aparece `7.500 Tc` en el stream, y con `0px` no aparece (default `0`).
+- `line_height` se confirmó midiendo la distancia real entre renglones: con `line_height: 2.5` la distancia entre líneas fue exactamente 2.5 veces la de `line_height: 1.0`.
+
+---
+
+## Dónde usarlo
+
+Van en el mismo elemento `type: "text"` que ya tiene `font_size_px`, `max_lines`, etc. — no son un elemento aparte:
+
+```json
+{
+  "type": "text",
+  "content": "{{customer_name}}",
+  "font_id": 5,
+  "font_size_px": 40,
+  "line_height": 1.4,
+  "letter_spacing_px": 2,
+  "max_lines": 2,
+  "text_align": "center",
+  "vertical_align": "middle"
+}
+```

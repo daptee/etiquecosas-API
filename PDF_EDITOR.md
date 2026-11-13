@@ -80,8 +80,10 @@ Un diseño **no pertenece a un solo producto**: es una entidad independiente (un
 | `labelShapeId` | number \| null | Forma/tamaño de etiqueta usada (`label_shapes.id`) |
 | `name` | string | Nombre visible del diseño, ej. "Basquet - Maxi" |
 | `data` | object | **El diseño en sí** (ver esquema abajo) |
-| `isPublished` | boolean | `false` = borrador (el admin lo está editando, no se usa para generar PDFs reales aunque ya esté vinculado a productos). `true` = se usa en la generación real de la próxima venta |
+| `isPublished` | boolean | `false` = borrador (el admin lo está editando). `true` = terminado, listo para producción |
 | `statusId` | 1 \| 2 | 1 = activo, 2 = inactivo |
+
+**Para que un diseño se use realmente al generar el PDF de una venta, tienen que darse las dos cosas: `isPublished: true` Y `statusId: 1`.** Cualquiera de las dos que falte (borrador sin publicar, o publicado pero desactivado) hace que el sistema caiga al flujo legacy para ese producto, como si no hubiera diseño nuevo. Esto te permite "pausar" un diseño ya publicado con `statusId: 2` sin perder el estado de publicado (y sin tener que despublicarlo y volver a publicarlo después).
 | `products` | array | (solo lectura, viene incluido en las respuestas) los productos vinculados a este diseño, cada uno con su `pivot.themeKey` y `pivot.id` (el id del vínculo, para poder desvincularlo) |
 
 Un diseño se puede crear **sin ningún producto vinculado** — sirve como borrador o como plantilla para reutilizar más adelante. No es necesario mandar `productId` al crearlo.
@@ -91,7 +93,9 @@ Un diseño se puede crear **sin ningún producto vinculado** — sirve como borr
 | Campo | Tipo | Descripción |
 |---|---|---|
 | `productId` | number | Producto que usa este diseño |
-| `themeKey` | number \| null | ID de la variante/temática que, **en ese producto**, selecciona este diseño (el mismo id que hoy usan las `attribute_values` de una variante). `null` = ese producto usa el diseño sin selector de variante |
+| `themeKey` | number \| null | El `id` de `product_variants` (**no** de `attribute_values`) que, **en ese producto**, selecciona este diseño. `null` = ese producto usa el diseño sin selector de variante |
+| `pageId` | string \| null | Si se manda, usa SOLO esa página de este diseño (`data.pages[].id`) en vez de todas sus páginas. Ver [PDF_PAGINAS_COMBINADAS.md](PDF_PAGINAS_COMBINADAS.md) |
+| `sortOrder` | number (default `0`) | Orden de armado cuando un producto+variante combina páginas de varios vínculos/diseños. Ver [PDF_PAGINAS_COMBINADAS.md](PDF_PAGINAS_COMBINADAS.md) |
 
 > Un mismo `productId` + `themeKey` solo puede estar vinculado a **un** diseño a la vez (si ya hay un vínculo con esa combinación, hay que desvincularlo antes de crear otro).
 
@@ -175,13 +179,74 @@ Un diseño de **dos páginas** es simplemente dos entradas en `pages`, cada una 
 | `width_cm`, `height_cm` | sí | Tamaño del elemento, en cm |
 | `z_index` | no (default 0) | Orden de apilado |
 | `icon_id` | solo en `icon` | ID de `personalization_icons` (catálogo existente, `GET /api/icons`) |
-| `font_id` | solo en `text` | ID de `typographies` (catálogo existente, `GET /api/typographies`) |
-| `font_size_px` | solo en `text` | Tamaño de fuente |
-| `content` | solo en `text` | Texto o placeholder. Hoy el único placeholder soportado es `{{customer_name}}` (se reemplaza por el nombre que puso el cliente en el checkout). **Nunca puede llevar HTML** — se limpia en el servidor |
+| `font_id` | solo en `text` | ID de `typographies` (catálogo existente, `GET /api/typographies`). Se ignora si `dynamic_attribute_id` matchea un atributo de tipo tipografía de la variante |
+| `dynamic_attribute_id` | opcional en `text`/`icon` | ID de un **atributo** (no de un valor) — usa la tipografía/ícono que trae el valor elegido de ese atributo en la variante de la venta, en vez de `font_id`/`icon_id` fijos. Ver [PDF_TIPOGRAFIA_POR_ATRIBUTO.md](PDF_TIPOGRAFIA_POR_ATRIBUTO.md) / [PDF_ICONO_PERSONALIZADO.md](PDF_ICONO_PERSONALIZADO.md) |
+| `font_size_px` | solo en `text` | Tamaño de fuente por defecto (se usa si no hay `font_size_rules`, o si ninguna regla matchea) |
+| `content` | solo en `text` | Texto literal. Si `value_mode` es `"fixed"` (o no se manda `value_mode`), se usa tal cual — también acepta los placeholders `{{customer_name}}` / `{{customer_first_name}}` / `{{customer_last_name}}` dentro del string (ver nota abajo), y `{{fecha}}` / `{{numero_pedido}}` / `{{id_producto}}` (`products.id` del producto comprado) con los datos de la venta. **Se respeta mayúscula/minúscula tal cual se tipea** (a diferencia de las vistas legacy, que siempre fuerzan mayúsculas) — si querés "CIRO" en mayúscula, escribilo así. **Nunca puede llevar HTML** — se limpia en el servidor |
+| `value_mode` | solo en `text`, opcional (default `"fixed"`) | `"fixed"` = usar `content` literal. Cualquier otro valor (ej. `"dynamic"`) + `dynamic_field` = ignorar `content` y usar el dato real del cliente |
+| `dynamic_field` | solo en `text`, requerido si `value_mode` no es `"fixed"` | `nombre_apellido` (nombre completo) \| `nombre` (solo nombre) \| `apellido` (solo apellido) \| `fecha` (fecha de la venta, `d/m/Y`) \| `numero_pedido` (id de la venta). Cualquier otro valor se descarta en el servidor (queda `null`, se usa `content` como fallback) |
+| `max_lines` | solo en `text`, opcional (default `3`) | Máximo de renglones en los que se puede partir el texto. Se clampea entre 1 y 20 |
+| `min_lines` | solo en `text`, opcional (default `1`) | Mínimo de renglones — si el texto entra en menos, se completa con renglones vacíos para reservar el espacio. Se clampea entre 1 y 20 |
+| `max_chars_per_line` | solo en `text`, opcional (default `10`) | Caracteres por renglón antes de cortar a la siguiente palabra. Se clampea entre 1 y 200 |
+| `font_size_rules` (alias: `length_rules` + `length_rules_enabled`) | solo en `text`, opcional | Escala de tamaño de fuente según la cantidad de caracteres del texto resuelto — ver ejemplo abajo. Si `length_rules_enabled` es `false`, se ignoran las reglas aunque estén cargadas (útil para guardarlas armadas pero desactivadas). Si no se manda nada de esto, se usa siempre `font_size_px` |
+| `text_align` | solo en `text`, opcional (default `center`) | `left` \| `center` \| `right` |
+| `vertical_align` | solo en `text`, opcional (default `middle`) | `top` \| `middle` \| `bottom` — centrado real dentro de la caja del elemento |
+| `vertical_offset_cm` | solo en `text`, opcional (default `0`) | Corrimiento fino vertical adicional (en cm), para ajustar ópticamente sin mover `y_cm`. Se clampea entre -50 y 50 |
+| `font_weight` | solo en `text`, opcional (default `400`) | Grosor de fuente (100 a 900, como CSS `font-weight`) |
+| `line_height` | solo en `text`, opcional (default `1.15`) | Interlineado fijo — mismo número que CSS `line-height` (sin unidad, multiplica el tamaño de fuente). Se usa si no hay `line_height_rules`, o si ninguna regla matchea. Se clampea entre 0.5 y 5. Ver [PDF_INTERLINEADO_ESPACIADO.md](PDF_INTERLINEADO_ESPACIADO.md) |
+| `line_height_rules` | solo en `text`, opcional | Interlineado según la cantidad de caracteres del texto resuelto — mismo esquema que `font_size_rules`. Ver [PDF_INTERLINEADO_ESPACIADO.md](PDF_INTERLINEADO_ESPACIADO.md) |
+| `letter_spacing_px` | solo en `text`, opcional (default `0`) | Espacio extra entre LETRAS, en px, además del espacio normal de la fuente. Se usa si no hay `letter_spacing_rules`, o si ninguna regla matchea. Se clampea entre -50 y 200. Ver [PDF_INTERLINEADO_ESPACIADO.md](PDF_INTERLINEADO_ESPACIADO.md) |
+| `letter_spacing_rules` | solo en `text`, opcional | Espaciado entre letras según la cantidad de caracteres del texto resuelto — mismo esquema que `font_size_rules`/`line_height_rules`. Ver [PDF_INTERLINEADO_ESPACIADO.md](PDF_INTERLINEADO_ESPACIADO.md) |
+| `padding_cm` | opcional en `background`, opcional (default `0`) | Insetea el color hacia adentro de su propia caja (por ejemplo, para dejar un borde/margen visible alrededor). Se clampea entre 0 y 50 |
+| `rotation_deg` | opcional en cualquier tipo (default `0`) | Rotación del elemento en grados, sobre su propio centro. Se clampea entre -360 y 360 |
 | `color` | en `background`/`text` | `{ "mode": "hex" \| "cmyk", "value": "..." }`. Para `cmyk`, `value` es `"c,m,y,k"` (0 a 1), igual que ya usan las vistas legacy |
 | `label_shape_id` | opcional en `background` | Referencia a `label_shapes.id` si ese elemento representa una forma del catálogo |
+| `background_image` | opcional en `background` | Ruta de una imagen propia de ESTE elemento (subida por `POST .../element-image`) — reemplaza el `color` como relleno. Ver [PDF_IMAGENES_ETIQUETA_E_ICONO.md](PDF_IMAGENES_ETIQUETA_E_ICONO.md) |
+| `custom_icon_path` | opcional en `icon` | Ruta de una imagen propia de ESTE elemento (subida por `POST .../element-image`, NO aparece en `GET /api/icons`) — reemplaza `icon_id`. Ver [PDF_IMAGENES_ETIQUETA_E_ICONO.md](PDF_IMAGENES_ETIQUETA_E_ICONO.md) |
+| `group_id` | opcional | Puramente organizativo para el editor (agrupar los elementos de una misma etiqueta física); el backend no lo usa. Para que varios elementos mantengan una distancia fija entre sí y queden centrados en su etiqueta, ver `layout_groups` en [PDF_LAYOUT_GROUPS.md](PDF_LAYOUT_GROUPS.md) |
 | `editable_by_customer` | opcional (default `false`) | Si es `true`, el cliente puede modificar este elemento en el checkout |
 | `editable_field` | requerido si `editable_by_customer` es `true` | `text` \| `color` \| `icon` — qué puede cambiar el cliente en ese elemento |
+
+⚠️ **Importante sobre `dynamic_field` + cajas angostas**: si el texto real del cliente (nombre o apellido) es más largo que el string de prueba que usaste al diseñar, y no entra en `width_cm` al `font_size_px` configurado, el texto se corta horizontalmente (una palabra sin espacios no se puede partir en renglones). Para evitar esto con apellidos largos, activá `length_rules_enabled: true` con reglas que reduzcan la fuente según la cantidad de caracteres, o dejá el `width_cm` con margen de sobra.
+
+**Nombre y apellido en posiciones separadas**: si querés poner el nombre en un extremo de la etiqueta y el apellido en otro, usá **dos elementos `text` distintos**, cada uno con su propio `x_cm`/`y_cm`. Hay dos formas equivalentes de decirle al backend qué mostrar en cada uno:
+
+- Con `value_mode`/`dynamic_field` (la forma que usa hoy el editor):
+  ```json
+  { "type": "text", "value_mode": "dynamic", "dynamic_field": "nombre", "content": "NOMBRE EJEMPLO", "x_cm": 0.3, "y_cm": 0.3, "width_cm": 2, "height_cm": 1, "font_size_px": 40 },
+  { "type": "text", "value_mode": "dynamic", "dynamic_field": "apellido", "content": "APELLIDO EJEMPLO", "x_cm": 3.5, "y_cm": 1.8, "width_cm": 2, "height_cm": 1, "font_size_px": 40 }
+  ```
+  `content` acá es solo un texto de referencia para cuando se previsualiza/edita sin datos reales — al generar el PDF real se ignora y se usa el nombre/apellido del cliente.
+
+- Con placeholders dentro de `content` (forma anterior, se sigue soportando):
+  ```json
+  { "type": "text", "content": "{{customer_first_name}}", "x_cm": 0.3, "y_cm": 0.3, "width_cm": 2, "height_cm": 1, "font_size_px": 40 },
+  { "type": "text", "content": "{{customer_last_name}}", "x_cm": 3.5, "y_cm": 1.8, "width_cm": 2, "height_cm": 1, "font_size_px": 40 }
+  ```
+
+`{{customer_name}}` / `dynamic_field: "nombre_apellido"` siguen existiendo para cuando querés nombre y apellido juntos en un solo bloque (con el corte automático nombre/apellido de `formatName()`). El nombre o el apellido solos (`nombre`/`apellido`/`{{customer_first_name}}`/`{{customer_last_name}}`) son texto plano — cada uno se corta solo por palabras si no entra en `max_chars_per_line` (normalmente no hace falta, un nombre o apellido solo rara vez necesita más de un renglón, pero si es más largo que la caja, conviene `length_rules` — ver la advertencia arriba).
+
+**`max_lines` / `min_lines` / `max_chars_per_line`**: el corte de renglones usa `formatName()` — solo el nombre completo (`dynamic_field: "nombre_apellido"` o `content: "{{customer_name}}"`) activa el corte especial de nombre/apellido (máximo 2 renglones reales aunque `max_lines` sea mayor); cualquier otro texto se corta por palabras completas. El detalle completo con ejemplos está en [FORMATO_NOMBRES_PDF.md](FORMATO_NOMBRES_PDF.md).
+
+**`font_size_rules`** — lista ordenada por `max_chars` (de menor a mayor); se usa la primera regla cuyo `max_chars` sea mayor o igual a la cantidad de caracteres del texto. Una regla sin `max_chars` (o `null`) actúa como "para el resto" y conviene ponerla al final:
+
+```json
+{
+  "type": "text",
+  "content": "{{customer_name}}",
+  "font_id": 5,
+  "font_size_px": 40,
+  "max_lines": 2,
+  "min_lines": 1,
+  "max_chars_per_line": 10,
+  "font_size_rules": [
+    { "max_chars": 5, "font_size_px": 80 },
+    { "max_chars": 10, "font_size_px": 50 },
+    { "max_chars": null, "font_size_px": 30 }
+  ]
+}
+```
+Con esa config: "ANA" (3 caracteres) sale con `font_size_px: 80`, "GUILLERMINA" (11 caracteres) con `30`.
 
 **Importante sobre `editable_by_customer`**: esto reemplaza, de forma explícita por elemento, lo que hoy el checkout manda de forma implícita en `customization_data` (`form.name`, `color.color_code`, `icon.icon`). El front del storefront debe:
 - Mostrar el selector de color solo si algún elemento tiene `editable_field: "color"`.
@@ -294,7 +359,7 @@ El front debe usar los `id` que devuelven estos endpoints para completar `icon_i
 
 Al aprobarse/generarse una venta, por cada producto comprado:
 
-1. Se busca en `product_pdf_design_products` un vínculo para ese producto (y esa variante, si tiene) cuyo diseño esté `isPublished: true`.
+1. Se busca en `product_pdf_design_products` un vínculo para ese producto (y esa variante, si tiene) cuyo diseño esté `isPublished: true` y `statusId: 1` (activo).
 2. Si existe → se genera el PDF con el diseño nuevo (reemplazando `{{customer_name}}`, resolviendo íconos/tipografías, aplicando los overrides del cliente solo en los campos marcados como editables).
 3. Si no existe → se sigue generando el PDF exactamente como antes, con `product_pdf` y las vistas por temática.
 

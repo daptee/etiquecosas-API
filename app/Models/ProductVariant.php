@@ -16,6 +16,7 @@ class ProductVariant extends Model
         'variant',
         'stock_channels',
         'img',
+        'theme_id',
     ];
 
     protected $casts = [
@@ -26,6 +27,15 @@ class ProductVariant extends Model
     public function product()
     {
         return $this->belongsTo(Product::class, 'product_id');
+    }
+
+    /**
+     * Temática de PDF sugerida para ESTA variante puntual — tiene prioridad
+     * sobre la del producto general (Product::theme()) si está seteada.
+     */
+    public function theme()
+    {
+        return $this->belongsTo(PdfTheme::class, 'theme_id');
     }
 
     public function getAttributesValuesAttribute()
@@ -77,6 +87,78 @@ class ProductVariant extends Model
         }, $channels);
     }
 
+    /**
+     * Extrae el id referenciado en el metadata, que puede venir como
+     * {"value":4}, {"value":[4]} o doblemente codificado ("{\"value\":4}").
+     */
+    private static function idFromMetadata($metadata)
+    {
+        if (is_string($metadata)) {
+            $metadata = json_decode($metadata, true);
+        }
+
+        $value = is_array($metadata) ? ($metadata['value'] ?? null) : null;
+
+        if (is_array($value)) {
+            $value = reset($value) ?: null;
+        }
+
+        return is_numeric($value) ? (int) $value : null;
+    }
+
+    private static function metadataIdsForType($attributesValues, string $type)
+    {
+        return $attributesValues
+            ->filter(fn($attr) => ($attr->attribute->type ?? null) === $type)
+            ->map(fn($attr) => self::idFromMetadata($attr->metadata))
+            ->filter()
+            ->unique();
+    }
+
+    /**
+     * Para atributos de tipo "icon" o "typography", el metadata del valor trae
+     * {"value": <id>} que apunta a personalization_icons o typographies;
+     * devuelve el path del icono o del archivo de la fuente.
+     */
+    private static function formatAttributeValues($attributesValues): array
+    {
+        $iconIds = self::metadataIdsForType($attributesValues, 'icon');
+        $icons = $iconIds->isEmpty()
+            ? collect()
+            : PersonalizationIcon::withTrashed()->whereIn('id', $iconIds)->pluck('icon', 'id');
+
+        $typographyIds = self::metadataIdsForType($attributesValues, 'typography');
+        $fonts = $typographyIds->isEmpty()
+            ? collect()
+            : TypographyFile::whereIn('typography_id', $typographyIds)
+                ->orderBy('id')
+                ->get()
+                ->groupBy('typography_id')
+                ->map(fn($files) => $files->first()->file_path);
+
+        return $attributesValues->map(function ($attr) use ($icons, $fonts) {
+            $data = [
+                'id' => $attr->id,
+                'value' => $attr->value,
+            ];
+
+            $type = $attr->attribute->type ?? null;
+            if ($type === 'icon') {
+                $data['icon'] = $icons->get(self::idFromMetadata($attr->metadata));
+            } elseif ($type === 'typography') {
+                $data['font'] = $fonts->get(self::idFromMetadata($attr->metadata));
+            }
+
+            $data['attribute'] = [
+                'id' => $attr->attribute->id ?? null,
+                'name' => $attr->attribute->name ?? null,
+                'type' => $attr->attribute->type ?? null,
+            ];
+
+            return $data;
+        })->values()->toArray();
+    }
+
     public function toArray()
     {
         $array = parent::toArray();
@@ -98,16 +180,12 @@ class ProductVariant extends Model
             'wholesale_min_amount' => $this->variant['wholesale_min_amount'] ?? null,
             'order' => $this->variant['order'] ?? null,
             'is_heritable' => isset($this->variant['is_heritable']) ? (int) $this->variant['is_heritable'] : null,
-            'attributesvalues' => $this->attributes_values->map(function ($attr) {
-                return [
-                    'id' => $attr->id,
-                    'value' => $attr->value,
-                    'attribute' => [
-                        'id' => $attr->attribute->id ?? null,
-                        'name' => $attr->attribute->name ?? null,
-                    ],
-                ];
-            })->toArray(),
+            // theme_id SÍ es una columna real (no vive en el JSON variant
+            // como el resto de estos campos) — se repite acá, además de a
+            // nivel raíz del array, para que aparezca donde se espera
+            // encontrar cualquier otro dato de la variante.
+            'theme_id' => $this->theme_id,
+            'attributesvalues' => self::formatAttributeValues($this->attributes_values),
             'available_attributes' => $this->available_attributes_resolved->toArray(),
         ];
 

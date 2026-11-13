@@ -482,7 +482,9 @@ class MercadoPagoController extends Controller
                 $customIcon = $customData['icon']['icon'] ?? null;
 
                 if ($customIcon && $customData['icon']['name'] == 'Sin dibujo') {
-                    $customIcon = null;
+                    // '' (no null): personalización explícita de "ningún
+                    // ícono" — ver nota en EtiquetaService::resolverElementoDesign.
+                    $customIcon = '';
                 }
 
                 // === CINTAS PARA COSER (Producto 1291) ===

@@ -83,6 +83,7 @@ class ProductController extends Controller
                 'attributes:id,name,type',
                 'attributeValues:id,value,attribute_id,metadata',
                 ...$this->tagRelation($request),
+                'theme:id,name,colors',
                 'images:id,product_id,img,is_main',
             ]);
         if ($request->has('search')) {
@@ -218,6 +219,7 @@ class ProductController extends Controller
                 'attributes:id,name,type',
                 'attributeValues:id,value,attribute_id,metadata',
                 ...$this->tagRelation($request),
+                'theme:id,name,colors',
                 'images:id,product_id,img,is_main',
             ])
             ->where('is_feature', true)
@@ -288,6 +290,7 @@ class ProductController extends Controller
                 'attributes:id,name,type',
                 'attributeValues:id,value,attribute_id,metadata',
                 ...$this->tagRelation($request),
+                'theme:id,name,colors',
                 'images:id,product_id,img,is_main',
             ]);
         if ($request->has('search')) {
@@ -415,14 +418,41 @@ class ProductController extends Controller
             'relatedProducts.images:id,product_id,img,is_main',
             'relatedProducts.tag:id,name,color',
             'relatedProducts.stockStatus:id,name',
-            'variants'
+            'variants',
+            'pdfDesigns:id,label_shape_id,name,data',
+            'pdfDesigns.labelShape:id,name,shape_type,width_cm,height_cm,data',
         ])->makeHidden([
                     'created_at',
                     'updated_at'
                 ]);
 
         $product->setRelation('variants', $product->variants->sortBy(fn($v) => $v->variant['order'] ?? 0)->values());
+        $this->filterPdfDesignsByPivotPage($product);
         return $this->success($product, 'Producto obtenido exitosamente');
+    }
+
+    /**
+     * Un producto puede estar vinculado a UNA SOLA página puntual de un
+     * diseño ajeno (product_pdf_design_products.page_id), no al diseño
+     * entero — exactamente lo mismo que ya hace
+     * EtiquetaService::generarEtiquetasDesdeDesignsMultiples() al generar el
+     * PDF real de una venta (filtra data.pages por ese page_id). Acá hace
+     * falta lo mismo: sin este filtro, pdfDesigns trae el `data` COMPLETO
+     * del diseño ajeno (todas sus páginas/hojas), aunque el producto solo
+     * haya elegido una — pivot.page_id === null sigue significando "el
+     * diseño entero", no se toca en ese caso.
+     */
+    private function filterPdfDesignsByPivotPage(Product $product): void
+    {
+        foreach ($product->pdfDesigns as $design) {
+            $pageId = $design->pivot->page_id ?? null;
+            if (!$pageId || empty($design->data['pages'])) {
+                continue;
+            }
+            $data = $design->data;
+            $data['pages'] = array_values(array_filter($data['pages'], fn($p) => ($p['id'] ?? null) === $pageId));
+            $design->data = $data;
+        }
     }
 
     public function slug(Request $request, string $slug)
@@ -475,13 +505,16 @@ class ProductController extends Controller
             'relatedProducts.images:id,product_id,img,is_main',
             'relatedProducts.tag:id,name,color',
             'relatedProducts.stockStatus:id,name',
-            'variants'
+            'variants',
+            'pdfDesigns:id,label_shape_id,name,data',
+            'pdfDesigns.labelShape:id,name,shape_type,width_cm,height_cm,data',
         ])->makeHidden([
                     'created_at',
                     'updated_at'
                 ]);
 
         $product->setRelation('variants', $product->variants->sortBy(fn($v) => $v->variant['order'] ?? 0)->values());
+        $this->filterPdfDesignsByPivotPage($product);
 
         return $this->success($product, 'Producto obtenido exitosamente');
     }
@@ -502,6 +535,7 @@ class ProductController extends Controller
             'wholesale_price' => 'nullable|numeric',
             'wholesale_min_amount' => 'nullable|integer|min:0',
             'tag_id' => 'nullable|exists:configuration_tags,id',
+            'theme_id' => 'nullable|exists:pdf_themes,id',
             'costs' => 'nullable|array',
             'costs.*' => 'exists:costs,id',
             'categories' => 'required|array|min:1',
@@ -849,6 +883,7 @@ class ProductController extends Controller
                     'wholesale_price' => 'nullable|numeric',
                     'wholesale_min_amount' => 'nullable|integer|min:0',
                     'order' => 'nullable|integer|min:0',
+                    'theme_id' => 'nullable|integer|exists:pdf_themes,id',
                     'stock_channels' => 'nullable|array',
                     'stock_channels.*.channel' => 'integer|exists:channels,id',
                     'stock_channels.*.channel_name' => 'string|max:255',
@@ -926,6 +961,7 @@ class ProductController extends Controller
                     'wholesale_price' => $variantData['wholesale_price'] ?? null,
                     'wholesale_min_amount' => $variantData['wholesale_min_amount'] ?? null,
                     'order' => $variantData['order'] ?? null,
+                    'theme_id' => $variantData['theme_id'] ?? null,
                     'stock_channels' => $variantData['stock_channels'] ?? null,
                     'img' => $imagePath ?? null,
                 ]);
@@ -1110,6 +1146,7 @@ class ProductController extends Controller
             'attributeValues',
             'variants',
             'tag',
+            'theme',
             'images',
             'costs',
             'customization',
@@ -1136,6 +1173,7 @@ class ProductController extends Controller
             'wholesale_price' => 'nullable|numeric',
             'wholesale_min_amount' => 'nullable|integer|min:0',
             'tag_id' => 'nullable|exists:configuration_tags,id',
+            'theme_id' => 'nullable|exists:pdf_themes,id',
             'costs' => 'nullable|array',
             'costs.*' => 'integer|exists:costs,id',
             'categories' => 'required|array|min:1',
@@ -1459,6 +1497,7 @@ class ProductController extends Controller
                     'wholesale_price' => 'nullable|numeric',
                     'wholesale_min_amount' => 'nullable|integer|min:0',
                     'order' => 'nullable|integer|min:0',
+                    'theme_id' => 'nullable|integer|exists:pdf_themes,id',
                     'stock_channels' => 'nullable|array',
                     'stock_channels.*.channel' => 'integer|exists:channels,id',
                     'stock_channels.*.channel_name' => 'string|max:255',
@@ -1560,6 +1599,7 @@ class ProductController extends Controller
                         'wholesale_price' => $variantData['wholesale_price'] ?? null,
                         'wholesale_min_amount' => $variantData['wholesale_min_amount'] ?? null,
                         'order' => $variantData['order'] ?? null,
+                        'theme_id' => $variantData['theme_id'] ?? null,
                         'stock_channels' => $variantData['stock_channels'] ?? null,
                         'img' => $imagePath,
                     ]);
@@ -1585,6 +1625,7 @@ class ProductController extends Controller
                         'wholesale_price' => $variantData['wholesale_price'] ?? null,
                         'wholesale_min_amount' => $variantData['wholesale_min_amount'] ?? null,
                         'order' => $variantData['order'] ?? null,
+                        'theme_id' => $variantData['theme_id'] ?? null,
                         'stock_channels' => $variantData['stock_channels'] ?? null,
                         'img' => $imagePath,
                     ]);
@@ -1780,6 +1821,7 @@ class ProductController extends Controller
             'attributeValues',
             'variants',
             'tag',
+            'theme',
             'images',
             'costs',
             'wholesales',

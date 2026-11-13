@@ -42,6 +42,7 @@ class Product extends Model
         'wholesale_price',
         'wholesale_min_amount',
         'tag_id',
+        'theme_id',
         'description',
         'shortDescription',
         'shipping_text',
@@ -106,6 +107,16 @@ class Product extends Model
         return $this->belongsTo(ConfigurationTag::class, 'tag_id');
     }
 
+    /**
+     * Temática de PDF sugerida para este producto a nivel general (ver
+     * PdfTheme) — opcional, y de menor prioridad que la de una variante
+     * puntual (ProductVariant::theme()) si ambas están seteadas.
+     */
+    public function theme()
+    {
+        return $this->belongsTo(PdfTheme::class, 'theme_id');
+    }
+
     public function wholesales()
     {
         return $this->hasMany(ProductWholesale::class);
@@ -144,6 +155,21 @@ class Product extends Model
     public function images()
     {
         return $this->hasMany(ProductImage::class)->orderBy('position');
+    }
+
+    /**
+     * Diseños de PDF del editor vinculados a este producto (solo los
+     * publicados y activos: son los únicos que realmente se usan para
+     * generar/previsualizar una etiqueta real). pivot.themeKey indica a
+     * qué variante corresponde cada uno.
+     */
+    public function pdfDesigns()
+    {
+        return $this->belongsToMany(ProductPdfDesign::class, 'product_pdf_design_products')
+            ->withPivot('id', 'theme_key', 'page_id', 'sort_order')
+            ->withTimestamps()
+            ->where('product_pdf_designs.is_published', true)
+            ->where('product_pdf_designs.status_id', 1);
     }
 
     public function relatedProducts()

@@ -18,6 +18,8 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\AttributeController;
 use App\Http\Controllers\TypographyController;
 use App\Http\Controllers\LabelShapeController;
+use App\Http\Controllers\PdfSheetSizeController;
+use App\Http\Controllers\PdfSheetSizeTypeController;
 use App\Http\Controllers\ProductPdfDesignController;
 use App\Http\Controllers\CostController;
 use App\Http\Controllers\ConfigurationTagController;
@@ -27,6 +29,7 @@ use App\Http\Controllers\ClientTypeController;
 use App\Http\Controllers\ProvinceController;
 use App\Http\Controllers\PersonalizationColorController;
 use App\Http\Controllers\PersonalizationIconController;
+use App\Http\Controllers\PdfThemeController;
 use App\Http\Controllers\ShippingTemplateController;
 use App\Http\Controllers\TemplateCategoryController;
 use App\Http\Controllers\ProductTypeController;
@@ -116,6 +119,7 @@ Route::prefix('v1')->group(function () {
 
     // product pdf designs (diseños armados desde el editor de PDFs)
     Route::get('product-pdf-designs', [ProductPdfDesignController::class, 'index']);
+    Route::get('product-pdf-designs/{id}/preview', [ProductPdfDesignController::class, 'preview']);
 
 
     // Coupons
@@ -150,6 +154,8 @@ Route::prefix('v1')->group(function () {
 
     // Coupon
     Route::get('coupons', [CouponController::class, 'index']);
+
+    Route::post('product-pdf-designs/fix-imported-icons', [ProductPdfDesignController::class, 'fixImportedIcons']);
 });
 
 // User
@@ -213,16 +219,44 @@ Route::middleware('jwt.auth')->prefix('label-shapes')->group(function () {
     Route::delete('/{id}', [LabelShapeController::class, 'delete']);
 });
 
+// Pdf sheet sizes (tamaños de hoja del editor de PDFs — ver PDF_TAMANOS_DE_HOJA.md)
+Route::middleware('jwt.auth')->prefix('pdf-sheet-sizes')->group(function () {
+    Route::get('/', [PdfSheetSizeController::class, 'index']);
+    Route::get('/{id}', [PdfSheetSizeController::class, 'show']);
+    Route::post('/', [PdfSheetSizeController::class, 'store']);
+    Route::post('/{id}', [PdfSheetSizeController::class, 'update']);
+    Route::patch('/{id}/toggle-status', [PdfSheetSizeController::class, 'toggleStatus']);
+    Route::delete('/{id}', [PdfSheetSizeController::class, 'delete']);
+});
+
+// Pdf sheet size types (catálogo de "Página"/"Pliego"/... — ver PDF_TAMANOS_DE_HOJA.md)
+Route::middleware('jwt.auth')->prefix('pdf-sheet-size-types')->group(function () {
+    Route::get('/', [PdfSheetSizeTypeController::class, 'index']);
+    Route::post('/', [PdfSheetSizeTypeController::class, 'store']);
+    Route::post('/{id}', [PdfSheetSizeTypeController::class, 'update']);
+    Route::delete('/{id}', [PdfSheetSizeTypeController::class, 'delete']);
+});
+
 // Product Pdf Designs (editor de PDFs)
 Route::middleware('jwt.auth')->prefix('product-pdf-designs')->group(function () {
     Route::get('/', [ProductPdfDesignController::class, 'index']);
     Route::get('/{id}', [ProductPdfDesignController::class, 'show']);
     Route::post('/', [ProductPdfDesignController::class, 'store']);
+    // Antes de "/{id}" — si no, "import-from-pdf" matchearía como si fuera un id.
+    Route::post('/import-from-pdf', [ProductPdfDesignController::class, 'importFromPdf']);
+    Route::post('/import-from-product', [ProductPdfDesignController::class, 'importFromProduct']);
     Route::post('/{id}', [ProductPdfDesignController::class, 'update']);
     Route::patch('/{id}/toggle-status', [ProductPdfDesignController::class, 'toggleStatus']);
     Route::delete('/{id}', [ProductPdfDesignController::class, 'delete']);
     Route::get('/{id}/preview', [ProductPdfDesignController::class, 'preview']);
+    Route::post('/{id}/background-image', [ProductPdfDesignController::class, 'uploadBackgroundImage']);
+    Route::post('/{id}/element-image', [ProductPdfDesignController::class, 'uploadElementImage']);
     Route::post('/{id}/products', [ProductPdfDesignController::class, 'attachProduct']);
+    // Las rutas "bulk"/"bulk-many" van antes de "/{linkId}" para que no se matcheen como si fueran un linkId.
+    Route::post('/{id}/products/bulk', [ProductPdfDesignController::class, 'bulkAttachProducts']);
+    Route::delete('/{id}/products/bulk', [ProductPdfDesignController::class, 'bulkDetachProducts']);
+    Route::post('/{id}/products/bulk-many', [ProductPdfDesignController::class, 'bulkAttachMany']);
+    Route::delete('/{id}/products/bulk-many', [ProductPdfDesignController::class, 'bulkDetachMany']);
     Route::delete('/{id}/products/{linkId}', [ProductPdfDesignController::class, 'detachProduct']);
 });
 
@@ -281,6 +315,15 @@ Route::middleware('jwt.auth')->prefix('icons')->group(function () {
     Route::post('/', [PersonalizationIconController::class, 'store']);
     Route::put('/{id}', [PersonalizationIconController::class, 'update']);
     Route::delete('/{id}', [PersonalizationIconController::class, 'delete']);
+});
+
+// PdfTheme
+Route::middleware('jwt.auth')->prefix('pdf-themes')->group(function () {
+    Route::get('/', [PdfThemeController::class, 'index']);
+    Route::post('/', [PdfThemeController::class, 'store']);
+    Route::put('/{id}', [PdfThemeController::class, 'update']);
+    Route::delete('/{id}', [PdfThemeController::class, 'delete']);
+    Route::get('/suggest', [PdfThemeController::class, 'suggestForProduct']);
 });
 
 // ShippingTemplate
@@ -410,6 +453,8 @@ Route::middleware('jwt.auth')->prefix('pdf-directories')->group(function () {
     Route::get('/{fecha}', [PdfDirectoryController::class, 'getPdfsByDate']);           // GET ALL PDF de una fecha
     Route::get('/{fecha}/download-zip', [PdfDirectoryController::class, 'downloadCarpetaZip']); // Descargar carpeta en ZIP
     Route::get('/{fecha}/download/{nombrePdf}', [PdfDirectoryController::class, 'downloadPdf']); // Descargar PDF individual
+    Route::get('/{fecha}/view/{nombrePdf}', [PdfDirectoryController::class, 'viewPdf']); // Ver PDF individual (vista previa, sin forzar descarga)
+    Route::post('/{fecha}/regenerate/{nombrePdf}', [PdfDirectoryController::class, 'regeneratePdf']); // Regenerar un PDF puntual
 });
 
 // Home Content - Gestión de contenido de la home

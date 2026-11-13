@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Lora:400,700,400italic|Oswald:400,700" media="screen">
-    
+
     <style>
         @font-face {
             font-family: 'Lora';
@@ -296,6 +296,7 @@
             margin-top: 0.4cm;
             margin-bottom: 0.2cm;
         }
+        {!! file_get_contents(public_path('css/etiquetas.css')) !!}
     </style>
 </head>
 

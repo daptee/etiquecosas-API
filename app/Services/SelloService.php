@@ -151,4 +151,42 @@ class SelloService
             ]);
         }
     }
+
+    /**
+     * Elimina SOLO el sello de una línea de venta puntual (no todo el
+     * pedido) del PDF del día — usada al regenerar un PDF individual desde
+     * PdfDirectoryController::regeneratePdf().
+     */
+    public static function limpiarSelloDeProductOrder(int $productOrderId, $fechaCompra = null): void
+    {
+        $fechaCarpeta = $fechaCompra
+            ? Carbon::parse($fechaCompra)->setTimezone('America/Argentina/Buenos_Aires')->format('d-m-Y')
+            : Carbon::now('America/Argentina/Buenos_Aires')->format('d-m-Y');
+
+        $dirPath = storage_path("app/pdf/Sellos");
+        $jsonFile = "{$dirPath}/{$fechaCarpeta}-sellos.json";
+
+        if (file_exists($jsonFile)) {
+            $sellos = json_decode(file_get_contents($jsonFile), true) ?? [];
+
+            $sellosFiltrados = array_values(array_filter($sellos, function ($sello) use ($productOrderId) {
+                return ($sello['product_order_id'] ?? null) != $productOrderId;
+            }));
+
+            if (count($sellosFiltrados) === count($sellos)) {
+                return;
+            }
+
+            if (count($sellosFiltrados) > 0) {
+                file_put_contents($jsonFile, json_encode($sellosFiltrados, JSON_PRETTY_PRINT));
+                self::generarPdfConsolidado($fechaCarpeta, $sellosFiltrados);
+            } else {
+                unlink($jsonFile);
+                $pdfFile = "{$dirPath}/{$fechaCarpeta}-sellos.pdf";
+                if (file_exists($pdfFile)) {
+                    unlink($pdfFile);
+                }
+            }
+        }
+    }
 }

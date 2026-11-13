@@ -877,7 +877,12 @@ class SaleController extends Controller
             $customIcon = $customData['icon']['icon'] ?? null;
 
             if ($customIcon && $customData['icon']['name'] == 'Sin dibujo') {
-                $customIcon = null;
+                // '' (no null): el cliente SÍ personalizó, eligiendo
+                // explícitamente no llevar ícono — EtiquetaService::
+                // resolverElementoDesign distingue esto ('' = respeta la
+                // elección, queda vacío) de null (no personalizó nada, cae
+                // al icon_id de respaldo del diseño).
+                $customIcon = '';
             }
 
             // === SELLOS PERSONALIZADOS (Producto 481) ===
@@ -1088,7 +1093,8 @@ class SaleController extends Controller
                 $customIcon = $customData['icon']['icon'] ?? null;
 
                 if ($customIcon && $customData['icon']['name'] == 'Sin dibujo') {
-                    $customIcon = null;
+                    // '' (no null): ver nota en EtiquetaService::resolverElementoDesign.
+                    $customIcon = '';
                 }
 
                 // === SELLOS PERSONALIZADOS (Producto 481) ===
@@ -1742,13 +1748,19 @@ class SaleController extends Controller
             $sale = Sale::with('products.product', 'products.variant')->findOrFail($id);
 
             $pdfPaths = [];
+            EtiquetaService::$debugIconLog = []; // TEMPORAL — ver nota en EtiquetaService
+
+            // Bucketear por la fecha en que la venta fue aprobada (no por la fecha en
+            // que se regenera el PDF, que puede ser días después) — si todavía no fue
+            // aprobada, usar la fecha de creación de la venta.
+            $fechaAprobacion = $sale->fechaAprobacionOCreacion();
 
             // 🗑️ Eliminar todos los PDFs anteriores de este pedido antes de generar nuevos
-            EtiquetaService::limpiarPdfsDelPedido($sale->id, $sale->created_at);
-            CintaCoserService::limpiarEtiquetasDeVenta($sale->id, $sale->created_at);
-            CintaPlancharService::limpiarEtiquetasDeVenta($sale->id, $sale->created_at);
-            BandaService::limpiarBandasDeVenta($sale->id, $sale->created_at);
-            SelloService::limpiarSellosDeVenta($sale->id, $sale->created_at);
+            EtiquetaService::limpiarPdfsDelPedido($sale->id, $fechaAprobacion);
+            CintaCoserService::limpiarEtiquetasDeVenta($sale->id, $fechaAprobacion);
+            CintaPlancharService::limpiarEtiquetasDeVenta($sale->id, $fechaAprobacion);
+            BandaService::limpiarBandasDeVenta($sale->id, $fechaAprobacion);
+            SelloService::limpiarSellosDeVenta($sale->id, $fechaAprobacion);
 
             foreach ($sale->products as $productOrder) {
                 // === 1. Datos base ===
@@ -1761,7 +1773,8 @@ class SaleController extends Controller
                 $customIcon = $customData['icon']['icon'] ?? null;
 
                 if ($customIcon && $customData['icon']['name'] == 'Sin dibujo') {
-                    $customIcon = null;
+                    // '' (no null): ver nota en EtiquetaService::resolverElementoDesign.
+                    $customIcon = '';
                 }
 
                 // === SELLOS PERSONALIZADOS (Producto 481) ===
@@ -1773,7 +1786,7 @@ class SaleController extends Controller
                             $nombreCompleto,
                             $customColor,
                             $customIcon,
-                            $sale->created_at
+                            $fechaAprobacion
                         );
                         Log::info("Sello agregado para {$nombreCompleto}");
                     } catch (\Throwable $e) {
@@ -1793,7 +1806,7 @@ class SaleController extends Controller
                             $nombreCompleto,
                             $customColor,
                             $customIcon,
-                            $sale->created_at
+                            $fechaAprobacion
                         );
                         Log::info("Banda agregada para {$nombreCompleto}");
                     } catch (\Throwable $e) {
@@ -1813,7 +1826,7 @@ class SaleController extends Controller
                             $nombreCompleto,
                             $customColor,
                             $customIcon,
-                            $sale->created_at
+                            $fechaAprobacion
                         );
                         Log::info("Etiqueta de cinta para coser agregada para {$nombreCompleto}");
                     } catch (\Throwable $e) {
@@ -1833,7 +1846,7 @@ class SaleController extends Controller
                             $nombreCompleto,
                             $customColor,
                             $customIcon,
-                            $sale->created_at
+                            $fechaAprobacion
                         );
                         Log::info("Etiqueta de cinta para planchar agregada para {$nombreCompleto}");
                     } catch (\Throwable $e) {
@@ -1851,15 +1864,15 @@ class SaleController extends Controller
                     $form,
                     $customColor,
                     $customIcon,
-                    $sale->created_at
+                    $fechaAprobacion
                 );
                 $pdfPaths = array_merge($pdfPaths, $paths);
             }
 
             return $this->success(
                 $sale->load('products.product', 'products.variant'),
-                'PDF generado correctamente',
-                ['pdf_paths' => $pdfPaths]
+                'PDF generado correctamente [DEBUG-ICON-FIX-2026-09-29]',
+                ['pdf_paths' => $pdfPaths, 'debug_icon_fix' => EtiquetaService::$debugIconLog]
             );
 
         } catch (\Throwable $th) {
@@ -1925,7 +1938,8 @@ class SaleController extends Controller
                         $customIcon = $customData['icon']['icon'] ?? null;
 
                         if ($customIcon && $customData['icon']['name'] == 'Sin dibujo') {
-                            $customIcon = null;
+                            // '' (no null): ver nota en EtiquetaService::resolverElementoDesign.
+                            $customIcon = '';
                         }
 
                         // === SELLOS PERSONALIZADOS (Producto 481) ===

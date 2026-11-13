@@ -7,3 +7,21 @@ VALUES
   ('Vertical', 'rect', 2.7, 3.2, 1, JSON_OBJECT('css_class', 'etiqueta-vertical'), 1),
   ('Super Maxi', 'rect', 6.0, 3.6, 1, JSON_OBJECT('css_class', 'etiqueta-super-maxi'), 1),
   ('Super Mini', 'rect', 2.9, 1.15, 1, JSON_OBJECT('css_class', 'etiqueta-super-mini'), 1);
+
+INSERT INTO `label_shapes` (`name`, `shape_type`, `width_cm`, `height_cm`, `is_system`, `data`, `status_id`)
+VALUES
+  ('Maxi Combinada', 'rect', 5.2, 1.9, 1, JSON_OBJECT('css_class', 'etiqueta-maxi-combinada'), 1);
+
+
+INSERT INTO `label_shapes` (`name`, `shape_type`, `width_cm`, `height_cm`, `is_system`, `data`, `status_id`)
+VALUES
+  ('Transfer para planchar', 'rect', 6.03, 1.02, 1, JSON_OBJECT('css_class', 'etiqueta-transfer-para-planchar'), 1);
+
+
+INSERT INTO `label_shapes` (`name`, `shape_type`, `width_cm`, `height_cm`, `is_system`, `data`, `status_id`)
+VALUES
+  ('Banda', 'rect', 4.5, 3.5, 1, JSON_OBJECT('css_class', 'etiqueta-banda'), 1);
+
+INSERT INTO `label_shapes` (`name`, `shape_type`, `width_cm`, `height_cm`, `is_system`, `data`, `status_id`)
+VALUES
+  ('Sello', 'rect', 4.5, 3.5, 1, JSON_OBJECT('css_class', 'etiqueta-sello'), 1);

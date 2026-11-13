@@ -26,33 +26,95 @@ class ProductPdfResolverService
         $fecha
     ): array {
         $variant = $productOrder->variant?->variant;
+        // $tematicaId (attribute_values.id) es solo para el flujo LEGACY de abajo,
+        // no se toca. El diseño nuevo vincula por product_variants.id
+        // (product_pdf_design_products.theme_key = variant_id), que es lo que
+        // manda el front al vincular temáticas — no el primer atributo de la
+        // variante.
         $tematicaId = $productOrder->resolved_attributes_values->first()['id'] ?? null;
+        $variantId = $productOrder->variant_id;
 
-        $link = ProductPdfDesignProduct::with('design')
+        // Puede haber VARIOS vínculos para el mismo producto+variante (uno por
+        // cada página que compone el PDF final, pudiendo venir de diseños
+        // distintos) — ver product_pdf_design_products.page_id/sort_order.
+        $links = ProductPdfDesignProduct::with('design')
             ->where('product_id', $productOrder->product_id)
-            ->when($variant, fn($q) => $q->where('theme_key', $tematicaId))
-            ->when(!$variant, fn($q) => $q->whereNull('theme_key'))
-            ->whereHas('design', fn($q) => $q->where('is_published', true))
-            ->first();
+            ->when($variantId, fn($q) => $q->where('theme_key', $variantId))
+            ->when(!$variantId, fn($q) => $q->whereNull('theme_key'))
+            ->whereHas('design', fn($q) => $q->where('is_published', true)->where('status_id', 1))
+            ->orderBy('sort_order')
+            ->get();
 
-        $design = $link?->design;
+        // Diseños "acumulables" (ver AccumulatingPdfDesignService, generaliza
+        // BandaService): no generan un PDF propio por pedido, se van sumando
+        // al consolidado del día de ESE diseño — en paralelo a lo que haga el
+        // resto de los vínculos de este producto+variante, igual que bandas
+        // hoy genera su etiqueta normal Y se suma al PDF del día.
+        $accumulatingLinks = $links->filter(fn($link) => $link->design->esAcumulable());
+        $links = $links->reject(fn($link) => $link->design->esAcumulable())->values();
 
-        if ($design) {
+        foreach ($accumulatingLinks as $link) {
             try {
-                $paths = EtiquetaService::generarEtiquetasDesdeDesign(
+                AccumulatingPdfDesignService::agregarItemAlPdf(
+                    $link->design,
                     $ventaId,
-                    $design,
+                    $productOrder,
+                    $nombreCompleto,
+                    $customIcon,
+                    $fecha,
+                    $customColor,
+                    $link->label_element_id,
+                    $form['name'] ?? null,
+                    $form['lastName'] ?? null
+                );
+            } catch (\Throwable $e) {
+                Log::error('Error agregando pedido al diseño acumulable', [
+                    'design_id' => $link->design->id,
+                    'product_order_id' => $productOrder->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        if ($links->isNotEmpty()) {
+            try {
+                // Caso más común (un solo vínculo a un diseño entero): se
+                // mantiene byte-a-byte el llamado de siempre, sin pasar por el
+                // camino de "combinar páginas" para no arriesgar ese camino ya
+                // probado.
+                if ($links->count() === 1 && !$links->first()->page_id) {
+                    $design = $links->first()->design;
+                    $paths = EtiquetaService::generarEtiquetasDesdeDesign(
+                        $ventaId,
+                        $design,
+                        $productOrder,
+                        [$nombreCompleto],
+                        $customColor,
+                        $customIcon,
+                        $fecha,
+                        [$form['name'] ?? ''],
+                        [$form['lastName'] ?? '']
+                    );
+                    Log::info("PDF generado desde diseño del editor para {$nombreCompleto}, design ID: {$design->id}");
+                    return $paths;
+                }
+
+                $pageRefs = $links->map(fn($link) => ['design' => $link->design, 'page_id' => $link->page_id])->all();
+                $paths = EtiquetaService::generarEtiquetasDesdeDesignsMultiples(
+                    $ventaId,
+                    $pageRefs,
                     $productOrder,
                     [$nombreCompleto],
                     $customColor,
                     $customIcon,
                     $fecha,
-                    [$form['name'] ?? '']
+                    [$form['name'] ?? ''],
+                    [$form['lastName'] ?? '']
                 );
-                Log::info("PDF generado desde diseño del editor para {$nombreCompleto}, design ID: {$design->id}");
+                Log::info("PDF generado combinando " . count($pageRefs) . " página(s) de diseños del editor para {$nombreCompleto}");
                 return $paths;
             } catch (\Throwable $e) {
-                Log::error("Error generando PDF desde diseño del editor para {$nombreCompleto}, design ID: {$design->id}", [
+                Log::error("Error generando PDF desde diseño(s) del editor para {$nombreCompleto}", [
                     'error' => $e->getMessage(),
                     'product_order_id' => $productOrder->id,
                 ]);
@@ -61,6 +123,29 @@ class ProductPdfResolverService
         }
 
         return self::resolveLegacy($ventaId, $productOrder, $variant, $tematicaId, $nombreCompleto, $form, $customColor, $customIcon, $fecha);
+    }
+
+    /**
+     * Mismo criterio de "¿qué diseño del editor corresponde a este
+     * producto+variante?" que usa resolveAndGenerate() (arriba), pero sin
+     * generar nada — solo para saber el id. Usado por el módulo de
+     * directorios para completar `design_id` en cada PDF ya generado (ver
+     * PdfDirectoryService::getPdfsDeUnaFecha()). Es "mejor esfuerzo": devuelve
+     * el diseño VINCULADO ACTUALMENTE a ese producto+variante, no
+     * necesariamente el que estaba vinculado cuando ese PDF puntual se
+     * generó (eso no se guarda en ningún lado) — null si no hay ninguno
+     * (PDF generado por el sistema legacy, sin product_pdf_designs).
+     */
+    public static function findLinkedDesignId(int $productId, ?int $variantId): ?int
+    {
+        $link = ProductPdfDesignProduct::where('product_id', $productId)
+            ->when($variantId, fn($q) => $q->where('theme_key', $variantId))
+            ->when(!$variantId, fn($q) => $q->whereNull('theme_key'))
+            ->whereHas('design', fn($q) => $q->where('is_published', true)->where('status_id', 1))
+            ->orderBy('sort_order')
+            ->first();
+
+        return $link->product_pdf_design_id ?? null;
     }
 
     /**
