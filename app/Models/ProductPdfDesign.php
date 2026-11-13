@@ -19,6 +19,7 @@ class ProductPdfDesign extends Model
         'status_id',
         'fill_mode',
         'accumulation_group_attribute',
+        'accumulation_split_attributes',
         'accumulation_cols',
         'accumulation_rows',
         'accumulation_gap_cm',
@@ -32,6 +33,7 @@ class ProductPdfDesign extends Model
         'accumulation_cols' => 'integer',
         'accumulation_rows' => 'integer',
         'accumulation_gap_cm' => 'float',
+        'accumulation_split_attributes' => 'array',
     ];
 
     /** Diseño que se completa solo, página a página, a medida que entran pedidos del día (ver AccumulatingPdfDesignService) en vez de generar un PDF nuevo por pedido. */

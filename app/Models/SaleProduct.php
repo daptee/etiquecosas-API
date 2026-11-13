@@ -68,6 +68,7 @@ class SaleProduct extends Model
                 'id' => $av->id,
                 'value' => $av->value,
                 'attribute' => ['id' => $av->attribute->id ?? null, 'name' => $av->attribute->name ?? null],
+                'color_hex' => self::hexDeAttributeValue($av, $av->attribute->type ?? null),
             ];
         })->filter();
 
@@ -89,9 +90,44 @@ class SaleProduct extends Model
                     'id' => $attribute->id ?? $entry['attribute_id'],
                     'name' => $attribute->name ?? null,
                 ],
+                'color_hex' => $selectedValue ? self::hexDeAttributeValue($selectedValue, $attribute->type ?? null) : null,
             ];
         });
 
         return $resolvedConcrete->concat($resolvedWildcard)->values();
+    }
+
+    /**
+     * Hex real de un valor de atributo tipo "color" (ej. "Turquesa" de
+     * "Color banda 1") — el catálogo guarda el id de un `PersonalizationColor`
+     * en `metadata.value` (mismo mecanismo que ya usa
+     * ProductVariant::formatAttributeValues() para resolver el ícono/fuente
+     * de los atributos tipo "icon"/"typography"), y ESE registro trae el hex
+     * real en `color_code`. null si el atributo no es de tipo "color", o si
+     * no se pudo resolver el catálogo.
+     */
+    private static function hexDeAttributeValue(AttributeValue $av, ?string $attributeType): ?string
+    {
+        if ($attributeType !== 'color') {
+            return null;
+        }
+
+        $metadata = $av->metadata;
+        if (is_string($metadata)) {
+            $metadata = json_decode($metadata, true);
+        }
+
+        $colorId = is_array($metadata) ? ($metadata['value'] ?? null) : null;
+        if (is_array($colorId)) {
+            $colorId = reset($colorId) ?: null;
+        }
+        if (!is_numeric($colorId)) {
+            return null;
+        }
+
+        $color = PersonalizationColor::find((int) $colorId);
+        $hex = $color->color_code[0] ?? null;
+
+        return is_string($hex) && $hex !== '' ? $hex : null;
     }
 }

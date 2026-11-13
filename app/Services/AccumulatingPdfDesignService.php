@@ -110,7 +110,7 @@ class AccumulatingPdfDesignService
             fn($it) => ($it['product_order_id'] ?? null) !== $productOrder->id
         ));
 
-        $items[] = [
+        $itemBase = [
             'venta_id' => $ventaId,
             'product_order_id' => $productOrder->id,
             'nombre' => $nombre,
@@ -121,14 +121,7 @@ class AccumulatingPdfDesignService
             'first_name' => $firstName,
             'last_name' => $lastName,
             'cantidad' => $productOrder->quantity ?? 1,
-            'group_value' => self::resolverValorDeAgrupacion($design, $productOrder),
-            // Hex del color de agrupación (solo cuando accumulation_group_attribute
-            // es "Color") — para pintar el cartelito del grupo con ese color de
-            // fondo, ver armarPagina(). null en cualquier otro atributo de
-            // agrupación (ahí el cartelito sigue siendo texto negro sin fondo).
-            'group_color' => self::resolverHexDeAgrupacion($design, $productOrder),
             'icono' => $customIcon,
-            'color' => $customColor,
             // Qué elemento `background` (qué "etiqueta") de la página usa este
             // ítem — ver celdaDelDesign()/celdaPorBackground()/generarPdfConsolidado().
             // null = la primera etiqueta de la página (default, diseños de una sola
@@ -139,6 +132,39 @@ class AccumulatingPdfDesignService
             // el mismo PDF.
             'label_element_id' => $labelElementId,
         ];
+
+        // Productos "de a varios" (ej. pack de 2 bandas, cada una su propio
+        // color — ver BandaService::PRODUCTO_BANDA_2_ID/obtenerColoresDeVariante,
+        // el mismo caso ya resuelto a mano para el sistema viejo): cuando el
+        // diseño tiene accumulation_split_attributes configurado, ESTE pedido
+        // se parte en un ítem POR CADA atributo de la lista que tenga valor
+        // en la variante — cada uno con el color de SU propio atributo (si
+        // dos atributos dieron el mismo color, salen dos ítems idénticos en
+        // ese color, no se deduplican: cada uno es una etiqueta física
+        // distinta). Sin la config (el caso de siempre, 1 color por pedido),
+        // se agrega un único ítem con $customColor como hasta ahora.
+        $splits = self::resolverColoresPorAtributoDeSplit($design, $productOrder);
+
+        if (!empty($splits)) {
+            $hasGroups = !empty($design->accumulation_group_attribute);
+            foreach ($splits as $split) {
+                $items[] = $itemBase + [
+                    'group_value' => $hasGroups ? $split['nombre'] : null,
+                    'group_color' => $hasGroups ? $split['hex'] : null,
+                    'color' => $split['hex'],
+                ];
+            }
+        } else {
+            $items[] = $itemBase + [
+                'group_value' => self::resolverValorDeAgrupacion($design, $productOrder),
+                // Hex del color de agrupación (solo cuando accumulation_group_attribute
+                // es "Color") — para pintar el cartelito del grupo con ese color de
+                // fondo, ver armarPagina(). null en cualquier otro atributo de
+                // agrupación (ahí el cartelito sigue siendo texto negro sin fondo).
+                'group_color' => self::resolverHexDeAgrupacion($design, $productOrder),
+                'color' => $customColor,
+            ];
+        }
 
         self::guardarItemsDelDia($design->id, $fecha, $items);
         self::generarPdfConsolidado($design, $fecha, $items);
@@ -196,6 +222,58 @@ class AccumulatingPdfDesignService
         }
 
         return null;
+    }
+
+    /**
+     * Productos cuya variante trae VARIOS atributos de color, uno por cada
+     * unidad física del pack (ej. "Color banda 1"/"Color banda 2" en el
+     * producto de 2 bandas — ver BandaService::obtenerColoresDeVariante,
+     * misma idea para el sistema viejo): `$design->accumulation_split_attributes`
+     * (array de nombres de atributo, configurable desde el editor) le dice a
+     * agregarItemAlPdf() en qué atributos buscar un color por separado. Uno
+     * por nombre configurado, en orden, salteando los que no tengan valor en
+     * esta variante — si dos atributos dieron el mismo color (ej. las 2
+     * bandas del mismo color), se devuelven dos entradas idénticas a propósito.
+     * [] si no está configurado, si el pedido no tiene variante, o si ningún
+     * atributo configurado matcheó (entonces agregarItemAlPdf() sigue el
+     * camino de siempre, 1 solo ítem con $customColor).
+     */
+    private static function resolverColoresPorAtributoDeSplit(ProductPdfDesign $design, $productOrder): array
+    {
+        $attributeNames = $design->accumulation_split_attributes ?? [];
+        if (empty($attributeNames) || !$productOrder->variant) {
+            return [];
+        }
+
+        $attributesValues = $productOrder->resolved_attributes_values;
+        $resultados = [];
+
+        foreach ($attributeNames as $attributeName) {
+            $attributeName = trim((string) $attributeName);
+            if ($attributeName === '') {
+                continue;
+            }
+
+            foreach ($attributesValues as $attr) {
+                $attrName = $attr['attribute']['name'] ?? '';
+                if (stripos($attrName, $attributeName) === false) {
+                    continue;
+                }
+
+                $nombreColor = trim((string) ($attr['value'] ?? ''));
+                if ($nombreColor === '') {
+                    break;
+                }
+
+                $resultados[] = [
+                    'nombre' => $nombreColor,
+                    'hex' => self::colorCodeComoTexto($attr['color_hex'] ?? null),
+                ];
+                break;
+            }
+        }
+
+        return $resultados;
     }
 
     /**

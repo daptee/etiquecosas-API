@@ -862,6 +862,12 @@ class ProductPdfDesignController extends Controller
         // variante si se configura uno.
         $rules['fillMode'] = 'nullable|in:single,accumulating';
         $rules['accumulationGroupAttribute'] = 'nullable|string|max:191';
+        // Productos "de varias unidades, cada una su color" (ej. pack de 2
+        // bandas, "Color banda 1"/"Color banda 2") — ver
+        // AccumulatingPdfDesignService::resolverColoresPorAtributoDeSplit()
+        // y PDF_DISENOS_ACUMULABLES.md sección 1.2.
+        $rules['accumulationSplitAttributes'] = 'nullable|array';
+        $rules['accumulationSplitAttributes.*'] = 'string|max:191';
         $rules['accumulationCols'] = 'nullable|integer|min:1|max:50';
         $rules['accumulationRows'] = 'nullable|integer|min:1|max:50';
         $rules['accumulationGapCm'] = 'nullable|numeric|min:0|max:10';
@@ -897,6 +903,7 @@ class ProductPdfDesignController extends Controller
             'status_id' => $request->input('statusId', $design->status_id),
             'fill_mode' => $request->input('fillMode', $design->fill_mode),
             'accumulation_group_attribute' => $request->input('accumulationGroupAttribute', $design->accumulation_group_attribute),
+            'accumulation_split_attributes' => $request->input('accumulationSplitAttributes', $design->accumulation_split_attributes),
             'accumulation_cols' => $request->input('accumulationCols', $design->accumulation_cols),
             'accumulation_rows' => $request->input('accumulationRows', $design->accumulation_rows),
             'accumulation_gap_cm' => $request->input('accumulationGapCm', $design->accumulation_gap_cm),

@@ -36,6 +36,7 @@ Un diseño puede tener **varias páginas/celdas distintas** (ej. una etiqueta ch
 | `accumulationRows` | int \| `null` | `null` (se calcula solo) | Cuántas filas de celdas entran en una hoja. Igual que `accumulationCols`, se autocalcula si no se manda. |
 | `accumulationGapCm` | number | `0.3` | Separación en cm entre celdas (horizontal y vertical). |
 | `accumulationQuantityMode` | `"duplicate"` \| `"badge"` | `"duplicate"` | Cómo se imprime un pedido con cantidad > 1. Ver sección 1.1. |
+| `accumulationSplitAttributes` | `string[]` \| `null` | `null` | Productos "de varias unidades, cada una su color" (ej. pack de 2 bandas). Ver sección 1.2. |
 
 Ejemplo de request (editando un diseño ya creado, id `42`):
 
@@ -73,6 +74,36 @@ POST /api/product-pdf-designs/42
 ```
 
 Un pedido con cantidad 1 se ve exactamente igual en los dos modos (nunca sale ningún cartelito).
+
+---
+
+### 1.2. Productos "de varias unidades, cada una su color": `accumulationSplitAttributes`
+
+Caso: un pack de N unidades físicas por pedido (ej. "Bandas de silicona personalizadas. 2 unidades", producto 52796 — 36 variantes, cada una una combinación de 2 colores vía los atributos de catálogo `"Color banda 1"`/`"Color banda 2"`, tipo `color`). Cada unidad del pack es una etiqueta física independiente, con SU PROPIO color — no un solo ítem con un solo color como en el resto de este documento. Esto ya lo resuelve a mano `BandaService::obtenerColoresDeVariante()` para el sistema viejo; `accumulationSplitAttributes` es el equivalente configurable para un diseño del editor.
+
+`accumulationSplitAttributes` es una lista de nombres de atributo de la variante (orden = orden de las unidades del pack), ej.:
+
+```json
+POST /api/product-pdf-designs/42
+{
+  "name": "Bandas x2",
+  "fillMode": "accumulating",
+  "accumulationGroupAttribute": "Color",
+  "accumulationSplitAttributes": ["Color banda 1", "Color banda 2"]
+}
+```
+
+Con esto configurado, **cada pedido se parte en un ítem por cada atributo de la lista** que tenga valor en la variante elegida — en vez de agregar un único ítem con el color de `customization_data` (comportamiento de siempre, el de toda la sección 1). Si dos atributos de la lista resuelven el mismo color (ej. las 2 bandas del mismo color), salen dos ítems idénticos en ese color — **no se deduplican**, cada uno es una etiqueta física distinta que hay que cortar por separado.
+
+El color de cada ítem partido sale del catálogo, no de `customization_data`: el atributo tiene que ser de tipo `color` en la tabla `attributes`, con su `metadata.value` apuntando al id de un `PersonalizationColor` (que es donde vive el hex real, `color_code[0]`) — mismo mecanismo que ya usa el sistema para resolver el ícono/tipografía "por atributo" (`ProductVariant::formatAttributeValues()`). Si el atributo no es de tipo `color`, o no tiene esa `metadata`, el ítem sale igual (con el nombre) pero sin color propio.
+
+Si `accumulationGroupAttribute` también está configurado (cualquier valor no vacío alcanza, no hace falta que diga literalmente "Color"), cada ítem partido se agrupa por SU PROPIO color resuelto (encabezado de página con ese color de fondo, letra blanca — igual que la sección de agrupar por "Color" ya documentada) — pisa, solo para los ítems partidos, la agrupación normal por `customization_data`/atributo de variante. Sin `accumulationGroupAttribute`, los ítems partidos van todos en la misma lista continua, sin separar por color (pero cada uno sigue siendo una etiqueta física aparte).
+
+Sin esta config (`null`/`[]`, el default), el comportamiento es exactamente el de siempre — cero impacto en los diseños existentes.
+
+**Pendiente del front**: ver `PDF_SPLIT_ATTRIBUTES_FRONT.md` (doc aparte, para mandarle directo al equipo de front).
+
+Requiere la migración `database/sql/alter_product_pdf_designs_add_split_attributes.sql` (agrega `product_pdf_designs.accumulation_split_attributes`, JSON) — ver sección 6.
 
 ---
 
@@ -225,6 +256,7 @@ Hace falta aplicar, en orden, en la base de ese entorno:
 1. `database/sql/alter_product_pdf_designs_add_accumulation.sql` — agrega `fill_mode`/`accumulation_group_attribute`/`accumulation_cols`/`accumulation_rows`/`accumulation_gap_cm`. **Ya aplicado en desarrollo local** (confirmado 2026-11-11).
 2. `database/sql/alter_product_pdf_designs_add_quantity_mode.sql` — agrega `accumulation_quantity_mode`. **Todavía NO aplicado en desarrollo local** — sin esto, `accumulationQuantityMode` no se puede guardar (el modo `"badge"` de la sección 1.1).
 3. `database/sql/alter_product_pdf_design_products_add_label_element.sql` — agrega `product_pdf_design_products.label_element_id`. **Todavía NO aplicado en ningún entorno** (2026-11-12) — sin esto, `labelElementId` no se puede guardar (varias etiquetas en una misma página, sección 2.1).
+4. `database/sql/alter_product_pdf_designs_add_split_attributes.sql` — agrega `product_pdf_designs.accumulation_split_attributes`. **Todavía NO aplicado en ningún entorno** (2026-11-13) — sin esto, `accumulationSplitAttributes` no se puede guardar (productos de varias unidades/colores, sección 1.2).
 
 Verificar el estado real en cada entorno antes de asumir — esto puede haber cambiado desde que se escribió esta nota.
 
