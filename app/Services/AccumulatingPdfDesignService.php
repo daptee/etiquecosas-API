@@ -213,7 +213,25 @@ class AccumulatingPdfDesignService
         }
 
         $customData = json_decode($productOrder->customization_data ?? '', true) ?? [];
-        $hex = trim((string) ($customData['color']['color_code'] ?? ''));
+
+        return self::colorCodeComoTexto($customData['color']['color_code'] ?? null);
+    }
+
+    /**
+     * `customization_data.color.color_code` normalmente es un string
+     * ("#RRGGBB"), pero según qué pantalla/versión del front armó la compra
+     * puede llegar como array (ej. {mode: "hex", value: "#RRGGBB"}, igual al
+     * formato que usa `color` en los elementos del editor) — un (string) de
+     * eso tira "Array to string conversion" y aborta todo el ítem (ver
+     * resolverHexDeAgrupacion). Acá se tolera cualquiera de las dos formas.
+     */
+    private static function colorCodeComoTexto($colorCode): ?string
+    {
+        if (is_array($colorCode)) {
+            $colorCode = $colorCode['value'] ?? $colorCode['hex'] ?? $colorCode[0] ?? null;
+        }
+
+        $hex = trim((string) ($colorCode ?? ''));
 
         return $hex !== '' ? $hex : null;
     }
@@ -248,7 +266,10 @@ class AccumulatingPdfDesignService
             return $nombre !== '' ? $nombre : null;
         }
 
-        $nombre = trim((string) ($customData['color']['name'] ?? $customData['color']['color_code'] ?? ''));
+        $nombreColor = $customData['color']['name'] ?? null;
+        $nombre = $nombreColor !== null
+            ? trim((string) $nombreColor)
+            : (self::colorCodeComoTexto($customData['color']['color_code'] ?? null) ?? '');
         return $nombre !== '' ? $nombre : null;
     }
 
