@@ -586,6 +586,11 @@ class AccumulatingPdfDesignService
             $headerY = 0.15;
             $headerW = self::SHEET_WIDTH_CM - 2 * self::MARGIN_X_CM;
             $headerHBox = $headerH - 0.1;
+            // 10pt (ver bandas/consolidado.blade.php .color-header) — este
+            // sistema guarda el tamaño de fuente en px CSS (96dpi): 10pt =
+            // 10 * 96/72 px.
+            $headerFontSizePx = 10 * 96 / 72;
+            $headerText = mb_strtoupper($groupValue, 'UTF-8');
 
             // Agrupando por "Color" (ver resolverHexDeAgrupacion): cartelito con
             // fondo del color real del grupo y letra blanca — mismo criterio que
@@ -594,6 +599,14 @@ class AccumulatingPdfDesignService
             // cualquier otro atributo, el cartelito sigue siendo texto negro sin
             // fondo, como siempre.
             if ($groupColorHex !== null) {
+                // El cartelito se ajusta al texto (como el .color-header de
+                // referencia, que es inline-block) en vez de ocupar todo el
+                // ancho disponible: ancho real del texto + 0.15cm de margen
+                // de cada lado.
+                $headerPaddingCm = 0.15;
+                $headerTextWidthCm = EtiquetaService::anchoTextoCm($headerText, $headerFontSizePx, 700);
+                $headerW = min($headerW, $headerTextWidthCm + 2 * $headerPaddingCm);
+
                 $elements[] = EtiquetaService::resolverElementoParaItemAcumulado([
                     'id' => 'accum-header-bg',
                     'type' => 'background',
@@ -616,13 +629,10 @@ class AccumulatingPdfDesignService
                 'height_cm' => $headerHBox,
                 'z_index' => 1,
                 'value_mode' => 'fixed',
-                'content' => mb_strtoupper($groupValue, 'UTF-8'),
+                'content' => $headerText,
                 'max_lines' => 1,
                 'max_chars_per_line' => 80,
-                // 10pt (ver bandas/consolidado.blade.php .color-header) — este
-                // sistema guarda el tamaño de fuente en px CSS (96dpi): 10pt =
-                // 10 * 96/72 px.
-                'font_size_px' => 10 * 96 / 72,
+                'font_size_px' => $headerFontSizePx,
                 'font_weight' => 700,
                 'text_align' => $groupColorHex !== null ? 'center' : 'left',
                 'vertical_align' => 'middle',

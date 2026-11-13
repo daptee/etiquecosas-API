@@ -1102,6 +1102,22 @@ class EtiquetaService
      * (FontMetrics::getTextWidth, con su fuente, tamaño y letter-spacing ya
      * resueltos), con tope en el width_cm de su caja.
      */
+    /**
+     * Ancho en cm de UN renglón de texto suelto (sin caja/layout_group
+     * detrás) con la misma fuente/métrica que usa dompdf para dibujarlo —
+     * para armar un fondo "a medida" del texto (ver AccumulatingPdfDesignService,
+     * cartelito de grupo con fondo de color), en vez de ocupar todo el ancho
+     * disponible.
+     */
+    public static function anchoTextoCm(string $text, float $fontSizePx, int $fontWeight = 400): float
+    {
+        $fontMetrics = self::metricasFuentes();
+        $font = self::fuenteParaMedir($fontMetrics, ['font_weight' => $fontWeight]);
+        $anchoPt = $fontMetrics->getTextWidth($text, $font, $fontSizePx * self::PX_TO_PT);
+
+        return $anchoPt * self::PT_TO_CM;
+    }
+
     private static function medidasTextoLayout(array $el): array
     {
         $lines = $el['resolved_lines'] ?? [''];
