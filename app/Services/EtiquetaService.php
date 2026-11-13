@@ -1547,8 +1547,9 @@ class EtiquetaService
      * separado en 2 líneas si se pasa $firstName, o word-wrap agrupando
      * partículas de apellidos compuestos) pero sin forzar mayúsculas — el
      * editor nuevo permite mezclar estilos ("CIRO" + "Robertito").
-     * Devuelve los renglones SIN escapar; nunca más de $maxLines (lo que
-     * sobra queda pegado en el último).
+     * Devuelve los renglones SIN escapar; nunca más de $maxLines — lo que no
+     * entra en esa última línea se DESCARTA (no se muestra), no se lo pega
+     * atrás sin límite de ancho.
      */
     private static function dividirEnRenglones(string $texto, int $maxLines, int $maxCharsPerLine, ?string $firstName): array
     {
@@ -1583,14 +1584,24 @@ class EtiquetaService
             // medía " " + token: una primera palabra de maxCharsPerLine
             // caracteres o más dejaba un renglón vacío arriba).
             $candidate = $currentLine === '' ? $token : $currentLine . ' ' . $token;
-            if ($currentLine !== '' && mb_strlen($candidate, 'UTF-8') > $maxCharsPerLine && count($lines) < $maxLines - 1) {
+            $excedeAncho = $currentLine !== '' && mb_strlen($candidate, 'UTF-8') > $maxCharsPerLine;
+
+            if ($excedeAncho && count($lines) < $maxLines - 1) {
+                // Todavía hay lugar para otro renglón: se corta acá.
                 $lines[] = trim($currentLine);
                 $currentLine = $token;
+            } elseif ($excedeAncho) {
+                // Ya estamos en el ÚLTIMO renglón permitido y no entra más —
+                // se corta acá; este token y los que siguen se descartan (no
+                // se muestran), en vez de amontonarse sin límite de ancho.
+                break;
             } else {
                 $currentLine = $candidate;
             }
         }
-        $lines[] = trim($currentLine);
+        if ($currentLine !== '') {
+            $lines[] = trim($currentLine);
+        }
 
         return $lines;
     }
