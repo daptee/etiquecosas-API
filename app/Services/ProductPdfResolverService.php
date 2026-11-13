@@ -63,7 +63,9 @@ class ProductPdfResolverService
                     $customIcon,
                     $fecha,
                     $customColor,
-                    $link->label_element_id
+                    $link->label_element_id,
+                    $form['name'] ?? null,
+                    $form['lastName'] ?? null
                 );
             } catch (\Throwable $e) {
                 Log::error('Error agregando pedido al diseño acumulable', [

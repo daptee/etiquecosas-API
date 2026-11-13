@@ -16,3 +16,8 @@ VALUES
 INSERT INTO `label_shapes` (`name`, `shape_type`, `width_cm`, `height_cm`, `is_system`, `data`, `status_id`)
 VALUES
   ('Transfer para planchar', 'rect', 6.03, 1.02, 1, JSON_OBJECT('css_class', 'etiqueta-transfer-para-planchar'), 1);
+
+
+INSERT INTO `label_shapes` (`name`, `shape_type`, `width_cm`, `height_cm`, `is_system`, `data`, `status_id`)
+VALUES
+  ('Banda', 'rect', 4.5, 3.5, 1, JSON_OBJECT('css_class', 'etiqueta-banda'), 1);

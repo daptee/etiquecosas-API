@@ -1393,13 +1393,13 @@ class EtiquetaService
      * Mismo resolverElementoDesign() de siempre, pero para UN elemento de una
      * celda de diseño "acumulable" (ver AccumulatingPdfDesignService) — un
      * ítem ya guardado en el JSON del día, sin $productOrder en vivo detrás.
-     * Esas celdas solo usan nombre + ícono + color elegido por el cliente
-     * (sin apellido/atributos dinámicos: no aplican a un diseño que se arma
-     * con pedidos de ventas distintas).
+     * $firstName/$lastName son opcionales (no todos los ítems guardados los
+     * tienen) — sin ellos, un elemento con dynamic_field "nombre" o "apellido"
+     * (en vez de "nombre_apellido") queda vacío.
      */
-    public static function resolverElementoParaItemAcumulado(array $el, string $nombre, ?string $customIcon = null, $customColor = null): array
+    public static function resolverElementoParaItemAcumulado(array $el, string $nombre, ?string $customIcon = null, $customColor = null, ?string $firstName = null, ?string $lastName = null): array
     {
-        return self::resolverElementoDesign($el, $nombre, null, null, $customColor, $customIcon);
+        return self::resolverElementoDesign($el, $nombre, $firstName, $lastName, $customColor, $customIcon);
     }
 
     /**
@@ -1412,10 +1412,10 @@ class EtiquetaService
      * AccumulatingPdfDesignService::armarPagina() les sume el offset de
      * columna/fila y renombre los ids.
      */
-    public static function resolverCeldaAcumulada(array $cellPage, string $nombre, ?string $customIcon = null, $customColor = null): array
+    public static function resolverCeldaAcumulada(array $cellPage, string $nombre, ?string $customIcon = null, $customColor = null, ?string $firstName = null, ?string $lastName = null): array
     {
         $elements = array_map(
-            fn($el) => self::resolverElementoDesign($el, $nombre, null, null, $customColor, $customIcon),
+            fn($el) => self::resolverElementoDesign($el, $nombre, $firstName, $lastName, $customColor, $customIcon),
             $cellPage['elements'] ?? []
         );
 

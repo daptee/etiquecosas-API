@@ -82,7 +82,9 @@ class AccumulatingPdfDesignService
         ?string $customIcon,
         $fechaCompra = null,
         $customColor = null,
-        ?string $labelElementId = null
+        ?string $labelElementId = null,
+        ?string $firstName = null,
+        ?string $lastName = null
     ): void {
         if (!$design->esAcumulable()) {
             return;
@@ -112,6 +114,12 @@ class AccumulatingPdfDesignService
             'venta_id' => $ventaId,
             'product_order_id' => $productOrder->id,
             'nombre' => $nombre,
+            // Por separado de 'nombre' (que puede venir pisado por
+            // $productOrder->comment) — hace falta para los elementos con
+            // dynamic_field "nombre"/"apellido" (nombre o apellido solos,
+            // no el nombre completo), ver EtiquetaService::resolverElementoDesign.
+            'first_name' => $firstName,
+            'last_name' => $lastName,
             'cantidad' => $productOrder->quantity ?? 1,
             'group_value' => self::resolverValorDeAgrupacion($design, $productOrder),
             // Hex del color de agrupación (solo cuando accumulation_group_attribute
@@ -611,8 +619,10 @@ class AccumulatingPdfDesignService
             $offsetX = self::MARGIN_X_CM + $col * ($cellW + $badgeW + $gap);
             $offsetY = self::MARGIN_TOP_CM + $headerH + $row * ($cellH + $gap);
             $nombre = mb_strtoupper($item['nombre'], 'UTF-8');
+            $primerNombre = isset($item['first_name']) ? mb_strtoupper($item['first_name'], 'UTF-8') : null;
+            $apellido = isset($item['last_name']) ? mb_strtoupper($item['last_name'], 'UTF-8') : null;
 
-            $elementosCelda = EtiquetaService::resolverCeldaAcumulada($cellPage, $nombre, $item['icono'] ?? null, $item['color'] ?? null);
+            $elementosCelda = EtiquetaService::resolverCeldaAcumulada($cellPage, $nombre, $item['icono'] ?? null, $item['color'] ?? null, $primerNombre, $apellido);
             foreach ($elementosCelda as $elIdx => $resuelto) {
                 $resuelto['id'] = ($resuelto['id'] ?? 'el') . "-item{$i}-{$elIdx}";
                 $resuelto['x_cm'] = (float) ($resuelto['x_cm'] ?? 0) - $originX + $offsetX;
