@@ -114,6 +114,11 @@ class AccumulatingPdfDesignService
             'nombre' => $nombre,
             'cantidad' => $productOrder->quantity ?? 1,
             'group_value' => self::resolverValorDeAgrupacion($design, $productOrder),
+            // Hex del color de agrupación (solo cuando accumulation_group_attribute
+            // es "Color") — para pintar el cartelito del grupo con ese color de
+            // fondo, ver armarPagina(). null en cualquier otro atributo de
+            // agrupación (ahí el cartelito sigue siendo texto negro sin fondo).
+            'group_color' => self::resolverHexDeAgrupacion($design, $productOrder),
             'icono' => $customIcon,
             'color' => $customColor,
             // Qué elemento `background` (qué "etiqueta") de la página usa este
@@ -183,6 +188,26 @@ class AccumulatingPdfDesignService
         }
 
         return null;
+    }
+
+    /**
+     * Hex del color elegido por el cliente (customization_data.color.color_code),
+     * solo cuando el diseño agrupa por "Color" (ver resolverValorDePersonalizacion)
+     * — null en cualquier otro atributo de agrupación, o si el pedido no
+     * personalizó ningún color.
+     */
+    private static function resolverHexDeAgrupacion(ProductPdfDesign $design, $productOrder): ?string
+    {
+        $attributeName = $design->accumulation_group_attribute;
+        $normalizado = mb_strtolower(trim((string) $attributeName), 'UTF-8');
+        if ($normalizado !== 'color') {
+            return null;
+        }
+
+        $customData = json_decode($productOrder->customization_data ?? '', true) ?? [];
+        $hex = trim((string) ($customData['color']['color_code'] ?? ''));
+
+        return $hex !== '' ? $hex : null;
     }
 
     /**
@@ -289,6 +314,10 @@ class AccumulatingPdfDesignService
             }
 
             foreach ($grupos as $groupValue => $itemsDelGrupo) {
+                // Mismo color para todo el grupo (agrupados justamente por ese
+                // valor) — alcanza con el del primer ítem.
+                $groupColorHex = $itemsDelGrupo[0]['group_color'] ?? null;
+
                 foreach (array_chunk($itemsDelGrupo, $porPagina) as $chunk) {
                     $pages[] = self::armarPagina(
                         $cellPage,
@@ -301,7 +330,8 @@ class AccumulatingPdfDesignService
                         $hasGroups ? (string) $groupValue : null,
                         $duplicarPorCantidad ? 0.0 : $badgeW,
                         $originX,
-                        $originY
+                        $originY,
+                        $groupColorHex
                     );
                 }
             }
@@ -517,26 +547,57 @@ class AccumulatingPdfDesignService
         ?string $groupValue,
         float $badgeW = 0.0,
         float $originX = 0.0,
-        float $originY = 0.0
+        float $originY = 0.0,
+        ?string $groupColorHex = null
     ): array {
         $elements = [];
 
         if ($groupValue !== null) {
+            $headerX = self::MARGIN_X_CM;
+            $headerY = 0.15;
+            $headerW = self::SHEET_WIDTH_CM - 2 * self::MARGIN_X_CM;
+            $headerHBox = $headerH - 0.1;
+
+            // Agrupando por "Color" (ver resolverHexDeAgrupacion): cartelito con
+            // fondo del color real del grupo y letra blanca — mismo criterio que
+            // bandas/consolidado.blade.php (.color-header), pero con el color
+            // real del pedido en vez de una paleta fija por nombre. Agrupando por
+            // cualquier otro atributo, el cartelito sigue siendo texto negro sin
+            // fondo, como siempre.
+            if ($groupColorHex !== null) {
+                $elements[] = EtiquetaService::resolverElementoParaItemAcumulado([
+                    'id' => 'accum-header-bg',
+                    'type' => 'background',
+                    'x_cm' => $headerX,
+                    'y_cm' => $headerY,
+                    'width_cm' => $headerW,
+                    'height_cm' => $headerHBox,
+                    'z_index' => 0,
+                    'fill' => ['type' => 'color', 'color' => ['mode' => 'hex', 'value' => $groupColorHex]],
+                    'color' => ['mode' => 'hex', 'value' => $groupColorHex],
+                ], '');
+            }
+
             $elements[] = EtiquetaService::resolverElementoParaItemAcumulado([
                 'id' => 'accum-header',
                 'type' => 'text',
-                'x_cm' => self::MARGIN_X_CM,
-                'y_cm' => 0.15,
-                'width_cm' => self::SHEET_WIDTH_CM - 2 * self::MARGIN_X_CM,
-                'height_cm' => $headerH - 0.1,
+                'x_cm' => $headerX,
+                'y_cm' => $headerY,
+                'width_cm' => $headerW,
+                'height_cm' => $headerHBox,
+                'z_index' => 1,
                 'value_mode' => 'fixed',
                 'content' => mb_strtoupper($groupValue, 'UTF-8'),
                 'max_lines' => 1,
                 'max_chars_per_line' => 80,
-                'font_size_px' => 18,
+                // 10pt (ver bandas/consolidado.blade.php .color-header) — este
+                // sistema guarda el tamaño de fuente en px CSS (96dpi): 10pt =
+                // 10 * 96/72 px.
+                'font_size_px' => 10 * 96 / 72,
                 'font_weight' => 700,
-                'text_align' => 'left',
-                'color' => ['mode' => 'hex', 'value' => '#000000'],
+                'text_align' => $groupColorHex !== null ? 'center' : 'left',
+                'vertical_align' => 'middle',
+                'color' => ['mode' => 'hex', 'value' => $groupColorHex !== null ? '#FFFFFF' : '#000000'],
             ], '');
         }
 
