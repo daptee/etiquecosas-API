@@ -456,6 +456,8 @@ class EtiquetaService
                         $pdf = Pdf::loadView('tematica.editor.RENDER', compact('plantilla', 'product_order'))
                             ->setPaper([0, 0, $widthPt, $heightPt]);
                         $dompdf = $pdf->getDomPDF();
+                        // Contorno de letra (text_stroke): ver PdfTextStroke.
+                        PdfTextStroke::registrar($pdf);
                         $dompdf->getOptions()->setFontDir(public_path('fonts'));
                         $pdf->save($filePath);
 
@@ -500,6 +502,8 @@ class EtiquetaService
                     $pdf = Pdf::loadView('tematica.editor.RENDER', compact('plantilla', 'product_order'))
                         ->setPaper([0, 0, $widthPt, $heightPt]);
                     $dompdf = $pdf->getDomPDF();
+                    // Contorno de letra (text_stroke): ver PdfTextStroke.
+                    PdfTextStroke::registrar($pdf);
                     $dompdf->getOptions()->setFontDir(public_path('fonts'));
 
                     $tmpPath = "{$filePath}.tmp{$grupoIdx}.pdf";
@@ -1389,6 +1393,9 @@ class EtiquetaService
             $el['resolved_line_height_design'] = self::resolverInterlineado($el);
             $el['resolved_line_height'] = $el['resolved_line_height_design'] / $fontRatio;
             $el['resolved_letter_spacing_px'] = self::resolverEspaciadoLetras($el);
+            // Contorno de letra (PDF_CONTORNO_LETRA.md): solo cómo se pinta,
+            // no toca tamaño de caja, renglones ni espaciado.
+            $el['resolved_text_stroke'] = PdfTextStroke::resolver($el);
         }
 
         $customColorValue = null;

@@ -789,6 +789,8 @@ class AccumulatingPdfDesignService
                 $pdf = Pdf::loadView('tematica.editor.RENDER', compact('plantilla', 'product_order'))
                     ->setPaper([0, 0, $widthPt, $heightPt]);
                 $dompdf = $pdf->getDomPDF();
+                // Contorno de letra (text_stroke): ver PdfTextStroke.
+                PdfTextStroke::registrar($pdf);
                 $dompdf->getOptions()->setFontDir(public_path('fonts'));
 
                 $tmpPath = "{$filePath}.tmp{$idx}.pdf";

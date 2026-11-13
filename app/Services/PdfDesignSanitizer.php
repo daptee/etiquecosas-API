@@ -212,6 +212,16 @@ class PdfDesignSanitizer
             if (isset($el['border']['width_cm'])) {
                 $el['border']['width_cm'] = max(0, min(5, (float) $el['border']['width_cm']));
             }
+            // Contorno de letra (ver PDF_CONTORNO_LETRA.md): solo en textos y
+            // con grosor y color válidos; si no, se descarta (= sin contorno).
+            if (array_key_exists('text_stroke', $el)) {
+                $textStroke = ($el['type'] ?? null) === 'text' ? self::sanitizeTextStroke($el['text_stroke']) : null;
+                if ($textStroke === null) {
+                    unset($el['text_stroke']);
+                } else {
+                    $el['text_stroke'] = $textStroke;
+                }
+            }
             if (isset($el['background_image']) && is_string($el['background_image'])) {
                 $el['background_image'] = strip_tags($el['background_image']);
             }
@@ -259,6 +269,47 @@ class PdfDesignSanitizer
         }
 
         return ['type' => 'none'];
+    }
+
+    /**
+     * Contorno de letra de un texto (data.pages[].elements[].text_stroke, ver
+     * PDF_CONTORNO_LETRA.md). Null = sin contorno (grosor <= 0, sin color o
+     * formato inválido). Conserva value_mode/dynamic_attribute_id del color
+     * para que el editor lo siga mostrando como "De la compra".
+     */
+    public static function sanitizeTextStroke($stroke): ?array
+    {
+        if (!is_array($stroke) || !is_numeric($stroke['width_cm'] ?? null) || (float) $stroke['width_cm'] <= 0) {
+            return null;
+        }
+
+        $color = $stroke['color'] ?? null;
+        if (!is_array($color) || !isset($color['value']) || trim((string) $color['value']) === '') {
+            return null;
+        }
+        $mode = $color['mode'] ?? 'hex';
+
+        $cleanColor = [
+            'mode' => in_array($mode, ['hex', 'cmyk'], true) ? $mode : 'hex',
+            'value' => strip_tags((string) $color['value']),
+        ];
+        if (isset($color['value_mode']) && is_string($color['value_mode'])) {
+            $cleanColor['value_mode'] = $color['value_mode'] === 'dynamic' ? 'dynamic' : 'fixed';
+        }
+        if (array_key_exists('dynamic_attribute_id', $color)) {
+            $cleanColor['dynamic_attribute_id'] = is_numeric($color['dynamic_attribute_id']) ? (int) $color['dynamic_attribute_id'] : null;
+        }
+        if (array_key_exists('editable_by_customer', $color)) {
+            $cleanColor['editable_by_customer'] = $color['editable_by_customer'] === true;
+        }
+
+        return [
+            // El editor llega hasta 0,1 cm; tope holgado para no guardar basura.
+            'width_cm' => min(0.5, (float) $stroke['width_cm']),
+            'color' => $cleanColor,
+            'position' => ($stroke['position'] ?? null) === 'inside' ? 'inside' : 'outside',
+            'join' => ($stroke['join'] ?? null) === 'miter' ? 'miter' : 'round',
+        ];
     }
 
     /**

@@ -324,13 +324,33 @@
                             // (o 0) si no hay reglas o ninguna matchea.
                             $lineHeight = $el['resolved_line_height'] ?? $el['line_height'] ?? 1.15;
                             $letterSpacingPx = $el['resolved_letter_spacing_px'] ?? $el['letter_spacing_px'] ?? 0;
+                            // Contorno de letra (PDF_CONTORNO_LETRA.md), lo dibuja
+                            // App\Services\PdfTextStroke con callbacks de dompdf.
+                            // Exterior: una capa idéntica DEBAJO, marcada, que sale
+                            // solo con trazo; la capa normal de arriba tapa la mitad
+                            // interior. Interior: la única capa va marcada (recorte +
+                            // relleno/trazo por renglón). Sin contorno: capa normal.
+                            $textStroke = $el['resolved_text_stroke'] ?? null;
+                            $textLayers = match ($textStroke['mode'] ?? null) {
+                                \App\Services\PdfTextStroke::MODE_OUTSIDE => [$textStroke, null],
+                                \App\Services\PdfTextStroke::MODE_INSIDE => [$textStroke],
+                                default => [null],
+                            };
                         @endphp
+                        @foreach ($textLayers as $layerStroke)
                         <div class="editor-text-wrap" style="
                             top: {{ $wrapTop }};
                             transform: {{ $wrapTransform }};
                             text-align: {{ $el['text_align'] ?? 'center' }};
                         ">
-                            <p style="
+                            <p
+                                @if ($layerStroke)
+                                    {{ \App\Services\PdfTextStroke::ATTR_MODE }}="{{ $layerStroke['mode'] }}"
+                                    {{ \App\Services\PdfTextStroke::ATTR_WIDTH }}="{{ $layerStroke['width_pt'] }}"
+                                    {{ \App\Services\PdfTextStroke::ATTR_COLOR }}="{{ $layerStroke['color_css'] }}"
+                                    {{ \App\Services\PdfTextStroke::ATTR_JOIN }}="{{ $layerStroke['join'] }}"
+                                @endif
+                                style="
                                 font-family: @if (!empty($el['resolved_font_family']))'{{ $el['resolved_font_family'] }}', @endif'{{ $fallbackFontFamily }}';
                                 @if ($isLayoutText) white-space: nowrap; @endif
                                 font-size: {{ $el['resolved_font_size_px'] ?? $el['font_size_px'] ?? 32 }}px;
@@ -342,6 +362,7 @@
                                 {!! $el['resolved_text_html'] ?? ($el['resolved_text'] ?? '') !!}
                             </p>
                         </div>
+                        @endforeach
                         @break
 
                     @case('shape')
