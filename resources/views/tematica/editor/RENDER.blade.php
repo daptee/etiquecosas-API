@@ -249,7 +249,12 @@
                                 // dibuja a `icon_scale_pct`% del bloque, centrado — el bloque
                                 // (posición/tamaño/fondo) no cambia. Ausente o fuera de rango
                                 // = 100% (todo el bloque, igual que siempre).
-                                $iconScalePct = max(10, min(100, (float) ($el['icon_scale_pct'] ?? 100)));
+                                // `resolved_icon_scale_pct` (ver PDF_ESCALA_ICONO_POR_TEXTO.md)
+                                // la calcula EtiquetaService::ajustarTamanoIconoPorTexto() según
+                                // la longitud del texto agrupado con este ícono — tiene prioridad
+                                // sobre el `icon_scale_pct` fijo cuando el elemento trae
+                                // `icon_size_rules` y está agrupado con un texto.
+                                $iconScalePct = max(10, min(100, (float) ($el['resolved_icon_scale_pct'] ?? $el['icon_scale_pct'] ?? 100)));
                                 $iconOffsetPct = (100 - $iconScalePct) / 2;
                             @endphp
                             <img src="file://{{ str_replace('\\', '/', $el['resolved_icon_path']) }}" style="position: absolute; left: {{ $iconOffsetPct }}%; top: {{ $iconOffsetPct }}%; width: {{ $iconScalePct }}%; height: {{ $iconScalePct }}%; object-fit: contain;">

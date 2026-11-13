@@ -127,6 +127,32 @@ class PdfDesignSanitizer
                     ];
                 }, $el['letter_spacing_rules']), 0, 20);
             }
+            // Ver PDF_ESCALA_ICONO_POR_TEXTO.md: escala del ícono (type:"icon")
+            // según la longitud del texto agrupado con él (mismo group_id) —
+            // mismo esquema que font_size_rules pero para icon_scale_pct.
+            // icon_length_rules/icon_length_rules_enabled son el estado
+            // editable del editor (igual que length_rules/length_rules_enabled
+            // para el texto); icon_size_rules es lo que de verdad usa el
+            // backend (ya con el catch-all resuelto por el editor).
+            if (!empty($el['icon_size_rules']) && is_array($el['icon_size_rules'])) {
+                $el['icon_size_rules'] = array_slice(array_map(function ($rule) {
+                    return [
+                        'max_chars' => isset($rule['max_chars']) ? max(0, (int) $rule['max_chars']) : null,
+                        'icon_scale_pct' => isset($rule['icon_scale_pct']) ? max(10, min(100, (int) round((float) $rule['icon_scale_pct']))) : null,
+                    ];
+                }, $el['icon_size_rules']), 0, 20);
+            }
+            if (!empty($el['icon_length_rules']) && is_array($el['icon_length_rules'])) {
+                $el['icon_length_rules'] = array_slice(array_map(function ($rule) {
+                    return [
+                        'max_chars' => isset($rule['max_chars']) ? max(0, (int) $rule['max_chars']) : null,
+                        'icon_scale_pct' => isset($rule['icon_scale_pct']) ? max(10, min(100, (int) round((float) $rule['icon_scale_pct']))) : null,
+                    ];
+                }, $el['icon_length_rules']), 0, 20);
+            }
+            if (isset($el['icon_length_rules_enabled'])) {
+                $el['icon_length_rules_enabled'] = $el['icon_length_rules_enabled'] === true;
+            }
 
             if (isset($el['text_align']) && !in_array($el['text_align'], self::ALLOWED_TEXT_ALIGN, true)) {
                 $el['text_align'] = 'center';

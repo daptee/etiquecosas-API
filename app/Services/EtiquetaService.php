@@ -611,6 +611,7 @@ class EtiquetaService
             ];
 
             self::ajustarPorIconoAusente($resolved['elements']);
+            self::ajustarTamanoIconoPorTexto($resolved['elements']);
 
             $resolvedPages[] = self::aplicarLayoutGroups($resolved, $page['layout_groups'] ?? [], $logId, $pageIdx);
         }
@@ -1436,6 +1437,7 @@ class EtiquetaService
         );
 
         self::ajustarPorIconoAusente($elements);
+        self::ajustarTamanoIconoPorTexto($elements);
 
         $resolved = [
             'id' => $cellPage['id'] ?? null,
@@ -1793,6 +1795,83 @@ class EtiquetaService
         }
 
         return isset($el['letter_spacing_px']) ? (float) $el['letter_spacing_px'] : 0.0;
+    }
+
+    /**
+     * Escala de dibujo del ícono (`icon_scale_pct`, ver
+     * PDF_ESCALA_ICONO_Y_COLOR_DE_LA_COMPRA.md) según la cantidad de
+     * caracteres del TEXTO agrupado con él — mismo esquema que
+     * resolverTamanoFuente()/resolverInterlineado(), pero el largo no sale
+     * del propio elemento (un ícono no tiene texto) sino que lo pasa
+     * ajustarTamanoIconoPorTexto() ya calculado del texto del grupo.
+     * null = sin `icon_size_rules` configuradas o ninguna matchea (el ícono
+     * se queda con su `icon_scale_pct` fijo de siempre).
+     */
+    private static function resolverEscalaIcono(array $el, int $largoTextoAgrupado): ?float
+    {
+        $reglas = $el['icon_size_rules'] ?? null;
+        if (empty($reglas) || !is_array($reglas)) {
+            return null;
+        }
+
+        $reglasOrdenadas = $reglas;
+        usort($reglasOrdenadas, function ($a, $b) {
+            $maxA = $a['max_chars'] ?? PHP_INT_MAX;
+            $maxB = $b['max_chars'] ?? PHP_INT_MAX;
+            return $maxA <=> $maxB;
+        });
+
+        foreach ($reglasOrdenadas as $regla) {
+            $maxChars = $regla['max_chars'] ?? null;
+            if (($maxChars === null || $largoTextoAgrupado <= $maxChars) && isset($regla['icon_scale_pct'])) {
+                return (float) $regla['icon_scale_pct'];
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Un ícono agrupado (mismo `group_id`) con un texto puede traer
+     * `icon_size_rules`: si las trae, su `icon_scale_pct` de dibujo pasa a
+     * depender de la cantidad de caracteres del texto del grupo — igual que
+     * el tamaño de fuente del propio texto ya depende de su longitud
+     * (`font_size_rules`). Pedido del admin: en la etiqueta de "banda 1
+     * unidad" (nombre + ícono en la misma etiqueta), si el nombre es largo
+     * el ícono tiene que achicarse para no pisarlo.
+     *
+     * Un ícono SIN `group_id`, o agrupado solo con otro ícono/fondo (sin
+     * ningún texto en ese mismo grupo), no se toca: sigue con su
+     * `icon_scale_pct` fijo de siempre. Si hay más de un texto en el mismo
+     * grupo (no debería pasar en un uso normal), se usa el primero que
+     * aparece en la lista de elementos.
+     */
+    private static function ajustarTamanoIconoPorTexto(array &$elements): void
+    {
+        $largoTextoPorGrupo = [];
+        foreach ($elements as $el) {
+            $groupId = $el['group_id'] ?? null;
+            if ($groupId === null || ($el['type'] ?? null) !== 'text' || isset($largoTextoPorGrupo[$groupId])) {
+                continue;
+            }
+            $largoTextoPorGrupo[$groupId] = mb_strlen($el['resolved_text'] ?? '', 'UTF-8');
+        }
+
+        if (empty($largoTextoPorGrupo)) {
+            return;
+        }
+
+        foreach ($elements as &$el) {
+            $groupId = $el['group_id'] ?? null;
+            if (($el['type'] ?? null) !== 'icon' || $groupId === null || !isset($largoTextoPorGrupo[$groupId])) {
+                continue;
+            }
+            $escala = self::resolverEscalaIcono($el, $largoTextoPorGrupo[$groupId]);
+            if ($escala !== null) {
+                $el['resolved_icon_scale_pct'] = $escala;
+            }
+        }
+        unset($el);
     }
 
     /**
