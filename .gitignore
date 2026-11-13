@@ -9,6 +9,7 @@
 /public/fonts
 /storage/fonts
 /public/fonts/installed-fonts.json
+/storage
 /storage/*.key
 /vendor
 .env
