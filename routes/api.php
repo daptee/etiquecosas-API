@@ -245,6 +245,9 @@ Route::middleware('jwt.auth')->prefix('product-pdf-designs')->group(function () 
     // Antes de "/{id}" — si no, "import-from-pdf" matchearía como si fuera un id.
     Route::post('/import-from-pdf', [ProductPdfDesignController::class, 'importFromPdf']);
     Route::post('/import-from-product', [ProductPdfDesignController::class, 'importFromProduct']);
+    // Pasar un diseño entre entornos (dev → prod): ver PDF_EXPORTAR_IMPORTAR_DISENO.md.
+    Route::post('/import', [ProductPdfDesignController::class, 'import']);
+    Route::get('/{id}/export', [ProductPdfDesignController::class, 'export']);
     Route::post('/{id}', [ProductPdfDesignController::class, 'update']);
     Route::patch('/{id}/toggle-status', [ProductPdfDesignController::class, 'toggleStatus']);
     Route::delete('/{id}', [ProductPdfDesignController::class, 'delete']);

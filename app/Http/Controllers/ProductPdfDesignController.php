@@ -15,10 +15,13 @@ use App\Models\TypographyFile;
 use App\Services\EtiquetaService;
 use App\Services\PdfDesignImportService;
 use App\Services\PdfDesignSanitizer;
+use App\Services\PdfDesignTransferService;
 use Carbon\Carbon;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use App\Traits\FindObject;
@@ -914,6 +917,102 @@ class ProductPdfDesignController extends Controller
         $design->load(['products:id,name,sku', 'labelShape', 'generalStatus', 'user:id,name,lastName']);
         $this->logAudit(Auth::user(), 'Update Product Pdf Design', $request->all(), $design);
         return $this->success($design, 'Diseño de PDF actualizado');
+    }
+
+    /**
+     * Descarga el diseño como un JSON autocontenido (diseño + catálogo al que
+     * apunta + archivos en base64) para importarlo en otro entorno con
+     * POST /product-pdf-designs/import. Ver PDF_EXPORTAR_IMPORTAR_DISENO.md.
+     */
+    public function export($id)
+    {
+        $design = $this->findObject(ProductPdfDesign::class, $id);
+        $bundle = (new PdfDesignTransferService())->export($design);
+
+        $slug = Str::slug($design->name) ?: 'diseno';
+        $this->logAudit(Auth::user(), 'Export Product Pdf Design', ['designId' => $design->id], ['warnings' => $bundle['warnings']]);
+
+        return response()->json($bundle, 200, [
+            'Content-Disposition' => "attachment; filename=\"diseno-pdf-{$design->id}-{$slug}.json\"",
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    }
+
+    /**
+     * Importa un JSON de GET /product-pdf-designs/{id}/export. Por defecto
+     * crea un diseño nuevo SIN PUBLICAR y sin productos vinculados; con
+     * `targetDesignId` reemplaza el contenido de ese diseño (conserva sus
+     * vínculos y su estado de publicación).
+     */
+    public function import(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'file' => 'required_without:bundle|file|max:102400',
+            'bundle' => 'required_without:file|array',
+            'name' => 'nullable|string|max:255',
+            'targetDesignId' => 'nullable|integer|exists:product_pdf_designs,id',
+        ]);
+        if ($validator->fails()) {
+            $this->logAudit(Auth::user(), 'Import Product Pdf Design', $request->except('file', 'bundle'), $validator->errors());
+            return $this->validationError($validator->errors());
+        }
+
+        $bundle = $request->hasFile('file')
+            ? json_decode(file_get_contents($request->file('file')->getRealPath()), true)
+            : $request->input('bundle');
+        if ($bundleError = PdfDesignTransferService::bundleError($bundle)) {
+            return $this->validationError(['file' => [$bundleError]]);
+        }
+
+        $transfer = new PdfDesignTransferService();
+        $target = $request->filled('targetDesignId') ? ProductPdfDesign::find($request->targetDesignId) : null;
+        $source = $bundle['design'];
+
+        try {
+            [$design, $report] = DB::transaction(function () use ($transfer, $bundle, $source, $target, $request) {
+                $design = $target ?? ProductPdfDesign::create([
+                    'user_id' => Auth::id(),
+                    'name' => $request->input('name') ?: ($source['name'] ?? 'Diseño importado'),
+                    'data' => ['pages' => []],
+                    'is_published' => false,
+                    'status_id' => 1,
+                ]);
+
+                $result = $transfer->import($bundle, $design->id);
+
+                $data = $this->sanitizeDesignData($result['data']);
+                if ($layoutErrors = $this->layoutGroupErrors($data)) {
+                    throw new \InvalidArgumentException('layout_groups inválidos: ' . json_encode($layoutErrors, JSON_UNESCAPED_UNICODE));
+                }
+
+                $design->update([
+                    'name' => $request->input('name') ?: $design->name,
+                    'label_shape_id' => $result['label_shape_id'],
+                    'data' => $data,
+                    'fill_mode' => $source['fill_mode'] ?? 'single',
+                    'accumulation_group_attribute' => $source['accumulation_group_attribute'] ?? null,
+                    'accumulation_split_attributes' => $source['accumulation_split_attributes'] ?? null,
+                    'accumulation_cols' => $source['accumulation_cols'] ?? null,
+                    'accumulation_rows' => $source['accumulation_rows'] ?? null,
+                    'accumulation_gap_cm' => $source['accumulation_gap_cm'] ?? null,
+                    'accumulation_quantity_mode' => $source['accumulation_quantity_mode'] ?? null,
+                    'pages_output_mode' => $source['pages_output_mode'] ?? null,
+                ]);
+
+                return [$design, $result['report']];
+            });
+        } catch (\Throwable $e) {
+            $transfer->rollbackFiles();
+            $this->logAudit(Auth::user(), 'Import Product Pdf Design', $request->except('file', 'bundle'), $e->getMessage());
+            return $this->error('No se pudo importar el diseño: ' . $e->getMessage(), $e instanceof \InvalidArgumentException ? 422 : 500);
+        }
+
+        $design->load(['products:id,name,sku', 'labelShape', 'generalStatus', 'user:id,name,lastName']);
+        $this->logAudit(Auth::user(), 'Import Product Pdf Design', [
+            'source' => $bundle['source'] ?? null,
+            'targetDesignId' => $target?->id,
+        ], ['designId' => $design->id, 'report' => $report]);
+
+        return $this->success(['design' => $design, 'report' => $report], $target ? 'Diseño reemplazado con la importación' : 'Diseño importado');
     }
 
     public function toggleStatus($id)
