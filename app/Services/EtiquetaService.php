@@ -1346,7 +1346,18 @@ class EtiquetaService
                 $el['resolved_font_family'] = 'attr-font-' . $dynamicFontAttributeId;
                 $el['resolved_font_files'] = [public_path($attributeFont)];
             } elseif (!empty($el['font_id'])) {
-                $typography = Typography::with('files')->find($el['font_id']);
+                // Re-subir el archivo de una tipografía (TypographyController::
+                // storeFiles()) AGREGA una fila nueva en typography_files, no
+                // reemplaza la vieja — con 2+ archivos para la misma tipografía,
+                // el `hasMany` sin orderBy() devuelve el MÁS VIEJO primero, y
+                // como acá y en RENDER.blade.php solo se usa `[0]` (un solo
+                // archivo por tipografía, no distingue variantes por peso),
+                // quedaba pegado para siempre con el primer archivo subido
+                // aunque el admin reemplazara la fuente por una nueva (reporte:
+                // "no se me regenera correctamente la tipografia"). Se pide
+                // ordenado por id descendente para que `[0]` sea siempre el
+                // último archivo subido.
+                $typography = Typography::with(['files' => fn($q) => $q->orderByDesc('id')])->find($el['font_id']);
                 if ($typography) {
                     $el['resolved_font_family'] = $typography->name;
                     $el['resolved_font_files'] = $typography->files
