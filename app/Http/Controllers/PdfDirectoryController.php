@@ -38,6 +38,7 @@ class PdfDirectoryController extends Controller
             $startDate = $request->input('start_date');
             $endDate = $request->input('end_date');
             $filterUserId = $request->input('user_id'); // Solo para admin
+            $search = $request->input('search'); // Nombre de PDF (parcial)
 
             // Si es admin (profile_id 1) y se especifica user_id, filtrar por ese usuario
             $userId = null;
@@ -60,7 +61,8 @@ class PdfDirectoryController extends Controller
                 $startDate,
                 $endDate,
                 $page,
-                $perPage
+                $perPage,
+                $search
             );
 
             $metaData = [
@@ -119,7 +121,12 @@ class PdfDirectoryController extends Controller
                 $profileIdFiltro = 2;
             }
 
-            $resultado = PdfDirectoryService::getPdfsDeUnaFecha($fecha, $userId, $profileIdFiltro);
+            $resultado = PdfDirectoryService::getPdfsDeUnaFecha(
+                $fecha,
+                $userId,
+                $profileIdFiltro,
+                $request->input('search') // Nombre de PDF (parcial)
+            );
 
             return $this->success(
                 $resultado,
