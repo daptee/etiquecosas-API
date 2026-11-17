@@ -158,18 +158,24 @@
                             // DECLARADO del elemento, igual que hace el editor — así el
                             // resultado visual da lo mismo tenga o no borde (ver nota de
                             // abajo sobre por qué el % de CSS no sirve acá).
-                            if (($el['radius_mode'] ?? null) === 'straight') {
+                            // Misma prioridad que el editor (PdfDesignElementGlyph.vue,
+                            // cornerRadiusPx/fillStyle): el círculo es círculo siempre,
+                            // aunque el elemento traiga un radius_mode guardado de
+                            // cuando era otra forma (el editor solo muestra los
+                            // controles de esquinas en rect). Si no, radius_mode manda:
+                            // "straight" = 0; "rounded" = radius_pct, o 14% si nunca se
+                            // movió el slider (su valor por defecto en el editor). Sin
+                            // radius_mode, el radio propio de la forma.
+                            $shapeType = $el['resolved_shape_type'] ?? null;
+                            if ($shapeType === 'circle') {
+                                $borderRadius = '50%';
+                            } elseif (($el['radius_mode'] ?? null) === 'straight') {
                                 $borderRadius = '0';
-                            } elseif (isset($el['radius_pct'])) {
-                                $radiusCm = min($declaredWidthCm, $declaredHeightCm) * ((float) $el['radius_pct']) / 100;
+                            } elseif (!empty($el['radius_mode']) || isset($el['radius_pct'])) {
+                                $radiusCm = min($declaredWidthCm, $declaredHeightCm) * ((float) ($el['radius_pct'] ?? 14)) / 100;
                                 $borderRadius = $radiusCm . 'cm';
                             } else {
-                                $shapeType = $el['resolved_shape_type'] ?? null;
-                                $borderRadius = match ($shapeType) {
-                                    'circle' => '50%',
-                                    'rect' => ($el['resolved_shape_corner_radius_cm'] ?? 0) . 'cm',
-                                    default => '0',
-                                };
+                                $borderRadius = ($el['resolved_shape_corner_radius_cm'] ?? 0) . 'cm';
                             }
 
                             // dompdf pinta el fondo (background) hasta el borde exterior
@@ -202,14 +208,24 @@
                                 // del elemento ya reescalado en la página, y
                                 // preserveAspectRatio="none" para que estire libremente
                                 // hasta el width_cm/height_cm que el admin le puso acá.
-                                // No soporta borde (border-box a mano no aplica a un path
-                                // arbitrario): si el diseño le pone uno, se ignora.
+                                // El borde lo dibuja PdfCustomShapeBorder (borde de la
+                                // caja recortado con el contorno, como el editor) sobre
+                                // el contenedor marcado de abajo.
                                 $shapeViewBoxW = $el['resolved_shape_width_cm'] ?? $declaredWidthCm;
                                 $shapeViewBoxH = $el['resolved_shape_height_cm'] ?? $declaredHeightCm;
                                 $shapeSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' . $shapeViewBoxW . ' ' . $shapeViewBoxH . '" preserveAspectRatio="none">'
                                     . '<path d="' . $el['resolved_shape_outline_svg'] . '" fill="' . ($fillColorCss ?? 'none') . '" /></svg>';
                                 $shapeSvgUri = 'data:image/svg+xml;base64,' . base64_encode($shapeSvg);
                             @endphp
+                            <div style="position: absolute; left: 0; top: 0; width: {{ $declaredWidthCm }}cm; height: {{ $declaredHeightCm }}cm;"
+                                @if ($borderWidthCm > 0 && $borderColor && !empty($borderColor['value']))
+                                    {{ \App\Services\PdfCustomShapeBorder::ATTR_WIDTH }}="{{ \App\Services\PdfCustomShapeBorder::anchoPt($borderWidthCm) }}"
+                                    {{ \App\Services\PdfCustomShapeBorder::ATTR_COLOR }}="{{ ($borderColor['mode'] ?? 'hex') === 'cmyk' ? 'cmyk(' . $borderColor['value'] . ')' : $borderColor['value'] }}"
+                                    {{ \App\Services\PdfCustomShapeBorder::ATTR_OUTLINE }}="{{ $el['resolved_shape_outline_svg'] }}"
+                                    {{ \App\Services\PdfCustomShapeBorder::ATTR_SHAPE_W }}="{{ $shapeViewBoxW }}"
+                                    {{ \App\Services\PdfCustomShapeBorder::ATTR_SHAPE_H }}="{{ $shapeViewBoxH }}"
+                                @endif
+                            >
                             @if ($backgroundImagePath)
                                 {{-- PNG ya recortado con el contorno (PdfFillImage); si
                                      no se pudo armar (contorno con curvas, SVG), va la
@@ -218,6 +234,7 @@
                             @elseif ($fillColorCss)
                                 <img src="{{ $shapeSvgUri }}" style="width: {{ $declaredWidthCm }}cm; height: {{ $declaredHeightCm }}cm;">
                             @endif
+                            </div>
                         @else
                             <div style="
                                 width: {{ $innerWidthCm }}cm;
