@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Services\FontCacheService;
 use Illuminate\Support\Facades\Artisan;
 
 class CacheController extends Controller
 {
-    public function clearCache()
+    public function clearCache(FontCacheService $fontCacheService)
     {
         try {
             Artisan::call('config:clear');
@@ -15,7 +15,12 @@ class CacheController extends Controller
             Artisan::call('route:clear');
             Artisan::call('view:clear');
 
-            return response()->json(['message' => 'Cache limpiada correctamente'], 200);
+            $fonts = $fontCacheService->rebuild();
+
+            return response()->json([
+                'message' => 'Cache limpiada correctamente',
+                'data' => ['fonts' => $fonts],
+            ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Ocurrió un error inesperado, inténtelo más tarde',
