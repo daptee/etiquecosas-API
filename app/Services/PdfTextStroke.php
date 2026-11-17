@@ -44,13 +44,17 @@ class PdfTextStroke
     private const CM_TO_PT = 72 / 2.54;
 
     /**
-     * Registra los callbacks en el Dompdf del PDF (antes de save()/output()).
+     * Registra los callbacks de RENDER.blade.php en el Dompdf del PDF (antes
+     * de save()/output()): este contorno de letra y el borde de las formas
+     * custom (PdfCustomShapeBorder). Van juntos porque setCallbacks()
+     * reemplaza los que hubiera.
      */
     public static function registrar(PDF $pdf): PDF
     {
         $pdf->getDomPDF()->setCallbacks([
             ['event' => 'begin_frame', 'f' => [self::class, 'alEmpezarFrame']],
             ['event' => 'end_frame', 'f' => [self::class, 'alTerminarFrame']],
+            ['event' => 'end_frame', 'f' => [PdfCustomShapeBorder::class, 'alTerminarFrame']],
         ]);
 
         return $pdf;
