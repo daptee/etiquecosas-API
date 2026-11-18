@@ -1360,10 +1360,26 @@ class EtiquetaService
                 $typography = Typography::with(['files' => fn($q) => $q->orderByDesc('id')])->find($el['font_id']);
                 if ($typography) {
                     $el['resolved_font_family'] = $typography->name;
+                    // Solo sirven archivos que existan en disco y que dompdf
+                    // pueda cargar (RENDER.blade.php los declara como
+                    // format('truetype'): woff/woff2/eot se descartan y el
+                    // texto cae a Liberation Sans). Si el más nuevo es uno
+                    // de esos (o su archivo no está en el servidor), se usa
+                    // el siguiente válido en vez de perder la tipografía.
                     $el['resolved_font_files'] = $typography->files
+                        ->filter(fn($file) => in_array(strtolower(pathinfo($file->file_path, PATHINFO_EXTENSION)), ['ttf', 'otf'], true))
                         ->map(fn($file) => public_path($file->file_path))
+                        ->filter(fn($path) => is_file($path))
                         ->values()
                         ->all();
+
+                    if (empty($el['resolved_font_files'])) {
+                        Log::warning('[fonts] Tipografía sin archivo .ttf/.otf válido en disco', [
+                            'font_id' => $el['font_id'],
+                            'typography' => $typography->name,
+                            'files' => $typography->files->pluck('file_path')->all(),
+                        ]);
+                    }
                 }
             }
 
