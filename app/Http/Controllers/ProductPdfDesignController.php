@@ -21,6 +21,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -1039,6 +1040,27 @@ class ProductPdfDesignController extends Controller
      * selecciona en ese producto puntual). Un mismo diseño puede vincularse
      * a varios productos distintos.
      */
+    /**
+     * Antes TODO QueryException al vincular respondía "Ya existe un vínculo
+     * idéntico", aunque el error real fuera otro (columna faltante en la
+     * base, FK, etc.) — el admin veía "no me deja agregar el producto" sin
+     * pista de la causa. Solo el duplicado (1062) da ese mensaje; cualquier
+     * otro se loguea y se devuelve con su detalle.
+     */
+    private function motivoErrorVinculo(QueryException $e, $contexto): string
+    {
+        if (($e->errorInfo[1] ?? null) === 1062) {
+            return 'Ya existe un vínculo idéntico (mismo producto, variante, diseño, página y etiqueta)';
+        }
+
+        Log::error('[pdf-designs] Error al vincular producto con diseño', [
+            'contexto' => $contexto,
+            'error' => $e->getMessage(),
+        ]);
+
+        return 'No se pudo vincular el producto: ' . ($e->errorInfo[2] ?? $e->getMessage());
+    }
+
     public function attachProduct(Request $request, $id)
     {
         $design = $this->findObject(ProductPdfDesign::class, $id);
@@ -1069,7 +1091,7 @@ class ProductPdfDesignController extends Controller
                 'sort_order' => $request->sortOrder ?? 0,
             ]);
         } catch (QueryException $e) {
-            return $this->validationError(['themeKey' => ['Ya existe un vínculo idéntico (mismo producto, variante, diseño, página y etiqueta)']]);
+            return $this->validationError(['themeKey' => [$this->motivoErrorVinculo($e, $request->all())]]);
         }
 
         $design->load(['products:id,name,sku', 'labelShape', 'generalStatus', 'user:id,name,lastName']);
@@ -1119,7 +1141,7 @@ class ProductPdfDesignController extends Controller
             } catch (QueryException $e) {
                 $skipped[] = [
                     'themeKey' => $themeKey,
-                    'reason' => 'Ya existe un vínculo idéntico (mismo producto, variante, diseño, página y etiqueta)',
+                    'reason' => $this->motivoErrorVinculo($e, $request->all()),
                 ];
             }
         }
@@ -1219,7 +1241,7 @@ class ProductPdfDesignController extends Controller
                     $skipped[] = [
                         'productId' => $link['productId'],
                         'themeKey' => $themeKey,
-                        'reason' => 'Ya existe un vínculo idéntico (mismo producto, variante, diseño, página y etiqueta)',
+                        'reason' => $this->motivoErrorVinculo($e, $link),
                     ];
                 }
             }
