@@ -15,8 +15,10 @@ class PdfDirectoryService
      * Obtiene todas las carpetas de PDFs organizadas por fecha
      * Filtra por usuario diseñador si es necesario
      */
-    public static function getCarpetasPdf($userId = null, $profileId = null, $startDate = null, $endDate = null, $page = 1, $perPage = 15)
+    public static function getCarpetasPdf($userId = null, $profileId = null, $startDate = null, $endDate = null, $page = 1, $perPage = 15, $search = null)
     {
+        $search = is_string($search) ? trim($search) : null;
+
         $basePath = storage_path('app/pdf/planchas');
 
         if (!is_dir($basePath)) {
@@ -65,6 +67,13 @@ class PdfDirectoryService
             // Si es diseñador, filtrar solo PDFs de pedidos asignados
             if ($profileId == 2) { // Asumiendo que profile_id 2 es diseñador
                 $pdfFiles = self::filtrarPdfsPorUsuario($pdfFiles, $userId);
+            }
+
+            // Filtro por nombre de PDF: solo carpetas con al menos una coincidencia
+            if ($search !== null && $search !== '') {
+                $pdfFiles = array_filter($pdfFiles, function ($file) use ($search) {
+                    return self::nombreCoincide($file->getFilename(), $search);
+                });
             }
 
             // Si después del filtro no hay PDFs, no incluir la carpeta
@@ -132,11 +141,21 @@ class PdfDirectoryService
     }
 
     /**
+     * Coincidencia parcial y case-insensitive de un nombre de PDF con el texto buscado
+     */
+    private static function nombreCoincide(string $nombre, string $search): bool
+    {
+        return mb_stripos($nombre, $search) !== false;
+    }
+
+    /**
      * Obtiene todos los PDFs de una fecha específica
      * Incluye PDFs de pedidos y de cintas (coser/planchar x24/x48)
      */
-    public static function getPdfsDeUnaFecha($fecha, $userId = null, $profileId = null)
+    public static function getPdfsDeUnaFecha($fecha, $userId = null, $profileId = null, $search = null)
     {
+        $search = is_string($search) ? trim($search) : null;
+
         $carpetaPlanchas = storage_path("app/pdf/planchas/{$fecha}");
         $carpetaCintasCoser = storage_path("app/pdf/Cintas - Coser");
         $carpetaCintasPlanchar = storage_path("app/pdf/Cintas - Planchar");
@@ -280,6 +299,18 @@ class PdfDirectoryService
                     ];
                 }
             }
+        }
+
+        // Filtro por nombre de PDF (pedidos y extras; en acumulables también
+        // matchea por nombre del diseño)
+        if ($search !== null && $search !== '') {
+            $filtro = function ($pdf) use ($search) {
+                return self::nombreCoincide($pdf['nombre'], $search)
+                    || (isset($pdf['design_name']) && self::nombreCoincide((string) $pdf['design_name'], $search));
+            };
+
+            $resultado['pdfs_pedidos'] = array_values(array_filter($resultado['pdfs_pedidos'], $filtro));
+            $resultado['extras'] = array_values(array_filter($resultado['extras'], $filtro));
         }
 
         return $resultado;
