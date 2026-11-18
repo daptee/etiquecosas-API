@@ -1383,6 +1383,15 @@ class EtiquetaService
                 }
             }
 
+            // Fuentes con ascent/descent en 0 en `hhea` (ej. Gotham Medium):
+            // ver corregirMetricasFuente(). Se reemplaza la ruta ANTES de que
+            // la usen el @font-face del RENDER, la medición y el ratio de
+            // interlineado, así los tres ven la misma fuente corregida.
+            $el['resolved_font_files'] = array_map(
+                fn($path) => self::corregirMetricasFuente($path),
+                $el['resolved_font_files']
+            );
+
             // Renglones sin escapar (los usa aplicarLayoutGroups para medir y
             // para rearmar el HTML sin min_lines) + el HTML final ya escapado.
             // $firstName se pasa por SEPARADO de $resolvedText (dividirEnRenglones
@@ -1735,6 +1744,102 @@ class EtiquetaService
      * Se cachea por archivo. Si no se puede leer, no corrige (1.0).
      */
     private static array $fontLineHeightRatioCache = [];
+
+    /**
+     * dompdf calcula la altura de cada renglón con Ascender − Descender del
+     * .ufm, que php-font-lib saca de la tabla `hhea`. Algunas fuentes
+     * (reporte: Gotham Medium, "el texto sale pegado uno arriba del otro")
+     * traen hhea.ascent = hhea.descent = 0 → altura de renglón 0 → todos
+     * los renglones se dibujan en el mismo lugar. El navegador del editor
+     * usa las métricas de `OS/2` (win/typo), por eso ahí se ve bien.
+     *
+     * Si la fuente viene así, se genera UNA vez una copia con hhea.ascent /
+     * hhea.descent tomados de OS/2 (winAscent/winDescent, como Chrome/Windows;
+     * si no, typoAscender/typoDescender) y se devuelve esa ruta. Si la fuente
+     * está bien (o no se puede leer), se devuelve la ruta original.
+     */
+    private static array $fuentesCorregidasCache = [];
+
+    private static function corregirMetricasFuente(string $path): string
+    {
+        if (isset(self::$fuentesCorregidasCache[$path])) {
+            return self::$fuentesCorregidasCache[$path];
+        }
+        self::$fuentesCorregidasCache[$path] = $path;
+
+        try {
+            if (!is_file($path)) {
+                return $path;
+            }
+
+            $bin = file_get_contents($path);
+            $sfnt = substr($bin, 0, 4);
+            // TrueType (0x00010000 / "true") u OpenType-CFF ("OTTO"); woff,
+            // colecciones (ttcf), etc. quedan como están.
+            if (!in_array($sfnt, ["\x00\x01\x00\x00", 'true', 'OTTO'], true)) {
+                return $path;
+            }
+
+            $numTables = unpack('n', substr($bin, 4, 2))[1];
+            $tables = [];
+            for ($i = 0; $i < $numTables; $i++) {
+                $rec = substr($bin, 12 + $i * 16, 16);
+                if (strlen($rec) < 16) {
+                    return $path;
+                }
+                $r = unpack('a4tag/Nchecksum/Noffset/Nlength', $rec);
+                $tables[$r['tag']] = $r['offset'];
+            }
+            if (!isset($tables['hhea'], $tables['OS/2'])) {
+                return $path;
+            }
+
+            $int16 = fn(int $off) => unpack('n', substr($bin, $off, 2))[1] << 48 >> 48;
+            $hheaAscent = $int16($tables['hhea'] + 4);
+            $hheaDescent = $int16($tables['hhea'] + 6);
+            if ($hheaAscent - $hheaDescent > 0) {
+                return $path; // métricas sanas: no se toca
+            }
+
+            $os2 = $tables['OS/2'];
+            $winAscent = unpack('n', substr($bin, $os2 + 74, 2))[1];
+            $winDescent = unpack('n', substr($bin, $os2 + 76, 2))[1];
+            $ascent = $winAscent;
+            $descent = -$winDescent;
+            if ($ascent - $descent <= 0) {
+                $ascent = $int16($os2 + 68);  // typoAscender
+                $descent = $int16($os2 + 70); // typoDescender
+            }
+            if ($ascent - $descent <= 0) {
+                return $path;
+            }
+
+            $dir = storage_path('fonts_fixed');
+            if (!is_dir($dir)) {
+                mkdir($dir, 0775, true);
+            }
+            $fixedPath = $dir . DIRECTORY_SEPARATOR
+                . md5($path . '|' . filemtime($path) . '|' . filesize($path))
+                . '.' . strtolower(pathinfo($path, PATHINFO_EXTENSION) ?: 'ttf');
+
+            if (!is_file($fixedPath)) {
+                $bin = substr_replace($bin, pack('n', $ascent & 0xFFFF), $tables['hhea'] + 4, 2);
+                $bin = substr_replace($bin, pack('n', $descent & 0xFFFF), $tables['hhea'] + 6, 2);
+                file_put_contents($fixedPath, $bin);
+                Log::info('[fonts] Fuente con hhea ascent/descent en 0: se usa copia corregida', [
+                    'original' => $path,
+                    'fixed' => $fixedPath,
+                    'ascent' => $ascent,
+                    'descent' => $descent,
+                ]);
+            }
+
+            return self::$fuentesCorregidasCache[$path] = $fixedPath;
+        } catch (\Throwable $e) {
+            Log::warning('[fonts] No se pudo revisar/corregir métricas de la fuente', ['path' => $path, 'error' => $e->getMessage()]);
+            return $path;
+        }
+    }
 
     private static function obtenerRatioMetricasFuente(?string $fontFilePath): float
     {
