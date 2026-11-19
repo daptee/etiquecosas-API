@@ -347,9 +347,8 @@ class EtiquetaService
         // página por defecto, con "-N" al final del nombre de archivo — como
         // antes de agrupar/fusionar con FPDI (ver generarEtiquetasDesdePaginas)
         // — configurable con $design->pages_output_mode ("separate"/"combined").
-        // En "páginas combinadas" (generarEtiquetasDesdeDesignsMultiples) manda
-        // el pages_output_mode del COMBO que armó esos vínculos (combo_design_id);
-        // sin combo, un único PDF como siempre — ver PDF_PAGINAS_COMBINADAS.md.
+        // No afecta a "páginas combinadas" (generarEtiquetasDesdeDesignsMultiples),
+        // que sigue armando un único PDF siempre — ver PDF_PAGINAS_COMBINADAS.md.
         return self::generarEtiquetasDesdePaginas(
             $ventaId, $pages, $sufijo, "design:{$design->id}", $productOrder,
             $nombres, $customColor, $customIcon, $fechaCompra, $firstNames, $lastNames, $cutLines, $design->paginasPorSeparado()
@@ -362,13 +361,8 @@ class EtiquetaService
      * diseño entero) — ver product_pdf_design_products.page_id/sort_order.
      * $pageRefs: array ordenado de ['design' => ProductPdfDesign, 'page_id' => ?string].
      * page_id null = todas las páginas de ESE diseño puntual (no de los demás).
-     *
-     * $separarPorPagina / $nombreCombo: cuando las páginas las armó un diseño
-     * "combo" (product_pdf_design_products.combo_design_id), su
-     * pages_output_mode y su nombre (para el archivo). Sin combo: un único PDF
-     * con los nombres de los diseños de origen, como siempre.
      */
-    public static function generarEtiquetasDesdeDesignsMultiples(int $ventaId, array $pageRefs, $productOrder, array $nombres, $customColor, $customIcon, $fechaCompra = null, array $firstNames = [], array $lastNames = [], bool $separarPorPagina = false, ?string $nombreCombo = null): array
+    public static function generarEtiquetasDesdeDesignsMultiples(int $ventaId, array $pageRefs, $productOrder, array $nombres, $customColor, $customIcon, $fechaCompra = null, array $firstNames = [], array $lastNames = []): array
     {
         $pages = [];
         $nombresDesigns = [];
@@ -390,12 +384,12 @@ class EtiquetaService
             $nombresDesigns[] = $design->name;
         }
 
-        $sufijo = self::limpiarNombreArchivo(strtoupper($nombreCombo ?: (implode(' - ', array_unique($nombresDesigns)) ?: 'COMBO')));
+        $sufijo = self::limpiarNombreArchivo(strtoupper(implode(' - ', array_unique($nombresDesigns)) ?: 'COMBO'));
         $logId = 'designs:' . implode(',', array_map(fn($ref) => $ref['design']->id . ($ref['page_id'] ? ":{$ref['page_id']}" : ''), $pageRefs));
 
         return self::generarEtiquetasDesdePaginas(
             $ventaId, $pages, $sufijo, $logId, $productOrder,
-            $nombres, $customColor, $customIcon, $fechaCompra, $firstNames, $lastNames, false, $separarPorPagina
+            $nombres, $customColor, $customIcon, $fechaCompra, $firstNames, $lastNames
         );
     }
 

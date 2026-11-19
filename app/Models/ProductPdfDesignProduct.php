@@ -14,23 +14,12 @@ class ProductPdfDesignProduct extends Model
         'theme_key',
         'page_id',
         'label_element_id',
-        'combo_design_id',
         'sort_order',
     ];
 
     public function design()
     {
         return $this->belongsTo(ProductPdfDesign::class, 'product_pdf_design_id');
-    }
-
-    /**
-     * El diseño "combo" (páginas de varios diseños) que armó este vínculo por
-     * página — null = vínculo de siempre. Ver
-     * database/sql/alter_product_pdf_design_products_add_combo_design.sql.
-     */
-    public function combo()
-    {
-        return $this->belongsTo(ProductPdfDesign::class, 'combo_design_id');
     }
 
     public function product()
