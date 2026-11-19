@@ -274,7 +274,7 @@ class PdfContentStreamParser
                 case '"':
                     if (!empty($operands)) {
                         $raw = (string) end($operands);
-                        self::emitText($primitives, $raw, $ctm, $tm, $fontSizePt, $fillColor);
+                        self::emitText($primitives, $raw, $ctm, $tm, $fontSizePt, $fillColor, $fillColorCmyk);
                     }
                     break;
 
@@ -285,7 +285,7 @@ class PdfContentStreamParser
                     if (!empty($operands)) {
                         $arrLiteral = (string) end($operands);
                         foreach (self::extractArrayStrings($arrLiteral) as $raw) {
-                            self::emitText($primitives, $raw, $ctm, $tm, $fontSizePt, $fillColor);
+                            self::emitText($primitives, $raw, $ctm, $tm, $fontSizePt, $fillColor, $fillColorCmyk);
                         }
                     }
                     break;
@@ -316,7 +316,7 @@ class PdfContentStreamParser
         return $primitives;
     }
 
-    private static function emitText(array &$primitives, string $raw, array $ctm, array $tm, float $fontSizePt, string $fillColor): void
+    private static function emitText(array &$primitives, string $raw, array $ctm, array $tm, float $fontSizePt, string $fillColor, ?string $fillColorCmyk = null): void
     {
         $text = self::decodeLiteralString($raw);
         if ($text === '') {
@@ -345,6 +345,10 @@ class PdfContentStreamParser
             'text' => $text,
             'fontSizePt' => $fontSizePt,
             'color' => $fillColor,
+            // Mismo motivo que en los rect (ver $fillColorCmyk arriba): el
+            // texto de las vistas viejas pintado con cmyk() se tiene que
+            // reproducir en CMYK, no con el hex de la conversión directa.
+            'colorCmyk' => $fillColorCmyk,
             'angleDeg' => $angleDeg,
         ];
     }

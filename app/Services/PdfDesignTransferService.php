@@ -8,6 +8,7 @@ use App\Models\PersonalizationIcon;
 use App\Models\ProductPdfDesign;
 use App\Models\Typography;
 use App\Models\TypographyFile;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -220,7 +221,7 @@ class PdfDesignTransferService
      * qué se hizo con cada referencia. $designId es el diseño destino (ya
      * creado), para la carpeta de sus imágenes propias.
      */
-    public function import(array $bundle, int $designId): array
+    public function import(array $bundle, int $designId, bool $createMissingIcons = true, array $iconActions = []): array
     {
         $report = ['matched' => [], 'created' => [], 'missing' => [], 'warnings' => array_values($bundle['warnings'] ?? [])];
         $files = (array) ($bundle['files'] ?? []);
@@ -229,7 +230,7 @@ class PdfDesignTransferService
         $maps = [
             'label_shapes' => $this->importLabelShapes((array) ($refs['label_shapes'] ?? []), $report),
             'typographies' => $this->importTypographies((array) ($refs['typographies'] ?? []), $files, $report),
-            'icons' => $this->importIcons((array) ($refs['icons'] ?? []), $files, $report),
+            'icons' => $this->importIcons((array) ($refs['icons'] ?? []), $files, $report, $createMissingIcons, $iconActions),
             'attributes' => $this->importAttributes((array) ($refs['attributes'] ?? []), $report),
         ];
 
@@ -334,14 +335,81 @@ class PdfDesignTransferService
         return $map;
     }
 
-    private function importIcons(array $icons, array $files, array &$report): array
+    /**
+     * Íconos de la exportación que NO existen en este entorno (no hay uno con
+     * el mismo nombre). Para que el front pregunte qué hacer con cada uno
+     * antes de importar. `svg` es el archivo que trae la exportación (data
+     * URL, para mostrarlo), o null si no vino.
+     */
+    public function missingIcons(array $bundle): array
+    {
+        $files = (array) ($bundle['files'] ?? []);
+        $missing = [];
+        foreach ((array) ($bundle['refs']['icons'] ?? []) as $oldId => $icon) {
+            if (PersonalizationIcon::where('name', $icon['name'] ?? '')->exists()) {
+                continue;
+            }
+            $path = $icon['path'] ?? '';
+            $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+            $mime = $ext === 'svg' ? 'image/svg+xml' : "image/{$ext}";
+            $missing[] = [
+                'sourceIconId' => (int) $oldId,
+                'name' => $icon['name'] ?? null,
+                'file' => isset($files[$path]) ? "data:{$mime};base64,{$files[$path]}" : null,
+            ];
+        }
+
+        return $missing;
+    }
+
+    /**
+     * $iconActions[id de origen] = qué hacer con ese ícono (lo manda el front):
+     *   ['action' => 'create']                     crearlo con el archivo de la exportación
+     *   ['action' => 'use', 'iconId' => N]         usar el ícono N de este entorno
+     *   ['action' => 'upload', 'file' => SVG]      crearlo con un SVG subido ahora
+     * Sin acción: se busca por nombre y, si no existe, se crea solo cuando
+     * $createMissing es true (si no, queda sin ícono y se avisa).
+     */
+    private function importIcons(array $icons, array $files, array &$report, bool $createMissing = true, array $iconActions = []): array
     {
         $map = [];
         foreach ($icons as $oldId => $icon) {
+            $action = $iconActions[$oldId] ?? $iconActions[(string) $oldId] ?? null;
+            $tipo = $action['action'] ?? null;
+
+            if ($tipo === 'use') {
+                $chosen = PersonalizationIcon::find($action['iconId'] ?? 0);
+                if ($chosen) {
+                    $map[(int) $oldId] = $chosen->id;
+                    $report['matched'][] = "Ícono \"" . ($icon['name'] ?? '') . "\" → \"{$chosen->name}\" (#{$chosen->id}, elegido)";
+                    continue;
+                }
+            }
+
+            if ($tipo === 'upload' && ($action['file'] ?? null) instanceof UploadedFile) {
+                $newPath = $this->writeFile(
+                    'icons/personalization/' . uniqid('icon_') . '.svg',
+                    base64_encode(file_get_contents($action['file']->getRealPath()))
+                );
+                $created = PersonalizationIcon::create([
+                    'name' => $this->nombreIconoLibre($action['name'] ?? $icon['name'] ?? 'Ícono importado'),
+                    'icon' => $newPath,
+                    'status_id' => 1,
+                ]);
+                $map[(int) $oldId] = $created->id;
+                $report['created'][] = "Ícono \"{$created->name}\" (#{$created->id}, archivo subido)";
+                continue;
+            }
+
             $existing = PersonalizationIcon::where('name', $icon['name'] ?? '')->first();
             if ($existing) {
                 $map[(int) $oldId] = $existing->id;
                 $report['matched'][] = "Ícono \"{$existing->name}\" (#{$existing->id})";
+                continue;
+            }
+
+            if (!$createMissing && $tipo !== 'create') {
+                $report['missing'][] = "Ícono \"" . ($icon['name'] ?? "#{$oldId}") . "\" no existe y no se creó: los elementos que lo usaban quedan sin ícono";
                 continue;
             }
 
@@ -359,6 +427,20 @@ class PdfDesignTransferService
         }
 
         return $map;
+    }
+
+    /**
+     * personalization_icons.name es único desde el ABM de íconos: si el
+     * nombre elegido para un SVG subido ya existe, se le agrega " (2)", " (3)"...
+     */
+    private function nombreIconoLibre(string $name): string
+    {
+        $candidato = $name;
+        for ($i = 2; PersonalizationIcon::withTrashed()->where('name', $candidato)->exists(); $i++) {
+            $candidato = "{$name} ({$i})";
+        }
+
+        return $candidato;
     }
 
     /**

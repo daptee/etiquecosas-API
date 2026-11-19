@@ -131,27 +131,6 @@ class ProductPdfDesignController extends Controller
     {
         $design = $this->findObject(ProductPdfDesign::class, $id);
         $design->load(['products:id,name,sku', 'labelShape', 'generalStatus', 'user:id,name,lastName']);
-
-        // Diseño "combo" (usa páginas de otros): sus productos están en
-        // vínculos por página con combo_design_id = este id, la mayoría en
-        // los diseños de origen — no aparecen en `products` (que solo trae
-        // los vínculos de ESTE diseño). Se mandan aparte para que el editor
-        // pueda listarlos.
-        $design->setAttribute('combo_links', $design->comboLinks()
-            ->with('product:id,name,sku')
-            ->orderBy('sort_order')
-            ->get()
-            ->map(fn($link) => [
-                'linkId' => $link->id,
-                'designId' => $link->product_pdf_design_id,
-                'productId' => $link->product_id,
-                'product' => $link->product,
-                'themeKey' => $link->theme_key,
-                'pageId' => $link->page_id,
-                'sortOrder' => $link->sort_order,
-            ])
-            ->values());
-
         return $this->success($design, 'Diseño de PDF obtenido');
     }
 
@@ -964,6 +943,19 @@ class ProductPdfDesignController extends Controller
      * crea un diseño nuevo SIN PUBLICAR y sin productos vinculados; con
      * `targetDesignId` reemplaza el contenido de ese diseño (conserva sus
      * vínculos y su estado de publicación).
+     *
+     * Íconos que no existen en este entorno (no hay uno con el mismo nombre):
+     * - `createMissingIcons` (default true): se crean solos con el SVG de la
+     *   exportación, como siempre.
+     * - `createMissingIcons=false`: si alguno no tiene una acción en
+     *   `iconActions`, NO se importa nada y responde 422 con `missingIcons`
+     *   (sourceIconId, name, file = SVG en data URL) para que el front
+     *   pregunte qué hacer y vuelva a mandar el import con las acciones.
+     * - `iconActions[<sourceIconId>]` (vale con cualquiera de los dos):
+     *     action=create                    crearlo con el SVG de la exportación
+     *     action=use,    iconId=N          usar el ícono N de este entorno
+     *     action=upload, file=<svg>[, name] crearlo con un SVG subido ahora
+     *                                      (solo multipart)
      */
     public function import(Request $request)
     {
@@ -972,9 +964,14 @@ class ProductPdfDesignController extends Controller
             'bundle' => 'required_without:file|array',
             'name' => 'nullable|string|max:255',
             'targetDesignId' => 'nullable|integer|exists:product_pdf_designs,id',
+            'iconActions' => 'nullable|array',
+            'iconActions.*.action' => 'required|in:create,use,upload',
+            'iconActions.*.iconId' => 'required_if:iconActions.*.action,use|nullable|integer|exists:personalization_icons,id',
+            'iconActions.*.file' => 'required_if:iconActions.*.action,upload|nullable|file|mimes:svg|max:2048',
+            'iconActions.*.name' => 'nullable|string|max:255',
         ]);
         if ($validator->fails()) {
-            $this->logAudit(Auth::user(), 'Import Product Pdf Design', $request->except('file', 'bundle'), $validator->errors());
+            $this->logAudit(Auth::user(), 'Import Product Pdf Design', $request->except('file', 'bundle', 'iconActions'), $validator->errors());
             return $this->validationError($validator->errors());
         }
 
@@ -989,8 +986,33 @@ class ProductPdfDesignController extends Controller
         $target = $request->filled('targetDesignId') ? ProductPdfDesign::find($request->targetDesignId) : null;
         $source = $bundle['design'];
 
+        // Las claves de iconActions son los ids de ORIGEN (refs.icons del JSON).
+        $iconActions = [];
+        foreach ((array) $request->input('iconActions', []) as $sourceIconId => $action) {
+            $iconActions[(int) $sourceIconId] = array_merge(
+                (array) $action,
+                ['file' => $request->file("iconActions.{$sourceIconId}.file")]
+            );
+        }
+        // boolean() acepta true/false/1/0/"true"/"false" (multipart o JSON).
+        $createMissingIcons = $request->boolean('createMissingIcons', true);
+
+        if (!$createMissingIcons) {
+            $sinDecidir = array_values(array_filter(
+                $transfer->missingIcons($bundle),
+                fn($icon) => !isset($iconActions[$icon['sourceIconId']])
+            ));
+            if ($sinDecidir) {
+                return response()->json([
+                    'status' => 422,
+                    'message' => 'Hay íconos que no existen en este entorno: elegí qué hacer con cada uno.',
+                    'missingIcons' => $sinDecidir,
+                ], 422);
+            }
+        }
+
         try {
-            [$design, $report] = DB::transaction(function () use ($transfer, $bundle, $source, $target, $request) {
+            [$design, $report] = DB::transaction(function () use ($transfer, $bundle, $source, $target, $request, $createMissingIcons, $iconActions) {
                 $design = $target ?? ProductPdfDesign::create([
                     'user_id' => Auth::id(),
                     'name' => $request->input('name') ?: ($source['name'] ?? 'Diseño importado'),
@@ -999,7 +1021,7 @@ class ProductPdfDesignController extends Controller
                     'status_id' => 1,
                 ]);
 
-                $result = $transfer->import($bundle, $design->id);
+                $result = $transfer->import($bundle, $design->id, $createMissingIcons, $iconActions);
 
                 $data = $this->sanitizeDesignData($result['data']);
                 if ($layoutErrors = $this->layoutGroupErrors($data)) {
@@ -1052,10 +1074,6 @@ class ProductPdfDesignController extends Controller
     {
         $design = $this->findObject(ProductPdfDesign::class, $id);
         $design->delete();
-        // Soft delete: la FK ON DELETE CASCADE de combo_design_id no se
-        // dispara. Si este diseño era un combo, sus vínculos por página viven
-        // en los diseños de origen y seguirían armando el PDF al comprar.
-        ProductPdfDesignProduct::where('combo_design_id', $design->id)->delete();
         $this->logAudit(Auth::user(), 'Delete Product Pdf Design', $id, $design);
         return $this->success($design, 'Diseño de PDF eliminado');
     }
@@ -1082,31 +1100,11 @@ class ProductPdfDesignController extends Controller
     }
 
     /**
-     * comboDesignId: el diseño "combo" (páginas de varios diseños) que arma
-     * este vínculo por página — ver
-     * database/sql/alter_product_pdf_design_products_add_combo_design.sql.
-     * Solo tiene sentido con pageId (un combo siempre vincula página por página).
-     */
-    private const COMBO_DESIGN_RULE = 'nullable|integer|exists:product_pdf_designs,id';
-
-    /**
-     * Los borrados "por producto + variantes" de un diseño no pueden llevarse
-     * puestos los vínculos por página que OTRO diseño (un combo) creó acá:
-     * quitar un producto del diseño "Objetos" entero borraba también las
-     * páginas que el combo "Combo primaria" tenía vinculadas en él. Sin
-     * comboDesignId → solo vínculos sin combo; con → solo los de ese combo.
-     */
-    private function comboScope($query, $comboDesignId)
-    {
-        return $comboDesignId
-            ? $query->where('combo_design_id', $comboDesignId)
-            : $query->whereNull('combo_design_id');
-    }
-
-    /**
      * Vincula este diseño a un producto (con la variante/temática que lo
      * selecciona en ese producto puntual). Un mismo diseño puede vincularse
-     * a varios productos distintos.
+     * a varios productos distintos. Un diseño "combo" (páginas prestadas de
+     * otros, data.pages[].source) se vincula igual, entero: al comprar,
+     * EtiquetaService completa sus páginas prestadas y usa SU pages_output_mode.
      */
     public function attachProduct(Request $request, $id)
     {
@@ -1116,12 +1114,11 @@ class ProductPdfDesignController extends Controller
             'productId' => 'required|exists:products,id',
             'themeKey' => 'nullable|integer',
             // id de data.pages[].id de ESTE diseño — null = usa todas sus páginas.
-            'pageId' => 'nullable|string|max:255|required_with:comboDesignId',
+            'pageId' => 'nullable|string|max:255',
             // id de un elemento `background` de ESTE diseño (diseño acumulable con
             // varias etiquetas en la misma página) — null = la primera etiqueta de
             // la página. Ver AccumulatingPdfDesignService.
             'labelElementId' => 'nullable|string|max:255',
-            'comboDesignId' => self::COMBO_DESIGN_RULE,
             'sortOrder' => 'nullable|integer',
         ]);
         if ($validator->fails()) {
@@ -1136,7 +1133,6 @@ class ProductPdfDesignController extends Controller
                 'theme_key' => $request->themeKey,
                 'page_id' => $request->pageId,
                 'label_element_id' => $request->labelElementId,
-                'combo_design_id' => $request->comboDesignId,
                 'sort_order' => $request->sortOrder ?? 0,
             ]);
         } catch (QueryException $e) {
@@ -1163,10 +1159,9 @@ class ProductPdfDesignController extends Controller
             'themeKeys' => 'required|array|min:1',
             'themeKeys.*' => 'nullable|integer',
             // Misma página (o diseño entero) para TODAS las temáticas de esta llamada.
-            'pageId' => 'nullable|string|max:255|required_with:comboDesignId',
+            'pageId' => 'nullable|string|max:255',
             // Misma etiqueta (ver attachProduct) para TODAS las temáticas de esta llamada.
             'labelElementId' => 'nullable|string|max:255',
-            'comboDesignId' => self::COMBO_DESIGN_RULE,
             'sortOrder' => 'nullable|integer',
         ]);
         if ($validator->fails()) {
@@ -1185,7 +1180,6 @@ class ProductPdfDesignController extends Controller
                     'theme_key' => $themeKey,
                     'page_id' => $request->pageId,
                     'label_element_id' => $request->labelElementId,
-                    'combo_design_id' => $request->comboDesignId,
                     'sort_order' => $request->sortOrder ?? 0,
                 ]);
                 $created[] = $link;
@@ -1222,8 +1216,6 @@ class ProductPdfDesignController extends Controller
             'productId' => 'required|exists:products,id',
             'themeKeys' => 'required|array|min:1',
             'themeKeys.*' => 'nullable|integer',
-            // Ver comboScope(): sin esto solo se borran vínculos que NO son de un combo.
-            'comboDesignId' => self::COMBO_DESIGN_RULE,
         ]);
         if ($validator->fails()) {
             $this->logAudit(Auth::user(), 'Bulk Detach Products from Pdf Design', $request->all(), $validator->errors());
@@ -1236,7 +1228,6 @@ class ProductPdfDesignController extends Controller
 
         $deletedCount = ProductPdfDesignProduct::where('product_pdf_design_id', $design->id)
             ->where('product_id', $request->productId)
-            ->tap(fn($q) => $this->comboScope($q, $request->input('comboDesignId')))
             ->where(function ($q) use ($nonNullKeys, $hasNull) {
                 if (!empty($nonNullKeys)) {
                     $q->whereIn('theme_key', $nonNullKeys);
@@ -1267,10 +1258,9 @@ class ProductPdfDesignController extends Controller
             'links.*.themeKeys' => 'required|array|min:1',
             'links.*.themeKeys.*' => 'nullable|integer',
             // Misma página (o diseño entero) para todas las temáticas de ESE producto.
-            'links.*.pageId' => 'nullable|string|max:255|required_with:links.*.comboDesignId',
+            'links.*.pageId' => 'nullable|string|max:255',
             // Misma etiqueta (ver attachProduct) para todas las temáticas de ESE producto.
             'links.*.labelElementId' => 'nullable|string|max:255',
-            'links.*.comboDesignId' => self::COMBO_DESIGN_RULE,
             'links.*.sortOrder' => 'nullable|integer',
         ]);
         if ($validator->fails()) {
@@ -1290,7 +1280,6 @@ class ProductPdfDesignController extends Controller
                         'theme_key' => $themeKey,
                         'page_id' => $link['pageId'] ?? null,
                         'label_element_id' => $link['labelElementId'] ?? null,
-                        'combo_design_id' => $link['comboDesignId'] ?? null,
                         'sort_order' => $link['sortOrder'] ?? 0,
                     ]);
                 } catch (QueryException $e) {
@@ -1328,8 +1317,6 @@ class ProductPdfDesignController extends Controller
             'links.*.productId' => 'required|exists:products,id',
             'links.*.themeKeys' => 'required|array|min:1',
             'links.*.themeKeys.*' => 'nullable|integer',
-            // Ver comboScope(): sin esto solo se borran vínculos que NO son de un combo.
-            'links.*.comboDesignId' => self::COMBO_DESIGN_RULE,
         ]);
         if ($validator->fails()) {
             $this->logAudit(Auth::user(), 'Bulk Detach Many Products from Pdf Design', $request->all(), $validator->errors());
@@ -1345,7 +1332,6 @@ class ProductPdfDesignController extends Controller
 
             $deletedCount += ProductPdfDesignProduct::where('product_pdf_design_id', $design->id)
                 ->where('product_id', $link['productId'])
-                ->tap(fn($q) => $this->comboScope($q, $link['comboDesignId'] ?? null))
                 ->where(function ($q) use ($nonNullKeys, $hasNull) {
                     if (!empty($nonNullKeys)) {
                         $q->whereIn('theme_key', $nonNullKeys);

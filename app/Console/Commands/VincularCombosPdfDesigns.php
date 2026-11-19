@@ -8,23 +8,25 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Completa product_pdf_design_products.combo_design_id en los vínculos por
- * página que ya existían antes de esa columna (ver
- * database/sql/alter_product_pdf_design_products_add_combo_design.sql).
+ * Pasa los productos vinculados a un diseño "combo" (data.pages[].source,
+ * páginas prestadas de otros diseños) al combo mismo.
  *
- * Un diseño "combo" (data.pages[].source) vinculaba cada página por separado
- * sin dejar registro de quién lo hizo: la página en la posición N del combo
- * quedaba como (diseño de origen, page_id de origen, sort_order N) — o
- * (el combo, page_id propio, N) para sus páginas propias. Se reconoce un
- * producto+variante como del combo cuando tiene un vínculo SIN combo para
- * CADA página del combo, en el diseño y la página que corresponden.
+ * El editor vinculaba un combo página por página en los diseños de ORIGEN:
+ * la página N del combo quedaba como (diseño de origen, page_id de origen,
+ * sort_order N) — o (el combo, page_id propio, N) para sus páginas propias —
+ * y el combo no tenía ningún vínculo propio. Este comando reconoce esos
+ * grupos (un vínculo por CADA página del combo, para el mismo
+ * producto+variante), crea UN vínculo al combo entero (page_id null) y borra
+ * los vínculos por página. Al comprar, EtiquetaService::
+ * generarEtiquetasDesdeDesign() completa las páginas prestadas y usa el
+ * pages_output_mode del combo.
  *
  * Por defecto solo muestra lo que haría. Con --apply lo escribe.
  */
-class AsignarCombosPdfDesigns extends Command
+class VincularCombosPdfDesigns extends Command
 {
-    protected $signature = 'pdf-designs:asignar-combos {--apply : Escribir los cambios (sin esto solo muestra qué haría)}';
-    protected $description = 'Completa combo_design_id en los vínculos por página creados por diseños con páginas de otros PDF';
+    protected $signature = 'pdf-designs:vincular-combos {--apply : Escribir los cambios (sin esto solo muestra qué haría)}';
+    protected $description = 'Pasa los vínculos por página de los diseños con páginas prestadas a un único vínculo al diseño combo';
 
     public function handle(): int
     {
@@ -37,8 +39,8 @@ class AsignarCombosPdfDesigns extends Command
             return self::SUCCESS;
         }
 
-        // link_id => [combo_id, ...] — un vínculo que encaja en DOS combos es
-        // ambiguo y no se toca.
+        // link_id => [combo_id => grupo]: un vínculo que encaja en DOS combos
+        // se resuelve abajo.
         $reclamados = [];
         $resumen = [];
 
@@ -50,8 +52,7 @@ class AsignarCombosPdfDesigns extends Command
                 'pos' => $pos,
             ]);
 
-            $candidatos = ProductPdfDesignProduct::whereNull('combo_design_id')
-                ->whereNotNull('page_id')
+            $candidatos = ProductPdfDesignProduct::whereNotNull('page_id')
                 ->where(function ($q) use ($esperado) {
                     foreach ($esperado as $e) {
                         $q->orWhere(fn($w) => $w->where('product_pdf_design_id', $e['design_id'])->where('page_id', $e['page_id']));
@@ -102,7 +103,7 @@ class AsignarCombosPdfDesigns extends Command
             $ganador[$linkId] = $opciones->count() === 1 ? $opciones->first()['combo'] : null;
         }
 
-        $asignar = [];
+        $convertir = [];
         $filas = [];
         foreach ($resumen as $comboId => $grupos) {
             foreach ($grupos as $clave => $linkIds) {
@@ -110,7 +111,7 @@ class AsignarCombosPdfDesigns extends Command
                 $ganados = collect($linkIds)->every(fn($id) => $ganador[$id] === $comboId);
                 $empatado = collect($linkIds)->contains(fn($id) => $ganador[$id] === null);
                 $accion = $ganados
-                    ? 'asignar'
+                    ? 'pasar al combo'
                     : ($empatado ? 'AMBIGUO (empate con otro combo) — no se toca' : 'no: esos vínculos son de otro combo');
                 $filas[] = [
                     $comboId,
@@ -121,35 +122,49 @@ class AsignarCombosPdfDesigns extends Command
                     $accion,
                 ];
                 if ($ganados) {
-                    foreach ($linkIds as $linkId) {
-                        $asignar[$linkId] = $comboId;
-                    }
+                    $convertir[] = [
+                        'combo_id' => $comboId,
+                        'product_id' => (int) $productId,
+                        'theme_key' => $themeKey === 'null' ? null : (int) $themeKey,
+                        'link_ids' => $linkIds,
+                    ];
                 }
             }
         }
         $ambiguos = array_filter($ganador, fn($c) => $c === null);
 
         if (!$filas) {
-            $this->info('No se encontraron vínculos por página para asignar.');
+            $this->info('No se encontraron vínculos por página de combos.');
             return self::SUCCESS;
         }
 
-        $this->table(['Combo', 'Nombre', 'Producto', 'Variante', 'Vínculos', 'Acción'], $filas);
+        $this->table(['Combo', 'Nombre', 'Producto', 'Variante', 'Vínculos por página', 'Acción'], $filas);
 
         if (!$this->option('apply')) {
-            $this->warn('Simulación: no se escribió nada. Correr con --apply para asignar ' . count($asignar) . ' vínculo(s).');
+            $this->warn('Simulación: no se escribió nada. Correr con --apply para pasar ' . count($convertir) . ' producto/variante(s) a su combo.');
             return self::SUCCESS;
         }
 
-        DB::transaction(function () use ($asignar) {
-            foreach ($asignar as $linkId => $comboId) {
-                ProductPdfDesignProduct::where('id', $linkId)->whereNull('combo_design_id')->update(['combo_design_id' => $comboId]);
+        DB::transaction(function () use ($convertir) {
+            foreach ($convertir as $c) {
+                $sortOrder = (int) ProductPdfDesignProduct::whereIn('id', $c['link_ids'])->min('sort_order');
+                ProductPdfDesignProduct::firstOrCreate(
+                    [
+                        'product_pdf_design_id' => $c['combo_id'],
+                        'product_id' => $c['product_id'],
+                        'theme_key' => $c['theme_key'],
+                        'page_id' => null,
+                        'label_element_id' => null,
+                    ],
+                    ['sort_order' => $sortOrder]
+                );
+                ProductPdfDesignProduct::whereIn('id', $c['link_ids'])->delete();
             }
         });
 
-        $this->info('Asignados ' . count($asignar) . ' vínculo(s).');
+        $this->info('Pasados ' . count($convertir) . ' producto/variante(s) a su combo.');
         if ($ambiguos) {
-            $this->warn(count($ambiguos) . ' vínculo(s) ambiguos quedaron sin combo: revisarlos a mano.');
+            $this->warn(count($ambiguos) . ' vínculo(s) ambiguos quedaron como estaban: revisarlos a mano.');
         }
 
         return self::SUCCESS;
