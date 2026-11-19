@@ -4359,9 +4359,92 @@ class ProductPdfDesignController extends Controller
                 }
                 return $page;
             }, $data['pages']);
+            $data['pages'] = $this->withIconNames($data['pages']);
         }
 
         return $data;
+    }
+
+    /**
+     * Cada elemento con `icon_id` lleva también `icon_name` (nombre del
+     * ícono en personalization_icons) para que el JSON del diseño se pueda
+     * leer sin cruzar contra el catálogo. Se recalcula en cada guardado: si
+     * el ícono cambió, el nombre se actualiza; sin icon_id, se quita.
+     *
+     * El `sig` de las celdas de grilla (PdfDesignImportService::
+     * elementSignature) se calcula con TODOS los campos del elemento, así que
+     * agregar/cambiar `icon_name` lo desincronizaría y el editor tomaría la
+     * celda como "modificada a mano". Por eso, si el sig guardado coincidía
+     * con el elemento ANTES de tocar icon_name, se recalcula; si ya no
+     * coincidía (celda editada a mano), se deja como está.
+     */
+    private function withIconNames(array $pages): array
+    {
+        $iconIds = [];
+        foreach ($pages as $page) {
+            foreach ($page['elements'] ?? [] as $el) {
+                if (is_array($el) && !empty($el['icon_id'])) {
+                    $iconIds[(int) $el['icon_id']] = true;
+                }
+            }
+        }
+        $names = $iconIds
+            ? PersonalizationIcon::withTrashed()->whereIn('id', array_keys($iconIds))->pluck('name', 'id')->all()
+            : [];
+
+        foreach ($pages as &$page) {
+            if (empty($page['elements']) || !is_array($page['elements'])) {
+                continue;
+            }
+
+            $sigsAntes = [];
+            foreach ($page['elements'] as &$el) {
+                if (!is_array($el)) {
+                    continue;
+                }
+                $nombre = !empty($el['icon_id']) ? ($names[(int) $el['icon_id']] ?? null) : null;
+                if (($el['icon_name'] ?? null) === $nombre) {
+                    continue;
+                }
+                if (isset($el['id'])) {
+                    $sigsAntes[$el['id']] = PdfDesignImportService::elementSignature($el);
+                }
+                if ($nombre === null) {
+                    unset($el['icon_name']);
+                } else {
+                    $el['icon_name'] = $nombre;
+                }
+            }
+            unset($el);
+
+            if (!$sigsAntes || empty($page['grids']) || !is_array($page['grids'])) {
+                continue;
+            }
+            $elementsById = [];
+            foreach ($page['elements'] as $el) {
+                if (is_array($el) && isset($el['id'])) {
+                    $elementsById[$el['id']] = $el;
+                }
+            }
+            foreach ($page['grids'] as &$grid) {
+                foreach ($grid['members'] ?? [] as $key => $member) {
+                    if (!is_array($member)) {
+                        continue;
+                    }
+                    foreach ($member as $i => $entry) {
+                        $id = is_array($entry) ? ($entry['id'] ?? null) : null;
+                        if ($id === null || !isset($sigsAntes[$id]) || ($entry['sig'] ?? null) !== $sigsAntes[$id]) {
+                            continue;
+                        }
+                        $grid['members'][$key][$i]['sig'] = PdfDesignImportService::elementSignature($elementsById[$id]);
+                    }
+                }
+            }
+            unset($grid);
+        }
+        unset($page);
+
+        return $pages;
     }
 
     /**
