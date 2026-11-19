@@ -943,6 +943,19 @@ class ProductPdfDesignController extends Controller
      * crea un diseño nuevo SIN PUBLICAR y sin productos vinculados; con
      * `targetDesignId` reemplaza el contenido de ese diseño (conserva sus
      * vínculos y su estado de publicación).
+     *
+     * Íconos que no existen en este entorno (no hay uno con el mismo nombre):
+     * - `createMissingIcons` (default true): se crean solos con el SVG de la
+     *   exportación, como siempre.
+     * - `createMissingIcons=false`: si alguno no tiene una acción en
+     *   `iconActions`, NO se importa nada y responde 422 con `missingIcons`
+     *   (sourceIconId, name, file = SVG en data URL) para que el front
+     *   pregunte qué hacer y vuelva a mandar el import con las acciones.
+     * - `iconActions[<sourceIconId>]` (vale con cualquiera de los dos):
+     *     action=create                    crearlo con el SVG de la exportación
+     *     action=use,    iconId=N          usar el ícono N de este entorno
+     *     action=upload, file=<svg>[, name] crearlo con un SVG subido ahora
+     *                                      (solo multipart)
      */
     public function import(Request $request)
     {
@@ -951,9 +964,14 @@ class ProductPdfDesignController extends Controller
             'bundle' => 'required_without:file|array',
             'name' => 'nullable|string|max:255',
             'targetDesignId' => 'nullable|integer|exists:product_pdf_designs,id',
+            'iconActions' => 'nullable|array',
+            'iconActions.*.action' => 'required|in:create,use,upload',
+            'iconActions.*.iconId' => 'required_if:iconActions.*.action,use|nullable|integer|exists:personalization_icons,id',
+            'iconActions.*.file' => 'required_if:iconActions.*.action,upload|nullable|file|mimes:svg|max:2048',
+            'iconActions.*.name' => 'nullable|string|max:255',
         ]);
         if ($validator->fails()) {
-            $this->logAudit(Auth::user(), 'Import Product Pdf Design', $request->except('file', 'bundle'), $validator->errors());
+            $this->logAudit(Auth::user(), 'Import Product Pdf Design', $request->except('file', 'bundle', 'iconActions'), $validator->errors());
             return $this->validationError($validator->errors());
         }
 
@@ -968,8 +986,33 @@ class ProductPdfDesignController extends Controller
         $target = $request->filled('targetDesignId') ? ProductPdfDesign::find($request->targetDesignId) : null;
         $source = $bundle['design'];
 
+        // Las claves de iconActions son los ids de ORIGEN (refs.icons del JSON).
+        $iconActions = [];
+        foreach ((array) $request->input('iconActions', []) as $sourceIconId => $action) {
+            $iconActions[(int) $sourceIconId] = array_merge(
+                (array) $action,
+                ['file' => $request->file("iconActions.{$sourceIconId}.file")]
+            );
+        }
+        // boolean() acepta true/false/1/0/"true"/"false" (multipart o JSON).
+        $createMissingIcons = $request->boolean('createMissingIcons', true);
+
+        if (!$createMissingIcons) {
+            $sinDecidir = array_values(array_filter(
+                $transfer->missingIcons($bundle),
+                fn($icon) => !isset($iconActions[$icon['sourceIconId']])
+            ));
+            if ($sinDecidir) {
+                return response()->json([
+                    'status' => 422,
+                    'message' => 'Hay íconos que no existen en este entorno: elegí qué hacer con cada uno.',
+                    'missingIcons' => $sinDecidir,
+                ], 422);
+            }
+        }
+
         try {
-            [$design, $report] = DB::transaction(function () use ($transfer, $bundle, $source, $target, $request) {
+            [$design, $report] = DB::transaction(function () use ($transfer, $bundle, $source, $target, $request, $createMissingIcons, $iconActions) {
                 $design = $target ?? ProductPdfDesign::create([
                     'user_id' => Auth::id(),
                     'name' => $request->input('name') ?: ($source['name'] ?? 'Diseño importado'),
@@ -978,7 +1021,7 @@ class ProductPdfDesignController extends Controller
                     'status_id' => 1,
                 ]);
 
-                $result = $transfer->import($bundle, $design->id);
+                $result = $transfer->import($bundle, $design->id, $createMissingIcons, $iconActions);
 
                 $data = $this->sanitizeDesignData($result['data']);
                 if ($layoutErrors = $this->layoutGroupErrors($data)) {

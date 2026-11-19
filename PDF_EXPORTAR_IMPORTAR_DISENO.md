@@ -45,6 +45,7 @@ Content-Type: multipart/form-data
 | `bundle` | objeto | Alternativa a `file`: el mismo JSON en el body (`application/json`). Uno de los dos. |
 | `name` | string, opcional | Nombre del diseño. Si no viene, el del diseño exportado. |
 | `targetDesignId` | int, opcional | Si viene, **reemplaza el contenido de ese diseño** en vez de crear uno nuevo. |
+| `createMissingIcons`, `iconActions` | opcionales | Qué hacer con los íconos que no existen en el destino: ver [PDF_IMPORTAR_ICONOS_FALTANTES.md](PDF_IMPORTAR_ICONOS_FALTANTES.md). |
 
 ### Qué hace
 
@@ -59,7 +60,7 @@ Los ids de dev no sirven en prod, así que cada referencia se busca **por nombre
 | Referencia | Si existe en prod (mismo nombre) | Si no existe |
 |---|---|---|
 | Tipografía (`font_id`) | Se usa la de prod. | Se crea, con sus archivos de fuente. |
-| Ícono (`icon_id`) | Se usa el de prod. | Se crea, con su SVG. |
+| Ícono (`icon_id`) | Se usa el de prod. | Se crea, con su SVG. O el usuario elige qué hacer: ver [PDF_IMPORTAR_ICONOS_FALTANTES.md](PDF_IMPORTAR_ICONOS_FALTANTES.md). |
 | Forma de etiqueta (`label_shape_id`) | Se usa la de prod. | Se crea. |
 | Atributo (`dynamic_attribute_id`, también en colores) | Se usa el de prod (mismo nombre y tipo). | **No se crea** (es de los productos): queda en `null` y se avisa en `report.missing`. |
 
