@@ -560,6 +560,20 @@ class PdfDesignImportService
             && $inner['y'] + $inner['h'] <= $outer['y'] + $outer['h'] + $tol;
     }
 
+    /**
+     * Color de un texto importado: el CMYK original si el PDF lo pintó con
+     * `k` (las vistas viejas usan `color: cmyk(...)`, ej. los nombres de
+     * stars/TRANSFER *), igual que rectToBackgroundElement() con los fondos.
+     * Con el hex de la conversión directa los colores quedaban mucho más
+     * saturados que en el PDF original (verde agua 0.53,0,0.47,0 → #78FF87).
+     */
+    private static function textColor(array $line): array
+    {
+        return !empty($line['colorCmyk'])
+            ? ['mode' => 'cmyk', 'value' => $line['colorCmyk']]
+            : ['mode' => 'hex', 'value' => $line['color'] ?? '#000000'];
+    }
+
     private static function rectToBackgroundElement(array $rect, float $pageHeightPt): array
     {
         // Si el PDF original pintó este rect con el operador CMYK `k` (no RGB
@@ -678,7 +692,7 @@ class PdfDesignImportService
         $lines = array_values(array_filter($lines, fn($l) => trim($l['text']) !== ''));
         $content = implode(' ', array_map(fn($l) => trim($l['text']), $lines));
         $fontSizePt = $lines[0]['fontSizePt'] ?? 12.0;
-        $color = $lines[0]['color'] ?? '#000000';
+        $color = self::textColor($lines[0] ?? []);
 
         $xs = array_column($lines, 'x');
         $ys = array_column($lines, 'y');
@@ -790,7 +804,7 @@ class PdfDesignImportService
             'font_value_mode' => 'fixed',
             'font_size_px' => round($fontSizePt / 0.75),
             'font_weight' => 400,
-            'color' => ['mode' => 'hex', 'value' => $color],
+            'color' => $color,
             'text_align' => 'center',
             'vertical_align' => 'middle',
             'vertical_offset_cm' => self::computeVerticalOffsetCm($heightCm, count($lines), $fontSizePt, $lineHeight),
@@ -866,6 +880,7 @@ class PdfDesignImportService
                 'text' => $l['text'],
                 'fontSizePt' => (float) ($l['fontSizePt'] ?? 12.0),
                 'color' => $l['color'] ?? '#000000',
+                'colorCmyk' => $l['colorCmyk'] ?? null,
                 'along' => $dx * $cos + $dy * $sin,
                 'perp' => -$dx * $sin + $dy * $cos,
             ];
@@ -882,7 +897,7 @@ class PdfDesignImportService
         $localLines = array_values(array_filter($localLines, fn($l) => trim($l['text']) !== ''));
         $content = implode(' ', array_map(fn($l) => trim($l['text']), $localLines));
         $fontSizePt = $localLines[0]['fontSizePt'];
-        $color = $localLines[0]['color'];
+        $color = self::textColor($localLines[0]);
 
         $longestLineLength = max(array_map(fn($l) => strlen(trim($l['text'])), $localLines));
         $estWidthPt = max(1, $longestLineLength * $fontSizePt * 0.6);
@@ -962,7 +977,7 @@ class PdfDesignImportService
             'font_value_mode' => 'fixed',
             'font_size_px' => round($fontSizePt / 0.75),
             'font_weight' => 400,
-            'color' => ['mode' => 'hex', 'value' => $color],
+            'color' => $color,
             'text_align' => 'center',
             'vertical_align' => 'middle',
             'vertical_offset_cm' => self::computeVerticalOffsetCm($heightCm, count($localLines), $fontSizePt, $lineHeight),
