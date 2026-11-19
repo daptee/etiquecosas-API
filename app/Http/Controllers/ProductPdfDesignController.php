@@ -1036,11 +1036,6 @@ class ProductPdfDesignController extends Controller
     }
 
     /**
-     * Vincula este diseño a un producto (con la variante/temática que lo
-     * selecciona en ese producto puntual). Un mismo diseño puede vincularse
-     * a varios productos distintos.
-     */
-    /**
      * Antes TODO QueryException al vincular respondía "Ya existe un vínculo
      * idéntico", aunque el error real fuera otro (columna faltante en la
      * base, FK, etc.) — el admin veía "no me deja agregar el producto" sin
@@ -1061,6 +1056,13 @@ class ProductPdfDesignController extends Controller
         return 'No se pudo vincular el producto: ' . ($e->errorInfo[2] ?? $e->getMessage());
     }
 
+    /**
+     * Vincula este diseño a un producto (con la variante/temática que lo
+     * selecciona en ese producto puntual). Un mismo diseño puede vincularse
+     * a varios productos distintos. Un diseño "combo" (páginas prestadas de
+     * otros, data.pages[].source) se vincula igual, entero: al comprar,
+     * EtiquetaService completa sus páginas prestadas y usa SU pages_output_mode.
+     */
     public function attachProduct(Request $request, $id)
     {
         $design = $this->findObject(ProductPdfDesign::class, $id);
