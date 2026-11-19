@@ -37,11 +37,12 @@ class ProductPdfResolverService
         // Puede haber VARIOS vínculos para el mismo producto+variante (uno por
         // cada página que compone el PDF final, pudiendo venir de diseños
         // distintos) — ver product_pdf_design_products.page_id/sort_order.
-        $links = ProductPdfDesignProduct::with('design')
+        $links = ProductPdfDesignProduct::with(['design', 'combo'])
             ->where('product_id', $productOrder->product_id)
             ->when($variantId, fn($q) => $q->where('theme_key', $variantId))
             ->when(!$variantId, fn($q) => $q->whereNull('theme_key'))
             ->whereHas('design', fn($q) => $q->where('is_published', true)->where('status_id', 1))
+            ->tap(fn($q) => self::soloCombosActivos($q))
             ->orderBy('sort_order')
             ->get();
 
@@ -78,40 +79,36 @@ class ProductPdfResolverService
 
         if ($links->isNotEmpty()) {
             try {
-                // Caso más común (un solo vínculo a un diseño entero): se
-                // mantiene byte-a-byte el llamado de siempre, sin pasar por el
-                // camino de "combinar páginas" para no arriesgar ese camino ya
-                // probado.
-                if ($links->count() === 1 && !$links->first()->page_id) {
-                    $design = $links->first()->design;
-                    $paths = EtiquetaService::generarEtiquetasDesdeDesign(
+                // Vínculos que armó un diseño "combo" (combo_design_id): cada
+                // combo es su propio PDF, con SU pages_output_mode (hojas
+                // juntas o separadas) y su nombre. El resto ("sueltos") sigue
+                // exactamente como antes.
+                $sueltos = $links->whereNull('combo_design_id')->values();
+                $porCombo = $links->whereNotNull('combo_design_id')->groupBy('combo_design_id');
+
+                $paths = $sueltos->isNotEmpty()
+                    ? self::generarDesdeVinculosSueltos($sueltos, $ventaId, $productOrder, $nombreCompleto, $form, $customColor, $customIcon, $fecha)
+                    : [];
+
+                foreach ($porCombo as $vinculosDelCombo) {
+                    $combo = $vinculosDelCombo->first()->combo;
+                    $pageRefs = $vinculosDelCombo->map(fn($link) => ['design' => $link->design, 'page_id' => $link->page_id])->all();
+                    $paths = array_merge($paths, EtiquetaService::generarEtiquetasDesdeDesignsMultiples(
                         $ventaId,
-                        $design,
+                        $pageRefs,
                         $productOrder,
                         [$nombreCompleto],
                         $customColor,
                         $customIcon,
                         $fecha,
                         [$form['name'] ?? ''],
-                        [$form['lastName'] ?? '']
-                    );
-                    Log::info("PDF generado desde diseño del editor para {$nombreCompleto}, design ID: {$design->id}");
-                    return $paths;
+                        [$form['lastName'] ?? ''],
+                        $combo->paginasPorSeparado(),
+                        $combo->name
+                    ));
+                    Log::info("PDF generado desde el combo {$combo->id} ({$combo->pages_output_mode}) con " . count($pageRefs) . " página(s) para {$nombreCompleto}");
                 }
 
-                $pageRefs = $links->map(fn($link) => ['design' => $link->design, 'page_id' => $link->page_id])->all();
-                $paths = EtiquetaService::generarEtiquetasDesdeDesignsMultiples(
-                    $ventaId,
-                    $pageRefs,
-                    $productOrder,
-                    [$nombreCompleto],
-                    $customColor,
-                    $customIcon,
-                    $fecha,
-                    [$form['name'] ?? ''],
-                    [$form['lastName'] ?? '']
-                );
-                Log::info("PDF generado combinando " . count($pageRefs) . " página(s) de diseños del editor para {$nombreCompleto}");
                 return $paths;
             } catch (\Throwable $e) {
                 Log::error("Error generando PDF desde diseño(s) del editor para {$nombreCompleto}", [
@@ -123,6 +120,60 @@ class ProductPdfResolverService
         }
 
         return self::resolveLegacy($ventaId, $productOrder, $variant, $tematicaId, $nombreCompleto, $form, $customColor, $customIcon, $fecha);
+    }
+
+    /**
+     * Vínculos sin combo, o de un combo publicado y activo. Un combo
+     * despublicado, inactivo o borrado (soft delete) deja de generar sus
+     * páginas — igual que un diseño normal despublicado.
+     */
+    private static function soloCombosActivos($query)
+    {
+        return $query->where(fn($q) => $q
+            ->whereNull('combo_design_id')
+            ->orWhereHas('combo', fn($c) => $c->where('is_published', true)->where('status_id', 1)));
+    }
+
+    /**
+     * Vínculos que no vienen de un combo: el comportamiento de siempre, sin
+     * cambios.
+     */
+    private static function generarDesdeVinculosSueltos($links, int $ventaId, $productOrder, string $nombreCompleto, array $form, $customColor, $customIcon, $fecha): array
+    {
+        // Caso más común (un solo vínculo a un diseño entero): se mantiene
+        // byte-a-byte el llamado de siempre, sin pasar por el camino de
+        // "combinar páginas" para no arriesgar ese camino ya probado.
+        if ($links->count() === 1 && !$links->first()->page_id) {
+            $design = $links->first()->design;
+            $paths = EtiquetaService::generarEtiquetasDesdeDesign(
+                $ventaId,
+                $design,
+                $productOrder,
+                [$nombreCompleto],
+                $customColor,
+                $customIcon,
+                $fecha,
+                [$form['name'] ?? ''],
+                [$form['lastName'] ?? '']
+            );
+            Log::info("PDF generado desde diseño del editor para {$nombreCompleto}, design ID: {$design->id}");
+            return $paths;
+        }
+
+        $pageRefs = $links->map(fn($link) => ['design' => $link->design, 'page_id' => $link->page_id])->all();
+        $paths = EtiquetaService::generarEtiquetasDesdeDesignsMultiples(
+            $ventaId,
+            $pageRefs,
+            $productOrder,
+            [$nombreCompleto],
+            $customColor,
+            $customIcon,
+            $fecha,
+            [$form['name'] ?? ''],
+            [$form['lastName'] ?? '']
+        );
+        Log::info("PDF generado combinando " . count($pageRefs) . " página(s) de diseños del editor para {$nombreCompleto}");
+        return $paths;
     }
 
     /**
@@ -142,10 +193,13 @@ class ProductPdfResolverService
             ->when($variantId, fn($q) => $q->where('theme_key', $variantId))
             ->when(!$variantId, fn($q) => $q->whereNull('theme_key'))
             ->whereHas('design', fn($q) => $q->where('is_published', true)->where('status_id', 1))
+            ->tap(fn($q) => self::soloCombosActivos($q))
             ->orderBy('sort_order')
             ->first();
 
-        return $link->product_pdf_design_id ?? null;
+        // Página de un combo: el diseño que el admin vinculó es el combo, no
+        // el diseño de origen de esa página.
+        return $link ? ($link->combo_design_id ?? $link->product_pdf_design_id) : null;
     }
 
     /**

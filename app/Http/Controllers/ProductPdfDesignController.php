@@ -131,6 +131,27 @@ class ProductPdfDesignController extends Controller
     {
         $design = $this->findObject(ProductPdfDesign::class, $id);
         $design->load(['products:id,name,sku', 'labelShape', 'generalStatus', 'user:id,name,lastName']);
+
+        // Diseño "combo" (usa páginas de otros): sus productos están en
+        // vínculos por página con combo_design_id = este id, la mayoría en
+        // los diseños de origen — no aparecen en `products` (que solo trae
+        // los vínculos de ESTE diseño). Se mandan aparte para que el editor
+        // pueda listarlos.
+        $design->setAttribute('combo_links', $design->comboLinks()
+            ->with('product:id,name,sku')
+            ->orderBy('sort_order')
+            ->get()
+            ->map(fn($link) => [
+                'linkId' => $link->id,
+                'designId' => $link->product_pdf_design_id,
+                'productId' => $link->product_id,
+                'product' => $link->product,
+                'themeKey' => $link->theme_key,
+                'pageId' => $link->page_id,
+                'sortOrder' => $link->sort_order,
+            ])
+            ->values());
+
         return $this->success($design, 'Diseño de PDF obtenido');
     }
 
@@ -1031,15 +1052,14 @@ class ProductPdfDesignController extends Controller
     {
         $design = $this->findObject(ProductPdfDesign::class, $id);
         $design->delete();
+        // Soft delete: la FK ON DELETE CASCADE de combo_design_id no se
+        // dispara. Si este diseño era un combo, sus vínculos por página viven
+        // en los diseños de origen y seguirían armando el PDF al comprar.
+        ProductPdfDesignProduct::where('combo_design_id', $design->id)->delete();
         $this->logAudit(Auth::user(), 'Delete Product Pdf Design', $id, $design);
         return $this->success($design, 'Diseño de PDF eliminado');
     }
 
-    /**
-     * Vincula este diseño a un producto (con la variante/temática que lo
-     * selecciona en ese producto puntual). Un mismo diseño puede vincularse
-     * a varios productos distintos.
-     */
     /**
      * Antes TODO QueryException al vincular respondía "Ya existe un vínculo
      * idéntico", aunque el error real fuera otro (columna faltante en la
@@ -1061,6 +1081,33 @@ class ProductPdfDesignController extends Controller
         return 'No se pudo vincular el producto: ' . ($e->errorInfo[2] ?? $e->getMessage());
     }
 
+    /**
+     * comboDesignId: el diseño "combo" (páginas de varios diseños) que arma
+     * este vínculo por página — ver
+     * database/sql/alter_product_pdf_design_products_add_combo_design.sql.
+     * Solo tiene sentido con pageId (un combo siempre vincula página por página).
+     */
+    private const COMBO_DESIGN_RULE = 'nullable|integer|exists:product_pdf_designs,id';
+
+    /**
+     * Los borrados "por producto + variantes" de un diseño no pueden llevarse
+     * puestos los vínculos por página que OTRO diseño (un combo) creó acá:
+     * quitar un producto del diseño "Objetos" entero borraba también las
+     * páginas que el combo "Combo primaria" tenía vinculadas en él. Sin
+     * comboDesignId → solo vínculos sin combo; con → solo los de ese combo.
+     */
+    private function comboScope($query, $comboDesignId)
+    {
+        return $comboDesignId
+            ? $query->where('combo_design_id', $comboDesignId)
+            : $query->whereNull('combo_design_id');
+    }
+
+    /**
+     * Vincula este diseño a un producto (con la variante/temática que lo
+     * selecciona en ese producto puntual). Un mismo diseño puede vincularse
+     * a varios productos distintos.
+     */
     public function attachProduct(Request $request, $id)
     {
         $design = $this->findObject(ProductPdfDesign::class, $id);
@@ -1069,11 +1116,12 @@ class ProductPdfDesignController extends Controller
             'productId' => 'required|exists:products,id',
             'themeKey' => 'nullable|integer',
             // id de data.pages[].id de ESTE diseño — null = usa todas sus páginas.
-            'pageId' => 'nullable|string|max:255',
+            'pageId' => 'nullable|string|max:255|required_with:comboDesignId',
             // id de un elemento `background` de ESTE diseño (diseño acumulable con
             // varias etiquetas en la misma página) — null = la primera etiqueta de
             // la página. Ver AccumulatingPdfDesignService.
             'labelElementId' => 'nullable|string|max:255',
+            'comboDesignId' => self::COMBO_DESIGN_RULE,
             'sortOrder' => 'nullable|integer',
         ]);
         if ($validator->fails()) {
@@ -1088,6 +1136,7 @@ class ProductPdfDesignController extends Controller
                 'theme_key' => $request->themeKey,
                 'page_id' => $request->pageId,
                 'label_element_id' => $request->labelElementId,
+                'combo_design_id' => $request->comboDesignId,
                 'sort_order' => $request->sortOrder ?? 0,
             ]);
         } catch (QueryException $e) {
@@ -1114,9 +1163,10 @@ class ProductPdfDesignController extends Controller
             'themeKeys' => 'required|array|min:1',
             'themeKeys.*' => 'nullable|integer',
             // Misma página (o diseño entero) para TODAS las temáticas de esta llamada.
-            'pageId' => 'nullable|string|max:255',
+            'pageId' => 'nullable|string|max:255|required_with:comboDesignId',
             // Misma etiqueta (ver attachProduct) para TODAS las temáticas de esta llamada.
             'labelElementId' => 'nullable|string|max:255',
+            'comboDesignId' => self::COMBO_DESIGN_RULE,
             'sortOrder' => 'nullable|integer',
         ]);
         if ($validator->fails()) {
@@ -1135,6 +1185,7 @@ class ProductPdfDesignController extends Controller
                     'theme_key' => $themeKey,
                     'page_id' => $request->pageId,
                     'label_element_id' => $request->labelElementId,
+                    'combo_design_id' => $request->comboDesignId,
                     'sort_order' => $request->sortOrder ?? 0,
                 ]);
                 $created[] = $link;
@@ -1171,6 +1222,8 @@ class ProductPdfDesignController extends Controller
             'productId' => 'required|exists:products,id',
             'themeKeys' => 'required|array|min:1',
             'themeKeys.*' => 'nullable|integer',
+            // Ver comboScope(): sin esto solo se borran vínculos que NO son de un combo.
+            'comboDesignId' => self::COMBO_DESIGN_RULE,
         ]);
         if ($validator->fails()) {
             $this->logAudit(Auth::user(), 'Bulk Detach Products from Pdf Design', $request->all(), $validator->errors());
@@ -1183,6 +1236,7 @@ class ProductPdfDesignController extends Controller
 
         $deletedCount = ProductPdfDesignProduct::where('product_pdf_design_id', $design->id)
             ->where('product_id', $request->productId)
+            ->tap(fn($q) => $this->comboScope($q, $request->input('comboDesignId')))
             ->where(function ($q) use ($nonNullKeys, $hasNull) {
                 if (!empty($nonNullKeys)) {
                     $q->whereIn('theme_key', $nonNullKeys);
@@ -1213,9 +1267,10 @@ class ProductPdfDesignController extends Controller
             'links.*.themeKeys' => 'required|array|min:1',
             'links.*.themeKeys.*' => 'nullable|integer',
             // Misma página (o diseño entero) para todas las temáticas de ESE producto.
-            'links.*.pageId' => 'nullable|string|max:255',
+            'links.*.pageId' => 'nullable|string|max:255|required_with:links.*.comboDesignId',
             // Misma etiqueta (ver attachProduct) para todas las temáticas de ESE producto.
             'links.*.labelElementId' => 'nullable|string|max:255',
+            'links.*.comboDesignId' => self::COMBO_DESIGN_RULE,
             'links.*.sortOrder' => 'nullable|integer',
         ]);
         if ($validator->fails()) {
@@ -1235,6 +1290,7 @@ class ProductPdfDesignController extends Controller
                         'theme_key' => $themeKey,
                         'page_id' => $link['pageId'] ?? null,
                         'label_element_id' => $link['labelElementId'] ?? null,
+                        'combo_design_id' => $link['comboDesignId'] ?? null,
                         'sort_order' => $link['sortOrder'] ?? 0,
                     ]);
                 } catch (QueryException $e) {
@@ -1272,6 +1328,8 @@ class ProductPdfDesignController extends Controller
             'links.*.productId' => 'required|exists:products,id',
             'links.*.themeKeys' => 'required|array|min:1',
             'links.*.themeKeys.*' => 'nullable|integer',
+            // Ver comboScope(): sin esto solo se borran vínculos que NO son de un combo.
+            'links.*.comboDesignId' => self::COMBO_DESIGN_RULE,
         ]);
         if ($validator->fails()) {
             $this->logAudit(Auth::user(), 'Bulk Detach Many Products from Pdf Design', $request->all(), $validator->errors());
@@ -1287,6 +1345,7 @@ class ProductPdfDesignController extends Controller
 
             $deletedCount += ProductPdfDesignProduct::where('product_pdf_design_id', $design->id)
                 ->where('product_id', $link['productId'])
+                ->tap(fn($q) => $this->comboScope($q, $link['comboDesignId'] ?? null))
                 ->where(function ($q) use ($nonNullKeys, $hasNull) {
                     if (!empty($nonNullKeys)) {
                         $q->whereIn('theme_key', $nonNullKeys);
@@ -4300,9 +4359,92 @@ class ProductPdfDesignController extends Controller
                 }
                 return $page;
             }, $data['pages']);
+            $data['pages'] = $this->withIconNames($data['pages']);
         }
 
         return $data;
+    }
+
+    /**
+     * Cada elemento con `icon_id` lleva también `icon_name` (nombre del
+     * ícono en personalization_icons) para que el JSON del diseño se pueda
+     * leer sin cruzar contra el catálogo. Se recalcula en cada guardado: si
+     * el ícono cambió, el nombre se actualiza; sin icon_id, se quita.
+     *
+     * El `sig` de las celdas de grilla (PdfDesignImportService::
+     * elementSignature) se calcula con TODOS los campos del elemento, así que
+     * agregar/cambiar `icon_name` lo desincronizaría y el editor tomaría la
+     * celda como "modificada a mano". Por eso, si el sig guardado coincidía
+     * con el elemento ANTES de tocar icon_name, se recalcula; si ya no
+     * coincidía (celda editada a mano), se deja como está.
+     */
+    private function withIconNames(array $pages): array
+    {
+        $iconIds = [];
+        foreach ($pages as $page) {
+            foreach ($page['elements'] ?? [] as $el) {
+                if (is_array($el) && !empty($el['icon_id'])) {
+                    $iconIds[(int) $el['icon_id']] = true;
+                }
+            }
+        }
+        $names = $iconIds
+            ? PersonalizationIcon::withTrashed()->whereIn('id', array_keys($iconIds))->pluck('name', 'id')->all()
+            : [];
+
+        foreach ($pages as &$page) {
+            if (empty($page['elements']) || !is_array($page['elements'])) {
+                continue;
+            }
+
+            $sigsAntes = [];
+            foreach ($page['elements'] as &$el) {
+                if (!is_array($el)) {
+                    continue;
+                }
+                $nombre = !empty($el['icon_id']) ? ($names[(int) $el['icon_id']] ?? null) : null;
+                if (($el['icon_name'] ?? null) === $nombre) {
+                    continue;
+                }
+                if (isset($el['id'])) {
+                    $sigsAntes[$el['id']] = PdfDesignImportService::elementSignature($el);
+                }
+                if ($nombre === null) {
+                    unset($el['icon_name']);
+                } else {
+                    $el['icon_name'] = $nombre;
+                }
+            }
+            unset($el);
+
+            if (!$sigsAntes || empty($page['grids']) || !is_array($page['grids'])) {
+                continue;
+            }
+            $elementsById = [];
+            foreach ($page['elements'] as $el) {
+                if (is_array($el) && isset($el['id'])) {
+                    $elementsById[$el['id']] = $el;
+                }
+            }
+            foreach ($page['grids'] as &$grid) {
+                foreach ($grid['members'] ?? [] as $key => $member) {
+                    if (!is_array($member)) {
+                        continue;
+                    }
+                    foreach ($member as $i => $entry) {
+                        $id = is_array($entry) ? ($entry['id'] ?? null) : null;
+                        if ($id === null || !isset($sigsAntes[$id]) || ($entry['sig'] ?? null) !== $sigsAntes[$id]) {
+                            continue;
+                        }
+                        $grid['members'][$key][$i]['sig'] = PdfDesignImportService::elementSignature($elementsById[$id]);
+                    }
+                }
+            }
+            unset($grid);
+        }
+        unset($page);
+
+        return $pages;
     }
 
     /**

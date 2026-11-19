@@ -77,12 +77,22 @@ class ProductPdfDesign extends Model
     public function products()
     {
         return $this->belongsToMany(Product::class, 'product_pdf_design_products')
-            ->withPivot('id', 'theme_key', 'page_id', 'label_element_id', 'sort_order')
+            ->withPivot('id', 'theme_key', 'page_id', 'label_element_id', 'combo_design_id', 'sort_order')
             ->withTimestamps();
     }
 
     public function productLinks()
     {
         return $this->hasMany(ProductPdfDesignProduct::class);
+    }
+
+    /**
+     * Vínculos por página que armó ESTE diseño como combo (data.pages[].source):
+     * viven en los diseños de origen (y en este mismo, para sus páginas
+     * propias), con combo_design_id = este id.
+     */
+    public function comboLinks()
+    {
+        return $this->hasMany(ProductPdfDesignProduct::class, 'combo_design_id');
     }
 }
