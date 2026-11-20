@@ -570,6 +570,43 @@ class EtiquetaService
     }
 
     /**
+     * Páginas resueltas (posiciones finales de cada etiqueta, igual que al
+     * renderizar) en el MISMO orden en que quedan como hojas en los PDFs
+     * generados: archivo por archivo (natural, "-1", "-2"...) y página por
+     * página. Lo usa el módulo de pliegos para dibujar las líneas de corte
+     * de cada hoja (ver PliegoService). $separarPorPagina: true = un archivo
+     * por página (orden del diseño); false = un solo archivo, cuyas páginas
+     * quedan agrupadas por tamaño de hoja (ver agruparPaginasPorTamano).
+     */
+    public static function paginasResueltasEnOrdenDeHojas(int $ventaId, array $pages, string $logId, $productOrder, string $nombre, ?string $firstName, ?string $lastName, $customColor, $customIcon, $fechaCompra, bool $separarPorPagina): array
+    {
+        $contexto = self::prepararContextoDesign($ventaId, $productOrder, $fechaCompra, $pages, $logId, $customIcon);
+        $resolvedPages = self::resolverPaginasDesign($pages, $contexto, $nombre, $firstName, $lastName, $customColor, $customIcon, $logId);
+
+        if ($separarPorPagina && count($resolvedPages) > 1) {
+            return array_values($resolvedPages);
+        }
+
+        $ordenadas = [];
+        foreach (self::agruparPaginasPorTamano($resolvedPages) as $grupo) {
+            foreach ($grupo['pages'] as $page) {
+                $ordenadas[] = $page;
+            }
+        }
+        return $ordenadas;
+    }
+
+    /** Páginas normalizadas de un diseño (con las páginas prestadas ya completas). */
+    public static function paginasDeDesign(ProductPdfDesign $design, ?string $pageId = null): array
+    {
+        $pages = self::normalizarPaginasDesign($design->data ?? []);
+        if ($pageId) {
+            $pages = array_values(array_filter($pages, fn($p) => ($p['id'] ?? null) === $pageId));
+        }
+        return $pages;
+    }
+
+    /**
      * Mismo cálculo que generarEtiquetasDesdeDesign() (resolver elementos +
      * layout_groups), pero sin renderizar: devuelve las posiciones finales
      * de cada grupo, para el GET .../preview?format=layout del editor.

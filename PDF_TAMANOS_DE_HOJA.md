@@ -15,6 +15,8 @@ Catálogo de "tamaños de hoja" (ej. A4, Oficio) para elegir al crear o editar u
 
 Precargados: tipos `Página` (id 1) y `Pliego` (id 2); tamaños (`is_system = 1`, todos con `type_id` = Página): A4 (21×29.7cm — el que ya usan casi todos los diseños existentes), A3, A5, Oficio, Carta.
 
+Los tamaños de tipo "Pliego" además usan `default_columns` / `default_rows` (grilla sugerida al armar un pliego; campos `defaultColumns` / `defaultRows` en el ABM) — ver [PLIEGOS.md](PLIEGOS.md).
+
 ---
 
 ## ABM de tamaños — `PdfSheetSizeController`
