@@ -103,7 +103,7 @@ class CutLineGeometry
         return $base > 0 ? max(0, $base + min($v, $h)) : 0.0;
     }
 
-    private static function rectRedondeado(float $x, float $y, float $w, float $h, float $r): array
+    public static function rectRedondeado(float $x, float $y, float $w, float $h, float $r): array
     {
         $r = min($r, $w / 2, $h / 2);
         $x2 = $x + $w;
@@ -128,7 +128,7 @@ class CutLineGeometry
         ];
     }
 
-    private static function elipse(float $cx, float $cy, float $rx, float $ry): array
+    public static function elipse(float $cx, float $cy, float $rx, float $ry): array
     {
         $kx = $rx * self::KAPPA;
         $ky = $ry * self::KAPPA;
@@ -181,7 +181,7 @@ class CutLineGeometry
      * Parser mínimo de path SVG: M/L/H/V/Z, absolutos y relativos. Cualquier
      * otro comando (curvas, arcos) = no se puede leer → null.
      */
-    private static function parsearPath(string $d): ?array
+    public static function parsearPath(string $d): ?array
     {
         if (preg_match('/[^MmLlHhVvZz0-9eE.,+\-\s]/', $d)) {
             return null;
@@ -272,7 +272,7 @@ class CutLineGeometry
      * Rota sobre (cx, cy), en grados, sentido horario con Y hacia abajo
      * (igual que transform: rotate() del render).
      */
-    private static function rotar(array $trazado, float $cx, float $cy, float $deg): array
+    public static function rotar(array $trazado, float $cx, float $cy, float $deg): array
     {
         $rad = deg2rad($deg);
         $cos = cos($rad);
@@ -290,7 +290,7 @@ class CutLineGeometry
         }, $trazado);
     }
 
-    private static function parsearColor($color): array
+    public static function parsearColor($color): array
     {
         if (is_array($color) && ($color['mode'] ?? null) === 'cmyk' && is_string($color['value'] ?? null)) {
             $partes = array_map('trim', explode(',', $color['value']));

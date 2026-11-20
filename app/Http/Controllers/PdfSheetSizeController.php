@@ -70,6 +70,8 @@ class PdfSheetSizeController extends Controller
             'widthCm' => 'required|numeric|min:0.1',
             'heightCm' => 'required|numeric|min:0.1',
             'typeId' => 'nullable|exists:pdf_sheet_size_types,id',
+            'defaultColumns' => 'nullable|integer|min:1|max:12',
+            'defaultRows' => 'nullable|integer|min:1|max:12',
             'isSystem' => 'nullable|boolean',
             'statusId' => 'nullable|exists:general_statuses,id',
         ]);
@@ -83,6 +85,8 @@ class PdfSheetSizeController extends Controller
             'width_cm' => $request->widthCm,
             'height_cm' => $request->heightCm,
             'type_id' => $request->typeId,
+            'default_columns' => $request->defaultColumns,
+            'default_rows' => $request->defaultRows,
             'is_system' => $request->boolean('isSystem'),
             'status_id' => $request->statusId ?? 1,
         ]);
@@ -101,6 +105,8 @@ class PdfSheetSizeController extends Controller
             'widthCm' => 'nullable|numeric|min:0.1',
             'heightCm' => 'nullable|numeric|min:0.1',
             'typeId' => 'nullable|exists:pdf_sheet_size_types,id',
+            'defaultColumns' => 'nullable|integer|min:1|max:12',
+            'defaultRows' => 'nullable|integer|min:1|max:12',
             'isSystem' => 'nullable|boolean',
             'statusId' => 'nullable|exists:general_statuses,id',
         ]);
@@ -114,6 +120,8 @@ class PdfSheetSizeController extends Controller
             'width_cm' => $request->input('widthCm', $size->width_cm),
             'height_cm' => $request->input('heightCm', $size->height_cm),
             'type_id' => $request->has('typeId') ? $request->typeId : $size->type_id,
+            'default_columns' => $request->has('defaultColumns') ? $request->defaultColumns : $size->default_columns,
+            'default_rows' => $request->has('defaultRows') ? $request->defaultRows : $size->default_rows,
             'is_system' => $request->has('isSystem') ? $request->boolean('isSystem') : $size->is_system,
             'status_id' => $request->input('statusId', $size->status_id),
         ]);

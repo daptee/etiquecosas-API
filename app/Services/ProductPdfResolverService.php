@@ -149,6 +149,68 @@ class ProductPdfResolverService
     }
 
     /**
+     * Páginas resueltas de lo que resolveAndGenerate() genera para esta
+     * línea de venta, en el mismo orden que las hojas de sus PDFs (ver
+     * EtiquetaService::paginasResueltasEnOrdenDeHojas). Mismo criterio de
+     * vínculos (sin los acumulables, que van a otro PDF). null si la línea
+     * no sale de diseños del editor (legacy): no hay geometría de etiquetas.
+     * Usado por el módulo de pliegos para las líneas de corte.
+     *
+     * Igual que findLinkedDesignId(): usa el diseño vinculado ACTUALMENTE.
+     */
+    public static function resolvedPagesInSheetOrder(int $ventaId, $productOrder, $fecha): ?array
+    {
+        $variantId = $productOrder->variant_id;
+        $links = ProductPdfDesignProduct::with('design')
+            ->where('product_id', $productOrder->product_id)
+            ->when($variantId, fn($q) => $q->where('theme_key', $variantId))
+            ->when(!$variantId, fn($q) => $q->whereNull('theme_key'))
+            ->whereHas('design', fn($q) => $q->where('is_published', true)->where('status_id', 1))
+            ->orderBy('sort_order')
+            ->get()
+            ->reject(fn($link) => $link->design->esAcumulable())
+            ->values();
+
+        if ($links->isEmpty()) {
+            return null;
+        }
+
+        // Mismos datos que arma SaleController::generarPdfSale().
+        $customData = $productOrder->customization_data;
+        if (is_string($customData)) {
+            $customData = json_decode($customData, true);
+        }
+        $customData = is_array($customData) ? $customData : [];
+        $form = $customData['form'] ?? [];
+        $nombreCompleto = trim(($form['name'] ?? '') . ' ' . ($form['lastName'] ?? ''));
+        $customColor = $customData['color']['color_code'] ?? null;
+        $customIcon = $customData['icon']['icon'] ?? null;
+        if ($customIcon && ($customData['icon']['name'] ?? null) == 'Sin dibujo') {
+            $customIcon = '';
+        }
+
+        if ($links->count() === 1 && !$links->first()->page_id) {
+            $design = $links->first()->design;
+            $pages = EtiquetaService::paginasDeDesign($design);
+            $logId = "design:{$design->id}";
+            $separar = $design->paginasPorSeparado();
+        } else {
+            $pages = [];
+            foreach ($links as $link) {
+                $pages = array_merge($pages, EtiquetaService::paginasDeDesign($link->design, $link->page_id));
+            }
+            $logId = 'pliego-cut:' . $links->pluck('product_pdf_design_id')->implode(',');
+            $separar = false;
+        }
+
+        return EtiquetaService::paginasResueltasEnOrdenDeHojas(
+            $ventaId, $pages, $logId, $productOrder, $nombreCompleto,
+            $form['name'] ?? '', $form['lastName'] ?? '',
+            $customColor, $customIcon, $fecha, $separar
+        );
+    }
+
+    /**
      * Flujo legacy sin modificar: extraído tal cual estaba duplicado en cada call site.
      */
     private static function resolveLegacy(

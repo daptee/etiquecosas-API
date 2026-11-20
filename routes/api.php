@@ -20,6 +20,7 @@ use App\Http\Controllers\TypographyController;
 use App\Http\Controllers\LabelShapeController;
 use App\Http\Controllers\PdfSheetSizeController;
 use App\Http\Controllers\PdfSheetSizeTypeController;
+use App\Http\Controllers\PliegoController;
 use App\Http\Controllers\ProductPdfDesignController;
 use App\Http\Controllers\CostController;
 use App\Http\Controllers\ConfigurationTagController;
@@ -235,6 +236,25 @@ Route::middleware('jwt.auth')->prefix('pdf-sheet-size-types')->group(function ()
     Route::post('/', [PdfSheetSizeTypeController::class, 'store']);
     Route::post('/{id}', [PdfSheetSizeTypeController::class, 'update']);
     Route::delete('/{id}', [PdfSheetSizeTypeController::class, 'delete']);
+});
+
+// Pliegos (planchas de imprenta armadas con las hojas de las ventas — ver PLIEGOS.md)
+Route::middleware('jwt.auth')->prefix('pliegos')->group(function () {
+    Route::get('/', [PliegoController::class, 'index']);
+    // Antes de "/{id}" para que no matcheen como id.
+    Route::get('/available-sheets', [PliegoController::class, 'availableSheets']);
+    Route::post('/download', [PliegoController::class, 'downloadMany']);
+    Route::get('/sheet-cut-lines', [PliegoController::class, 'sheetCutLines']);
+    Route::get('/design-cut-lines', [PliegoController::class, 'designCutLines']);
+    Route::get('/{id}', [PliegoController::class, 'show']);
+    Route::post('/', [PliegoController::class, 'store']);
+    Route::post('/{id}', [PliegoController::class, 'update']);
+    Route::get('/{id}/involved-sales', [PliegoController::class, 'involvedSales']);
+    Route::post('/{id}/finalize', [PliegoController::class, 'finalize']);
+    Route::post('/{id}/reopen', [PliegoController::class, 'reopen']);
+    Route::get('/{id}/download', [PliegoController::class, 'download']);
+    Route::get('/{id}/cut-lines', [PliegoController::class, 'cutLines']);
+    Route::delete('/{id}', [PliegoController::class, 'delete']);
 });
 
 // Product Pdf Designs (editor de PDFs)

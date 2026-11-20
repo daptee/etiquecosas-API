@@ -15,12 +15,16 @@ class PdfSheetSize extends Model
         'width_cm',
         'height_cm',
         'type_id',
+        'default_columns',
+        'default_rows',
         'is_system',
         'status_id',
     ];
 
     protected $casts = [
         'is_system' => 'boolean',
+        'default_columns' => 'integer',
+        'default_rows' => 'integer',
     ];
 
     public function generalStatus()
