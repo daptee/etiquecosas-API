@@ -336,10 +336,12 @@ El grosor y el color del pliego valen para todas las líneas. Así sale una sola
 ### Líneas que vienen de un diseño
 
 - **Diseño de la venta (`labels`):** el back vuelve a resolver las páginas del diseño vinculado a esa línea de venta, con el mismo nombre, ícono, color y `layout_groups` con que se generó el PDF. Toma la página que corresponde a esa hoja.
-- **Cualquier diseño (`slot_sources` y `designs`):** se resuelve igual que el preview del editor con `?cut_lines=1`, con "NOMBRE APELLIDO" de ejemplo. Las líneas se toman **aunque la página no tenga `cut_lines.enabled`**, porque el diseño se eligió a propósito para cortar. Se respetan las etiquetas con `cut_line: "hidden"`.
+- **Cualquier diseño (`slot_sources` y `designs`):** se resuelve igual que el preview del editor con `?cut_lines=1`, con "NOMBRE APELLIDO" de ejemplo.
+
+En los dos casos, las líneas se toman **aunque la página del diseño no tenga `cut_lines.enabled`**. En el pliego, si hay líneas o no lo decide el pliego (`cutLines.enabled` / `labels`), no cada diseño. El editor muestra el contorno de las etiquetas aunque la página no tenga ese interruptor activado. Sí se respetan las etiquetas con `cut_line: "hidden"`. `sheet-cut-lines` devuelve además `design_enabled`, que dice si la página tiene el interruptor activado en el editor; es solo informativo.
 
 Una hoja con `labels` **sale sin líneas** (y aparece en `warnings`) cuando:
-- la página del diseño no tiene `cut_lines.enabled`, igual que en el editor;
+- la página del diseño no tiene etiquetas (`background`) con línea, o todas están ocultas;
 - el producto no tiene un diseño del editor vinculado (PDF legacy), así que no hay geometría de etiquetas. **Para estos casos, usar `slot_sources`** con el diseño que corresponda;
 - el diseño vinculado hoy ya no coincide con el PDF generado (cambió la cantidad de hojas o el tamaño). Se arregla regenerando el PDF de la venta.
 
@@ -391,6 +393,7 @@ Una hoja con `labels` **sale sin líneas** (y aparece en `warnings`) cuando:
 
 - **Hoja de una venta antes de guardar:** `GET /pliegos/sheet-cut-lines?folder=…&file=…&page=…` devuelve `{ width_mm, height_mm, available, enabled, paths, reason }`, con `paths` en mm sobre la hoja.
   - Si `enabled` es `false`, la hoja no tiene líneas y `reason` dice por qué.
+  - `design_enabled`: si la página tiene `cut_lines.enabled` en el editor. Es solo informativo y no condiciona nada.
   - Responde 404 si no existen la venta o la hoja.
   - Responde 422 si `folder` o `file` son inválidos.
 
