@@ -839,7 +839,12 @@ class EtiquetaService
      */
     private static function normalizarPaginasDesign(array $data): array
     {
-        return self::resolverPaginasPrestadas(self::paginasCrudasDesign($data));
+        // Variantes de etiqueta en vivo (ver PDF_VARIANTES_ETIQUETA_EN_VIVO.md):
+        // va DESPUÉS de resolver páginas prestadas, por si la página prestada
+        // es justo la que trae una etiqueta armada con una variante.
+        return LabelShapeVariantResolver::resolvePages(
+            self::resolverPaginasPrestadas(self::paginasCrudasDesign($data))
+        );
     }
 
     /**
@@ -848,7 +853,7 @@ class EtiquetaService
      * diseños origen). Conservan su propio id. Si la origen ya no existe,
      * la página queda vacía.
      */
-    private static function resolverPaginasPrestadas(array $pages): array
+    public static function resolverPaginasPrestadas(array $pages): array
     {
         $sourceIds = collect($pages)
             ->map(fn($p) => $p['source']['designId'] ?? null)

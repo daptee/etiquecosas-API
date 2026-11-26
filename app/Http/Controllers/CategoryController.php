@@ -186,7 +186,7 @@ class CategoryController extends Controller
                 }
                 $imgPath = $imageName;
             }
-        } elseif (is_null($request->input('img'))) {
+        } elseif ($request->has('img') && is_null($request->input('img'))) {
             if ($category->img && Storage::disk('public_uploads')->exists($category->img)) {
                 Storage::disk('public_uploads')->delete($category->img);
             }
@@ -203,7 +203,7 @@ class CategoryController extends Controller
                 }
                 $iconPath = $iconName;
             }
-        } elseif (is_null($request->input('icon'))) {
+        } elseif ($request->has('icon') && is_null($request->input('icon'))) {
             if ($category->icon && Storage::disk('public_uploads')->exists($category->icon)) {
                 Storage::disk('public_uploads')->delete($category->icon);
             }
@@ -220,7 +220,7 @@ class CategoryController extends Controller
                 }
                 $bannerPath = $bannerName;
             }
-        } elseif (is_null($request->input('banner'))) {
+        } elseif ($request->has('banner') && is_null($request->input('banner'))) {
             if ($category->banner && Storage::disk('public_uploads')->exists($category->banner)) {
                 Storage::disk('public_uploads')->delete($category->banner);
             }

@@ -22,6 +22,8 @@ use Illuminate\Support\Facades\DB;
 use App\Traits\FindObject;
 use App\Traits\ApiResponse;
 use App\Traits\Auditable;
+use App\Services\EtiquetaService;
+use App\Services\LabelShapeVariantResolver;
 use App\Services\ProductPriceService;
 use Str;
 
@@ -427,6 +429,7 @@ class ProductController extends Controller
                 ]);
 
         $product->setRelation('variants', $product->variants->sortBy(fn($v) => $v->variant['order'] ?? 0)->values());
+        $this->resolvePdfDesignsPreview($product);
         $this->filterPdfDesignsByPivotPage($product);
         return $this->success($product, 'Producto obtenido exitosamente');
     }
@@ -451,6 +454,32 @@ class ProductController extends Controller
             }
             $data = $design->data;
             $data['pages'] = array_values(array_filter($data['pages'], fn($p) => ($p['id'] ?? null) === $pageId));
+            $design->data = $data;
+        }
+    }
+
+    /**
+     * `pdfDesigns:id,label_shape_id,name,data` trae `data` tal cual está en la
+     * columna — una página "prestada" (data.pages[].source = {designId,
+     * pageId}) llega sin elements/sheet propios (solo se persiste la
+     * referencia `source`), y una etiqueta con `variant_id` llega con lo
+     * último guardado, no con la variante actual. Sin esto, la web de
+     * clientes arma una vista previa en blanco o desactualizada — mismo
+     * problema que ya se arregló en el editor admin
+     * (ProductPdfDesignController::show()/resolveSourcePages()) y en
+     * EtiquetaService para el PDF real. Va ANTES de filterPdfDesignsByPivotPage
+     * (que filtra por id de página, no depende de que el contenido ya esté resuelto).
+     */
+    private function resolvePdfDesignsPreview(Product $product): void
+    {
+        foreach ($product->pdfDesigns as $design) {
+            $data = $design->data;
+            if (empty($data['pages']) || !is_array($data['pages'])) {
+                continue;
+            }
+            $data['pages'] = LabelShapeVariantResolver::resolvePages(
+                EtiquetaService::resolverPaginasPrestadas($data['pages'])
+            );
             $design->data = $data;
         }
     }
@@ -514,6 +543,7 @@ class ProductController extends Controller
                 ]);
 
         $product->setRelation('variants', $product->variants->sortBy(fn($v) => $v->variant['order'] ?? 0)->values());
+        $this->resolvePdfDesignsPreview($product);
         $this->filterPdfDesignsByPivotPage($product);
 
         return $this->success($product, 'Producto obtenido exitosamente');

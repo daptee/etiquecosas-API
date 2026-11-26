@@ -481,7 +481,13 @@ class AccumulatingPdfDesignService
             return null;
         }
 
-        $page = $pages[0];
+        // Variantes de etiqueta en vivo (PDF_VARIANTES_ETIQUETA_EN_VIVO.md):
+        // este flujo lee data.pages DIRECTO (no pasa por
+        // EtiquetaService::normalizarPaginasDesign), así que sin esto un PDF
+        // acumulado/diario no reflejaría una variante editada después de
+        // armado el diseño. No resuelve páginas prestadas (data.pages[].source)
+        // — ese es un gap previo y separado, no se toca acá.
+        $page = LabelShapeVariantResolver::resolvePages([$pages[0]])[0];
 
         if (!$labelElementId) {
             $primerBackground = self::backgroundDeCelda($page);
