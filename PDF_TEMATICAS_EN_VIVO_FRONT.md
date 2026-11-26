@@ -1,0 +1,122 @@
+# Front: guardar DE QUÉ temática/posición sale un color o ícono elegido
+
+Contexto completo en `PDF_TEMATICAS_EN_VIVO.md`. Resumen: el backend ya resuelve, en cada generación de PDF, el color/ícono REAL de una `PdfTheme` por posición (`theme_id` + `theme_color_index`/`theme_icon_index`) — si el admin edita la temática, todo lo que la referencia así se actualiza solo, sin tener que volver a guardar nada. El problema es que **hoy el editor no guarda esa referencia**: `themeColorHexes` (`composables/productPdfDesigns/useDesignEditor.ts`, línea ~366-376) aplana los colores de TODAS las temáticas asociadas en una sola lista de strings **sin duplicados** — para cuando un color llega al picker, ya se perdió de qué temática y de qué posición salió.
+
+Sin este cambio, el campo nuevo del backend simplemente no se usa — nada se rompe, pero tampoco se gana nada.
+
+**Importante — esto no es opcional, es parte del mismo fix**: guardar la referencia (pasos 1-3 de abajo) sin el paso 4 (que el PREVIEW también resuelva en vivo) deja al sistema PEOR que como está hoy: el editor va a seguir mostrando el color/ícono BAKED de cuando se eligió, mientras que el PDF generado va a usar el de la temática ACTUAL — el admin va a ver una cosa en el editor y otra distinta al descargar, sin ningún aviso. Los 4 pasos van juntos.
+
+## Qué hay que cambiar
+
+**1. `composables/productPdfDesigns/useDesignEditor.ts`**
+
+`themeColorHexes` (línea ~366) hoy es `string[]` aplanado y deduplicado. Para poder guardar la procedencia, tiene que dejar de deduplicar y pasar a ser algo como:
+
+```ts
+interface ThemeColorOption {
+	hex: string;
+	themeId: number;
+	colorIndex: number; // posición DENTRO de theme.colors, la que espera el backend
+}
+
+const themeColorOptions = computed<ThemeColorOption[]>(() =>
+	associatedThemes.value.flatMap(theme =>
+		(theme.colors ?? []).map((hex, colorIndex) => ({ hex, themeId: theme.id, colorIndex }))
+	)
+);
+```
+
+(Puede convivir con el actual `themeColorHexes` si algún otro lugar todavía necesita la lista plana — o reemplazarlo si no.)
+
+Para íconos, `themeIconIds` (línea ~358) ya devuelve solo ids (no hace falta la posición para que el PICKER filtre qué mostrar) — pero si además se quiere guardar `theme_icon_index` al elegir uno, hace falta algo similar: de qué temática y en qué posición está CADA id ofrecido, en vez de solo el Set final. Ojo: a diferencia del color, el ícono elegido YA es una referencia viva al catálogo (`icon_id`, `PersonalizationIcon`) — editar el ícono mismo (subirle otra imagen) ya se refleja solo, sin esto. `theme_icon_index` solo hace falta si además quieren que la temática pueda SACAR/REEMPLAZAR un ícono de su lista y que eso también se refleje — si no es un caso de uso real por ahora, se puede dejar para después sin perder nada de lo urgente (color).
+
+**2. El picker de color del elemento** (`ElementConfig.vue`, la sección donde se ofrecen los colores de `themeColorHexes`/`editor.associatedThemes`)
+
+Al elegir un color sugerido (no uno tipeado a mano), guardar:
+
+```ts
+update({
+	color: {
+		...element.color,
+		mode: 'hex',
+		value: option.hex,
+		theme_id: option.themeId,
+		theme_color_index: option.colorIndex
+	}
+});
+```
+
+Si el admin después tipea un hex a mano (no elige una sugerencia), hay que **sacar** `theme_id`/`theme_color_index` del objeto (poner `undefined`/omitirlos) — si no, el backend va a seguir pisando ese color con el de la temática en la próxima generación, ignorando lo que el admin tipeó a mano. Mismo cuidado para el color de `fill` de un fondo (`fill.color`, independiente de `color` — ver nota del backend: son dos objetos separados, cada uno con su propio `theme_id`/`theme_color_index`).
+
+**3. `types/productPdfDesigns/IProductPdfDesign.ts`**
+
+En el tipo de `color` (y en `PdfElementFill`'s color, si está tipado aparte), agregar:
+
+```ts
+theme_id?: number | null;
+theme_color_index?: number | null;
+```
+
+Y en `PdfDesignElement` (para `icon`), junto a `icon_id`:
+
+```ts
+theme_id?: number | null; // ojo: incompatible por ahora con el theme_id de `color` si algún día conviven en el mismo elemento (no debería pasar: un icon no tiene `color`)
+theme_icon_index?: number | null;
+```
+
+**4. El PREVIEW del editor tiene que resolver la referencia en vivo, igual que el backend**
+
+Hoy `components/productPdfDesigns/shared/PdfDesignElementGlyph.vue` dibuja el color/ícono leyendo directo el valor baked:
+
+- `resolvedColor` (línea ~157): `props.element.color.value` tal cual.
+- `iconSrc` (línea ~371): `catalogs?.iconUrl(props.element.icon_id)` tal cual.
+
+Si un elemento tiene `theme_id`+`theme_color_index`/`theme_icon_index`, ESTOS dos tienen que, en cambio, buscar el valor actual de la temática y usar ESE — exactamente lo que hace `EtiquetaService::resolverColorDeTematica()`/la resolución de ícono del backend, solo que en el front:
+
+```ts
+// resolvedColor — reemplaza el cuerpo actual
+const resolvedColor = computed(() => {
+	const color = props.element.color;
+	if (!color || !color.value) return 'transparent';
+
+	if (color.theme_id != null && color.theme_color_index != null) {
+		const theme = themesById.value[color.theme_id]; // ver más abajo de dónde sale themesById
+		const hex = theme?.colors?.[color.theme_color_index];
+		if (hex) return hex; // la temática manda — igual que el backend
+	}
+
+	return color.mode === 'cmyk' ? ColorHelper.cmykStringToHex(color.value) : color.value;
+});
+```
+
+```ts
+// iconSrc — misma idea
+const iconSrc = computed(() => {
+	// ...lo que ya haya antes...
+	if (props.element.theme_id != null && props.element.theme_icon_index != null) {
+		const theme = themesById.value[props.element.theme_id];
+		const iconFromTheme = theme?.icons?.[props.element.theme_icon_index];
+		if (iconFromTheme) return catalogs?.iconUrl(iconFromTheme.id) ?? null;
+	}
+	return catalogs?.iconUrl(props.element.icon_id) ?? null;
+});
+```
+
+`themesById` ya existe en `useDesignEditor.ts` (línea ~298) — pero hoy solo carga las temáticas ASOCIADAS al producto/variante que se está editando (`associatedThemeIds`, línea ~315-328). Un elemento puede referenciar una temática que YA NO es la asociada (el producto cambió de temática después, o el diseño se linkeó a otro producto) — para no dejar ese caso con el preview roto (temática no cargada = `themesById.value[id]` undefined = cae al valor baked, sin aviso de que está desactualizado), hay que además juntar los `theme_id` que ya traen los elementos del diseño (`design.value.pages.flatMap(p => p.elements).map(el => el.color?.theme_id ?? el.theme_id).filter(Boolean)`) y pedir `loadThemes()` para la unión de esos ids con `associatedThemeIds`, no solo estos últimos.
+
+Si en el picker de `ElementConfig.vue` también se muestra el color/ícono "actual" del elemento seleccionado (el swatch, el nombre del ícono, etc.), ese lugar tiene que mostrar lo mismo que `resolvedColor`/`iconSrc` de arriba — no el valor baked directo — por la misma razón.
+
+## Backend — ya está listo
+
+- `EtiquetaService::resolverElementoDesign()` ya resuelve `color.theme_id`+`theme_color_index` y `icon` `theme_id`+`theme_icon_index` contra la `PdfTheme` en cada generación (ver `PDF_TEMATICAS_EN_VIVO.md`).
+- `PdfDesignSanitizer` ya limpia/clampea ambos campos en `color` (de texto y de `fill`) y en elementos `icon` — no hace falta nada de validación extra del lado del front para que lleguen bien, solo mandarlos.
+- Ejemplo de elemento ya funcional para probar sin esperar el picker nuevo (mandarlo a mano en el JSON del diseño vía Postman/curl):
+
+```json
+{
+  "id": "texto1",
+  "type": "text",
+  "content": "EJEMPLO",
+  "color": { "mode": "hex", "value": "#000000", "theme_id": 5, "theme_color_index": 1 }
+}
+```

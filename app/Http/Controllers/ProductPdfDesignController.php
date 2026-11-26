@@ -131,6 +131,12 @@ class ProductPdfDesignController extends Controller
     {
         $design = $this->findObject(ProductPdfDesign::class, $id);
         $design->load(['products:id,name,sku', 'labelShape', 'generalStatus', 'user:id,name,lastName']);
+        // Sin esto, una página "prestada" (data.pages[].source = {designId, pageId})
+        // llegaba con sheet/elements vacíos (lo único que se persiste de verdad es
+        // la referencia `source`) — index() ya lo resolvía para las miniaturas del
+        // listado, pero show() no, así que el editor no podía armar la vista previa
+        // de ESE diseño puntual al abrirlo.
+        $this->resolveSourcePages([$design]);
         return $this->success($design, 'Diseño de PDF obtenido');
     }
 

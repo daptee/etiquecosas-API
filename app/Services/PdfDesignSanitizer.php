@@ -235,9 +235,50 @@ class PdfDesignSanitizer
                     $el['fill'] = self::sanitizeFill($el['fill']);
                 }
             }
+            // `color` de un `text` (color de la letra) no pasaba por acá
+            // antes de PDF_TEMATICAS_EN_VIVO.md — se agrega para poder
+            // limpiar/clampear `theme_id`/`theme_color_index` (mismo
+            // whitelist que ya usa `fill.color` de un `background`, ver
+            // sanitizeColorObject()).
+            if (isset($el['color']) && is_array($el['color'])) {
+                $el['color'] = self::sanitizeColorObject($el['color']);
+            }
+            // `icon` (type:"icon"): referencia opcional a un ícono de una
+            // PdfTheme por posición (ver PDF_TEMATICAS_EN_VIVO.md) — mismo
+            // criterio que `icon_scale_pct`: no hace falta chequear el tipo,
+            // en cualquier otro elemento EtiquetaService simplemente no lo lee.
+            if (array_key_exists('theme_id', $el)) {
+                $el['theme_id'] = is_numeric($el['theme_id']) ? (int) $el['theme_id'] : null;
+            }
+            if (array_key_exists('theme_icon_index', $el)) {
+                $el['theme_icon_index'] = is_numeric($el['theme_icon_index']) ? max(0, (int) $el['theme_icon_index']) : null;
+            }
 
             return $el;
         }, $elements);
+    }
+
+    /**
+     * Whitelist de un objeto `color` (data.pages[].elements[].color, o
+     * .fill.color de un `background`): mode/value + dynamic_attribute_id
+     * (reservado, sin uso en el backend todavía) + editable_by_customer +
+     * `theme_id`/`theme_color_index` (PDF_TEMATICAS_EN_VIVO.md: referencia a
+     * un color de una PdfTheme por posición — si están los dos,
+     * EtiquetaService resuelve el hex REAL de esa temática en cada
+     * generación y pisa `value`, en vez de confiar en el valor baked de acá;
+     * ninguno de los dos = comportamiento de siempre).
+     */
+    private static function sanitizeColorObject(array $color): array
+    {
+        $mode = $color['mode'] ?? 'hex';
+        return [
+            'mode' => in_array($mode, ['hex', 'cmyk'], true) ? $mode : 'hex',
+            'value' => isset($color['value']) ? strip_tags((string) $color['value']) : null,
+            'dynamic_attribute_id' => is_numeric($color['dynamic_attribute_id'] ?? null) ? (int) $color['dynamic_attribute_id'] : null,
+            'editable_by_customer' => ($color['editable_by_customer'] ?? false) === true,
+            'theme_id' => is_numeric($color['theme_id'] ?? null) ? (int) $color['theme_id'] : null,
+            'theme_color_index' => is_numeric($color['theme_color_index'] ?? null) ? max(0, (int) $color['theme_color_index']) : null,
+        ];
     }
 
     /**
@@ -251,16 +292,9 @@ class PdfDesignSanitizer
         $type = is_array($fill) ? ($fill['type'] ?? null) : null;
 
         if ($type === 'color' && is_array($fill['color'] ?? null) && isset($fill['color']['value'])) {
-            $color = $fill['color'];
-            $mode = $color['mode'] ?? 'hex';
             return [
                 'type' => 'color',
-                'color' => [
-                    'mode' => in_array($mode, ['hex', 'cmyk'], true) ? $mode : 'hex',
-                    'value' => strip_tags((string) $color['value']),
-                    'dynamic_attribute_id' => is_numeric($color['dynamic_attribute_id'] ?? null) ? (int) $color['dynamic_attribute_id'] : null,
-                    'editable_by_customer' => ($color['editable_by_customer'] ?? false) === true,
-                ],
+                'color' => self::sanitizeColorObject($fill['color']),
             ];
         }
 

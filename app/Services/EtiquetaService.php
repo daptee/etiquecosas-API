@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\LabelShape;
+use App\Models\PdfTheme;
 use App\Models\PersonalizationIcon;
 use App\Models\ProductPdfDesign;
 use App\Models\Typography;
@@ -1268,7 +1269,39 @@ class EtiquetaService
         $editable = ($el['editable_by_customer'] ?? false) === true;
         $field = $el['editable_field'] ?? null;
 
+        // Color elegido como "el color N de la temática X" en vez de un hex
+        // fijo (ver PDF_TEMATICAS_EN_VIVO.md) — se resuelve ACÁ, antes que
+        // nada más toque `color`, para que tanto el color de letra de un
+        // texto como el fallback de fondo de resolverFill() (cuando no hay
+        // `fill` explícito) ya usen el hex vivo. Si más abajo el cliente
+        // personalizó este color, ese override reemplaza `el['color']`
+        // entero igual que siempre (gana sobre la temática, como ya ganaba
+        // sobre cualquier otro valor baked).
+        if (isset($el['color']) && is_array($el['color'])) {
+            $el['color'] = self::resolverColorDeTematica($el['color']);
+        }
+
         if ($type === 'icon') {
+            // Ícono elegido como "posición N de la temática X" en vez de un
+            // icon_id puntual (ver PDF_TEMATICAS_EN_VIVO.md) — se resuelve acá
+            // mismo, ANTES que el resto de la cadena de abajo, pisando
+            // `icon_id` con el que tenga esa temática HOY en esa posición: así
+            // el resto de la precedencia (ícono por atributo de variante >
+            // ícono libre del cliente > imagen propia subida > icon_id) sigue
+            // exactamente igual, solo que el "icon_id de catálogo fijo" que
+            // compite ahí abajo ya viene actualizado. Si la temática se borró
+            // o la posición ya no existe (se achicó la lista de íconos), se
+            // deja el icon_id baked tal cual quedó guardado la última vez.
+            $temaIconId = $el['theme_id'] ?? null;
+            $temaIconIndex = $el['theme_icon_index'] ?? null;
+            if ($temaIconId && $temaIconIndex !== null) {
+                $tema = PdfTheme::with('icons')->find($temaIconId);
+                $iconDeLaTematica = $tema?->icons[$temaIconIndex] ?? null;
+                if ($iconDeLaTematica) {
+                    $el['icon_id'] = $iconDeLaTematica->id;
+                }
+            }
+
             $iconPath = null;
             $dynamicAttributeId = $el['dynamic_attribute_id'] ?? null;
             $attributeIcon = $dynamicAttributeId && $attributeIcons ? $attributeIcons->get($dynamicAttributeId) : null;
@@ -1529,6 +1562,37 @@ class EtiquetaService
     }
 
     /**
+     * Si `color` trae `theme_id`+`theme_color_index` (PDF_TEMATICAS_EN_VIVO.md:
+     * el admin eligió "el color N de la temática X" en vez de tipear un hex
+     * fijo), pisa `value` con el hex que tenga ESA temática HOY en esa
+     * posición — así editar la temática actualiza automáticamente cualquier
+     * diseño que la use, sin tener que salir a buscarlos y reescribirlos
+     * (mismo criterio que ya usa `dynamic_attribute_id` para ícono/tipografía
+     * por atributo: una referencia que se resuelve en cada generación, nunca
+     * un valor baked). Si la temática se borró o la posición ya no existe (se
+     * achicó la paleta), se deja el `value` baked tal cual quedó guardado la
+     * última vez — nunca un error, solo "se queda con lo de antes".
+     */
+    private static function resolverColorDeTematica(array $color): array
+    {
+        $temaId = $color['theme_id'] ?? null;
+        $temaIndex = $color['theme_color_index'] ?? null;
+        if (!$temaId || $temaIndex === null) {
+            return $color;
+        }
+
+        $tema = PdfTheme::find($temaId);
+        $hex = $tema->colors[$temaIndex] ?? null;
+        if (!is_string($hex) || $hex === '') {
+            return $color;
+        }
+
+        $color['mode'] = 'hex';
+        $color['value'] = $hex;
+        return $color;
+    }
+
+    /**
      * Fondo a dibujar (ver PDF_FONDO_ELEMENTOS.md): `fill`, o el formato viejo
      * de la etiqueta si no viene. Con imagen agrega resolved_image_path
      * (absoluto) y, en etiquetas con forma custom, resolved_clipped_image_path
@@ -1537,6 +1601,16 @@ class EtiquetaService
     private static function resolverFill(array $el, ?string $customColorValue): array
     {
         $fill = PdfDesignSanitizer::fillDelElemento($el);
+
+        // `fill.color` es un objeto de color INDEPENDIENTE de `el['color']`
+        // (front lo mirrorea, pero cada uno trae sus propios theme_id/
+        // theme_color_index) — cuando hay `fill` explícito (el caso normal
+        // hoy, ver PDF_FONDO_ELEMENTOS.md), fillDelElemento() usa ESTE color,
+        // no el de `el['color']` ya resuelto más arriba, así que hace falta
+        // resolverlo acá también.
+        if (($fill['type'] ?? null) === 'color' && is_array($fill['color'] ?? null)) {
+            $fill['color'] = self::resolverColorDeTematica($fill['color']);
+        }
 
         // Igual que antes con `color`: el color del cliente pisa el fondo,
         // salvo que sea una imagen (la imagen tapaba el color).
