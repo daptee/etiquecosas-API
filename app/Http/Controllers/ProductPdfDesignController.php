@@ -147,6 +147,10 @@ class ProductPdfDesignController extends Controller
             $this->logAudit(Auth::user(), 'Store Product Pdf Design', $request->all(), $layoutErrors);
             return $this->validationError($layoutErrors);
         }
+        if ($boundsErrors = $this->sheetBoundsErrors($data)) {
+            $this->logAudit(Auth::user(), 'Store Product Pdf Design', $request->all(), $boundsErrors);
+            return $this->validationError($boundsErrors);
+        }
 
         $design = ProductPdfDesign::create([
             'label_shape_id' => $request->labelShapeId,
@@ -897,6 +901,10 @@ class ProductPdfDesignController extends Controller
                 $this->logAudit(Auth::user(), 'Update Product Pdf Design', $request->all(), $layoutErrors);
                 return $this->validationError($layoutErrors);
             }
+            if ($boundsErrors = $this->sheetBoundsErrors($data)) {
+                $this->logAudit(Auth::user(), 'Update Product Pdf Design', $request->all(), $boundsErrors);
+                return $this->validationError($boundsErrors);
+            }
         }
 
         $design->update([
@@ -1026,6 +1034,9 @@ class ProductPdfDesignController extends Controller
                 $data = $this->sanitizeDesignData($result['data']);
                 if ($layoutErrors = $this->layoutGroupErrors($data)) {
                     throw new \InvalidArgumentException('layout_groups inválidos: ' . json_encode($layoutErrors, JSON_UNESCAPED_UNICODE));
+                }
+                if ($boundsErrors = $this->sheetBoundsErrors($data)) {
+                    throw new \InvalidArgumentException('Elementos fuera de la hoja: ' . json_encode($boundsErrors, JSON_UNESCAPED_UNICODE));
                 }
 
                 $design->update([
@@ -4449,6 +4460,34 @@ class ProductPdfDesignController extends Controller
         }
 
         return $data;
+    }
+
+    /**
+     * Errores de elementos que quedan fuera de los límites físicos de la
+     * hoja (data.pages[].sheet), en el formato de errores de validación:
+     * "data.pages.{i}.elements.{j}" => [mensaje]. Vacío = todos entran.
+     * Ver PdfDesignSanitizer::validateElementsWithinSheet() y
+     * PDF_LIMITES_DE_HOJA.md.
+     */
+    private function sheetBoundsErrors(array $data): array
+    {
+        $errors = [];
+
+        foreach ($data['pages'] ?? [] as $pageIdx => $page) {
+            if (!is_array($page) || empty($page['sheet']) || !is_array($page['sheet'])) {
+                continue;
+            }
+            if (empty($page['elements']) || !is_array($page['elements'])) {
+                continue;
+            }
+
+            $elErrors = PdfDesignSanitizer::validateElementsWithinSheet($page['elements'], $page['sheet']);
+            foreach ($elErrors as $elIdx => $message) {
+                $errors["data.pages.{$pageIdx}.elements.{$elIdx}"] = [$message];
+            }
+        }
+
+        return $errors;
     }
 
     /**
