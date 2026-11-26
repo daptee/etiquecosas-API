@@ -325,8 +325,7 @@
                             // Texto dentro de un layout_group: la caja ya mide
                             // exactamente renglones × font_size × line_height (lo
                             // calculó aplicarLayoutGroups), así que va pegado arriba,
-                            // sin vertical_align ni empujones, y sin que dompdf lo
-                            // vuelva a cortar por ancho.
+                            // sin vertical_align ni empujones.
                             $isLayoutText = !empty($el['layout_text']);
                             if ($isLayoutText) {
                                 [$wrapTop, $wrapTransform] = ['0', 'none'];
@@ -369,7 +368,18 @@
                                 @endif
                                 style="
                                 font-family: @if (!empty($el['resolved_font_family']))'{{ $el['resolved_font_family'] }}', @endif'{{ $fallbackFontFamily }}';
-                                @if ($isLayoutText) white-space: nowrap; @endif
+                                {{-- Ver PDF_RENGLONES_SIN_RECORTE_CSS.md: `resolved_text_html`
+                                     ya trae los <br> finales (según max_lines/max_chars_per_line,
+                                     ver EtiquetaService::dividirEnRenglones()) — sin nowrap, dompdf
+                                     podía volver a envolver el texto por su cuenta, por ancho real
+                                     en px, ignorando esos cortes y dando un resultado distinto (e
+                                     inconsistente entre tamaños) al configurado. Ahora SIEMPRE se
+                                     respeta el corte ya calculado, para todo texto (antes solo el de
+                                     un layout_group) — si la config no coincide con el ancho real a
+                                     ese tamaño de fuente, el texto se desborda hacia los costados en
+                                     vez de autoajustarse: hay que elegir bien max_chars_per_line, ya
+                                     no hay red de contención automática. --}}
+                                white-space: nowrap;
                                 font-size: {{ $el['resolved_font_size_px'] ?? $el['font_size_px'] ?? 32 }}px;
                                 font-weight: {{ $el['font_weight'] ?? 400 }};
                                 line-height: {{ $lineHeight }};
