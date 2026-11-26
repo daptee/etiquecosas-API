@@ -853,7 +853,7 @@ class EtiquetaService
      * diseños origen). Conservan su propio id. Si la origen ya no existe,
      * la página queda vacía.
      */
-    private static function resolverPaginasPrestadas(array $pages): array
+    public static function resolverPaginasPrestadas(array $pages): array
     {
         $sourceIds = collect($pages)
             ->map(fn($p) => $p['source']['designId'] ?? null)
