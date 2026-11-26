@@ -441,6 +441,77 @@ class PdfDesignSanitizer
      * Un miembro repetido en dos grupos es error para el SEGUNDO grupo (al
      * generar, el primero lo conserva).
      */
+    /**
+     * Valida que NINGÚN elemento de la página quede fuera de los límites
+     * físicos de la hoja (data.pages[].sheet.width_cm/height_cm) — evita
+     * que una etiqueta se guarde con una posición que termine impresa
+     * cortada o directamente fuera del papel (ver PDF_LIMITES_DE_HOJA.md:
+     * el diseño 111 terminó con filas de una grilla por debajo del borde
+     * de la hoja porque nada lo impedía al guardar).
+     *
+     * Usa la caja YA ROTADA (si el elemento tiene `rotation_deg`) — un
+     * elemento girado cuya caja SIN girar nominalmente se "sale" de la hoja
+     * puede entrar perfectamente una vez rotado (ver
+     * PdfDesignImportService::rotatedTextElement/clampCenter, mismo
+     * cálculo). $tolCm es solo margen de error de redondeo — un elemento
+     * realmente fuera de la hoja siempre es un error, no hay tolerancia
+     * para bleed intencional (nada se imprime fuera del papel físico).
+     *
+     * Devuelve [índice del elemento => mensaje], vacío si todos entran.
+     */
+    public static function validateElementsWithinSheet(array $elements, array $sheet, float $tolCm = 0.05): array
+    {
+        $sheetWidth = (float) ($sheet['width_cm'] ?? 0);
+        $sheetHeight = (float) ($sheet['height_cm'] ?? 0);
+        if ($sheetWidth <= 0 || $sheetHeight <= 0) {
+            return [];
+        }
+
+        $errors = [];
+        foreach ($elements as $idx => $el) {
+            if (!is_array($el) || !isset($el['x_cm'], $el['y_cm'], $el['width_cm'], $el['height_cm'])) {
+                continue;
+            }
+
+            $widthCm = (float) $el['width_cm'];
+            $heightCm = (float) $el['height_cm'];
+            $centerX = (float) $el['x_cm'] + $widthCm / 2;
+            $centerY = (float) $el['y_cm'] + $heightCm / 2;
+
+            $rotationDeg = (float) ($el['rotation_deg'] ?? 0);
+            if ($rotationDeg !== 0.0) {
+                $rad = deg2rad($rotationDeg);
+                $cos = abs(cos($rad));
+                $sin = abs(sin($rad));
+                $halfW = ($widthCm / 2) * $cos + ($heightCm / 2) * $sin;
+                $halfH = ($widthCm / 2) * $sin + ($heightCm / 2) * $cos;
+            } else {
+                $halfW = $widthCm / 2;
+                $halfH = $heightCm / 2;
+            }
+
+            $left = $centerX - $halfW;
+            $right = $centerX + $halfW;
+            $top = $centerY - $halfH;
+            $bottom = $centerY + $halfH;
+
+            if ($left < -$tolCm || $right > $sheetWidth + $tolCm || $top < -$tolCm || $bottom > $sheetHeight + $tolCm) {
+                $errors[$idx] = sprintf(
+                    'El elemento "%s" queda fuera de la hoja (%.2fx%.2fcm): su caja va de (%.2f, %.2f) a (%.2f, %.2f)cm.',
+                    $el['id'] ?? $idx,
+                    $sheetWidth,
+                    $sheetHeight,
+                    round($left, 2),
+                    round($top, 2),
+                    round($right, 2),
+                    round($bottom, 2)
+                );
+            }
+        }
+
+        return $errors;
+    }
+
     public static function validateLayoutGroups(array $groups, array $elements, bool $alGuardar = true): array
     {
         $elementsById = [];

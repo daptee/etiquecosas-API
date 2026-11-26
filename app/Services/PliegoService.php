@@ -820,9 +820,11 @@ class PliegoService
      * venta (mismo nombre, ícono, color y layout_groups) y se toma la que
      * corresponde a esa hoja.
      *
-     * @return array{available: bool, enabled: bool, paths: array, reason: ?string}
+     * @return array{available: bool, enabled: bool, paths: array, design_enabled?: bool, reason: ?string}
      *         available false = no se pueden calcular (reason dice por qué);
-     *         enabled false = la página del diseño no tiene líneas de corte.
+     *         enabled false = no hay ninguna etiqueta con línea (todas ocultas);
+     *         design_enabled = si la página tiene cut_lines.enabled en el
+     *         editor (solo informativo, no condiciona).
      */
     public static function sheetCutLines(Sale $sale, SaleProduct $saleProduct, string $key): array
     {
@@ -830,6 +832,16 @@ class PliegoService
         if (!isset(self::$cutCache[$ck])) {
             try {
                 $resolved = ProductPdfResolverService::resolvedPagesInSheetOrder($sale->id, $saleProduct, $sale->fechaAprobacionOCreacion());
+                // Se guarda solo lo necesario (tamaño + trazos), no la página
+                // resuelta entera: con muchas hojas, las páginas completas
+                // ocupan cientos de MB.
+                if (is_array($resolved)) {
+                    $resolved = array_map(fn($page) => [
+                        'sheet' => $page['sheet'] ?? [],
+                        'design_enabled' => (bool) CutLineGeometry::configPagina($page),
+                        'paths' => array_map(fn($t) => self::transformPath($t, 0, 0, 10), CutLineGeometry::trazadosPagina($page)),
+                    ], $resolved);
+                }
             } catch (\Throwable $e) {
                 Log::error('Pliegos: error resolviendo páginas para líneas de corte', ['sale_product_id' => $ck, 'error' => $e->getMessage()]);
                 $resolved = false;
@@ -858,12 +870,16 @@ class PliegoService
             return $fail('El diseño vinculado no coincide con el PDF generado (¿cambió el diseño?). Regenerá el PDF de la venta.');
         }
 
-        if (!CutLineGeometry::configPagina($page)) {
-            return ['available' => true, 'enabled' => false, 'paths' => [], 'reason' => 'La página del diseño no tiene líneas de corte habilitadas.'];
+        // A diferencia del PDF de corte del editor, NO se exige
+        // page.cut_lines.enabled: en el pliego, si hay líneas lo decide el
+        // pliego (cut_lines.enabled / labels), y el editor muestra el
+        // contorno de las etiquetas aunque la página no tenga ese flag. Sí se
+        // respeta cut_line "hidden" de cada etiqueta (trazadosPagina).
+        if (!$page['paths']) {
+            return ['available' => true, 'enabled' => false, 'paths' => [], 'design_enabled' => $page['design_enabled'],
+                'reason' => 'La página del diseño no tiene etiquetas con línea de corte (o todas están ocultas).'];
         }
-
-        $paths = array_map(fn($t) => self::transformPath($t, 0, 0, 10), CutLineGeometry::trazadosPagina($page));
-        return ['available' => true, 'enabled' => true, 'paths' => $paths, 'reason' => null];
+        return ['available' => true, 'enabled' => true, 'paths' => $page['paths'], 'design_enabled' => $page['design_enabled'], 'reason' => null];
     }
 
     /**
