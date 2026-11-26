@@ -253,6 +253,13 @@ class PdfDesignSanitizer
             if (array_key_exists('theme_icon_index', $el)) {
                 $el['theme_icon_index'] = is_numeric($el['theme_icon_index']) ? max(0, (int) $el['theme_icon_index']) : null;
             }
+            // `background` (label): referencia a la variante de label_shapes.data.variants[]
+            // que armó esta etiqueta (ver PDF_VARIANTES_ETIQUETA_EN_VIVO.md) — con esto,
+            // EtiquetaService reconstruye la etiqueta con la definición ACTUAL de la
+            // variante en cada generación, en vez de confiar en lo guardado acá.
+            if (isset($el['variant_id']) && is_string($el['variant_id'])) {
+                $el['variant_id'] = strip_tags($el['variant_id']);
+            }
 
             return $el;
         }, $elements);
