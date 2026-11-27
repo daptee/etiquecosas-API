@@ -53,7 +53,8 @@ class Pliego extends Model
         return $this->belongsTo(PdfSheetSize::class, 'sheet_size_id');
     }
 
-    public function creator()
+    /** Quien creó el pliego (created_by). Mismo nombre que en diseños (ProductPdfDesign::user). */
+    public function user()
     {
         return $this->belongsTo(User::class, 'created_by');
     }
