@@ -1,3 +1,9 @@
+> **Superado.** Este enfoque (resolución en memoria, nunca persistida) se reemplazó por propagación con
+> persistencia al guardar la variante — ver `PDF_VARIANTES_ETIQUETA_PROPAGACION.md` y
+> `PDF_VARIANTES_ETIQUETA_PROPAGACION_BACK.md`. El código de este documento ya no existe en el back
+> (se borró `LabelShapeVariantResolver` y los enganches que llamaba). Se deja este archivo como
+> referencia histórica de por qué se descartó.
+
 # Variantes de etiqueta en vivo
 
 Resuelve el pedido original: "que al editar una variante de etiqueta, ese cambio impacte en todos los

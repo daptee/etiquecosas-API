@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\LabelShape;
+use App\Services\LabelShapeVariantPropagator;
 use App\Services\PdfDesignSanitizer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -108,6 +109,8 @@ class LabelShapeController extends Controller
             return $this->validationError($validator->errors());
         }
 
+        $oldVariants = self::variantsById($shape->data['variants'] ?? []);
+
         $shape->update([
             'name' => $request->input('name', $shape->name),
             'shape_type' => $request->input('shapeType', $shape->shape_type),
@@ -118,9 +121,74 @@ class LabelShapeController extends Controller
             'status_id' => $request->input('statusId', $shape->status_id),
         ]);
 
+        $updatedDesigns = $this->propagateVariantChanges($shape, $oldVariants);
+
         $shape->load('generalStatus');
         $this->logAudit(Auth::user(), 'Update Label Shape', $request->all(), $shape);
-        return $this->success($shape, 'Forma de etiqueta actualizada');
+        return $this->success($shape, 'Forma de etiqueta actualizada', ['updated_designs' => $updatedDesigns]);
+    }
+
+    /**
+     * Ver PDF_VARIANTES_ETIQUETA_PROPAGACION.md: por cada variante de
+     * `data.variants[]` que cambió (comparada con la que había antes de este
+     * update), reescribe y persiste los diseños que la usan. Una variante
+     * que se sacó del array se desvincula (los diseños quedan como están,
+     * solo pierden la referencia). Una variante nueva no necesita nada:
+     * todavía no la usa ningún diseño.
+     */
+    private function propagateVariantChanges(LabelShape $shape, array $oldVariants): array
+    {
+        $newVariants = self::variantsById($shape->data['variants'] ?? []);
+        $updatedDesigns = [];
+
+        foreach ($newVariants as $id => $variant) {
+            if (isset($oldVariants[$id]) && $oldVariants[$id] == $variant) {
+                continue;
+            }
+            if (!isset($oldVariants[$id])) {
+                continue;
+            }
+            foreach (LabelShapeVariantPropagator::propagateVariant($shape, $variant) as $d) {
+                $updatedDesigns[$d['id']] = $d;
+            }
+        }
+
+        foreach ($oldVariants as $id => $variant) {
+            if (!isset($newVariants[$id])) {
+                LabelShapeVariantPropagator::unlinkVariant($shape->id, $id);
+            }
+        }
+
+        return array_values($updatedDesigns);
+    }
+
+    /** @return array<string, array> variantes de label_shapes.data.variants[] indexadas por su id */
+    private static function variantsById(array $variants): array
+    {
+        $byId = [];
+        foreach ($variants as $v) {
+            if (is_array($v) && isset($v['id'])) {
+                $byId[(string) $v['id']] = $v;
+            }
+        }
+        return $byId;
+    }
+
+    /**
+     * Diseños que usan esta variante, sin modificar nada — el front lo llama
+     * antes de guardar para avisar "esto va a actualizar N diseños" y pedir
+     * confirmación (ver PDF_VARIANTES_ETIQUETA_PROPAGACION.md, sección 3).
+     */
+    public function variantUsage($id, $variantId)
+    {
+        $shape = $this->findObject(LabelShape::class, $id);
+        $variants = self::variantsById($shape->data['variants'] ?? []);
+        if (!isset($variants[$variantId])) {
+            return $this->notFound('Variante no encontrada');
+        }
+
+        $designs = LabelShapeVariantPropagator::usageForVariant($shape->id, (string) $variantId);
+        return $this->success($designs, 'Diseños que usan esta variante');
     }
 
     public function toggleStatus($id)
@@ -137,6 +205,9 @@ class LabelShapeController extends Controller
     public function delete($id)
     {
         $shape = $this->findObject(LabelShape::class, $id);
+        // Los diseños que usaban alguna variante de esta forma quedan como
+        // están, solo pierden la referencia (ver PDF_VARIANTES_ETIQUETA_PROPAGACION.md).
+        LabelShapeVariantPropagator::unlinkVariant($shape->id, null);
         $shape->delete();
         $this->logAudit(Auth::user(), 'Delete Label Shape', $id, $shape);
         return $this->success($shape, 'Forma de etiqueta eliminada');

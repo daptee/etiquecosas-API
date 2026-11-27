@@ -18,6 +18,7 @@ class PdfDesignSanitizer
     private const ALLOWED_LAYOUT_SIDES = ['after', 'before'];
     private const MAX_LAYOUT_GAP_CM = 50;
     public const ALLOWED_FILL_TYPES = ['none', 'color', 'image'];
+    private const ALLOWED_LABEL_VARIANT_PARTS = ['fill', 'border', 'corners', 'padding', 'cut'];
     // Path que devuelve POST /product-pdf-designs/{id}/element-image. El
     // nombre de archivo no puede arrancar con "." (descarta "..").
     private const FILL_IMAGE_PATH_PATTERN = '#^pdf-element-images/\d+/[A-Za-z0-9_][A-Za-z0-9._-]*$#';
@@ -253,12 +254,17 @@ class PdfDesignSanitizer
             if (array_key_exists('theme_icon_index', $el)) {
                 $el['theme_icon_index'] = is_numeric($el['theme_icon_index']) ? max(0, (int) $el['theme_icon_index']) : null;
             }
-            // `background` (label): referencia a la variante de label_shapes.data.variants[]
-            // que armó esta etiqueta (ver PDF_VARIANTES_ETIQUETA_EN_VIVO.md) — con esto,
-            // EtiquetaService reconstruye la etiqueta con la definición ACTUAL de la
-            // variante en cada generación, en vez de confiar en lo guardado acá.
-            if (isset($el['variant_id']) && is_string($el['variant_id'])) {
-                $el['variant_id'] = strip_tags($el['variant_id']);
+            // Referencia a la variante de label_shapes.data.variants[] que armó
+            // esta etiqueta/elemento (ver PDF_VARIANTES_ETIQUETA_PROPAGACION.md).
+            // Al guardar la variante, el back busca estas referencias y
+            // reescribe los diseños — acá solo se whitelistea la forma del dato.
+            if (array_key_exists('label_variant_ref', $el)) {
+                $ref = is_array($el['label_variant_ref']) ? self::sanitizeLabelVariantRef($el['label_variant_ref']) : null;
+                if ($ref === null) {
+                    unset($el['label_variant_ref']);
+                } else {
+                    $el['label_variant_ref'] = $ref;
+                }
             }
 
             return $el;
@@ -285,6 +291,56 @@ class PdfDesignSanitizer
             'editable_by_customer' => ($color['editable_by_customer'] ?? false) === true,
             'theme_id' => is_numeric($color['theme_id'] ?? null) ? (int) $color['theme_id'] : null,
             'theme_color_index' => is_numeric($color['theme_color_index'] ?? null) ? max(0, (int) $color['theme_color_index']) : null,
+        ];
+    }
+
+    /**
+     * data.pages[].elements[].label_variant_ref (ver PDF_VARIANTES_ETIQUETA_PROPAGACION.md).
+     * Dos formas según de qué elemento viene: la etiqueta (`label_shape_id` +
+     * `variant_id` + partes/elementos importados) o un sub-elemento (solo
+     * `variant_element_id`, se identifica por tener esa clave). `instance_id`
+     * es obligatorio en los dos casos — sin él no hay forma de unir la
+     * etiqueta con sus elementos ni de propagar nada. null = sin vínculo
+     * (el front lo manda así al desvincular un elemento retocado a mano).
+     */
+    private static function sanitizeLabelVariantRef(array $ref): ?array
+    {
+        $instanceId = isset($ref['instance_id']) && is_scalar($ref['instance_id']) ? strip_tags((string) $ref['instance_id']) : null;
+        if (!$instanceId) {
+            return null;
+        }
+
+        if (array_key_exists('variant_element_id', $ref)) {
+            $variantElementId = is_scalar($ref['variant_element_id']) ? strip_tags((string) $ref['variant_element_id']) : null;
+            return $variantElementId !== null && $variantElementId !== ''
+                ? ['instance_id' => $instanceId, 'variant_element_id' => $variantElementId]
+                : null;
+        }
+
+        $labelShapeId = is_numeric($ref['label_shape_id'] ?? null) ? (int) $ref['label_shape_id'] : null;
+        $variantId = isset($ref['variant_id']) && is_scalar($ref['variant_id']) ? strip_tags((string) $ref['variant_id']) : null;
+        if (!$labelShapeId || !$variantId) {
+            return null;
+        }
+
+        $labelParts = is_array($ref['label_parts'] ?? null)
+            ? array_values(array_intersect($ref['label_parts'], self::ALLOWED_LABEL_VARIANT_PARTS))
+            : [];
+
+        $elementIds = is_array($ref['element_ids'] ?? null)
+            ? array_values(array_filter(array_map(
+                fn($id) => is_scalar($id) ? strip_tags((string) $id) : null,
+                $ref['element_ids']
+            )))
+            : [];
+
+        return [
+            'label_shape_id' => $labelShapeId,
+            'variant_id' => $variantId,
+            'instance_id' => $instanceId,
+            'label_parts' => $labelParts,
+            'element_ids' => $elementIds,
+            'all_elements' => ($ref['all_elements'] ?? false) === true,
         ];
     }
 
@@ -444,6 +500,13 @@ class PdfDesignSanitizer
                     : ($group['members'] ?? null),
                 'container_element_id' => $cleanId($group['container_element_id'] ?? null),
             ];
+
+            // Relación creada al aplicar una variante de etiqueta (ver
+            // PDF_VARIANTES_ETIQUETA_PROPAGACION.md): une esta relación con la
+            // instancia de la etiqueta para poder reemplazarla al propagar.
+            if (array_key_exists('label_variant_instance_id', $group)) {
+                $clean['label_variant_instance_id'] = $cleanId($group['label_variant_instance_id']);
+            }
 
             if (array_key_exists('links', $group) && $group['links'] !== null) {
                 $clean['links'] = is_array($group['links'])

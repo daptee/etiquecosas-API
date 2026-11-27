@@ -214,6 +214,7 @@ Route::middleware('jwt.auth')->prefix('attributes')->group(function () {
 Route::middleware('jwt.auth')->prefix('label-shapes')->group(function () {
     Route::get('/', [LabelShapeController::class, 'index']);
     Route::get('/{id}', [LabelShapeController::class, 'show']);
+    Route::get('/{id}/variants/{variantId}/usage', [LabelShapeController::class, 'variantUsage']);
     Route::post('/', [LabelShapeController::class, 'store']);
     Route::post('/{id}', [LabelShapeController::class, 'update']);
     Route::patch('/{id}/toggle-status', [LabelShapeController::class, 'toggleStatus']);

@@ -839,12 +839,7 @@ class EtiquetaService
      */
     private static function normalizarPaginasDesign(array $data): array
     {
-        // Variantes de etiqueta en vivo (ver PDF_VARIANTES_ETIQUETA_EN_VIVO.md):
-        // va DESPUÉS de resolver páginas prestadas, por si la página prestada
-        // es justo la que trae una etiqueta armada con una variante.
-        return LabelShapeVariantResolver::resolvePages(
-            self::resolverPaginasPrestadas(self::paginasCrudasDesign($data))
-        );
+        return self::resolverPaginasPrestadas(self::paginasCrudasDesign($data));
     }
 
     /**

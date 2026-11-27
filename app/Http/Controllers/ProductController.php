@@ -23,7 +23,6 @@ use App\Traits\FindObject;
 use App\Traits\ApiResponse;
 use App\Traits\Auditable;
 use App\Services\EtiquetaService;
-use App\Services\LabelShapeVariantResolver;
 use App\Services\ProductPriceService;
 use Str;
 
@@ -462,10 +461,8 @@ class ProductController extends Controller
      * `pdfDesigns:id,label_shape_id,name,data` trae `data` tal cual está en la
      * columna — una página "prestada" (data.pages[].source = {designId,
      * pageId}) llega sin elements/sheet propios (solo se persiste la
-     * referencia `source`), y una etiqueta con `variant_id` llega con lo
-     * último guardado, no con la variante actual. Sin esto, la web de
-     * clientes arma una vista previa en blanco o desactualizada — mismo
-     * problema que ya se arregló en el editor admin
+     * referencia `source`). Sin esto, la web de clientes arma una vista previa
+     * en blanco — mismo problema que ya se arregló en el editor admin
      * (ProductPdfDesignController::show()/resolveSourcePages()) y en
      * EtiquetaService para el PDF real. Va ANTES de filterPdfDesignsByPivotPage
      * (que filtra por id de página, no depende de que el contenido ya esté resuelto).
@@ -477,9 +474,7 @@ class ProductController extends Controller
             if (empty($data['pages']) || !is_array($data['pages'])) {
                 continue;
             }
-            $data['pages'] = LabelShapeVariantResolver::resolvePages(
-                EtiquetaService::resolverPaginasPrestadas($data['pages'])
-            );
+            $data['pages'] = EtiquetaService::resolverPaginasPrestadas($data['pages']);
             $design->data = $data;
         }
     }
