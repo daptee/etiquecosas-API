@@ -13,7 +13,6 @@ use App\Models\ProductVariant;
 use App\Models\Typography;
 use App\Models\TypographyFile;
 use App\Services\EtiquetaService;
-use App\Services\LabelShapeVariantResolver;
 use App\Services\PdfDesignImportService;
 use App\Services\PdfDesignSanitizer;
 use App\Services\PdfDesignTransferService;
@@ -112,13 +111,11 @@ class ProductPdfDesignController extends Controller
         if (!$perPage) {
             $designs = $query->get();
             $this->resolveSourcePages($designs->all());
-            $this->resolveLabelVariants($designs->all());
             return $this->success($designs, 'Diseños de PDF obtenidos');
         }
 
         $designs = $query->paginate($perPage, ['*'], 'page', $page);
         $this->resolveSourcePages($designs->items());
-        $this->resolveLabelVariants($designs->items());
         $metaData = [
             'current_page' => $designs->currentPage(),
             'last_page' => $designs->lastPage(),
@@ -140,7 +137,6 @@ class ProductPdfDesignController extends Controller
         // listado, pero show() no, así que el editor no podía armar la vista previa
         // de ESE diseño puntual al abrirlo.
         $this->resolveSourcePages([$design]);
-        $this->resolveLabelVariants([$design]);
         return $this->success($design, 'Diseño de PDF obtenido');
     }
 
@@ -4348,26 +4344,6 @@ class ProductPdfDesignController extends Controller
             if ($changed) {
                 $design->data = $data;
             }
-        }
-    }
-
-    /**
-     * Variantes de etiqueta en vivo (ver PDF_VARIANTES_ETIQUETA_EN_VIVO.md):
-     * reconstruye cada etiqueta (`background` con `label_shape_id` +
-     * `variant_id`) con la definición ACTUAL de esa variante — mismo criterio
-     * que usa EtiquetaService al generar el PDF — así el editor muestra lo
-     * mismo que termina impreso. Va DESPUÉS de resolveSourcePages, por si una
-     * página prestada es justo la que trae la etiqueta. No se persiste nada.
-     */
-    private function resolveLabelVariants(array $designs): void
-    {
-        foreach ($designs as $design) {
-            $data = $design->data;
-            if (empty($data['pages']) || !is_array($data['pages'])) {
-                continue;
-            }
-            $data['pages'] = LabelShapeVariantResolver::resolvePages($data['pages']);
-            $design->data = $data;
         }
     }
 

@@ -1,3 +1,8 @@
+> **Superado.** El back cambió de enfoque (resolución en vivo → propagación con persistencia). Ver
+> `PDF_VARIANTES_ETIQUETA_PROPAGACION.md` (su propia propuesta) y `PDF_VARIANTES_ETIQUETA_PROPAGACION_BACK.md`
+> (confirmación e implementación) para lo que hay que hacer ahora. Nada de lo que describe este
+> documento (`variant_id` suelto, resolución en vivo en `CanvasArea.vue`) hace falta implementarlo.
+
 # Front: guardar de qué variante sale una etiqueta, y resolverla en vivo en el editor
 
 Contexto completo en `PDF_VARIANTES_ETIQUETA_EN_VIVO.md`. Resumen: el backend ya reconstruye, en cada
