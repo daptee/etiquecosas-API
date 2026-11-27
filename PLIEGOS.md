@@ -114,11 +114,13 @@ Los tamaños se cargan con `GET /pdf-sheet-sizes?typeId={id del tipo "Pliego"}`.
 |---|---|
 | `search` | Busca por nombre. |
 | `status` | `borrador` o `finalizado`. |
+| `userId` | Solo los pliegos creados por ese usuario, igual que en diseños. |
 | `quantity`, `page` | Paginado (opcional). |
 
 Cada pliego trae sus campos más:
 - `total_slots` y `filled_slots`: para el texto "8/10 hojas".
 - `sheet_size`.
+- `user: { id, name, lastName }`: quien creó el pliego, igual que en diseños.
 - `slots[]` con `position`, `key`, `folder`, `file`, `page`, `sale_id` y `view_url`: para la miniatura de la tarjeta.
 
 ### Panel lateral: `GET /pliegos/available-sheets`
@@ -214,7 +216,9 @@ La respuesta es el **detalle** (ver abajo).
 
 Trae los campos del pliego (`id`, `name`, `sheet_size_id`, `width_cm`, `height_cm`, `columns`, `rows`, `margin_mm`, `gap_mm`, `status`, `finalized_at`, `created_at`, `updated_at`) más:
 - `cut_lines`: la configuración tal como se guardó, o `null`. Se usa para llenar el panel de líneas de corte al editar; los defaults están en [Configuración](#configuración-cutlines-al-crear-o-editar).
-- `sheet_size`, `creator: { id, name }`, `finalizer: { id, name }`, que puede ser `null`.
+- `sheet_size`.
+- `user: { id, name, lastName }`: quien creó el pliego, igual que en diseños.
+- `finalizer: { id, name, lastName }`: quien lo finalizó, o `null`.
 - `total_slots`, `filled_slots`.
 - `slot_width_mm`, `slot_height_mm`.
 - `min_scale`: la escala de la hoja que más se achica. Si es menor a 1, mostrar "Las hojas no entran a tamaño real: se achican al X %".

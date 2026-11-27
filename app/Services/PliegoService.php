@@ -464,7 +464,7 @@ class PliegoService
     /** Pliego con sus lugares enriquecidos (venta, cliente, producto, hoja, escala). */
     public static function detail(Pliego $pliego): array
     {
-        $pliego->loadMissing(['slots.sale.client:id,name,lastName', 'slots.sale.status', 'slots.saleProduct.product:id,name', 'sheetSize', 'creator:id,name', 'finalizer:id,name']);
+        $pliego->loadMissing(['slots.sale.client:id,name,lastName', 'slots.sale.status', 'slots.saleProduct.product:id,name', 'sheetSize', 'user:id,name,lastName', 'finalizer:id,name,lastName']);
         $geom = $pliego->slotGeometry();
         $minScale = 1.0;
 

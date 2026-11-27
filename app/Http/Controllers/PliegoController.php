@@ -34,13 +34,15 @@ class PliegoController extends Controller
     {
         $search = $request->query('search');
         $status = $request->query('status');
+        $userId = $request->query('userId');
         $perPage = $request->query('quantity');
         $page = $request->query('page', 1);
 
         $query = Pliego::query()
-            ->with(['sheetSize', 'slots'])
+            ->with(['sheetSize', 'slots', 'user:id,name,lastName'])
             ->withCount('slots')
             ->when($search, fn($q) => $q->where('name', 'like', "%{$search}%"))
+            ->when($userId, fn($q) => $q->where('created_by', $userId))
             ->when($status, fn($q) => $q->where('status', $status))
             ->orderByDesc('created_at')
             ->orderByDesc('id');
